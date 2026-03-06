@@ -1,0 +1,365 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 222 47% 11%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 190 80% 50%;
+
+    --secondary: 220 14% 96%;
+    --secondary-foreground: 222 47% 14%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 8% 46%;
+
+    --accent: 217 91% 95%;
+    --accent-foreground: 217 91% 26%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --danger: 0 84% 60%;
+    --danger-foreground: 0 0% 100%;
+
+    /* Sparkline 10-band performance gradient tokens (deep-red → red → orange → amber → yellow → lime → light-green → green → emerald → deep-green) */
+    --spark-band-1: 0 85% 45%;       /* Deep red: < -8% */
+    --spark-band-2: 8 80% 52%;       /* Red: -5% to -8% */
+    --spark-band-3: 18 85% 55%;      /* Orange-red: -3% to -5% */
+    --spark-band-4: 30 90% 50%;      /* Orange: -1.5% to -3% */
+    --spark-band-5: 45 95% 48%;      /* Amber: -0.5% to -1.5% */
+    --spark-band-6: 55 80% 48%;      /* Yellow: -0.5% to +0.5% */
+    --spark-band-7: 75 70% 42%;      /* Lime: +0.5% to +1.5% */
+    --spark-band-8: 120 55% 42%;     /* Green: +1.5% to +3% */
+    --spark-band-9: 150 70% 38%;     /* Emerald: +3% to +5% */
+    --spark-band-10: 160 85% 32%;    /* Deep green: > +5% */
+
+    --spark-neutral-stroke: 220 8% 46%;
+    --spark-neutral-fill: 220 8% 46%;
+    --spark-primary-stroke: 217 91% 60%;
+    --spark-primary-fill: 217 91% 60%;
+    --spark-warning-stroke: 38 92% 50%;
+    --spark-warning-fill: 38 92% 50%;
+    --spark-baseline: 220 8% 46%;
+    --spark-stroke-width: 1.5;
+    --spark-fill-opacity: 0.18;
+    --spark-baseline-opacity: 0.45;
+    --spark-baseline-dash: 5 3;
+    --spark-padding: 0.03;
+
+    --link-active: 160 84% 39%;
+    --link-active-foreground: 0 0% 100%;
+    --link-inactive: 220 8% 46%;
+    --link-inactive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 214 32% 91%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.625rem;
+
+    --sidebar-background: 222 47% 8%;
+    --sidebar-foreground: 220 14% 96%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 222 47% 14%;
+    --sidebar-accent-foreground: 220 14% 96%;
+    --sidebar-border: 222 47% 14%;
+    --sidebar-ring: 217 91% 60%;
+
+    --trading-buy: 160 84% 39%;
+    --trading-buy-foreground: 0 0% 100%;
+    --trading-sell: 0 84% 60%;
+    --trading-sell-foreground: 0 0% 100%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(190 80% 50%));
+    --gradient-success: linear-gradient(135deg, hsl(160 84% 39%), hsl(190 80% 50%));
+    --gradient-danger: linear-gradient(135deg, hsl(0 84% 60%), hsl(25 95% 53%));
+    --gradient-buy: linear-gradient(135deg, hsl(160 84% 39%), hsl(170 75% 45%));
+    --gradient-sell: linear-gradient(135deg, hsl(0 84% 60%), hsl(15 90% 55%));
+    --shadow-glow: 0 0 20px hsl(217 91% 60% / 0.15);
+    --shadow-card: 0 1px 3px hsl(222 47% 11% / 0.04), 0 4px 12px hsl(222 47% 11% / 0.06);
+    --shadow-card-hover: 0 4px 16px hsl(222 47% 11% / 0.08), 0 12px 32px hsl(222 47% 11% / 0.1);
+    --shadow-trading: 0 4px 20px hsl(217 91% 60% / 0.1);
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 96%;
+
+    --card: 222 47% 9%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 190 80% 50%;
+
+    --secondary: 222 47% 14%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 222 47% 14%;
+    --muted-foreground: 215 20% 55%;
+
+    --accent: 217 91% 18%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 160 84% 39%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --danger: 0 84% 60%;
+    --danger-foreground: 0 0% 100%;
+
+    /* Sparkline 10-band performance gradient tokens — dark mode (slightly brighter for dark bg) */
+    --spark-band-1: 0 80% 50%;
+    --spark-band-2: 8 75% 55%;
+    --spark-band-3: 18 80% 58%;
+    --spark-band-4: 30 85% 55%;
+    --spark-band-5: 45 90% 52%;
+    --spark-band-6: 55 75% 52%;
+    --spark-band-7: 75 65% 48%;
+    --spark-band-8: 120 50% 48%;
+    --spark-band-9: 150 65% 44%;
+    --spark-band-10: 160 80% 38%;
+
+    --spark-neutral-stroke: 215 20% 55%;
+    --spark-neutral-fill: 215 20% 55%;
+    --spark-primary-stroke: 217 91% 60%;
+    --spark-primary-fill: 217 91% 60%;
+    --spark-warning-stroke: 38 92% 50%;
+    --spark-warning-fill: 38 92% 50%;
+    --spark-baseline: 215 20% 55%;
+    --spark-stroke-width: 1.5;
+    --spark-fill-opacity: 0.18;
+    --spark-baseline-opacity: 0.45;
+    --spark-baseline-dash: 5 3;
+    --spark-padding: 0.03;
+
+    --link-active: 160 84% 42%;
+    --link-active-foreground: 0 0% 100%;
+    --link-inactive: 215 20% 55%;
+    --link-inactive-foreground: 0 0% 100%;
+
+    --border: 222 47% 15%;
+    --input: 222 47% 17%;
+    --ring: 217 91% 60%;
+
+    --trading-buy: 160 84% 42%;
+    --trading-buy-foreground: 0 0% 100%;
+    --trading-sell: 0 80% 58%;
+    --trading-sell-foreground: 0 0% 100%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(190 80% 50%));
+    --gradient-success: linear-gradient(135deg, hsl(160 84% 39%), hsl(190 80% 50%));
+    --gradient-danger: linear-gradient(135deg, hsl(0 84% 60%), hsl(25 95% 53%));
+    --gradient-buy: linear-gradient(135deg, hsl(160 84% 42%), hsl(170 75% 48%));
+    --gradient-sell: linear-gradient(135deg, hsl(0 80% 58%), hsl(15 85% 55%));
+    --shadow-glow: 0 0 30px hsl(217 91% 60% / 0.2);
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.2), 0 4px 12px hsl(0 0% 0% / 0.15);
+    --shadow-card-hover: 0 4px 16px hsl(0 0% 0% / 0.25), 0 12px 32px hsl(0 0% 0% / 0.2);
+    --shadow-trading: 0 4px 20px hsl(217 91% 60% / 0.15);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body {
+    @apply h-full overflow-x-hidden antialiased;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Glass morphism */
+  .glass {
+    @apply bg-white/10 backdrop-blur-xl border border-white/20;
+    box-shadow: var(--shadow-glow);
+  }
+
+  .glass-dark {
+    @apply bg-black/20 backdrop-blur-xl border border-white/10;
+    box-shadow: var(--shadow-glow);
+  }
+
+  /* Card transitions */
+  .card-hover-effect {
+    @apply transition-all duration-300 ease-out;
+    box-shadow: var(--shadow-card);
+  }
+  .card-hover-effect:hover {
+    box-shadow: var(--shadow-card-hover);
+    @apply -translate-y-0.5;
+  }
+
+  /* News card variant */
+  .news-card {
+    @apply relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-300;
+    box-shadow: var(--shadow-card);
+  }
+  .news-card:hover {
+    box-shadow: var(--shadow-card-hover);
+    @apply -translate-y-0.5 border-primary/30;
+  }
+  .news-card::before {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-[2px] opacity-0 transition-opacity duration-300;
+    background: var(--gradient-primary);
+  }
+  .news-card:hover::before {
+    @apply opacity-100;
+  }
+
+  /* Gradient text utility */
+  .text-gradient-primary {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/40;
+  }
+
+  /* Chart & data visualization styles */
+  .chart-container {
+    @apply w-full h-full min-h-[200px] rounded-xl overflow-hidden;
+  }
+
+  .animate-enter {
+    @apply animate-slide-up;
+  }
+
+  /* Stock price trends */
+  .trend-up {
+    @apply text-success;
+  }
+
+  .trend-down {
+    @apply text-danger;
+  }
+
+  /* Loading states */
+  .loading-pulse {
+    @apply animate-pulse-gentle;
+  }
+
+  /* Live indicator pulse */
+  .live-dot {
+    @apply relative inline-block w-2 h-2 rounded-full bg-success;
+  }
+  .live-dot::after {
+    content: '';
+    @apply absolute inset-0 rounded-full bg-success animate-ping;
+  }
+
+  /* Monospace for numbers */
+  .font-mono-num {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Trading card glass variant */
+  .trading-card {
+    @apply relative overflow-hidden rounded-xl border border-border bg-card transition-all duration-300;
+    box-shadow: var(--shadow-trading);
+  }
+  .trading-card:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+  .trading-card::before {
+    content: '';
+    @apply absolute top-0 left-0 right-0 h-px opacity-50;
+    background: var(--gradient-primary);
+  }
+
+  /* Trading table row styles */
+  .trading-table tr {
+    @apply transition-colors duration-150;
+  }
+  .trading-table tr:hover {
+    @apply bg-muted/50;
+  }
+
+  /* Buy/Sell button variants */
+  .btn-buy {
+    background: var(--gradient-buy);
+    @apply text-white font-semibold shadow-sm transition-all duration-200;
+  }
+  .btn-buy:hover {
+    @apply opacity-90 shadow-md;
+  }
+
+  .btn-sell {
+    background: var(--gradient-sell);
+    @apply text-white font-semibold shadow-sm transition-all duration-200;
+  }
+  .btn-sell:hover {
+    @apply opacity-90 shadow-md;
+  }
+
+  /* Pulse-live animation for connection dot */
+  .pulse-live {
+    @apply relative inline-flex h-2.5 w-2.5 rounded-full;
+  }
+  .pulse-live::after {
+    content: '';
+    @apply absolute inset-0 rounded-full animate-ping;
+    background: inherit;
+    opacity: 0.6;
+  }
+
+  /* Fade-in-up animation utility */
+  .animate-fade-in-up {
+    animation: fade-in-up 0.5s ease-out both;
+  }
+
+}
