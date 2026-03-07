@@ -9,6 +9,16 @@ const KEY_TO_COUNTRY: Record<string, string> = {
   'Mexico': 'mx', 'Taiwan': 'tw', 'Sweden': 'se',
   'Norway': 'no', 'Denmark': 'dk', 'New Zealand': 'nz',
   'South Africa': 'za', 'Russia': 'ru', 'Turkey': 'tr',
+  'Italy': 'it', 'Spain': 'es', 'Netherlands': 'nl',
+  'Finland': 'fi', 'Poland': 'pl', 'Austria': 'at',
+  'Ireland': 'ie', 'Portugal': 'pt', 'Greece': 'gr',
+  'Czechia': 'cz', 'Hungary': 'hu', 'Romania': 'ro',
+  'Slovakia': 'sk', 'Bulgaria': 'bg', 'Serbia': 'rs',
+  'Ukraine': 'ua', 'Argentina': 'ar', 'Colombia': 'co',
+  'Indonesia': 'id', 'Thailand': 'th', 'Malaysia': 'my',
+  'Philippines': 'ph', 'Pakistan': 'pk', 'Israel': 'il',
+  'UAE': 'ae', 'Saudi Arabia': 'sa', 'Egypt': 'eg',
+  'Nigeria': 'ng', 'Kenya': 'ke',
   'USD': 'us', 'EUR': 'eu', 'GBP': 'gb', 'JPY': 'jp',
   'CAD': 'ca', 'AUD': 'au', 'CHF': 'ch', 'CNY': 'cn',
   'HKD': 'hk', 'KRW': 'kr', 'INR': 'in', 'BRL': 'br',
@@ -18,6 +28,10 @@ const KEY_TO_COUNTRY: Record<string, string> = {
 };
 
 export function getCountryCode(key: string): string | null {
+  // If already a 2-letter ISO code (e.g. "CL", "PE"), use directly
+  if (key.length === 2 && /^[A-Za-z]{2}$/.test(key)) {
+    return key.toLowerCase();
+  }
   return KEY_TO_COUNTRY[key] ?? null;
 }
 

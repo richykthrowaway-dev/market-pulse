@@ -22,6 +22,9 @@ import Settings from "./pages/Settings";
 import Screener from "./pages/Screener";
 import Trading from "./pages/Trading";
 import RiskAnalysis from "./pages/RiskAnalysis";
+import FeeCalculators from "./pages/FeeCalculators";
+import Watchlists from "./pages/Watchlists";
+import TradeJournal from "./pages/TradeJournal";
 
 const queryClient = new QueryClient({
   defaultOptions: queryClientDefaults,
@@ -42,6 +45,7 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/stocks" element={<Stocks />} />
+                <Route path="/watchlists" element={<Watchlists />} />
                 <Route path="/markets" element={<Markets />} />
                 <Route path="/currencies" element={<Currencies />} />
                 <Route path="/global" element={<Global />} />
@@ -51,6 +55,8 @@ const App = () => (
                 <Route path="/analysis" element={<Analysis />} />
                 <Route path="/screener" element={<Screener />} />
                 <Route path="/trading" element={<Trading />} />
+                <Route path="/fee-calculators" element={<FeeCalculators />} />
+                <Route path="/journal" element={<TradeJournal />} />
                 <Route path="/settings" element={<Settings />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

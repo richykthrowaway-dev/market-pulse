@@ -1,86 +1,286 @@
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useIndices } from "@/hooks/useSupabaseData";
+import { REGION_TO_ISO } from "@/data/countryMeta";
+import { cn } from "@/lib/utils";
+import { Globe as GlobeIcon } from "lucide-react";
+import GlobeView from "@/components/global/GlobeView";
+import CountryPanel from "@/components/global/CountryPanel";
+import GlobalSummary from "@/components/global/GlobalSummary";
 
-import React from 'react';
-import { PageLayout } from '@/components/layout/PageLayout';
-import { useIndices } from '@/hooks/useSupabaseData';
-import { Globe, ArrowUpIcon, ArrowDownIcon } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { Flag } from '@/components/ui/Flag';
+// ── Realistic space background ──────────────────────────────────────────
+// Multi-layer CSS approach: nebulae, galaxy clouds, backlight glow, and
+// four tiers of stars via box-shadow. All generated deterministically with
+// a seeded PRNG so positions are stable across renders.
+
+function seededRandom(seed: number) {
+  return () => {
+    seed = (seed * 16807 + 0) % 2147483647;
+    return (seed - 1) / 2147483646;
+  };
+}
+
+function useStarfield() {
+  return useMemo(() => {
+    const rng = seededRandom(42);
+    // Consolidated into 3 layers (down from 5) — fewer DOM elements, fewer paints
+    const fine: string[] = [];   // 1px — combines old tiny + small
+    const medium: string[] = []; // 2px
+    const large: string[] = [];  // 3px — combines old large + bright
+
+    // Fine stars — reduced from 900 to 400
+    for (let i = 0; i < 400; i++) {
+      const x = Math.floor(rng() * 3000);
+      const y = Math.floor(rng() * 3000);
+      const a = (0.15 + rng() * 0.45).toFixed(2);
+      const warm = rng() > 0.6;
+      const color = warm
+        ? `rgba(255,240,220,${a})`
+        : `rgba(220,230,255,${a})`;
+      fine.push(`${x}px ${y}px ${color}`);
+    }
+    // Medium blue-white stars — reduced from 120 to 80
+    for (let i = 0; i < 80; i++) {
+      const x = Math.floor(rng() * 3000);
+      const y = Math.floor(rng() * 3000);
+      const a = (0.4 + rng() * 0.5).toFixed(2);
+      medium.push(`${x}px ${y}px rgba(190,210,255,${a})`);
+    }
+    // Larger visible stars — reduced from 52 to 25
+    for (let i = 0; i < 25; i++) {
+      const x = Math.floor(rng() * 3000);
+      const y = Math.floor(rng() * 3000);
+      const a = (0.55 + rng() * 0.45).toFixed(2);
+      large.push(`${x}px ${y}px rgba(225,238,255,${a})`);
+    }
+
+    return {
+      fine: fine.join(","),
+      medium: medium.join(","),
+      large: large.join(","),
+    };
+  }, []);
+}
+
+// Multi-layered nebula/galaxy background using stacked radial gradients.
+// Builds a deep-space scene with: base gradient, nebula clouds, galaxy
+// wisps, dust lanes, and a centered backlight glow behind the globe.
+// Consolidated from 20 → 12 gradients. Merged overlapping layers to reduce
+// per-frame rasterization cost. Backlight uses a single 4-stop gradient
+// instead of 3 separate ones; secondary wisps folded into major nebulae.
+const SPACE_BACKGROUND = [
+  // ── Backlight glow (merged 3 → 1) ──
+  "radial-gradient(circle at 50% 50%, rgba(180,225,255,0.18) 0%, rgba(80,200,245,0.28) 10%, rgba(40,120,180,0.08) 28%, transparent 45%)",
+
+  // ── 4 corner nebulae ──
+  "radial-gradient(ellipse at 8% 12%, rgba(30,100,200,0.32) 0%, rgba(20,70,150,0.12) 25%, transparent 50%)",
+  "radial-gradient(ellipse at 88% 82%, rgba(20,160,180,0.28) 0%, rgba(12,100,130,0.10) 28%, transparent 52%)",
+  "radial-gradient(ellipse at 82% 8%, rgba(100,50,160,0.26) 0%, rgba(65,35,120,0.10) 22%, transparent 48%)",
+  "radial-gradient(ellipse at 12% 88%, rgba(30,70,160,0.26) 0%, rgba(18,45,110,0.10) 24%, transparent 48%)",
+
+  // ── Edge wisps (merged 4 → 2) ──
+  "radial-gradient(ellipse at 3% 45%, rgba(35,170,195,0.15) 0%, transparent 28%), radial-gradient(ellipse at 45% 2%, rgba(28,65,140,0.16) 0%, transparent 30%)",
+  "radial-gradient(ellipse at 95% 45%, rgba(65,38,125,0.12) 0%, transparent 25%), radial-gradient(ellipse at 55% 95%, rgba(22,120,150,0.13) 0%, transparent 26%)",
+
+  // ── Galaxy cluster hints ──
+  "radial-gradient(ellipse at 90% 22%, rgba(75,115,185,0.14) 0%, transparent 20%), radial-gradient(ellipse at 25% 70%, rgba(55,105,165,0.12) 0%, transparent 18%)",
+
+  // ── Atmosphere + vignette (merged) ──
+  "radial-gradient(ellipse at 50% 40%, rgba(12,30,65,0.45) 0%, rgba(8,18,40,0.20) 45%, transparent 75%)",
+  "radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(2,4,10,0.50) 100%)",
+
+  // ── Base deep space ──
+  "radial-gradient(ellipse at 40% 35%, #0b1626 0%, #070e1c 25%, #050a15 50%, #03060e 75%, #020407 100%)",
+].join(",");
+
+type GlobeMode = "flags" | "performance";
+
+function useContainerSize(ref: React.RefObject<HTMLDivElement | null>) {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    let rafId = 0;
+    let pendingW = 0;
+    let pendingH = 0;
+    const ro = new ResizeObserver(([entry]) => {
+      pendingW = Math.floor(entry.contentRect.width);
+      pendingH = Math.floor(entry.contentRect.height);
+      // Coalesce to 1 React update per frame; skip no-ops
+      if (!rafId) {
+        rafId = requestAnimationFrame(() => {
+          rafId = 0;
+          setSize(prev =>
+            prev.width === pendingW && prev.height === pendingH
+              ? prev
+              : { width: pendingW, height: pendingH }
+          );
+        });
+      }
+    });
+    ro.observe(el);
+    return () => { cancelAnimationFrame(rafId); ro.disconnect(); };
+  }, [ref]);
+  return size;
+}
 
 const Global = () => {
-  const { data: indices = [], isLoading } = useIndices();
-  
-  const regions = [
-    { name: 'North America', markets: ['United States', 'Canada'] },
-    { name: 'Europe', markets: ['United Kingdom', 'Germany', 'France', 'Europe'] },
-    { name: 'Asia-Pacific', markets: ['Japan', 'China', 'Hong Kong', 'Australia'] },
-  ];
-  
+  const { data: indices = [] } = useIndices();
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [mode, setMode] = useState<GlobeMode>("flags");
+  const stars = useStarfield();
+
+  const leftRef = useRef<HTMLDivElement | null>(null);
+  const { width: leftW, height: leftH } = useContainerSize(leftRef);
+
+  // Lock page scroll
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  // Build performance map from index data.
+  // Uses a ref to preserve object identity when values haven't changed —
+  // prevents downstream getCapColor callback recreation on every React Query refetch.
+  const prevPerfMapRef = useRef<Record<string, number>>({});
+  const performanceMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const idx of indices) {
+      const iso = REGION_TO_ISO[idx.region];
+      if (iso) map[iso] = idx.changePercent;
+    }
+    const prev = prevPerfMapRef.current;
+    const keys = Object.keys(map);
+    if (
+      keys.length === Object.keys(prev).length &&
+      keys.every(k => prev[k] === map[k])
+    ) {
+      return prev; // same data → same reference → no callback cascade
+    }
+    prevPerfMapRef.current = map;
+    return map;
+  }, [indices]);
+
+  const handleCountryClick = useCallback((iso2: string) => {
+    setSelectedCountry(iso2);
+  }, []);
+
+  const handleClose = useCallback(() => {
+    setSelectedCountry(null);
+  }, []);
+
   return (
-    <PageLayout title="Global Markets">
-      <div className="grid grid-cols-1 gap-8">
-        <div className="bg-card rounded-lg p-6 shadow">
-          <div className="flex items-center gap-3 mb-4">
-            <Globe className="h-6 w-6 text-primary" />
-            <h2 className="text-xl font-semibold">World Markets Overview</h2>
+    <div className="h-screen flex flex-col bg-background text-foreground">
+      {/* Header Bar */}
+      <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-border bg-card/80 backdrop-blur-sm">
+        <div className="flex items-center gap-2">
+          <GlobeIcon className="h-5 w-5 text-primary" />
+          <h1 className="text-base font-semibold">Global Investment Hub</h1>
+        </div>
+        <div className="flex items-center gap-3">
+          {/* Mode Toggle */}
+          <div className="flex rounded-md border border-border overflow-hidden text-xs">
+            <button
+              className={cn(
+                "px-3 py-1 transition-colors",
+                mode === "flags"
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-muted"
+              )}
+              onClick={() => setMode("flags")}
+            >
+              Flags
+            </button>
+            <button
+              className={cn(
+                "px-3 py-1 transition-colors",
+                mode === "performance"
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-muted"
+              )}
+              onClick={() => setMode("performance")}
+            >
+              Performance
+            </button>
           </div>
-          
-          {isLoading ? (
-            <p className="text-muted-foreground">Loading indices…</p>
-          ) : indices.length === 0 ? (
-            <p className="text-muted-foreground">No index data available. Run a market sync to populate.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-              {regions.map((region) => {
-                const regionIndices = indices.filter(i => region.markets.includes(i.region));
-                return (
-                  <div key={region.name} className="border rounded-lg p-4">
-                    <h3 className="font-semibold text-lg mb-3">{region.name}</h3>
-                    <ul className="space-y-3">
-                      {regionIndices.length === 0 ? (
-                        <li className="text-muted-foreground text-sm">No data</li>
-                      ) : (
-                        regionIndices.map((index) => (
-                          <li key={index.symbol} className="flex justify-between items-center py-1 border-b border-border/50 last:border-0">
-                            <div className="flex flex-col">
-                              <span className="font-medium text-sm flex items-center gap-1.5">
-                                <Flag code={index.region} size={27} />
-                                {index.name}
-                              </span>
-                              <span className="text-xs text-muted-foreground">{index.region}</span>
-                            </div>
-                            <div className="flex flex-col items-end">
-                              <span className="font-medium text-sm">
-                                {index.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                              </span>
-                              <span className={cn(
-                                "flex items-center text-xs",
-                                index.changePercent >= 0 ? "text-success" : "text-danger"
-                              )}>
-                                {index.changePercent >= 0 ?
-                                  <ArrowUpIcon className="h-3 w-3 mr-0.5" /> :
-                                  <ArrowDownIcon className="h-3 w-3 mr-0.5" />
-                                }
-                                {index.change >= 0 ? '+' : ''}{index.change.toFixed(2)} ({index.changePercent >= 0 ? '+' : ''}{index.changePercent.toFixed(2)}%)
-                              </span>
-                            </div>
-                          </li>
-                        ))
-                      )}
-                    </ul>
-                  </div>
-                );
-              })}
-            </div>
+        </div>
+      </div>
+
+      {/* 50/50 Split */}
+      <div className="flex-1 flex min-h-0">
+        {/* Left — Globe with realistic space background */}
+        <div ref={leftRef} className="w-1/2 relative overflow-hidden">
+          {/* Nebula / galaxy background — GPU-promoted, non-interactive */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: SPACE_BACKGROUND,
+              willChange: "transform",       // GPU compositor layer
+              contain: "strict",             // paint containment
+            }}
+          />
+
+          {/* Star field — 3 consolidated layers, GPU-promoted, static */}
+          <div
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{
+              width: 1,
+              height: 1,
+              boxShadow: stars.fine,
+              willChange: "transform",
+              contain: "strict",
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{
+              width: 2,
+              height: 2,
+              borderRadius: "50%",
+              boxShadow: stars.medium,
+              willChange: "transform",
+              contain: "strict",
+            }}
+          />
+          <div
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{
+              width: 3,
+              height: 3,
+              borderRadius: "50%",
+              boxShadow: stars.large,
+              willChange: "transform",
+              contain: "strict",
+            }}
+          />
+          {/* Globe */}
+          {leftW > 0 && leftH > 0 && (
+            <GlobeView
+              width={leftW}
+              height={leftH}
+              mode={mode}
+              performanceMap={performanceMap}
+              selectedCountry={selectedCountry}
+              onCountryClick={handleCountryClick}
+            />
           )}
-          
-          {!isLoading && indices.length > 0 && (
-            <p className="text-xs text-muted-foreground mt-4">
-              Last updated: {new Date(indices[0].lastUpdated).toLocaleString()}
-            </p>
+        </div>
+
+        {/* Right — Panel */}
+        <div className="w-1/2 border-l border-border bg-card overflow-hidden">
+          {selectedCountry ? (
+            <CountryPanel
+              key={selectedCountry}
+              iso2={selectedCountry}
+              onClose={handleClose}
+            />
+          ) : (
+            <GlobalSummary onCountryClick={handleCountryClick} />
           )}
         </div>
       </div>
-    </PageLayout>
+    </div>
   );
 };
 
