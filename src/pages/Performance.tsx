@@ -1,57 +1,149 @@
-
-import React from 'react';
+// src/pages/Performance.tsx
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { TrendingUp } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { usePortfolio } from '@/hooks/usePortfolio';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { PerformanceKpiGrid } from '@/components/performance/PerformanceKpiGrid';
+import { EquityCurveChart } from '@/components/performance/EquityCurveChart';
+import { DrawdownChart } from '@/components/performance/DrawdownChart';
+import { PerformanceTable } from '@/components/performance/PerformanceTable';
+import { AttributionSection } from '@/components/performance/AttributionSection';
+import { CorrelationMatrix } from '@/components/performance/CorrelationMatrix';
+import { usePortfolioPrices, useHoldingSectors, BENCHMARK_LABELS } from '@/hooks/usePortfolioPrices';
+import { usePerformanceMetrics } from '@/hooks/usePerformanceMetrics';
+import type { BenchmarkKey, DateRange, TableMode, AttributionGrouping } from '@/lib/performanceTypes';
 
-const Performance = () => {
-  const { data: holdings = [], isLoading } = usePortfolio();
+const DATE_RANGE_OPTIONS: { label: string; value: DateRange }[] = [
+  { label: '1Y', value: '1Y' },
+  { label: '3Y', value: '3Y' },
+  { label: 'Max', value: 'Max' },
+];
 
-  if (isLoading) {
+export default function Performance() {
+  const [benchmark, setBenchmark] = useState<BenchmarkKey>('SPY');
+  const [dateRange, setDateRange] = useState<DateRange>('1Y');
+  const [tableMode, setTableMode] = useState<TableMode>('returns');
+  const [attributionGrouping, setAttributionGrouping] = useState<AttributionGrouping>('sector');
+
+  const portfolioData = usePortfolioPrices(benchmark);
+  const sectorMap = useHoldingSectors(portfolioData.holdings.map(h => h.ticker));
+
+  const { equityCurve, drawdownData, periods, summary, attribution, correlations, isLoading, error } =
+    usePerformanceMetrics({ portfolioData, benchmark, dateRange, attributionGrouping, sectorMap });
+
+  const holdingSymbols = portfolioData.holdings.map(h => h.ticker);
+
+  // ── Empty state ────────────────────────────────────────────────────────────
+  if (!isLoading && portfolioData.holdings.length === 0) {
     return (
       <PageLayout title="Performance">
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading performance data…</p>
-        </div>
-      </PageLayout>
-    );
-  }
-
-  if (holdings.length === 0) {
-    return (
-      <PageLayout title="Performance">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <p className="text-muted-foreground text-lg">No portfolio holdings yet</p>
-            <p className="text-muted-foreground text-sm mt-2">Add holdings to your portfolio to see performance analytics.</p>
+        <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
+          <TrendingUp className="h-12 w-12 text-muted-foreground/40" />
+          <div>
+            <p className="text-lg font-medium">No portfolio holdings yet</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              Add holdings to your portfolio to see performance analytics.
+            </p>
           </div>
+          <Button asChild variant="outline">
+            <Link to="/portfolio">Go to Portfolio</Link>
+          </Button>
         </div>
       </PageLayout>
     );
   }
 
-  const totalCostBasis = holdings.reduce((sum: number, h: any) => sum + h.shares * h.avg_cost_basis, 0);
+  // ── Error state ────────────────────────────────────────────────────────────
+  if (error) {
+    return (
+      <PageLayout title="Performance">
+        <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
+          <p className="text-destructive font-medium">Failed to load performance data</p>
+          <p className="text-sm text-muted-foreground">{error.message}</p>
+          <Button onClick={() => window.location.reload()} variant="outline">Retry</Button>
+        </div>
+      </PageLayout>
+    );
+  }
 
   return (
     <PageLayout title="Performance">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-3">
-          <div className="bg-card rounded-lg p-6 shadow">
-            <h2 className="text-xl font-semibold mb-4">Portfolio Summary</h2>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Total Cost Basis</p>
-                <p className="text-2xl font-bold">${totalCostBasis.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Holdings</p>
-                <p className="text-xl font-bold">{holdings.length} positions</p>
-              </div>
-            </div>
+      {/* ── Controls bar ──────────────────────────────────────────────── */}
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-2">
+          {/* Benchmark selector */}
+          <Select value={benchmark} onValueChange={v => setBenchmark(v as BenchmarkKey)}>
+            <SelectTrigger className="w-48 h-8 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.entries(BENCHMARK_LABELS) as [BenchmarkKey, string][]).map(([key, label]) => (
+                <SelectItem key={key} value={key}>{label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Date range pills */}
+          <div className="flex rounded-md border border-border overflow-hidden">
+            {DATE_RANGE_OPTIONS.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => setDateRange(opt.value)}
+                className={`px-3 py-1 text-xs font-medium transition-colors ${
+                  dateRange === opt.value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-muted text-muted-foreground'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
           </div>
         </div>
       </div>
+
+      <div className="space-y-6">
+        {/* ── KPI strip ──────────────────────────────────────────────── */}
+        <PerformanceKpiGrid summary={summary} isLoading={isLoading} />
+
+        {/* ── Charts row ─────────────────────────────────────────────── */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <EquityCurveChart
+            data={equityCurve}
+            benchmarkLabel={BENCHMARK_LABELS[benchmark]}
+            isLoading={isLoading}
+          />
+          <DrawdownChart
+            data={drawdownData}
+            benchmarkLabel={BENCHMARK_LABELS[benchmark]}
+            isLoading={isLoading}
+          />
+        </div>
+
+        {/* ── Performance table ──────────────────────────────────────── */}
+        <PerformanceTable
+          rows={periods}
+          mode={tableMode}
+          onModeChange={setTableMode}
+          isLoading={isLoading}
+        />
+
+        {/* ── Attribution ────────────────────────────────────────────── */}
+        {attribution.length > 0 && (
+          <AttributionSection
+            rows={attribution}
+            grouping={attributionGrouping}
+            onGroupingChange={setAttributionGrouping}
+          />
+        )}
+
+        {/* ── Correlation matrix ─────────────────────────────────────── */}
+        {holdingSymbols.length >= 2 && correlations.length > 0 && (
+          <CorrelationMatrix entries={correlations} symbols={holdingSymbols} />
+        )}
+      </div>
     </PageLayout>
   );
-};
-
-export default Performance;
+}
