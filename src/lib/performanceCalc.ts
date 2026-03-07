@@ -182,8 +182,8 @@ export function computePeriodMetrics(
   isAnnualized: boolean,
 ): PeriodPerformance {
   const n = portValues.length;
-  const portReturn = n > 1 ? (portValues[n - 1] / portValues[0] - 1) * 100 : 0;
-  const benchReturn = n > 1 ? (benchValues[n - 1] / benchValues[0] - 1) * 100 : 0;
+  const portReturn  = n > 1 && portValues[0]  > 0 ? (portValues[n - 1]  / portValues[0]  - 1) * 100 : 0;
+  const benchReturn = n > 1 && benchValues[0] > 0 ? (benchValues[n - 1] / benchValues[0] - 1) * 100 : 0;
   const activeReturn = portReturn - benchReturn;
 
   const tradingDays = n - 1;
@@ -202,9 +202,10 @@ export function computePeriodMetrics(
     : portReturn;
   const sharpe = vol > 0 ? annualizedRetForSharpe / vol : 0;
 
-  const negRets = portLogRets.filter(r => r < 0);
-  const downsideDev = negRets.length > 1
-    ? Math.sqrt(negRets.reduce((s, r) => s + r ** 2, 0) / negRets.length) * Math.sqrt(252) * 100
+  const downsideDev = portLogRets.length > 1
+    ? Math.sqrt(
+        portLogRets.reduce((s, r) => s + (r < 0 ? r ** 2 : 0), 0) / portLogRets.length
+      ) * Math.sqrt(252) * 100
     : vol;
   const sortino = downsideDev > 0 ? annualizedRetForSharpe / downsideDev : 0;
 

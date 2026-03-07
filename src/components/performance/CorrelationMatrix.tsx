@@ -68,7 +68,7 @@ export function CorrelationMatrix({ entries, symbols }: CorrelationMatrixProps) 
                               <div
                                 className={cn(
                                   'w-14 h-10 flex items-center justify-center rounded font-mono font-medium cursor-default transition-opacity hover:opacity-80',
-                                  corrToColor(corr ?? 0),
+                                  corr !== null ? corrToColor(corr) : 'bg-muted/30 text-muted-foreground',
                                 )}
                               >
                                 {corr !== null ? corr.toFixed(2) : '—'}

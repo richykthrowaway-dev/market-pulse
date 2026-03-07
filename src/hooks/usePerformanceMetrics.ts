@@ -34,8 +34,12 @@ export function usePerformanceMetrics({
 
     if (holdings.length === 0 || Object.keys(priceMap).length === 0) return empty;
 
-    // 1. Portfolio daily values
-    const portValues = buildPortfolioValues(holdings, priceMap);
+    // 1. Portfolio daily values — use holdings-only sub-map to avoid
+    //    benchmark dates polluting the date union and skewing Since Inception
+    const holdingPriceMap = Object.fromEntries(
+      holdings.map(h => [h.ticker, priceMap[h.ticker] ?? {}])
+    );
+    const portValues = buildPortfolioValues(holdings, holdingPriceMap);
     if (portValues.length < 2) return empty;
 
     // 2. Equity curve + drawdowns (sliced to selected date range)

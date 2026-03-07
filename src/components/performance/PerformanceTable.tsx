@@ -139,7 +139,7 @@ export function PerformanceTable({ rows, mode, onModeChange, isLoading }: Perfor
               ))}
               {sorted.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                  <td colSpan={mode === 'risk' ? 8 : 6} className="px-4 py-8 text-center text-muted-foreground text-sm">
                     Not enough data to compute performance periods.
                   </td>
                 </tr>

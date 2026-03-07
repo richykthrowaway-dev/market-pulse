@@ -59,7 +59,10 @@ export function usePortfolioPrices(benchmark: BenchmarkKey): PortfolioPricesResu
 
   // Determine which benchmark symbols we need
   const benchmarkConfig = BENCHMARK_SYMBOLS[benchmark];
-  const benchmarkSymbols = Array.isArray(benchmarkConfig) ? benchmarkConfig : [benchmarkConfig];
+  const benchmarkSymbols = useMemo(
+    () => (Array.isArray(benchmarkConfig) ? benchmarkConfig : [benchmarkConfig]),
+    [benchmarkConfig],
+  );
 
   // Symbols to fetch: unique holdings + benchmark symbols (deduplicated)
   const allSymbols = useMemo(() => {

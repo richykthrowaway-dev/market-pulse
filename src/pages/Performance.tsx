@@ -1,5 +1,5 @@
 // src/pages/Performance.tsx
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { TrendingUp } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
@@ -28,7 +28,11 @@ export default function Performance() {
   const [attributionGrouping, setAttributionGrouping] = useState<AttributionGrouping>('sector');
 
   const portfolioData = usePortfolioPrices(benchmark);
-  const sectorMap = useHoldingSectors(portfolioData.holdings.map(h => h.ticker));
+  const holdingTickers = useMemo(
+    () => portfolioData.holdings.map(h => h.ticker),
+    [portfolioData.holdings],
+  );
+  const sectorMap = useHoldingSectors(holdingTickers);
 
   const { equityCurve, drawdownData, periods, summary, attribution, correlations, isLoading, error } =
     usePerformanceMetrics({ portfolioData, benchmark, dateRange, attributionGrouping, sectorMap });

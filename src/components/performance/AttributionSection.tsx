@@ -56,7 +56,7 @@ export function AttributionSection({ rows, grouping, onGroupingChange }: Attribu
               </tr>
             </thead>
             <tbody>
-              {rows
+              {[...rows]
                 .sort((a, b) => Math.abs(b.contributionReturnPct) - Math.abs(a.contributionReturnPct))
                 .map(row => (
                   <tr key={row.segmentName} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
