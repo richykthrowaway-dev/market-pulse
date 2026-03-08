@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { NewsItem, formatDate } from '@/utils/stocksApi';
 import { cn } from '@/lib/utils';
 import { ExternalLinkIcon, ClockIcon } from 'lucide-react';
+import { StockLogo } from '@/components/stocks/StockLogo';
 
 interface NewsCardProps {
   news: NewsItem[];
@@ -12,12 +13,24 @@ interface NewsCardProps {
 }
 
 export function NewsCard({ news, watchlistSymbols, className }: NewsCardProps) {
-  // Filter news by watchlist symbols if provided
-  const filteredNews = watchlistSymbols?.length
-    ? news.filter((item) =>
-        item.relatedSymbols?.some((s) => watchlistSymbols.includes(s))
-      )
+  // null = show all; a symbol string = filter to that symbol only
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+  // If the active filter symbol is removed from the watchlist, clear it
+  useEffect(() => {
+    if (activeFilter && watchlistSymbols && !watchlistSymbols.includes(activeFilter)) {
+      setActiveFilter(null);
+    }
+  }, [watchlistSymbols, activeFilter]);
+
+  // First narrow to watchlist symbols, then apply chip filter
+  const watchlistNews = watchlistSymbols?.length
+    ? news.filter((item) => item.relatedSymbols?.some((s) => watchlistSymbols.includes(s)))
     : news;
+
+  const filteredNews = activeFilter
+    ? watchlistNews.filter((item) => item.relatedSymbols?.includes(activeFilter))
+    : watchlistNews;
 
   return (
     <section className={cn('space-y-4', className)} aria-label="Market News">
@@ -32,29 +45,45 @@ export function NewsCard({ news, watchlistSymbols, className }: NewsCardProps) {
         </span>
       </div>
 
-      {/* Watchlist filter chips */}
+      {/* Watchlist filter chips — clickable */}
       {watchlistSymbols && watchlistSymbols.length > 0 && (
-        <div className="flex flex-wrap gap-1.5" role="list" aria-label="Filtered symbols">
+        <div className="flex flex-wrap gap-1.5" role="list" aria-label="Filter by symbol">
           {watchlistSymbols.map((symbol) => {
-            const count = news.filter((n) =>
-              n.relatedSymbols?.includes(symbol)
-            ).length;
+            const count = watchlistNews.filter((n) => n.relatedSymbols?.includes(symbol)).length;
+            const isActive = activeFilter === symbol;
             return (
-              <Badge
+              <button
                 key={symbol}
-                variant={count > 0 ? 'default' : 'outline'}
+                onClick={() => setActiveFilter(isActive ? null : symbol)}
+                aria-pressed={isActive}
+                disabled={count === 0}
                 className={cn(
-                  'text-xs font-mono-num transition-all duration-200',
-                  count > 0 && 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20'
+                  'inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-medium transition-all duration-150',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+                  isActive
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : count > 0
+                      ? 'bg-primary/10 text-primary border-primary/30 hover:bg-primary/20 cursor-pointer'
+                      : 'bg-muted/40 text-muted-foreground border-border/40 cursor-not-allowed opacity-50',
                 )}
               >
                 {symbol}
                 {count > 0 && (
-                  <span className="ml-1 opacity-60">{count}</span>
+                  <span className={cn('tabular-nums', isActive ? 'opacity-80' : 'opacity-60')}>
+                    {count}
+                  </span>
                 )}
-              </Badge>
+              </button>
             );
           })}
+          {activeFilter && (
+            <button
+              onClick={() => setActiveFilter(null)}
+              className="inline-flex items-center gap-1 rounded-full border border-border/60 bg-muted/60 px-2.5 py-0.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-150"
+            >
+              Clear filter ×
+            </button>
+          )}
         </div>
       )}
 
@@ -84,17 +113,13 @@ export function NewsCard({ news, watchlistSymbols, className }: NewsCardProps) {
                 aria-label={`Read article: ${item.title}`}
               >
                 <div className="flex gap-4">
-                  {/* Image thumbnail */}
-                  {item.imageUrl && (
-                    <div className="hidden sm:block flex-shrink-0 w-24 h-20 rounded-lg overflow-hidden bg-muted">
-                      <img
-                        src={item.imageUrl}
-                        alt={`Illustration for: ${item.title}`}
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.display = 'none';
-                        }}
-                        className="h-full w-full object-cover"
+                  {/* Company logo for first related symbol */}
+                  {item.relatedSymbols && item.relatedSymbols.length > 0 && (
+                    <div className="hidden sm:flex flex-shrink-0 items-center justify-center w-12 h-12 rounded-xl overflow-hidden bg-muted/40 border border-border/40 self-center">
+                      <StockLogo
+                        ticker={item.relatedSymbols[0]}
+                        name={item.relatedSymbols[0]}
+                        size="md"
                       />
                     </div>
                   )}
@@ -110,11 +135,13 @@ export function NewsCard({ news, watchlistSymbols, className }: NewsCardProps) {
                       )}
                     </div>
 
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                      {item.summary}
-                    </p>
+                    {item.summary && (
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
+                        {item.summary}
+                      </p>
+                    )}
 
-                    <div className="flex items-center justify-between gap-2">
+                    <div className={cn('flex items-center justify-between gap-2', item.summary ? '' : 'mt-1.5')}>
                       <div className="flex items-center gap-2 flex-wrap">
                         {item.relatedSymbols?.slice(0, 4).map((symbol) => (
                           <Badge
@@ -129,13 +156,18 @@ export function NewsCard({ news, watchlistSymbols, className }: NewsCardProps) {
                           {item.source}
                         </span>
                       </div>
-                      <time
-                        dateTime={item.publishedAt.toISOString()}
-                        className="flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap"
-                      >
-                        <ClockIcon className="h-3 w-3" />
-                        {formatDate(item.publishedAt)}
-                      </time>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[9px] text-muted-foreground/50 font-medium tracking-wide uppercase">
+                          {item.id.startsWith('db-') ? 'Yahoo Finance' : 'Finnhub'}
+                        </span>
+                        <time
+                          dateTime={item.publishedAt.toISOString()}
+                          className="flex items-center gap-1 text-[10px] text-muted-foreground whitespace-nowrap"
+                        >
+                          <ClockIcon className="h-3 w-3" />
+                          {formatDate(item.publishedAt)}
+                        </time>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -22,13 +22,13 @@ export function TradingViewHeatmap({
   height = 500,
   className,
 }: TradingViewHeatmapProps) {
-  const { resolvedTheme } = useTradingView();
+  const { resolvedTheme, mounted } = useTradingView();
   const containerRef = useRef<HTMLDivElement>(null);
   const containerId = useRef(`tv-heatmap-${++heatmapIdCounter}`);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || !mounted) return;
     container.innerHTML = '';
 
     const widget = document.createElement('div');
@@ -63,7 +63,7 @@ export function TradingViewHeatmap({
     container.appendChild(widget);
 
     return () => { container.innerHTML = ''; };
-  }, [resolvedTheme, dataSource, grouping, blockSize, blockColor, width, height]);
+  }, [resolvedTheme, dataSource, grouping, blockSize, blockColor, width, height, mounted]);
 
   return <div ref={containerRef} id={containerId.current} className={className} />;
 }

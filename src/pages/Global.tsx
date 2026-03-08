@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { useIndices } from "@/hooks/useSupabaseData";
 import { REGION_TO_ISO } from "@/data/countryMeta";
 import { cn } from "@/lib/utils";
-import { Globe as GlobeIcon } from "lucide-react";
-import GlobeView from "@/components/global/GlobeView";
+import { Globe as GlobeIcon, ArrowLeft, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+const GlobeView = lazy(() => import("@/components/global/GlobeView"));
 import CountryPanel from "@/components/global/CountryPanel";
 import GlobalSummary from "@/components/global/GlobalSummary";
 
@@ -21,43 +22,47 @@ function seededRandom(seed: number) {
 
 function useStarfield() {
   return useMemo(() => {
-    const rng = seededRandom(42);
-    // Consolidated into 3 layers (down from 5) — fewer DOM elements, fewer paints
-    const fine: string[] = [];   // 1px — combines old tiny + small
-    const medium: string[] = []; // 2px
-    const large: string[] = [];  // 3px — combines old large + bright
+    const SIZE = 3000;
+    const canvas = document.createElement("canvas");
+    canvas.width = SIZE;
+    canvas.height = SIZE;
+    const ctx = canvas.getContext("2d")!;
 
-    // Fine stars — reduced from 900 to 400
+    const rng = seededRandom(42);
+
+    // Fine 1px stars (same positions/colors as before)
     for (let i = 0; i < 400; i++) {
-      const x = Math.floor(rng() * 3000);
-      const y = Math.floor(rng() * 3000);
-      const a = (0.15 + rng() * 0.45).toFixed(2);
+      const x = Math.floor(rng() * SIZE);
+      const y = Math.floor(rng() * SIZE);
+      const a = 0.15 + rng() * 0.45;
       const warm = rng() > 0.6;
-      const color = warm
+      ctx.fillStyle = warm
         ? `rgba(255,240,220,${a})`
         : `rgba(220,230,255,${a})`;
-      fine.push(`${x}px ${y}px ${color}`);
+      ctx.fillRect(x, y, 1, 1);
     }
-    // Medium blue-white stars — reduced from 120 to 80
+    // Medium 2px stars
     for (let i = 0; i < 80; i++) {
-      const x = Math.floor(rng() * 3000);
-      const y = Math.floor(rng() * 3000);
-      const a = (0.4 + rng() * 0.5).toFixed(2);
-      medium.push(`${x}px ${y}px rgba(190,210,255,${a})`);
+      const x = Math.floor(rng() * SIZE);
+      const y = Math.floor(rng() * SIZE);
+      const a = 0.4 + rng() * 0.5;
+      ctx.fillStyle = `rgba(190,210,255,${a})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 1, 0, Math.PI * 2);
+      ctx.fill();
     }
-    // Larger visible stars — reduced from 52 to 25
+    // Large 3px stars
     for (let i = 0; i < 25; i++) {
-      const x = Math.floor(rng() * 3000);
-      const y = Math.floor(rng() * 3000);
-      const a = (0.55 + rng() * 0.45).toFixed(2);
-      large.push(`${x}px ${y}px rgba(225,238,255,${a})`);
+      const x = Math.floor(rng() * SIZE);
+      const y = Math.floor(rng() * SIZE);
+      const a = 0.55 + rng() * 0.45;
+      ctx.fillStyle = `rgba(225,238,255,${a})`;
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+      ctx.fill();
     }
 
-    return {
-      fine: fine.join(","),
-      medium: medium.join(","),
-      large: large.join(","),
-    };
+    return canvas.toDataURL("image/png");
   }, []);
 }
 
@@ -124,6 +129,7 @@ function useContainerSize(ref: React.RefObject<HTMLDivElement | null>) {
 }
 
 const Global = () => {
+  const navigate = useNavigate();
   const { data: indices = [] } = useIndices();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [mode, setMode] = useState<GlobeMode>("flags");
@@ -175,6 +181,13 @@ const Global = () => {
       {/* Header Bar */}
       <div className="shrink-0 flex items-center justify-between px-4 py-2 border-b border-border bg-card/80 backdrop-blur-sm">
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigate("/")}
+            className="p-1.5 -ml-1 rounded-md hover:bg-muted transition-colors"
+            aria-label="Back to dashboard"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
           <GlobeIcon className="h-5 w-5 text-primary" />
           <h1 className="text-base font-semibold">Global Investment Hub</h1>
         </div>
@@ -221,49 +234,34 @@ const Global = () => {
             }}
           />
 
-          {/* Star field — 3 consolidated layers, GPU-promoted, static */}
+          {/* Star field — single pre-rendered canvas image, zero box-shadow compositing */}
           <div
-            className="absolute top-0 left-0 pointer-events-none"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              width: 1,
-              height: 1,
-              boxShadow: stars.fine,
+              backgroundImage: `url(${stars})`,
+              backgroundSize: "3000px 3000px",
               willChange: "transform",
               contain: "strict",
             }}
           />
-          <div
-            className="absolute top-0 left-0 pointer-events-none"
-            style={{
-              width: 2,
-              height: 2,
-              borderRadius: "50%",
-              boxShadow: stars.medium,
-              willChange: "transform",
-              contain: "strict",
-            }}
-          />
-          <div
-            className="absolute top-0 left-0 pointer-events-none"
-            style={{
-              width: 3,
-              height: 3,
-              borderRadius: "50%",
-              boxShadow: stars.large,
-              willChange: "transform",
-              contain: "strict",
-            }}
-          />
-          {/* Globe */}
+          {/* Globe — lazy-loaded so the 5MB Three.js bundle doesn't block initial render */}
           {leftW > 0 && leftH > 0 && (
-            <GlobeView
-              width={leftW}
-              height={leftH}
-              mode={mode}
-              performanceMap={performanceMap}
-              selectedCountry={selectedCountry}
-              onCountryClick={handleCountryClick}
-            />
+            <Suspense
+              fallback={
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary/60" />
+                </div>
+              }
+            >
+              <GlobeView
+                width={leftW}
+                height={leftH}
+                mode={mode}
+                performanceMap={performanceMap}
+                selectedCountry={selectedCountry}
+                onCountryClick={handleCountryClick}
+              />
+            </Suspense>
           )}
         </div>
 

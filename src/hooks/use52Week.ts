@@ -29,7 +29,8 @@ export function use52Week(tickers: string[], enabled = true) {
     queryKey: ['52week-ranges', hash],
     queryFn: () => fetch52Week(tickers),
     enabled: enabled && tickers.length > 0,
-    staleTime: 60 * 60 * 1000, // 1 hour
+    staleTime: 60 * 60 * 1000,      // 1 hour — Finnhub data is end-of-day
+    gcTime: 4 * 60 * 60 * 1000,    // 4 hours — keep in cache across page navigations
     refetchOnWindowFocus: false,
     retry: 2,
     retryDelay: 2000,

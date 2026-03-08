@@ -301,6 +301,7 @@ export function AllocationExplorer({
                 minAngle={2}
                 onClick={!isPositionMode ? (_, idx) => handleGroupClick(sorted[idx].group) : undefined}
                 style={!isPositionMode ? { cursor: 'pointer' } : undefined}
+                activeShape={false}
               >
                 {sorted.map((row, i) => (
                   <Cell

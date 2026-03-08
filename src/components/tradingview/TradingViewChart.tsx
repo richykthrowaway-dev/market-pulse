@@ -34,6 +34,9 @@ export function TradingViewChart({
   hideTopToolbar,
   hideSideToolbar,
   hideVolume,
+  hideLegend,
+  chartStyle,
+  overrides,
   locale,
   saveImage,
   studies,
@@ -41,7 +44,7 @@ export function TradingViewChart({
   'aria-label': ariaLabel,
 }: TradingViewChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { resolvedTheme, defaultConfig } = useTradingView();
+  const { resolvedTheme, defaultConfig, mounted } = useTradingView();
 
   // Stable unique ID per instance
   const containerId = useMemo(() => `tradingview_widget_${++widgetIdCounter}`, []);
@@ -55,6 +58,10 @@ export function TradingViewChart({
       allow_symbol_change: allowSymbolChange ?? defaultConfig.allowSymbolChange ?? true,
       hide_top_toolbar: hideTopToolbar ?? defaultConfig.hideTopToolbar ?? false,
       hide_side_toolbar: hideSideToolbar ?? defaultConfig.hideSideToolbar ?? false,
+      hide_volume: hideVolume ?? false,
+      hide_legend: hideLegend ?? false,
+      chart_style: chartStyle ?? '1',
+      overrides: overrides ?? undefined,
       locale: locale ?? defaultConfig.locale ?? 'en',
       save_image: saveImage ?? defaultConfig.saveImage ?? true,
       studies: studies ?? [],
@@ -63,13 +70,17 @@ export function TradingViewChart({
     [
       symbol, interval, theme, resolvedTheme, range,
       allowSymbolChange, hideTopToolbar, hideSideToolbar,
+      hideVolume, hideLegend, chartStyle,
+      // Stringify overrides so a new object with same values doesn't retrigger
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      JSON.stringify(overrides),
       locale, saveImage, studies, defaultConfig,
     ]
   );
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || !mounted) return;
 
     // Clear previous widget
     container.innerHTML = '';
@@ -83,16 +94,19 @@ export function TradingViewChart({
       interval: config.interval,
       timezone: 'Etc/UTC',
       theme: config.theme,
-      style: '1',
+      style: config.chart_style,
       locale: config.locale,
       allow_symbol_change: config.allow_symbol_change,
       hide_top_toolbar: config.hide_top_toolbar,
       hide_side_toolbar: config.hide_side_toolbar,
+      hide_volume: config.hide_volume,
+      hide_legend: config.hide_legend,
       save_image: config.save_image,
       width: '100%',
       height: '100%',
       ...(config.range ? { range: config.range } : {}),
       ...(config.studies.length ? { studies: config.studies } : {}),
+      ...(config.overrides ? { overrides: config.overrides } : {}),
       support_host: 'https://www.tradingview.com',
     });
 
@@ -107,7 +121,7 @@ export function TradingViewChart({
     return () => {
       container.innerHTML = '';
     };
-  }, [config, containerId]);
+  }, [config, containerId, mounted]);
 
   return (
     <section

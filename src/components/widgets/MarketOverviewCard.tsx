@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { useMarketReturns, buildBuckets } from '@/hooks/useMarketReturns';
@@ -10,6 +10,7 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
+  CartesianGrid,
 } from 'recharts';
 
 interface MarketOverviewCardProps {
@@ -35,7 +36,8 @@ export function MarketOverviewCard({ className }: MarketOverviewCardProps) {
   const [timeframe, setTimeframe] = useState<string>('1D');
   const { data, isLoading } = useMarketReturns(timeframe);
 
-  const buckets = data ? buildBuckets(data.returns) : [];
+  // Memoised — buildBuckets iterates 47k×22 = ~1M ops; only rerun when returns array changes
+  const buckets = useMemo(() => (data ? buildBuckets(data.returns) : []), [data?.returns]);
   const stats = data?.stats ?? { median: 0, mean: 0, up: 0, down: 0 };
 
   return (
@@ -69,31 +71,35 @@ export function MarketOverviewCard({ className }: MarketOverviewCardProps) {
           ))}
         </div>
 
-        {/* Stats row */}
+        {/* Stats rows — 2-line layout matching GuruFocus */}
         <div className="mb-2">
-          <p className="text-xs font-semibold text-card-foreground mb-1">
+          <p className="text-sm font-bold text-card-foreground mb-1">
             {TIMEFRAME_LABELS[timeframe]}
           </p>
-          <div className="flex items-center gap-6 text-xs">
-            <span>
+          {/* Row 1: Median + Up */}
+          <div className="flex items-center gap-5 text-xs mb-0.5">
+            <span className="text-muted-foreground">
               Median{' '}
-              <span className={cn('font-mono-num font-semibold', stats.median >= 0 ? 'text-success' : 'text-danger')}>
+              <span className={cn('font-semibold', stats.median >= 0 ? 'text-success' : 'text-danger')}>
                 {stats.median >= 0 ? '+' : ''}{stats.median.toFixed(2)}
               </span>
             </span>
-            <span>
+            <span className="text-muted-foreground">
               Up{' '}
-              <span className="font-mono-num font-semibold text-success">{stats.up.toLocaleString()}</span>
+              <span className="font-semibold text-success">{stats.up.toLocaleString()}</span>
             </span>
-            <span>
+          </div>
+          {/* Row 2: Mean + Down */}
+          <div className="flex items-center gap-5 text-xs">
+            <span className="text-muted-foreground">
               Mean{' '}
-              <span className={cn('font-mono-num font-semibold', stats.mean >= 0 ? 'text-success' : 'text-danger')}>
+              <span className={cn('font-semibold', stats.mean >= 0 ? 'text-success' : 'text-danger')}>
                 {stats.mean >= 0 ? '+' : ''}{stats.mean.toFixed(2)}
               </span>
             </span>
-            <span>
+            <span className="text-muted-foreground">
               Down{' '}
-              <span className="font-mono-num font-semibold text-danger">{stats.down.toLocaleString()}</span>
+              <span className="font-semibold text-danger">{stats.down.toLocaleString()}</span>
             </span>
           </div>
         </div>
@@ -109,22 +115,31 @@ export function MarketOverviewCard({ className }: MarketOverviewCardProps) {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={buckets}
-              margin={{ top: 8, right: 16, bottom: 24, left: 8 }}
-              barCategoryGap="8%"
+              margin={{ top: 8, right: 8, bottom: 24, left: 4 }}
+              barCategoryGap="0%"
             >
+              <CartesianGrid
+                vertical={false}
+                stroke="hsl(var(--border))"
+                strokeOpacity={0.5}
+              />
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={{ stroke: 'hsl(var(--border))' }}
                 tickLine={false}
-                interval={0}
-                angle={0}
+                // interval=2 → show every 3rd tick: indices 0,3,6,9,12,15,18,21
+                // maps to: -100, -8.00, -5.00, -2.00, 1.00, 4.00, 7.00, 10+
+                interval={2}
               />
               <YAxis
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={false}
                 tickLine={false}
-                width={40}
+                width={44}
+                tickFormatter={(v: number) =>
+                  v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)
+                }
               />
               <Tooltip
                 cursor={{ fill: 'hsl(var(--muted) / 0.3)' }}
@@ -141,13 +156,13 @@ export function MarketOverviewCard({ className }: MarketOverviewCardProps) {
                     bucket.from === -Infinity
                       ? '< -10%'
                       : bucket.to === Infinity
-                      ? '> 10%'
+                      ? '> +10%'
                       : `${bucket.from}% to ${bucket.to}%`;
-                  return [`${value} stocks`, rangeLabel];
+                  return [`${value.toLocaleString()} stocks`, rangeLabel];
                 }}
                 labelFormatter={() => ''}
               />
-              <Bar dataKey="count" radius={[2, 2, 0, 0]} maxBarSize={40}>
+              <Bar dataKey="count" radius={[1, 1, 0, 0]}>
                 {buckets.map((bucket, i) => {
                   const midpoint = bucket.from === -Infinity ? -11 : bucket.to === Infinity ? 11 : (bucket.from + bucket.to) / 2;
                   return (

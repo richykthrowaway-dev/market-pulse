@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,11 @@ import { Switch } from '@/components/ui/switch';
 import { Bell, Globe, Lock, User, Settings as SettingsIcon } from 'lucide-react';
 
 const Settings = () => {
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
+  const isDark = mounted && resolvedTheme === 'dark';
 
   return (
     <PageLayout title="Settings">
@@ -92,7 +96,7 @@ const Settings = () => {
                       <p className="text-sm text-muted-foreground">Switch between light and dark theme</p>
                     </div>
                     <Switch
-                      checked={theme === 'dark'}
+                      checked={isDark}
                       onCheckedChange={(checked) => setTheme(checked ? 'dark' : 'light')}
                     />
                   </div>

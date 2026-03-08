@@ -18,13 +18,13 @@ export function TradingViewEconomicCalendar({
   countryFilter,
   className,
 }: TradingViewEconomicCalendarProps) {
-  const { resolvedTheme } = useTradingView();
+  const { resolvedTheme, mounted } = useTradingView();
   const containerRef = useRef<HTMLDivElement>(null);
   const containerId = useRef(`tv-calendar-${++calendarIdCounter}`);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || !mounted) return;
     container.innerHTML = '';
 
     const widget = document.createElement('div');
@@ -42,7 +42,7 @@ export function TradingViewEconomicCalendar({
       width: typeof width === 'number' ? width : '100%',
       height,
       colorTheme: resolvedTheme,
-      isTransparent: true,
+      isTransparent: false,
       locale: 'en',
       importanceFilter,
     };
@@ -52,7 +52,7 @@ export function TradingViewEconomicCalendar({
     container.appendChild(widget);
 
     return () => { container.innerHTML = ''; };
-  }, [resolvedTheme, width, height, importanceFilter, countryFilter]);
+  }, [resolvedTheme, width, height, importanceFilter, countryFilter, mounted]);
 
   return <div ref={containerRef} id={containerId.current} className={className} />;
 }

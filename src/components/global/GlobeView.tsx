@@ -75,6 +75,7 @@ export default function GlobeView({
   // Instead, we imperatively poke the globe to re-evaluate colors.
   const hoverIsoRef = useRef<string | null>(null);
   const hoverRafRef = useRef<number>(0); // rAF handle for coalesced hover updates
+  const draggingRef = useRef(false); // suppress hover during drag
 
   // Load GeoJSON (instant if cached from prior mount)
   useEffect(() => {
@@ -93,7 +94,10 @@ export default function GlobeView({
     let el: HTMLElement;
     try {
       controls = globe.controls();
-      el = globe.renderer().domElement;
+      const renderer = globe.renderer();
+      el = renderer.domElement;
+      // Cap pixel ratio — 2 is visually identical to 3 but renders 2.25× fewer pixels
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     } catch {
       return;
     }
@@ -109,6 +113,14 @@ export default function GlobeView({
       }, 5000);
     };
 
+    const onPointerDown = () => {
+      draggingRef.current = true;
+      stopAndRestart();
+    };
+    const onPointerUp = () => {
+      draggingRef.current = false;
+    };
+
     // Throttle wheel handler — runs at most once per 100ms to avoid
     // clearing/setting timeouts 60-120× per second during fast scrolls.
     let lastWheelTime = 0;
@@ -119,11 +131,15 @@ export default function GlobeView({
       stopAndRestart();
     };
 
-    el.addEventListener("pointerdown", stopAndRestart);
+    el.addEventListener("pointerdown", onPointerDown);
+    el.addEventListener("pointerup", onPointerUp);
+    el.addEventListener("pointerleave", onPointerUp);
     el.addEventListener("wheel", wheelThrottled, { passive: true });
 
     return () => {
-      el.removeEventListener("pointerdown", stopAndRestart);
+      el.removeEventListener("pointerdown", onPointerDown);
+      el.removeEventListener("pointerup", onPointerUp);
+      el.removeEventListener("pointerleave", onPointerUp);
       el.removeEventListener("wheel", wheelThrottled);
       clearTimeout(idleTimer.current);
     };
@@ -181,6 +197,7 @@ export default function GlobeView({
   // even if the mouse crosses multiple polygons in a single 16ms interval.
   const handleHover = useCallback(
     (polygon: object | null) => {
+      if (draggingRef.current) return; // skip hover updates while dragging
       const feat = polygon as Feature | null;
       const newIso = feat?.properties?.ISO_A2 ?? null;
       if (newIso === hoverIsoRef.current) return; // same polygon, skip
@@ -235,7 +252,7 @@ export default function GlobeView({
         width={globeSize}
         height={globeSize}
         backgroundColor="rgba(0,0,0,0)"
-        globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
+        globeImageUrl="/earth-night.jpg"
         showAtmosphere
         atmosphereColor="#64a0ff"
         atmosphereAltitude={0.18}

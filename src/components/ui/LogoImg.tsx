@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLogoWithFallback } from '@/hooks/useLogoWithFallback';
 
 /**
  * Logo.dev publishable API key.
@@ -54,17 +55,44 @@ export function getLogoDevUrl(ticker: string): string {
 }
 
 /**
- * Reusable logo component powered by Logo.dev.
- * Renders a retina-quality logo with monogram fallback,
- * automatic light/dark theme, lazy loading, and a Building2 icon
- * fallback if the image fails entirely.
+ * Reusable logo component with multi-source fallback.
+ *
+ * Load chain:
+ * 1. logo.dev (primary — fast, covers 95% of stocks)
+ * 2. Finnhub (fallback — for lesser-known stocks)
+ * 3. Building2 icon (last resort)
+ *
+ * Fetches Finnhub logos in the background to cache for future visits.
  */
 export function LogoImg({ ticker, size = 'sm', alt, className }: LogoImgProps) {
   const [failed, setFailed] = useState(false);
-  const url = getLogoDevUrl(ticker);
+  const [logoSrc, setLogoSrc] = useState<string>(getLogoDevUrl(ticker));
+
+  const { handleLogoDevLoad, handleLogoDevError, fallbackUrl } = useLogoWithFallback(ticker);
+
   const altText = alt || `${ticker.toUpperCase()} logo`;
 
-  if (failed) {
+  // Only swap to Finnhub when Logo.dev actually failed — not just because Finnhub responded
+  useEffect(() => {
+    if (fallbackUrl && failed) {
+      setLogoSrc(fallbackUrl);
+      setFailed(false);
+    }
+  }, [fallbackUrl, failed]);
+
+  const handleImgLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    // Notify the hook that logo.dev loaded (might queue Finnhub fetch)
+    handleLogoDevLoad(e);
+  };
+
+  const handleImgError = () => {
+    // If logo.dev fails, try Finnhub
+    handleLogoDevError();
+    setFailed(true);
+  };
+
+  if (failed && !fallbackUrl) {
+    // All sources exhausted — show Building icon
     return (
       <span
         className={cn(
@@ -80,23 +108,30 @@ export function LogoImg({ ticker, size = 'sm', alt, className }: LogoImgProps) {
     );
   }
 
+  // Detect if the current src is a Finnhub PNG (has white background)
+  const isFinnhubPng = logoSrc.includes('finnhub.io');
+
   return (
     <span
       className={cn(
         sizeClasses[size],
-        'inline-flex items-center justify-center rounded-lg bg-muted ring-1 ring-border shrink-0 overflow-hidden',
+        // Use white background for Finnhub PNGs so they look correct in dark mode
+        isFinnhubPng
+          ? 'inline-flex items-center justify-center rounded-lg bg-white dark:bg-white/90 shrink-0 overflow-hidden'
+          : 'inline-flex items-center justify-center rounded-lg shrink-0 overflow-hidden',
         className
       )}
       role="img"
       aria-label={altText}
     >
       <img
-        src={url}
+        src={logoSrc}
         alt={altText}
         loading="lazy"
         decoding="async"
         sizes={imgSizes[size]}
-        onError={() => setFailed(true)}
+        onLoad={handleImgLoad}
+        onError={handleImgError}
         className="h-full w-full object-contain p-1"
       />
     </span>

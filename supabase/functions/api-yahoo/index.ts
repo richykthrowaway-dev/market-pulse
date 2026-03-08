@@ -1,0 +1,211 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+/**
+ * api-yahoo — Yahoo Finance proxy with crumb-based auth.
+ *
+ * Yahoo Finance's v8 chart API requires a crumb token obtained via a
+ * two-step auth flow. Without it all requests return 401.
+ *
+ * Auth flow (per Yahoo Finance requirements circa 2024):
+ *   1. GET /v1/test/getcrumb  → plain-text crumb + sets A1 session cookie
+ *   2. GET /v8/finance/chart/{symbol}?...&crumb={crumb}  with Cookie header
+ *
+ * The crumb+cookie pair is cached at module level (persists across warm
+ * Deno invocations) and refreshed on 401 or after 30 minutes.
+ *
+ * Endpoints (via ?endpoint=):
+ *   chart  → Yahoo Finance v8/finance/chart/{symbol}
+ *            Returns { closes: number[] } — nulls filtered, adjclose preferred.
+ *            Params: symbol (required), interval (default "1h"), range (default "1mo")
+ *
+ *   quote  → Yahoo Finance v7/finance/quote?symbols={symbol}
+ *            Returns raw Yahoo quote JSON.
+ */
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+};
+
+const YAHOO_HOSTS = [
+  "https://query1.finance.yahoo.com",
+  "https://query2.finance.yahoo.com",
+];
+
+const YF_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Accept": "application/json, text/plain, */*",
+  "Accept-Language": "en-US,en;q=0.9",
+  "Referer": "https://finance.yahoo.com/",
+  "Origin": "https://finance.yahoo.com",
+};
+
+// ── Crumb cache (module-level — persists between warm invocations) ────────────
+
+interface CrumbCache {
+  crumb: string;
+  cookie: string;
+  expiry: number; // unix ms
+}
+
+let crumbCache: CrumbCache | null = null;
+
+async function fetchCrumb(): Promise<CrumbCache | null> {
+  for (const host of YAHOO_HOSTS) {
+    try {
+      const res = await fetch(`${host}/v1/test/getcrumb`, {
+        headers: { ...YF_HEADERS, "Accept": "text/plain, */*" },
+      });
+
+      if (!res.ok) continue;
+
+      const crumb = (await res.text()).trim();
+
+      // A valid crumb is a short alphanumeric/punctuation string (not an HTML page)
+      if (!crumb || crumb.length > 64 || crumb.startsWith("<")) continue;
+
+      // Extract the A1 session cookie — required alongside the crumb
+      const rawCookie = res.headers.get("set-cookie") ?? "";
+      // Pull just the A1=... value; ignore Expires/Path/etc. attributes
+      const a1Match  = rawCookie.match(/\bA1=[^;]+/);
+      const cookie   = a1Match ? a1Match[0] : rawCookie.split(";")[0];
+
+      return { crumb, cookie, expiry: Date.now() + 28 * 60 * 1000 }; // 28 min TTL
+    } catch {
+      // Try next host
+    }
+  }
+  return null;
+}
+
+async function getCrumb(): Promise<CrumbCache | null> {
+  if (crumbCache && Date.now() < crumbCache.expiry) return crumbCache;
+  crumbCache = await fetchCrumb();
+  return crumbCache;
+}
+
+// ── Chart fetch (with automatic crumb refresh on 401) ────────────────────────
+
+async function fetchChart(symbol: string, interval: string, range: string): Promise<Response | null> {
+  const auth = await getCrumb();
+
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const crumbParam = auth?.crumb ? `&crumb=${encodeURIComponent(auth.crumb)}` : "";
+    const cookieHdr  = auth?.cookie ? { "Cookie": auth.cookie } : {};
+
+    const chartPath = `/v8/finance/chart/${encodeURIComponent(symbol)}` +
+      `?interval=${interval}&range=${range}&includePrePost=false${crumbParam}`;
+
+    for (const host of YAHOO_HOSTS) {
+      try {
+        const res = await fetch(`${host}${chartPath}`, {
+          headers: { ...YF_HEADERS, ...cookieHdr },
+        });
+
+        if (res.status === 401 && attempt === 0) {
+          // Crumb expired — force-refresh and retry
+          crumbCache = null;
+          const fresh = await getCrumb();
+          if (!fresh) return null;
+          Object.assign(auth ?? {}, fresh); // update for retry loop
+          break; // break inner host loop to retry outer attempt loop
+        }
+
+        if (res.ok) return res;
+      } catch {
+        // Try next host
+      }
+    }
+  }
+
+  return null;
+}
+
+// ── Main handler ─────────────────────────────────────────────────────────────
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  const url      = new URL(req.url);
+  const endpoint = url.searchParams.get("endpoint") ?? "chart";
+  const symbol   = url.searchParams.get("symbol")   ?? "";
+  const interval = url.searchParams.get("interval") ?? "1h";
+  const range    = url.searchParams.get("range")    ?? "1mo";
+
+  if (!symbol) {
+    return new Response(JSON.stringify({ error: "symbol param required" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    // ── Chart endpoint ────────────────────────────────────────────────────────
+    if (endpoint === "chart") {
+      const upstream = await fetchChart(symbol, interval, range);
+
+      if (!upstream) {
+        return new Response(JSON.stringify({ closes: [], error: "Yahoo Finance unavailable" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const data   = await upstream.json();
+      const result = data?.chart?.result?.[0];
+
+      if (!result) {
+        return new Response(JSON.stringify({ closes: [] }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Prefer adjclose (handles stock splits correctly)
+      const rawCloses: (number | null)[] =
+        result.indicators?.adjclose?.[0]?.adjclose ??
+        result.indicators?.quote?.[0]?.close       ??
+        [];
+
+      // Strip nulls (market gaps, pre/post-market holes)
+      const closes = rawCloses.filter((v): v is number => v != null && isFinite(v));
+
+      return new Response(JSON.stringify({ closes }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Quote endpoint ────────────────────────────────────────────────────────
+    if (endpoint === "quote") {
+      for (const host of YAHOO_HOSTS) {
+        try {
+          const res = await fetch(
+            `${host}/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`,
+            { headers: YF_HEADERS }
+          );
+          if (!res.ok) continue;
+          const data  = await res.json();
+          const quote = data?.quoteResponse?.result?.[0] ?? null;
+          return new Response(JSON.stringify(quote), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        } catch { /* try next host */ }
+      }
+      return new Response(JSON.stringify(null), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: `Unknown endpoint: ${endpoint}` }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
+  } catch (err) {
+    console.error("api-yahoo error:", err);
+    return new Response(JSON.stringify({ error: String(err), closes: [] }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});

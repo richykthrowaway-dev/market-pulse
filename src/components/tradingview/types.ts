@@ -66,8 +66,10 @@ export interface TradingViewChartConfig {
   hideTopToolbar?: boolean;
   /** Hide side toolbar */
   hideSideToolbar?: boolean;
-  /** Hide bottom volume */
+  /** Hide bottom volume subplot */
   hideVolume?: boolean;
+  /** Hide the OHLC / indicator legend overlay (stock name, price, etc.) */
+  hideLegend?: boolean;
   /** Locale for the widget */
   locale?: string;
   /** Enable saving chart layouts */
@@ -78,6 +80,17 @@ export interface TradingViewChartConfig {
   studies?: string[];
   /** Container element ID */
   containerId?: string;
+  /**
+   * TradingView chart plot style.
+   * 0 = Bars, 1 = Candles (default), 2 = Line, 3 = Area, 8 = Column
+   */
+  chartStyle?: '0' | '1' | '2' | '3' | '8' | '9';
+  /**
+   * Raw TradingView property overrides forwarded verbatim to the widget config.
+   * Keys follow TradingView's override path notation, e.g.
+   * "mainSeriesProperties.areaStyle.linecolor": "#3b82f6"
+   */
+  overrides?: Record<string, string | number | boolean>;
 }
 
 export interface TradingViewContextValue {
@@ -85,4 +98,6 @@ export interface TradingViewContextValue {
   resolvedTheme: TradingViewTheme;
   /** Default chart configuration */
   defaultConfig: Partial<TradingViewChartConfig>;
+  /** True once next-themes has resolved the real theme — gate widget creation on this */
+  mounted: boolean;
 }

@@ -2,6 +2,7 @@
 import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { usePortfolio } from '@/hooks/usePortfolio';
+import { useStatement } from '@/contexts/StatementContext';
 import type { PriceBar } from '@/hooks/useDefeatBeta';
 import { pricesToMap } from '@/lib/performanceCalc';
 import type { BenchmarkKey, PriceMap } from '@/lib/performanceTypes';
@@ -45,17 +46,30 @@ export interface PortfolioPricesResult {
 
 export function usePortfolioPrices(benchmark: BenchmarkKey): PortfolioPricesResult {
   const { data: rawHoldings = [], isLoading: holdingsLoading, error: holdingsError } = usePortfolio();
+  const { parsedStatement } = useStatement();
 
-  const holdings = useMemo(() =>
-    rawHoldings
+  // Prefer parsed CSV statement positions over Supabase holdings.
+  // OpenPosition uses { symbol, quantity, costPrice } — map to internal shape.
+  const holdings = useMemo(() => {
+    const csvPositions = parsedStatement?.openPositions?.filter(
+      p => p.assetCategory === 'STK' && p.quantity > 0,
+    );
+    if (csvPositions && csvPositions.length > 0) {
+      return csvPositions.map(p => ({
+        ticker: p.symbol,
+        shares: p.quantity,
+        avg_cost_basis: p.costPrice,
+      }));
+    }
+    // Fallback: Supabase holdings
+    return rawHoldings
       .filter((h: any) => h.ticker && h.shares > 0)
       .map((h: any) => ({
         ticker: h.ticker as string,
         shares: h.shares as number,
         avg_cost_basis: h.avg_cost_basis as number,
-      })),
-    [rawHoldings],
-  );
+      }));
+  }, [parsedStatement, rawHoldings]);
 
   // Determine which benchmark symbols we need
   const benchmarkConfig = BENCHMARK_SYMBOLS[benchmark];
@@ -82,8 +96,9 @@ export function usePortfolioPrices(benchmark: BenchmarkKey): PortfolioPricesResu
     })),
   });
 
-  const isLoading = holdingsLoading || priceQueries.some(q => q.isLoading);
-  const error = (holdingsError ?? priceQueries.find(q => q.error)?.error ?? null) as Error | null;
+  const usingCsv = !!(parsedStatement?.openPositions?.some(p => p.assetCategory === 'STK' && p.quantity > 0));
+  const isLoading = (!usingCsv && holdingsLoading) || priceQueries.some(q => q.isLoading);
+  const error = ((!usingCsv ? holdingsError : null) ?? priceQueries.find(q => q.error)?.error ?? null) as Error | null;
 
   const priceMap = useMemo<PriceMap>(() => {
     const map: PriceMap = {};

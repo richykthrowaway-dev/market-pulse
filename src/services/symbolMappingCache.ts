@@ -29,6 +29,14 @@ interface CacheStore {
   timeframes: Record<string, TimeframeMapping>;
 }
 
+/**
+ * In-memory cache — avoids repeated localStorage reads + JSON.parse within a page session.
+ * Every useStockHistory call invokes resolveListingId + resolveTimeframeId, so without
+ * this layer, rendering 50 stock cards fires 100 localStorage reads.
+ */
+const memSymbols = new Map<string, SymbolMapping>();
+const memTimeframes = new Map<string, TimeframeMapping>();
+
 function loadCache(): CacheStore {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -54,18 +62,27 @@ function isExpired(resolvedAt: number): boolean {
 /**
  * Resolve a canonical ticker to its listing ID, using cache when possible.
  * Returns null if the symbol doesn't exist in the database.
+ *
+ * Cache priority: in-memory Map → localStorage → Supabase
  */
 export async function resolveListingId(
   ticker: string,
 ): Promise<{ symbolId: string; listingId: string } | null> {
+  // 1. In-memory fast path (no I/O)
+  const mem = memSymbols.get(ticker);
+  if (mem && !isExpired(mem.resolvedAt)) {
+    return { symbolId: mem.symbolId, listingId: mem.listingId };
+  }
+
+  // 2. localStorage (cold start or page refresh)
   const cache = loadCache();
   const cached = cache.symbols[ticker];
-
   if (cached && !isExpired(cached.resolvedAt)) {
+    memSymbols.set(ticker, cached); // promote to in-memory
     return { symbolId: cached.symbolId, listingId: cached.listingId };
   }
 
-  // Cache miss — resolve from Supabase
+  // 3. Cache miss — resolve from Supabase
   const { data: sym } = await supabase
     .from('symbols')
     .select('id')
@@ -83,12 +100,13 @@ export async function resolveListingId(
 
   if (!listing) return null;
 
-  // Store in cache
-  cache.symbols[ticker] = {
+  const entry: SymbolMapping = {
     symbolId: sym.id,
     listingId: listing.id,
     resolvedAt: Date.now(),
   };
+  memSymbols.set(ticker, entry);
+  cache.symbols[ticker] = entry;
   saveCache(cache);
 
   return { symbolId: sym.id, listingId: listing.id };
@@ -96,16 +114,25 @@ export async function resolveListingId(
 
 /**
  * Resolve a timeframe code (e.g., '1D') to its ID, using cache when possible.
+ *
+ * Cache priority: in-memory Map → localStorage → Supabase
  */
 export async function resolveTimeframeId(code: string): Promise<string | null> {
+  // 1. In-memory fast path
+  const mem = memTimeframes.get(code);
+  if (mem && !isExpired(mem.resolvedAt)) {
+    return mem.timeframeId;
+  }
+
+  // 2. localStorage
   const cache = loadCache();
   const cached = cache.timeframes[code];
-
   if (cached && !isExpired(cached.resolvedAt)) {
+    memTimeframes.set(code, cached); // promote to in-memory
     return cached.timeframeId;
   }
 
-  // Cache miss
+  // 3. Cache miss — resolve from Supabase
   const { data: tf } = await supabase
     .from('timeframes')
     .select('id')
@@ -114,10 +141,9 @@ export async function resolveTimeframeId(code: string): Promise<string | null> {
 
   if (!tf) return null;
 
-  cache.timeframes[code] = {
-    timeframeId: tf.id,
-    resolvedAt: Date.now(),
-  };
+  const entry: TimeframeMapping = { timeframeId: tf.id, resolvedAt: Date.now() };
+  memTimeframes.set(code, entry);
+  cache.timeframes[code] = entry;
   saveCache(cache);
 
   return tf.id;
@@ -127,5 +153,7 @@ export async function resolveTimeframeId(code: string): Promise<string | null> {
  * Clear all cached mappings (useful when data model changes).
  */
 export function clearMappingCache(): void {
+  memSymbols.clear();
+  memTimeframes.clear();
   localStorage.removeItem(STORAGE_KEY);
 }

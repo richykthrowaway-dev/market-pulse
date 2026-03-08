@@ -196,6 +196,11 @@ const RiskAnalysis = () => {
   const tickerList = useMemo(() => holdings.map(h => h.ticker), [holdings]);
   const { data: rangeResult, isLoading: is52wLoading, isError: use52WeekError } = use52Week(tickerList, tickerList.length > 0);
 
+  /* Pre-sorted for Risk Metrics card — avoids inline .sort() mutating on every render */
+  const holdingsByValue = useMemo(
+    () => [...holdings].sort((a, b) => b.marketValue - a.marketValue),
+    [holdings],
+  );
 
   /* rebalancing logic moved to RebalancingWidget */
 
@@ -258,9 +263,7 @@ const RiskAnalysis = () => {
                 </div>
               </div>
               <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1.5 max-h-[300px] overflow-y-auto">
-                {holdings
-                  .sort((a, b) => b.marketValue - a.marketValue)
-                  .map((h) => (
+                {holdingsByValue.map((h) => (
                     <div key={h.ticker} className="flex items-center justify-between py-1.5 border-b border-border/40 last:border-b-0">
                       <div className="flex items-center gap-2">
                         <SectorDot sector={h.sector} size="xs" gicsDetail={h.gicsDetail} />

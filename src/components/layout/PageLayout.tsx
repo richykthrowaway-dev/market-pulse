@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
-import { TradingViewTickerTape } from '@/components/tradingview';
 import { useStatement } from '@/contexts/StatementContext';
 
 interface PageLayoutProps {
@@ -51,7 +50,6 @@ export function PageLayout({ children, title, description, canonical }: PageLayo
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <TradingViewTickerTape className="border-b border-border" />
       
       <div className="flex-1 flex">
         <Sidebar

@@ -17,8 +17,8 @@ import {
   resolveVariant,
   getColorSet,
   getColorSetByPerformance,
-  generatePath,
-  generateFillPath,
+  generateSmoothPath,
+  generateSmoothFillPath,
   getBaselineY,
   getPointCoords,
 } from './utils';
@@ -42,7 +42,7 @@ export function Sparkline({
   animate = true,
 }: SparklineProps) {
   const gradientId = useId();
-  const polylineRef = useRef<SVGPolylineElement>(null);
+  const polylineRef = useRef<SVGPathElement>(null);
   const [mounted, setMounted] = useState(!animate);
 
   // Animate the stroke on mount
@@ -71,8 +71,8 @@ export function Sparkline({
   }, [data, variant, resolved]);
 
   const svgHeight = height;
-  const linePath = useMemo(() => generatePath(data, SVG_INTERNAL_WIDTH, svgHeight), [data, svgHeight]);
-  const fillPath = useMemo(() => generateFillPath(data, SVG_INTERNAL_WIDTH, svgHeight), [data, svgHeight]);
+  const linePath = useMemo(() => generateSmoothPath(data, SVG_INTERNAL_WIDTH, svgHeight), [data, svgHeight]);
+  const fillPath = useMemo(() => generateSmoothFillPath(data, SVG_INTERNAL_WIDTH, svgHeight), [data, svgHeight]);
   const baselineY = useMemo(() => getBaselineY(data, svgHeight), [data, svgHeight]);
 
   const highlightPoint = useMemo(() => {
@@ -115,9 +115,10 @@ export function Sparkline({
         </defs>
 
         {/* Fill area */}
-        <polygon
-          points={fillPath}
+        <path
+          d={fillPath}
           fill={`url(#spark-fill-${gradientId})`}
+          stroke="none"
           opacity={mounted ? 1 : 0}
           style={{ transition: 'opacity 0.4s ease-out 0.4s' }}
         />
@@ -137,9 +138,9 @@ export function Sparkline({
         )}
 
         {/* Stroke line */}
-        <polyline
+        <path
           ref={polylineRef}
-          points={linePath}
+          d={linePath}
           fill="none"
           stroke={colors.stroke}
           strokeWidth={STROKE_WIDTH}

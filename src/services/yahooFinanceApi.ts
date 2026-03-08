@@ -40,3 +40,43 @@ export async function fetchYahooQuote(
 
   return res.json();
 }
+
+/**
+ * Fetch intraday close prices via the api-yahoo edge function → Yahoo Finance chart API.
+ *
+ * @param yahooTicker  Yahoo-format ticker: "AAPL", "RY.TO", "SCD.V", "LLOY.L" …
+ * @param interval     Bar size — "1h" for intraday, "1d" for daily
+ * @param range        How far back — "7d" | "1mo" | "3mo" | "6mo" | "1y"
+ * @returns            Array of close prices, nulls filtered, adjclose preferred
+ */
+export async function fetchYahooIntraday(
+  yahooTicker: string,
+  interval: '1h' | '1d' = '1h',
+  range: '7d' | '1mo' | '3mo' | '6mo' | '1y' = '1mo',
+): Promise<number[]> {
+  const qs = new URLSearchParams({
+    endpoint: 'chart',
+    symbol: yahooTicker,
+    interval,
+    range,
+  }).toString();
+
+  const url = `https://${PROJECT_ID}.supabase.co/functions/v1/api-yahoo?${qs}`;
+
+  try {
+    const res = await fetch(url, {
+      headers: { apikey: API_KEY, Authorization: `Bearer ${API_KEY}` },
+      signal: AbortSignal.timeout(8000),
+    });
+
+    if (!res.ok) {
+      console.debug(`[Yahoo chart] ${yahooTicker} → ${res.status}`);
+      return [];
+    }
+
+    const json: { closes?: number[] } = await res.json();
+    return json.closes ?? [];
+  } catch {
+    return [];
+  }
+}

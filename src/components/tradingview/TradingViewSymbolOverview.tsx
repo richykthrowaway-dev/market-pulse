@@ -18,7 +18,7 @@ export function TradingViewSymbolOverview({
   height = 400,
   className,
 }: TradingViewSymbolOverviewProps) {
-  const { resolvedTheme } = useTradingView();
+  const { resolvedTheme, mounted } = useTradingView();
   const containerRef = useRef<HTMLDivElement>(null);
   const containerId = useRef(`tv-so-${++soIdCounter}`);
 
@@ -30,7 +30,7 @@ export function TradingViewSymbolOverview({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || !mounted) return;
     container.innerHTML = '';
 
     const widget = document.createElement('div');
@@ -58,7 +58,7 @@ export function TradingViewSymbolOverview({
     container.appendChild(widget);
 
     return () => { container.innerHTML = ''; };
-  }, [resolvedTheme, symbols, chartOnly, width, height]);
+  }, [resolvedTheme, symbols, chartOnly, width, height, mounted]);
 
   return <div ref={containerRef} id={containerId.current} className={className} />;
 }

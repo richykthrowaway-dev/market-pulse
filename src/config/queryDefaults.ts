@@ -15,7 +15,9 @@ export const queryClientDefaults: DefaultOptions = {
   queries: {
     gcTime: 10 * 60 * 1000,        // 10 min garbage collection
     staleTime: 60 * 1000,           // 1 min default stale time
-    refetchOnWindowFocus: true,
+    // Disabled globally — refetching on every tab switch hammers the API
+    // when many queries have short stale times. Enable per-query if needed.
+    refetchOnWindowFocus: false,
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000),
   },
@@ -23,34 +25,34 @@ export const queryClientDefaults: DefaultOptions = {
 
 /** Per-data-type query options */
 export const QUERY_CONFIG = {
-  /** Real-time price quotes – most time-sensitive */
+  /** Price quotes – EODHD free tier is already 15-min delayed; 60s polls are sufficient */
   quotes: {
-    staleTime: 15_000,
-    refetchInterval: 15_000,
+    staleTime: 60_000,
+    refetchInterval: 60_000,
   },
 
-  /** Stock list with prices – moderate freshness */
+  /** Stock list – nightly ingest; 5 min is plenty for dashboard display */
   stocks: {
-    staleTime: 60_000,
-    refetchInterval: 60_000,
-  },
-
-  /** Market indices – moderate freshness */
-  indices: {
-    staleTime: 60_000,
-    refetchInterval: 60_000,
-  },
-
-  /** Currency pairs – FX moves slower */
-  currencies: {
-    staleTime: 120_000,
-    refetchInterval: 120_000,
-  },
-
-  /** News articles – don't change often */
-  news: {
     staleTime: 5 * 60_000,
     refetchInterval: 5 * 60_000,
+  },
+
+  /** Market indices – slow moving during market hours */
+  indices: {
+    staleTime: 2 * 60_000,
+    refetchInterval: 2 * 60_000,
+  },
+
+  /** Currency pairs – FX moves slowly */
+  currencies: {
+    staleTime: 5 * 60_000,
+    refetchInterval: 5 * 60_000,
+  },
+
+  /** News articles – new articles rarely arrive within 10 min */
+  news: {
+    staleTime: 10 * 60_000,
+    refetchInterval: 10 * 60_000,
   },
 
   /** Historical OHLCV bars – only changes at EOD */

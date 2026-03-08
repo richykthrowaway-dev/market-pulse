@@ -78,9 +78,9 @@ export function useStocksPrefs() {
 
   const pinStock = useCallback((symbol: string, exchange: string, name?: string) => {
     update(p => {
-      // Don't duplicate
-      if (p.pinnedStocks.some(ps => ps.symbol === symbol && ps.exchange === exchange)) return p;
-      return { ...p, pinnedStocks: [...p.pinnedStocks, { symbol, exchange, name }] };
+      // Remove existing entry (if any) so it moves to front
+      const filtered = p.pinnedStocks.filter(ps => !(ps.symbol === symbol && ps.exchange === exchange));
+      return { ...p, pinnedStocks: [{ symbol, exchange, name }, ...filtered] };
     });
   }, []);
 

@@ -118,13 +118,76 @@ serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
-  // Optional mode from request body
+  // Optional mode + date from request body
   let mode = "full";
+  let seedDate: string | null = null;
   try {
     const body = await req.json();
     if (body?.mode) mode = body.mode;
+    if (body?.date) seedDate = body.date;
   } catch { /* no body */ }
   log.mode = mode;
+
+  // ── seed_historical: insert ohlcv_bars for a specific past date ──────────
+  // Usage: POST { mode: "seed_historical", date: "YYYY-MM-DD" }
+  // Fetches that date's bulk EOD from EODHD and stores bars — no stocks update.
+  if (mode === "seed_historical" && seedDate) {
+    log.seed_date = seedDate;
+    const historicalBars = await eodGet<EodBulkBar[]>(`/eod-bulk-last-day/US?date=${seedDate}`, apiKey);
+    if (!historicalBars || historicalBars.length === 0) {
+      return new Response(
+        JSON.stringify({ error: `No EODHD data returned for ${seedDate}` }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const { data: tf } = await supabase.from("timeframes").select("id").eq("code", "1D").single();
+    if (!tf) throw new Error("1D timeframe not found");
+
+    // Paginate listings to build ticker → listing_id map
+    const allListings: { id: string; local_ticker: string }[] = [];
+    let lPage = 0;
+    while (true) {
+      const { data } = await supabase.from("listings").select("id, local_ticker")
+        .eq("is_active", true).range(lPage * 1000, (lPage + 1) * 1000 - 1);
+      if (!data || data.length === 0) break;
+      allListings.push(...data);
+      if (data.length < 1000) break;
+      lPage++;
+    }
+    const listingMap = new Map<string, string>();
+    for (const l of allListings) listingMap.set(l.local_ticker.toUpperCase(), l.id);
+
+    const ohlcvRows = historicalBars
+      .filter((b) => b.code && Number(b.adjusted_close ?? b.close) > 0)
+      .map((b) => {
+        const listingId = listingMap.get(b.code.toUpperCase());
+        if (!listingId) return null;
+        return {
+          listing_id: listingId,
+          timeframe_id: tf.id,
+          ts: new Date(b.date + "T00:00:00Z").toISOString(),
+          open: b.open, high: b.high, low: b.low,
+          close: b.adjusted_close ?? b.close,
+          volume: Math.round(Number(b.volume) || 0),
+          vwap: null, trades: null, source: "eodhd_bulk",
+        };
+      }).filter(Boolean) as Record<string, unknown>[];
+
+    let inserted = 0;
+    await runBatches(ohlcvRows, async (batch) => {
+      const { error } = await supabase.from("ohlcv_bars")
+        .upsert(batch, { onConflict: "listing_id,timeframe_id,ts" });
+      if (error) console.error("historical bars insert error:", error.message);
+      else inserted += batch.length;
+    });
+
+    log.bars_inserted = inserted;
+    log.elapsed_ms = Date.now() - t0;
+    return new Response(
+      JSON.stringify({ ok: true, ...log }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
 
   try {
     // ── Step 1: Fetch EODHD data (2 API calls in parallel) ────────────────────
@@ -371,6 +434,51 @@ serve(async (req) => {
     });
     log.bars_upserted = barsUpserted;
     console.log(`Upserted ${barsUpserted} OHLCV bars`);
+
+    // ── Step 7b: Compute change_percent from ohlcv_bars ──────────────────────
+    // EODHD bulk endpoint often omits change_p. When all values are zero,
+    // compute change_percent as (today_close - prev_close) / prev_close * 100
+    // using the two most recent distinct dates in ohlcv_bars.
+    const allChangeZero = validBars.every((b) => !b.change_p || Number(b.change_p) === 0);
+    if (allChangeZero) {
+      console.log("change_p all zero — computing change_percent from ohlcv_bars...");
+
+      // Get the most recent date in ohlcv_bars (today's bars, just inserted)
+      const { data: todayDateRow } = await supabase
+        .from("ohlcv_bars")
+        .select("ts")
+        .eq("timeframe_id", dailyTfId)
+        .order("ts", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (todayDateRow) {
+        // Get the most recent date BEFORE today's date
+        const { data: prevDateRow } = await supabase
+          .from("ohlcv_bars")
+          .select("ts")
+          .eq("timeframe_id", dailyTfId)
+          .lt("ts", todayDateRow.ts)
+          .order("ts", { ascending: false })
+          .limit(1)
+          .single();
+
+        if (prevDateRow) {
+          // Delegate entirely to PostgreSQL — avoids loading 95k rows into Deno memory
+          // and keeps the edge function well under its 25-second wall-time limit.
+          const { data: changeResult, error: changeErr } = await supabase
+            .rpc("compute_daily_changes");
+          if (changeErr) {
+            console.error("compute_daily_changes error:", changeErr.message);
+          } else {
+            log.change_percent_computed = changeResult;
+            console.log("compute_daily_changes:", JSON.stringify(changeResult));
+          }
+        } else {
+          console.log("Only one day of ohlcv data — change_percent will be 0 until tomorrow");
+        }
+      }
+    }
 
     // ── Step 8: Refresh multi-timeframe returns cache ──────────────────────────
     // Pre-computes 1W/1M/3M/6M/YTD/1Y/3Y/5Y/10Y return distributions.

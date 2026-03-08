@@ -9,12 +9,17 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { StockCard } from '@/components/stocks/StockCard';
 import { StockChart } from '@/components/stocks/StockChart';
 import { MarketOverview } from '@/components/markets/MarketOverview';
-import { CurrencyExchange } from '@/components/currencies/CurrencyExchange';
+import { MarketBreadthCards } from '@/components/widgets/MarketBreadthCards';
 import { NewsCard } from '@/components/news/NewsCard';
 import { StatsCard } from '@/components/ui/StatsCard';
 import { WatchlistChart } from '@/components/stocks/WatchlistChart';
 import { MarketOverviewCard } from '@/components/widgets/MarketOverviewCard';
-import { BarChart3, TrendingDown, TrendingUp, Wallet2 } from 'lucide-react';
+import { BarChart3, TrendingDown, TrendingUp, Wallet2, Newspaper } from 'lucide-react';
+import { TradingViewTimeline } from '@/components/tradingview';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+/** Default sparkline window — syncs with the main chart range buttons */
+const DEFAULT_SPARKLINE_DAYS = 30;
 
 const WATCHLIST_DISPLAY = [
   { symbol: 'AAPL', name: 'Apple Inc.' },
@@ -31,25 +36,21 @@ export function Dashboard() {
   
   const { data: stocks = [], isLoading: stocksLoading } = useStocks();
   const { data: indices = [] } = useIndices();
-  const { data: currencies = [] } = useCurrencies();
+  const { data: currencies = [] } = useCurrencies(); // kept for potential future use
   const { data: news = [] } = useNews(WATCHLIST_SYMBOLS);
 
-  // Prefetch remote logos as soon as the stock list arrives
-  const tickers = useMemo(() => stocks.map((s) => s.symbol), [stocks]);
-  useLogoPrefetch(tickers);
+  // Prefetch logos for visible stocks only — prefetching all 1000+ fires 1000 concurrent requests
+  const visibleTickers = useMemo(() => stocks.slice(0, 20).map((s) => s.symbol), [stocks]);
+  useLogoPrefetch(visibleTickers);
 
   const [selectedStock, setSelectedStock] = useState<typeof stocks[0] | null>(null);
   const activeStock = selectedStock ?? stocks[0];
-  
-  // Calculate market statistics
-  const gainers = stocks.filter(stock => stock.changePercent > 0);
-  const losers = stocks.filter(stock => stock.changePercent < 0);
-  
-  const topGainer = [...stocks].sort((a, b) => b.changePercent - a.changePercent)[0];
-  const topLoser = [...stocks].sort((a, b) => a.changePercent - b.changePercent)[0];
-  
-  const totalMarketCap = stocks.reduce((sum, stock) => sum + stock.marketCap, 0);
-  const totalVolume = stocks.reduce((sum, stock) => sum + stock.volume, 0);
+
+  // Memoize market statistics so they don't re-sort/reduce on every render
+  const topGainer = useMemo(() => [...stocks].sort((a, b) => b.changePercent - a.changePercent)[0], [stocks]);
+  const topLoser = useMemo(() => [...stocks].sort((a, b) => a.changePercent - b.changePercent)[0], [stocks]);
+  const totalMarketCap = useMemo(() => stocks.reduce((sum, s) => sum + s.marketCap, 0), [stocks]);
+  const totalVolume = useMemo(() => stocks.reduce((sum, s) => sum + s.volume, 0), [stocks]);
   
   const toggleSidebar = () => {
     setIsSidebarCollapsed(prev => !prev);
@@ -113,48 +114,62 @@ export function Dashboard() {
               />
             </div>
 
-            {/* Market Overview Card */}
-            <div className="mb-6 animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
-              <MarketOverviewCard />
-            </div>
-
-
-            {/* Main Content Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Left column - Stock list */}
-              <div className="lg:col-span-1 space-y-4 animate-slide-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
-                <h2 className="text-lg font-semibold tracking-tight">All Stocks</h2>
-                <div className="space-y-3">
-                  {stocks.slice(0, 5).map((stock) => (
+            {/* Stock Cards + Chart side-by-side */}
+            <div className="flex flex-col lg:flex-row gap-6 mb-6 animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+              {/* Stock cards — ~1/3 width, internal scroll */}
+              <div className="lg:w-1/3 flex flex-col animate-slide-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
+                <h2 className="text-lg font-semibold tracking-tight mb-3">All Stocks</h2>
+                <div className="space-y-3 overflow-y-auto lg:max-h-[500px] p-1">
+                  {stocks.slice(0, 10).map((stock) => (
                     <StockCardWithHistory
                       key={stock.symbol}
                       stock={stock}
                       days={chartDays}
                       isActive={activeStock.symbol === stock.symbol}
                       onClick={() => setSelectedStock(stock)}
+                      compact
                     />
                   ))}
                 </div>
               </div>
-              
-              {/* Middle column - Chart and news */}
-              <div className="lg:col-span-2 space-y-6 animate-slide-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
-                <StockChart 
-                  symbol={activeStock.symbol} 
-                  name={activeStock.name} 
+
+              {/* Chart — ~2/3 width */}
+              <div className="lg:w-2/3 min-w-0">
+                <StockChart
+                  symbol={activeStock.symbol}
+                  name={activeStock.name}
                   currentPrice={activeStock.price}
                   onRangeChange={setChartDays}
                 />
+              </div>
+            </div>
+
+            {/* Main Content Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left column - News */}
+              <div className="lg:col-span-2 space-y-6 animate-slide-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
                 <NewsCard
                   news={news}
                   watchlistSymbols={WATCHLIST_SYMBOLS}
                 />
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <Newspaper className="h-5 w-5 text-primary" />
+                      Top Stories
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0 overflow-hidden rounded-b-lg">
+                    <TradingViewTimeline height={500} className="w-full" />
+                  </CardContent>
+                </Card>
               </div>
-              
-              {/* Right column - Markets and currencies */}
+
+              {/* Right column - Market overview, markets, breadth */}
               <div className="lg:col-span-1 space-y-6 animate-slide-up" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
+                <MarketOverviewCard />
                 <MarketOverview indices={indices} />
-                <CurrencyExchange currencies={currencies} />
+                <MarketBreadthCards />
               </div>
             </div>
           </div>
@@ -165,11 +180,12 @@ export function Dashboard() {
 }
 
 /** Wraps StockCard with real sparkline data from ohlcv_bars */
-function StockCardWithHistory({ stock, days, isActive, onClick }: {
+function StockCardWithHistory({ stock, days, isActive, onClick, compact }: {
   stock: any;
   days: number;
   isActive: boolean;
   onClick: () => void;
+  compact?: boolean;
 }) {
   const { data: bars = [] } = useStockHistory(stock.symbol, days);
   const priceHistory = bars.map((b: any) => Number(b.close));
@@ -188,6 +204,7 @@ function StockCardWithHistory({ stock, days, isActive, onClick }: {
       stock={overriddenStock}
       priceHistory={priceHistory.length > 0 ? priceHistory : undefined}
       onClick={onClick}
+      compact={compact}
       className={isActive ? "ring-2 ring-primary shadow-glow" : ""}
     />
   );

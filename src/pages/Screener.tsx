@@ -2,6 +2,7 @@ import React from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { TradingViewScreener, TradingViewEconomicCalendar } from '@/components/tradingview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { StockSearch } from '@/components/search/StockSearch';
 
 const Screener = () => {
   return (
@@ -13,12 +14,19 @@ const Screener = () => {
         </TabsList>
 
         <TabsContent value="screener">
+          <div className="mb-4">
+            <StockSearch
+              placeholder="Search by ticker or company name..."
+              className="max-w-md"
+            />
+          </div>
           <div className="bg-card rounded-lg p-4 shadow border border-border">
             <TradingViewScreener
               defaultColumn="overview"
               defaultScreen="most_capitalized"
               market="america"
-              height={600}
+              showToolbar={true}
+              height={550}
               className="w-full"
             />
           </div>

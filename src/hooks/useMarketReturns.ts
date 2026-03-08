@@ -8,6 +8,10 @@ export interface MarketReturnsData {
     up: number;
     down: number;
   };
+  /** New 52-week highs — only present in 1D responses */
+  new_high?: number;
+  /** New 52-week lows — only present in 1D responses */
+  new_low?: number;
 }
 
 /**
@@ -61,7 +65,7 @@ export function buildBuckets(returns: number[]): Bucket[] {
   }
 
   // Last bucket: >= 10
-  buckets.push({ label: '+Inf', from: 10, to: Infinity, count: 0 });
+  buckets.push({ label: '10+', from: 10, to: Infinity, count: 0 });
 
   // Fill counts
   for (const r of returns) {

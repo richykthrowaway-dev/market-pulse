@@ -11,9 +11,11 @@ import {
   type CandlestickData,
   type LineData,
   type AreaData,
+  type Time,
   ColorType,
   CrosshairMode,
 } from 'lightweight-charts';
+import { format } from 'date-fns';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +31,18 @@ export interface LightweightChartProps {
   upColor?: string;
   /** Override bear candle color */
   downColor?: string;
+  /** Override area-chart line colour */
+  areaLineColor?: string;
+  /** Override area-chart top gradient colour */
+  areaTopColor?: string;
+  /** Override area-chart bottom gradient colour */
+  areaBottomColor?: string;
+  /**
+   * When provided the chart will initially show data from this ISO date string
+   * (e.g. "2026-02-28") through today, but the user can freely scroll/zoom to
+   * see data outside that window.  When omitted the chart fits all data.
+   */
+  visibleFrom?: string;
 }
 
 /**
@@ -42,6 +56,10 @@ export function LightweightChart({
   className,
   upColor,
   downColor,
+  areaLineColor,
+  areaTopColor,
+  areaBottomColor,
+  visibleFrom,
 }: LightweightChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -53,6 +71,7 @@ export function LightweightChart({
   const colors = useMemo(() => {
     const root = document.documentElement;
     const get = (v: string) => getComputedStyle(root).getPropertyValue(v).trim();
+    const defaultArea = `hsl(${get('--primary')})`;
     return {
       bg: 'transparent',
       text: isDark ? '#d1d5db' : '#374151',
@@ -61,9 +80,11 @@ export function LightweightChart({
       crosshair: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)',
       up: upColor || `hsl(${get('--success')})`,
       down: downColor || `hsl(${get('--danger')})`,
-      area: `hsl(${get('--primary')})`,
+      area: areaLineColor || defaultArea,
+      areaTop: areaTopColor || (areaLineColor ? undefined : defaultArea.replace(')', ' / 0.4)').replace('hsl(', 'hsla(')),
+      areaBottom: areaBottomColor || (areaLineColor ? undefined : defaultArea.replace(')', ' / 0.05)').replace('hsl(', 'hsla(')),
     };
-  }, [isDark, upColor, downColor]);
+  }, [isDark, upColor, downColor, areaLineColor, areaTopColor, areaBottomColor]);
 
   // Create / recreate chart on theme change
   useEffect(() => {
@@ -125,8 +146,8 @@ export function LightweightChart({
     } else if (type === 'area') {
       const series = chart.addSeries(AreaSeries, {
         lineColor: colors.area,
-        topColor: colors.area.replace(')', ' / 0.4)').replace('hsl(', 'hsla('),
-        bottomColor: colors.area.replace(')', ' / 0.05)').replace('hsl(', 'hsla('),
+        topColor: colors.areaTop ?? colors.area.replace(')', ' / 0.4)').replace('hsl(', 'hsla('),
+        bottomColor: colors.areaBottom ?? colors.area.replace(')', ' / 0.05)').replace('hsl(', 'hsla('),
         lineWidth: 2,
       });
       series.setData(data as AreaData[]);
@@ -140,7 +161,15 @@ export function LightweightChart({
       seriesRef.current = series;
     }
 
-    chart.timeScale().fitContent();
+    // Set initial visible range or fit all data
+    if (visibleFrom) {
+      chart.timeScale().setVisibleRange({
+        from: visibleFrom as Time,
+        to: format(new Date(), 'yyyy-MM-dd') as Time,
+      });
+    } else {
+      chart.timeScale().fitContent();
+    }
 
     // Resize observer
     const ro = new ResizeObserver((entries) => {
@@ -158,6 +187,20 @@ export function LightweightChart({
       seriesRef.current = null;
     };
   }, [colors, type, height, data]);
+
+  // Update visible range without recreating the chart (triggered when
+  // the user clicks a timeframe button but data + theme haven't changed)
+  useEffect(() => {
+    if (!chartRef.current) return;
+    if (visibleFrom) {
+      chartRef.current.timeScale().setVisibleRange({
+        from: visibleFrom as Time,
+        to: format(new Date(), 'yyyy-MM-dd') as Time,
+      });
+    } else {
+      chartRef.current.timeScale().fitContent();
+    }
+  }, [visibleFrom]);
 
   return (
     <div

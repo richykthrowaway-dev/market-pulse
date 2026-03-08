@@ -212,8 +212,9 @@ const SECTION_HANDLERS: Record<string, SectionHandler> = {
     const pos = ctx.positionsBySymbol.get(symbol);
     if (pos) {
       if (!pos.description) pos.description = desc;
-      // cols[5] is typically the listing exchange in IBKR CSVs
-      const listingExchange = cols[5]?.trim();
+      // cols[8] = Listing Exch (e.g. "VENTURE", "NYSE", "NASDAQ")
+      // cols[5] = Conid (numeric) — do NOT use as exchange
+      const listingExchange = cols[8]?.trim();
       if (listingExchange && !pos.exchange) pos.exchange = listingExchange;
     }
     const perf = ctx.perfBySymbol.get(symbol);

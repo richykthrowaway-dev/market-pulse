@@ -1,52 +1,91 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { subDays } from 'date-fns';
+import { subDays, format } from 'date-fns';
 import { X } from 'lucide-react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useStocks } from '@/hooks/useSupabaseData';
 import { StockCard } from '@/components/stocks/StockCard';
 import { StockChart } from '@/components/stocks/StockChart';
-import { useStockHistory } from '@/hooks/useStockHistory';
+import { useSparklineData } from '@/hooks/useSparklineData';
+import { useEodhdBarsForChart } from '@/hooks/useEodhdBarsForChart';
 import { useEodhdStock, type EodhdStockData } from '@/hooks/useEodhdStock';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useStocksPrefs } from '@/hooks/useStocksPrefs';
-import { TradingViewChart, TradingViewMiniChart, TradingViewTechnicalAnalysis } from '@/components/tradingview';
-import { LightweightCandlestick } from '@/components/charts';
 
-/** Shows real 52-week high/low from ohlcv_bars */
-function Week52Range({ symbol }: { symbol: string }) {
-  const { data: bars = [], isLoading } = useStockHistory(symbol, 365);
-  if (isLoading) return <p className="text-xl font-semibold mt-1 text-muted-foreground">Loading…</p>;
-  if (bars.length === 0) return <p className="text-xl font-semibold mt-1 text-muted-foreground">N/A</p>;
-  const closes = bars.map((b: any) => Number(b.close));
-  const low52 = Math.min(...closes);
-  const high52 = Math.max(...closes);
-  return <p className="text-xl font-semibold mt-1">${low52.toFixed(2)} - ${high52.toFixed(2)}</p>;
+/* ── Lazy-loaded heavy components (code-split, only fetched when needed) ── */
+const TradingViewChart = React.lazy(() =>
+  import('@/components/tradingview/TradingViewChart').then(m => ({ default: m.TradingViewChart }))
+);
+
+/* ── IntersectionObserver wrapper: mounts children only when near viewport ── */
+function LazySection({ children, height = 500, rootMargin = '400px 0px' }: {
+  children: React.ReactNode;
+  height?: number;
+  rootMargin?: string;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || visible) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setVisible(true); observer.disconnect(); } },
+      { rootMargin },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visible, rootMargin]);
+
+  return (
+    <div ref={ref} style={visible ? undefined : { minHeight: height }}>
+      {visible ? (
+        <React.Suspense fallback={<Skeleton className="w-full rounded-lg" style={{ height }} />}>
+          {children}
+        </React.Suspense>
+      ) : (
+        <Skeleton className="w-full rounded-lg" style={{ height }} />
+      )}
+    </div>
+  );
 }
 
-/** 52W range for external stocks using EODHD bars */
-function ExternalWeek52Range({ bars, currency = 'USD' }: { bars: Array<{ close: number }>; currency?: string }) {
-  if (bars.length === 0) return <p className="text-xl font-semibold mt-1 text-muted-foreground">N/A</p>;
-  const closes = bars.map(b => b.close);
-  const low52 = Math.min(...closes);
-  const high52 = Math.max(...closes);
-  const fmt = (v: number) => {
-    try { return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 2 }).format(v); }
-    catch { return `$${v.toFixed(2)}`; }
-  };
-  return <p className="text-xl font-semibold mt-1">{fmt(low52)} - {fmt(high52)}</p>;
+/**
+ * Number of stock cards that eagerly fetch sparkline data on mount.
+ * Cards beyond this index only fetch when scrolled into view.
+ */
+const EAGER_CARD_COUNT = 8;
+
+/** Maps chartDays → TradingView range string */
+function daysToTvRange(days: number): string {
+  if (days <= 7)    return '5D';
+  if (days <= 30)   return '1M';
+  if (days <= 90)   return '3M';
+  if (days <= 365)  return '12M';
+  if (days <= 1825) return '60M';
+  return 'ALL';
 }
 
-/** Wraps StockCard with real sparkline data from ohlcv_bars */
-function StockCardWithHistory({ stock, days, isActive, onClick }: {
+
+
+/** Wraps StockCard with real sparkline data from EODHD.
+ *  When `externalPriceHistory` is provided (for the active stock) it uses that
+ *  instead of fetching separately, guaranteeing chart/card consistency. */
+function StockCardWithHistory({ stock, days, isActive, onClick, externalPriceHistory }: {
   stock: any;
   days: number;
   isActive: boolean;
   onClick: () => void;
+  externalPriceHistory?: number[];
 }) {
-  const { data: bars = [] } = useStockHistory(stock.symbol, days);
-  const priceHistory = bars.map((b: any) => Number(b.close));
+  // Skip fetch when external data is provided (empty symbol → query disabled)
+  const { data: fetchedHistory = [] } = useSparklineData(
+    externalPriceHistory ? '' : stock.symbol,
+    days,
+  );
+  const priceHistory = externalPriceHistory ?? fetchedHistory;
 
+  // Compute period change from EODHD data so the card shows accurate values
   const overriddenStock = priceHistory.length >= 2
     ? {
         ...stock,
@@ -58,10 +97,46 @@ function StockCardWithHistory({ stock, days, isActive, onClick }: {
   return (
     <StockCard
       stock={overriddenStock}
-      priceHistory={priceHistory}
+      priceHistory={priceHistory.length >= 2 ? priceHistory : undefined}
       onClick={onClick}
       className={isActive ? "ring-2 ring-primary" : ""}
     />
+  );
+}
+
+/**
+ * Lazy stock card: renders a plain card immediately, swaps to
+ * StockCardWithHistory (with sparkline) once scrolled near viewport.
+ */
+function LazyStockCard({ stock, days, isActive, onClick }: {
+  stock: any;
+  days: number;
+  isActive: boolean;
+  onClick: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [shouldFetch, setShouldFetch] = useState(false);
+
+  useEffect(() => {
+    if (shouldFetch) return;
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) { setShouldFetch(true); observer.disconnect(); } },
+      { rootMargin: '300px 0px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [shouldFetch]);
+
+  if (shouldFetch) {
+    return <StockCardWithHistory stock={stock} days={days} isActive={isActive} onClick={onClick} />;
+  }
+
+  return (
+    <div ref={ref}>
+      <StockCard stock={stock} onClick={onClick} className={isActive ? "ring-2 ring-primary" : ""} />
+    </div>
   );
 }
 
@@ -73,10 +148,10 @@ function ExternalStockCardWithHistory({ externalData, days, isActive, onClick, e
   exchange?: string;
 }) {
   const filteredCloses = useMemo(() => {
-    const cutoff = subDays(new Date(), days);
+    const cutoff = format(subDays(new Date(), days), 'yyyy-MM-dd');
     return externalData.bars
-      .filter(bar => new Date(bar.date) >= cutoff)
-      .map(b => b.close);
+      .filter(bar => bar.date >= cutoff)
+      .map(b => Number(b.adjusted_close ?? b.close));
   }, [externalData.bars, days]);
 
   const overriddenStock = filteredCloses.length >= 2
@@ -154,9 +229,11 @@ const Stocks = () => {
   const { data: allStocks = [], isLoading } = useStocks();
   const { hiddenSymbols, pinnedStocks, hideSymbol, pinStock, unpinStock } = useStocksPrefs();
   const hiddenSet = useMemo(() => new Set(hiddenSymbols), [hiddenSymbols]);
-  const stocks = useMemo(() => allStocks.filter(s => !hiddenSet.has(s.symbol)), [allStocks, hiddenSet]);
+  const baseStocks = useMemo(() => allStocks.filter(s => !hiddenSet.has(s.symbol)), [allStocks, hiddenSet]);
   const [searchParams, setSearchParams] = useSearchParams();
   const [selectedIndex, setSelectedIndex] = React.useState(-1);
+  // chartDays drives sparkline period for ALL stock cards (local + pinned).
+  // Updated via StockChart's onRangeChange when user clicks 1W/1M/3M/1Y/All buttons.
   const [chartDays, setChartDays] = React.useState(30);
 
   // Track which pinned symbol is "active" (selected) and its loaded data for the detail panel
@@ -165,39 +242,76 @@ const Stocks = () => {
   const pinnedDataRef = React.useRef<Record<string, EodhdStockData>>({});
   const [, forceUpdate] = React.useState(0);
 
+  // Promoted symbol: searched local stock moved to top of list (not persisted)
+  const [promotedSymbol, setPromotedSymbol] = React.useState<string | null>(null);
+
+  // Reorder stocks: promoted symbol always first
+  const stocks = useMemo(() => {
+    if (!promotedSymbol) return baseStocks;
+    const idx = baseStocks.findIndex(s => s.symbol.toUpperCase() === promotedSymbol.toUpperCase());
+    if (idx <= 0) return baseStocks; // Already first or not found
+    return [baseStocks[idx], ...baseStocks.slice(0, idx), ...baseStocks.slice(idx + 1)];
+  }, [baseStocks, promotedSymbol]);
+
   const urlSymbol = searchParams.get('symbol');
   const urlExchange = searchParams.get('exchange') || 'US';
   const urlName = searchParams.get('name') || undefined;
 
-  const localIndex = urlSymbol
-    ? stocks.findIndex(s => s.symbol.toUpperCase() === urlSymbol.toUpperCase())
-    : -1;
-
-  const isExternalUrl = !!urlSymbol && localIndex === -1;
-
-  // When arriving via URL with an external symbol, pin it
+  // Handle URL search params — wait for stocks to load before deciding local vs external
   useEffect(() => {
-    if (isExternalUrl && urlSymbol) {
+    if (!urlSymbol || isLoading) return;
+
+    const localIdx = baseStocks.findIndex(s => s.symbol.toUpperCase() === urlSymbol.toUpperCase());
+
+    if (localIdx >= 0) {
+      // Local stock: promote to top of list and select it
+      setPromotedSymbol(urlSymbol.toUpperCase());
+      setSelectedIndex(0);
+      setActivePinnedKey(null);
+    } else {
+      // External stock: pin it for data fetching (renders at top of card list)
       pinStock(urlSymbol, urlExchange, urlName);
       setActivePinnedKey(`${urlSymbol.toUpperCase()}.${urlExchange}`);
       setSelectedIndex(-1);
-      setSearchParams({}, { replace: true });
+      setPromotedSymbol(null);
     }
-  }, [isExternalUrl, urlSymbol]);
+    setSearchParams({}, { replace: true });
+  }, [urlSymbol, isLoading, baseStocks.length]);
 
-  // Auto-select local stock from URL
-  useEffect(() => {
-    if (urlSymbol && localIndex >= 0) {
-      setSelectedIndex(localIndex);
-      setSearchParams({}, { replace: true });
-    }
-  }, [urlSymbol, localIndex]);
+  const isExternalUrl = false; // No longer used as a separate flag
 
   const activePinnedData = activePinnedKey ? pinnedDataRef.current[activePinnedKey] ?? null : null;
   const activePinnedMeta = activePinnedKey
     ? pinnedStocks.find(ps => `${ps.symbol.toUpperCase()}.${ps.exchange}` === activePinnedKey)
     : null;
   const isPinnedSelected = selectedIndex === -1 && activePinnedData !== null;
+
+  // Fetch full 5Y EODHD bars for the active LOCAL stock so StockChart uses
+  // the same data source (and adjusted_close) as the sparklines.
+  const activeLocalSymbol = !isPinnedSelected ? (stocks[selectedIndex >= 0 ? selectedIndex : 0]?.symbol ?? null) : null;
+  const { data: activeLocalBars } = useEodhdBarsForChart(activeLocalSymbol);
+
+  /** EODHD bars filtered to current timeframe — used for card sparkline consistency. */
+  const areaChartData = useMemo(() => {
+    const bars: any[] = isPinnedSelected && activePinnedData
+      ? activePinnedData.bars
+      : (activeLocalBars ?? []);
+    if (bars.length < 2) return [];
+    const cutoff = format(subDays(new Date(), chartDays), 'yyyy-MM-dd');
+    return bars
+      .filter((b: any) => b.date >= cutoff)
+      .map((b: any) => ({
+        time: b.date as string,
+        value: Number(b.adjusted_close ?? b.close),
+      }));
+  }, [isPinnedSelected, activePinnedData, activeLocalBars, chartDays]);
+
+  /** Sparkline (close prices only) derived from the same EODHD bars the chart uses.
+   *  Passed to the active stock's card to guarantee chart ↔ card consistency. */
+  const activeSparkline = useMemo(() => {
+    if (areaChartData.length < 2) return undefined;
+    return areaChartData.map(d => d.value);
+  }, [areaChartData]);
 
   // SEO
   useEffect(() => {
@@ -247,8 +361,8 @@ const Stocks = () => {
             const pinKey = `${sym}.${ps.exchange}`;
             const isActive = isPinnedSelected && activePinnedKey === pinKey;
             return (
+              <div key={pinKey} data-stock-symbol={sym}>
               <PinnedStockCard
-                key={pinKey}
                 pin={ps}
                 days={chartDays}
                 isActive={isActive}
@@ -267,12 +381,13 @@ const Stocks = () => {
                   if (activePinnedKey === pinKey) forceUpdate(n => n + 1);
                 }}
               />
+              </div>
             );
           })}
 
           <div className="space-y-4">
             {stocks.map((stock, idx) => (
-              <div key={stock.symbol} className="relative">
+              <div key={stock.symbol} className="relative" data-stock-symbol={stock.symbol.toUpperCase()}>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -288,12 +403,28 @@ const Stocks = () => {
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
-                <StockCardWithHistory
-                  stock={stock}
-                  days={chartDays}
-                  isActive={selectedIndex === idx && !isPinnedSelected}
-                  onClick={() => { setSelectedIndex(idx); setActivePinnedKey(null); }}
-                />
+                {/* First EAGER_CARD_COUNT cards fetch sparkline immediately;
+                    the rest lazy-load when scrolled near viewport */}
+                {idx < EAGER_CARD_COUNT ? (
+                  <StockCardWithHistory
+                    stock={stock}
+                    days={chartDays}
+                    isActive={selectedIndex === idx && !isPinnedSelected}
+                    onClick={() => { setSelectedIndex(idx); setActivePinnedKey(null); }}
+                    externalPriceHistory={
+                      idx === (selectedIndex >= 0 ? selectedIndex : 0) && !isPinnedSelected
+                        ? activeSparkline
+                        : undefined
+                    }
+                  />
+                ) : (
+                  <LazyStockCard
+                    stock={stock}
+                    days={chartDays}
+                    isActive={selectedIndex === idx && !isPinnedSelected}
+                    onClick={() => { setSelectedIndex(idx); setActivePinnedKey(null); }}
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -302,96 +433,42 @@ const Stocks = () => {
         <section className="lg:col-span-2 space-y-4 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-2" aria-label="Stock details">
           {activeStock && (
             <>
+              {/* ── Above-the-fold: loads immediately ── */}
               <StockChart
                 symbol={activeStock.symbol}
                 name={activeStock.name}
                 currentPrice={activeStock.price}
                 volatility={2.5}
                 onRangeChange={setChartDays}
-                externalBars={isPinnedSelected && activePinnedData ? activePinnedData.bars : undefined}
+                externalBars={
+                  isPinnedSelected && activePinnedData
+                    ? activePinnedData.bars      // pinned stock — EODHD bars already fetched
+                    : (activeLocalBars ?? undefined) // local stock — 5Y EODHD bars
+                }
                 exchange={isPinnedSelected && activePinnedMeta ? activePinnedMeta.exchange : undefined}
                 logoUrl={isPinnedSelected && activePinnedData ? activePinnedData.stock.logoUrl : undefined}
                 currency={isPinnedSelected && activePinnedData ? activePinnedData.stock.currency : 'USD'}
               />
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-                <div className="bg-card rounded-lg p-4 shadow">
-                  <h3 className="font-medium text-sm text-muted-foreground">Market Cap</h3>
-                  <p className="text-xl font-semibold mt-1">
-                    {(activeStock.marketCap || (activeStock as any).market_cap || 0) > 0
-                      ? (() => {
-                          const mc = activeStock.marketCap || (activeStock as any).market_cap || 0;
-                          const cur = isPinnedSelected && activePinnedData ? activePinnedData.stock.currency : 'USD';
-                          const sym = cur === 'USD' ? '$' : cur + ' ';
-                          return mc >= 1e12 ? `${sym}${(mc / 1e12).toFixed(2)}T`
-                               : mc >= 1e9  ? `${sym}${(mc / 1e9).toFixed(2)}B`
-                               : mc >= 1e6  ? `${sym}${(mc / 1e6).toFixed(2)}M`
-                               : `${sym}${mc.toFixed(0)}`;
-                        })()
-                      : 'N/A'}
-                  </p>
+              {/* TradingView Advanced Chart — range synced to timeframe buttons.
+                  key forces a full remount on symbol or range change so the
+                  widget always initializes with the correct range. */}
+              <LazySection height={540}>
+                <div className="mt-4">
+                  <TradingViewChart
+                    key={`${activeStock.symbol}-${daysToTvRange(chartDays)}`}
+                    symbol={activeStock.symbol}
+                    interval="D"
+                    range={daysToTvRange(chartDays)}
+                    height={500}
+                    hideSideToolbar
+                    className="w-full"
+                    aria-label={`TradingView advanced chart for ${activeStock.symbol}`}
+                  />
                 </div>
-                <div className="bg-card rounded-lg p-4 shadow">
-                  <h3 className="font-medium text-sm text-muted-foreground">Volume</h3>
-                  <p className="text-xl font-semibold mt-1">
-                    {activeStock.volume > 0
-                      ? `${(activeStock.volume / 1_000_000).toFixed(2)}M`
-                      : 'N/A'}
-                  </p>
-                </div>
-                <div className="bg-card rounded-lg p-4 shadow">
-                  <h3 className="font-medium text-sm text-muted-foreground">52W Range</h3>
-                  {isPinnedSelected && activePinnedData
-                    ? <ExternalWeek52Range bars={activePinnedData.bars} currency={activePinnedData.stock.currency} />
-                    : <Week52Range symbol={activeStock.symbol} />
-                  }
-                </div>
-              </div>
+              </LazySection>
 
-              {/* Lightweight Charts Candlestick */}
-              <div className="mt-6">
-                <LightweightCandlestick
-                  symbol={activeStock.symbol}
-                  name={activeStock.name}
-                  height={400}
-                  externalBars={isPinnedSelected && activePinnedData ? activePinnedData.bars : undefined}
-                />
-              </div>
 
-              {/* TradingView Mini Chart */}
-              <div className="mt-4">
-                <TradingViewMiniChart
-                  symbol={activeStock.symbol}
-                  height={500}
-                  dateRange="12M"
-                  className="w-full"
-                  aria-label={`Mini chart for ${activeStock.symbol}`}
-                />
-              </div>
-
-              {/* TradingView Advanced Chart */}
-              <div className="mt-4">
-                <TradingViewChart
-                  symbol={activeStock.symbol}
-                  interval="D"
-                  height={500}
-                  hideTopToolbar
-                  hideSideToolbar
-                  className="w-full"
-                  aria-label={`TradingView advanced chart for ${activeStock.symbol}`}
-                />
-              </div>
-
-              {/* TradingView Technical Analysis */}
-              <div className="mt-4">
-                <h3 className="text-lg font-semibold mb-2">Technical Analysis</h3>
-                <TradingViewTechnicalAnalysis
-                  symbol={activeStock.symbol}
-                  interval="1D"
-                  height={425}
-                  className="w-full"
-                />
-              </div>
             </>
           )}
         </section>

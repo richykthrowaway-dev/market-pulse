@@ -13,7 +13,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { batchLookupSymbols } from '@/services/symbolLookupService';
-import { getGicsSectorColor, normalizeSector } from '@/lib/gicsColors';
+import { getGicsSectorColor, normalizeSector, getCategoryColor } from '@/lib/gicsColors';
 import { Sparkline } from '@/components/ui/sparkline';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as ReTooltip } from 'recharts';
 import { AllocationExplorer, type GroupingKey, type AllocationHolding, type SymbolMeta, type SortCol as AllocSortCol, groupColor, COUNTRY_NAMES, classifyHolding } from '@/components/portfolio/AllocationExplorer';
@@ -273,12 +273,12 @@ function PnlTimeframeCard({ parsedStatement, timeframe }: { parsedStatement: Par
 
 /* ─── Market Cap Distribution Card ─── */
 
-const MCAP_TIERS: { label: string; min: number; color: string }[] = [
-  { label: 'Mega Cap', min: 200e9, color: 'hsl(220,65%,50%)' },
-  { label: 'Large Cap', min: 10e9, color: 'hsl(190,55%,45%)' },
-  { label: 'Mid Cap', min: 2e9, color: 'hsl(45,65%,50%)' },
-  { label: 'Small Cap', min: 300e6, color: 'hsl(25,60%,50%)' },
-  { label: 'Micro Cap', min: 0, color: 'hsl(0,50%,55%)' },
+const MCAP_TIERS: { label: string; min: number }[] = [
+  { label: 'Mega Cap',  min: 200e9  },
+  { label: 'Large Cap', min: 10e9   },
+  { label: 'Mid Cap',   min: 2e9    },
+  { label: 'Small Cap', min: 300e6  },
+  { label: 'Micro Cap', min: 0      },
 ];
 
 function classifyMcap(mc: number | undefined): string {
@@ -290,7 +290,7 @@ function classifyMcap(mc: number | undefined): string {
 }
 
 function mcapColor(label: string): string {
-  return MCAP_TIERS.find((t) => t.label === label)?.color ?? 'hsl(var(--muted))';
+  return label === 'Unknown' ? 'hsl(var(--muted))' : getCategoryColor('cap', label);
 }
 
 function MarketCapCard({ holdings, marketCaps }: { holdings: { ticker: string; marketValue: number }[]; marketCaps: Record<string, number> }) {
@@ -311,7 +311,7 @@ function MarketCapCard({ holdings, marketCaps }: { holdings: { ticker: string; m
       value: map[t.label]?.value || 0,
       count: map[t.label]?.count || 0,
       pct: total > 0 ? ((map[t.label]?.value || 0) / total) * 100 : 0,
-      color: t.color,
+      color: getCategoryColor('cap', t.label),
     })).filter((b) => b.value > 0);
     // Add unknown if present
     if (map['Unknown']) {

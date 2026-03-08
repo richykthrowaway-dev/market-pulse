@@ -53,14 +53,28 @@ function mapNews(row: any): NewsItem {
   };
 }
 
-export function useStocks() {
+const DEFAULT_STOCKS = ['AAPL', 'GOOG', 'NVDA', 'AMZN', 'NFLX'];
+
+export function useStocks(symbols?: string[]) {
+  const querySymbols = symbols || DEFAULT_STOCKS;
+
   return useQuery({
-    queryKey: ['stocks'],
+    queryKey: ['stocks', querySymbols],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // If no symbols specified, use defaults only (no .in() filter = all rows)
+      // If symbols specified, filter to only those symbols
+      let query = supabase
         .from('stocks')
-        .select('symbol, name, price, change, change_percent, volume, market_cap, last_updated')
-        .order('market_cap', { ascending: false });
+        .select('symbol, name, price, change, change_percent, volume, market_cap, last_updated');
+
+      if (symbols) {
+        query = query.in('symbol', symbols);
+      } else {
+        // Default: fetch only the top 5 by default
+        query = query.in('symbol', DEFAULT_STOCKS);
+      }
+
+      const { data, error } = await query.order('market_cap', { ascending: false });
       if (error) throw error;
       return (data ?? []).map(mapStock);
     },
@@ -96,25 +110,86 @@ export function useCurrencies() {
   });
 }
 
-export function useNews(watchlistSymbols?: string[]) {
+/** Top N stocks by market cap — used for sector analysis, breadth, cap distribution */
+export function useTopStocksByMarketCap(limit = 300) {
   return useQuery({
-    queryKey: ['news', watchlistSymbols],
+    queryKey: ['stocks', 'top', limit],
     queryFn: async () => {
-      let query = supabase
-        .from('news')
-        .select('id, title, summary, source, url, image_url, published_at, related_symbols')
-        .order('published_at', { ascending: false })
-        .limit(50);
-
-      // If watchlist symbols provided, filter using overlaps
-      if (watchlistSymbols && watchlistSymbols.length > 0) {
-        query = query.overlaps('related_symbols', watchlistSymbols);
-      }
-
-      const { data, error } = await query;
+      const { data, error } = await supabase
+        .from('stocks')
+        .select('symbol, name, price, change, change_percent, volume, market_cap, last_updated')
+        .order('market_cap', { ascending: false })
+        .limit(limit);
       if (error) throw error;
-      return (data ?? []).map(mapNews);
+      return (data ?? []).map(mapStock);
+    },
+    ...QUERY_CONFIG.stocks,
+  });
+}
+
+export function useNews(watchlistSymbols?: string[], country?: string) {
+  return useQuery({
+    queryKey: ['news', country ?? '', watchlistSymbols ?? []],
+    queryFn: async (): Promise<NewsItem[]> => {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+      const url = new URL(`${supabaseUrl}/functions/v1/api-news`);
+      if (country) {
+        url.searchParams.set('country', country);
+      }
+      if (watchlistSymbols && watchlistSymbols.length > 0) {
+        url.searchParams.set('symbols', watchlistSymbols.join(','));
+      }
+      url.searchParams.set('days', '7');
+
+      const res = await fetch(url.toString(), {
+        headers: {
+          apikey: supabaseKey,
+          Authorization: `Bearer ${supabaseKey}`,
+        },
+      });
+      if (!res.ok) throw new Error(`api-news: ${res.status}`);
+      const json = await res.json();
+      return (json.news ?? []).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        summary: item.summary,
+        source: item.source,
+        url: item.url,
+        imageUrl: item.imageUrl ?? undefined,
+        publishedAt: new Date(item.publishedAt),
+        relatedSymbols: item.relatedSymbols ?? undefined,
+      }));
     },
     ...QUERY_CONFIG.news,
+  });
+}
+
+/**
+ * Fetch news articles for a specific country.
+ * Queries the news table by country_code (populated by news-sync-global edge function).
+ */
+export function useNewsByCountry(countryCode?: string) {
+  return useQuery({
+    queryKey: ['news', 'country', countryCode],
+    queryFn: async (): Promise<NewsItem[]> => {
+      const { data, error } = await supabase
+        .from('news')
+        .select('id, title, summary, source, url, image_url, published_at, related_symbols')
+        .eq('country_code', countryCode!.toUpperCase())
+        .order('published_at', { ascending: false })
+        .limit(20);
+      // Gracefully return empty if country_code column doesn't exist yet
+      if (error) {
+        console.warn(`useNewsByCountry(${countryCode}):`, error.message);
+        return [];
+      }
+      return (data ?? []).map(mapNews);
+    },
+    enabled: !!countryCode,
+    staleTime: 5 * 60_000,
+    refetchInterval: 5 * 60_000,
+    retry: 1,
   });
 }

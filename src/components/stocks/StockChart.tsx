@@ -1,19 +1,19 @@
 
 import React, { useState, useMemo } from 'react';
-import { 
-  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, 
-  ResponsiveContainer, Legend 
-} from 'recharts';
+import { useTheme } from 'next-themes';
+import { subDays, format } from 'date-fns';
 import { useStockHistory } from '@/hooks/useStockHistory';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StockLogo } from '@/components/stocks/StockLogo';
 import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LightweightChart } from '@/components/charts/LightweightChart';
+import { resolveBand, getBandHex, getBandRgba } from '@/lib/sparklineTvColors';
 import type { EodBar } from '@/services/eodhdApi';
 
 const timeRanges = [
-  { label: '1W', days: 7 },
+  { label: '1W', days: 6 },
   { label: '1M', days: 30 },
   { label: '3M', days: 90 },
   { label: '1Y', days: 365 },
@@ -38,8 +38,8 @@ interface StockChartProps {
   currency?: string;
 }
 
-export function StockChart({ 
-  symbol, 
+export function StockChart({
+  symbol,
   name,
   currentPrice,
   className,
@@ -49,55 +49,60 @@ export function StockChart({
   logoUrl,
   currency = 'USD',
 }: StockChartProps) {
-  const [selectedRange, setSelectedRange] = useState(timeRanges[1]); // Default to 1M
-  
-  const { data: localBars = [], isLoading: localLoading } = useStockHistory(
-    externalBars ? '' : symbol, // skip local fetch when external bars provided
-    selectedRange.days
+  const [selectedRange, setSelectedRange] = useState(timeRanges[1]); // Default 1M
+  const { resolvedTheme } = useTheme();
+
+  // Fetch bars for the selected range — React Query caches per (symbol, days).
+  const { data: allLocalBars = [], isLoading: localLoading } = useStockHistory(
+    externalBars ? '' : symbol,
+    selectedRange.days,
   );
-  
+
   const isLoading = externalBars ? false : localLoading;
-  
-  // Use external bars filtered by selected range, or local bars
-  const bars = useMemo(() => {
-    if (externalBars) {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - selectedRange.days);
-      return externalBars.filter(b => new Date(b.date) >= cutoff);
+
+  // The cutoff date string for the selected range (used for band colour + visible range)
+  const visibleFrom = useMemo(
+    () => selectedRange.days >= 9999 ? undefined : format(subDays(new Date(), selectedRange.days), 'yyyy-MM-dd'),
+    [selectedRange.days],
+  );
+
+  // All available bars mapped to AreaData[] — the chart holds the full history
+  // so the user can scroll/zoom freely beyond the selected timeframe window.
+  const lwData = useMemo(() => {
+    const src: any[] = externalBars ?? allLocalBars;
+    return src.map((bar: any) => ({
+      time: (bar.date
+        ? String(bar.date).slice(0, 10)
+        : new Date(bar.ts).toISOString().slice(0, 10)) as string,
+      value: Number(bar.adjusted_close ?? bar.close),
+    }));
+  }, [externalBars, allLocalBars]);
+
+  // Slice to selected range for band-colour computation only
+  const windowData = useMemo(() => {
+    if (!visibleFrom) return lwData;
+    return lwData.filter(d => (d.time as string) >= visibleFrom);
+  }, [lwData, visibleFrom]);
+
+  // Resolve performance-band colour from the visible window's period return
+  const bandColor = useMemo(() => {
+    const theme = resolvedTheme === 'dark' ? 'dark' : 'light';
+    if (windowData.length < 2) {
+      return { hex: '#3b82f6', top: 'rgba(59,130,246,0.4)', bottom: 'rgba(59,130,246,0.05)' };
     }
-    return localBars;
-  }, [externalBars, localBars, selectedRange.days]);
+    const first = windowData[0].value;
+    const last  = windowData[windowData.length - 1].value;
+    const pct   = first ? ((last - first) / first) * 100 : 0;
+    const band  = resolveBand(pct);
+    return {
+      hex:    getBandHex(band, theme),
+      top:    getBandRgba(band, theme, 0.4),
+      bottom: getBandRgba(band, theme, 0.05),
+    };
+  }, [windowData, resolvedTheme]);
 
-  const chartData = useMemo(() => {
-    if (bars.length === 0) return [];
-    return bars.map((bar: any) => {
-      const date = new Date(bar.ts ?? bar.date);
-      const days = selectedRange.days;
-      return {
-        date: date.toLocaleDateString('en-US', {
-          month: days > 90 ? 'short' : 'numeric',
-          day: 'numeric',
-          year: days > 365 ? '2-digit' : undefined,
-        }),
-        price: Number(bar.close),
-      };
-    });
-  }, [bars, selectedRange.days]);
-  
-  const minPrice = chartData.length > 0 ? Math.min(...chartData.map(d => d.price)) * 0.98 : 0;
-  const maxPrice = chartData.length > 0 ? Math.max(...chartData.map(d => d.price)) * 1.02 : 100;
-  
-  const formatYAxis = (value: number) => {
-    try {
-      return new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 2 }).format(value);
-    } catch { return `$${value.toFixed(2)}`; }
-  };
-
-  // Compute a reasonable tick interval
-  const tickInterval = chartData.length > 20 ? Math.floor(chartData.length / 10) : 1;
-  
   return (
-    <Card className={cn("overflow-hidden h-full", className)}>
+    <Card className={cn('overflow-hidden', className)}>
       <CardHeader className="flex-row items-center justify-between pb-4">
         <div className="flex items-center gap-3">
           <StockLogo ticker={symbol} name={name} size="md" exchange={exchange} logoUrl={logoUrl} />
@@ -108,9 +113,9 @@ export function StockChart({
         </div>
         <div className="flex gap-1">
           {timeRanges.map((range) => (
-            <Button 
-              key={range.label} 
-              variant={selectedRange.label === range.label ? "default" : "outline"} 
+            <Button
+              key={range.label}
+              variant={selectedRange.label === range.label ? 'default' : 'outline'}
               size="sm"
               onClick={() => {
                 setSelectedRange(range);
@@ -123,77 +128,26 @@ export function StockChart({
           ))}
         </div>
       </CardHeader>
-      <CardContent className="p-0 pb-4">
-        <div className="h-[300px] w-full px-4">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <Skeleton className="w-full h-full rounded-md" />
-            </div>
-          ) : chartData.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              No price data available for this range
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart
-                data={chartData}
-                margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
-                  vertical={false} 
-                  stroke="hsl(var(--border))" 
-                />
-                <XAxis 
-                  dataKey="date" 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10 }}
-                  tickMargin={10}
-                  interval={tickInterval}
-                />
-                <YAxis 
-                  domain={[minPrice, maxPrice]} 
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{ fontSize: 10 }}
-                  tickMargin={10}
-                  tickFormatter={formatYAxis}
-                  width={60}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "var(--radius)",
-                    boxShadow: "0 2px 10px rgba(0, 0, 0, 0.1)",
-                  }}
-                  formatter={(value: number) => {
-                    try {
-                      return [new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 2 }).format(value), 'Price'];
-                    } catch { return [`$${value.toFixed(2)}`, 'Price']; }
-                  }}
-                  labelFormatter={(label) => `Date: ${label}`}
-                />
-                <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="price" 
-                  stroke="hsl(var(--primary))" 
-                  fillOpacity={1}
-                  fill="url(#colorPrice)"
-                  strokeWidth={2}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          )}
-        </div>
+
+      <CardContent className="p-0 pb-0">
+        {isLoading ? (
+          <Skeleton className="w-full rounded-none" style={{ height: 300 }} />
+        ) : lwData.length === 0 ? (
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">
+            No price data available for this range
+          </div>
+        ) : (
+          <LightweightChart
+            data={lwData}
+            type="area"
+            height={300}
+            areaLineColor={bandColor.hex}
+            areaTopColor={bandColor.top}
+            areaBottomColor={bandColor.bottom}
+            visibleFrom={visibleFrom}
+            className="rounded-none"
+          />
+        )}
       </CardContent>
     </Card>
   );

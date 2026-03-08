@@ -14,11 +14,11 @@ let tickerTapeIdCounter = 0;
 export function TradingViewTickerTape({
   symbols,
   showSymbolLogo = true,
-  isTransparent = true,
+  isTransparent = false,
   displayMode = 'adaptive',
   className,
 }: TradingViewTickerTapeProps) {
-  const { resolvedTheme } = useTradingView();
+  const { resolvedTheme, mounted } = useTradingView();
   const containerRef = useRef<HTMLDivElement>(null);
   const containerId = useRef(`tv-ticker-tape-${++tickerTapeIdCounter}`);
 
@@ -36,7 +36,7 @@ export function TradingViewTickerTape({
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || !mounted) return;
     container.innerHTML = '';
 
     const widget = document.createElement('div');
@@ -62,7 +62,7 @@ export function TradingViewTickerTape({
     container.appendChild(widget);
 
     return () => { container.innerHTML = ''; };
-  }, [resolvedTheme, symbols, showSymbolLogo, isTransparent, displayMode]);
+  }, [resolvedTheme, symbols, showSymbolLogo, isTransparent, displayMode, mounted]);
 
   return <div ref={containerRef} id={containerId.current} className={className} />;
 }

@@ -1,12 +1,12 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { useIndices } from '@/hooks/useSupabaseData';
 import { cn } from '@/lib/utils';
 import { Flag } from '@/components/ui/Flag';
 import { formatPercentage } from '@/utils/stocksApi';
 import type { MarketIndex } from '@/utils/stocksApi';
-import { TradingViewHeatmap, TradingViewSymbolOverview } from '@/components/tradingview';
+import { TradingViewHeatmap, TradingViewEtfHeatmap } from '@/components/tradingview';
 
 const REGION_ORDER = [
   'United Kingdom',
@@ -54,8 +54,41 @@ function IndexCard({ index }: { index: MarketIndex }) {
   );
 }
 
+// Overhead: navbar(64) + content-pad-top(24) + small-h1+mb-2(28) + 2×card(36px each=72) + gap(8) + content-pad-bottom(24)
+const LAYOUT_OVERHEAD = 224;
+
+function useHeatmapHeight() {
+  const [height, setHeight] = useState(() =>
+    Math.max(180, Math.floor((window.innerHeight - LAYOUT_OVERHEAD) / 2))
+  );
+  useEffect(() => {
+    function update() {
+      setHeight(Math.max(180, Math.floor((window.innerHeight - LAYOUT_OVERHEAD) / 2)));
+    }
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+  return height;
+}
+
 const Markets = () => {
   const { data: indices = [], isLoading } = useIndices();
+  const heatmapHeight = useHeatmapHeight();
+
+  // Lock page scroll & shrink the PageLayout h1 title
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    const h1 = document.querySelector('main h1') as HTMLElement | null;
+    let prevClass = '';
+    if (h1) {
+      prevClass = h1.className;
+      h1.className = 'text-sm font-medium text-muted-foreground mb-2 tracking-wide';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      if (h1) h1.className = prevClass;
+    };
+  }, []);
 
   const sorted = [...indices].sort((a, b) => {
     const ai = REGION_ORDER.indexOf(a.region);
@@ -65,29 +98,17 @@ const Markets = () => {
 
   return (
     <PageLayout title="Global Markets">
-      <head>
-        <title>Global Markets | MarketPulse</title>
-        <meta name="description" content="Track global market indices in real time — S&amp;P 500, NASDAQ, DAX, Nikkei 225, and more." />
-      </head>
 
-      {/* Market Heatmap */}
-      <div className="mb-6 bg-card rounded-lg p-4 shadow border border-border">
-        <h2 className="text-xl font-semibold mb-3">S&P 500 Heatmap</h2>
-        <TradingViewHeatmap dataSource="SPX500" height={450} className="w-full" />
-      </div>
-
-      {/* Symbol Overview */}
-      <div className="mb-6 bg-card rounded-lg p-4 shadow border border-border">
-        <h2 className="text-xl font-semibold mb-3">Key Indices</h2>
-        <TradingViewSymbolOverview
-          symbols={[
-            ['S&P 500', 'FOREXCOM:SPXUSD|1D'],
-            ['Nasdaq 100', 'FOREXCOM:NSXUSD|1D'],
-            ['Dow Jones', 'FOREXCOM:DJI|1D'],
-          ]}
-          height={400}
-          className="w-full"
-        />
+      {/* Heatmaps — stacked, sized to fill viewport without scrolling */}
+      <div className="flex flex-col gap-2">
+        <div className="bg-card rounded-lg px-3 pt-2 pb-2 shadow border border-border">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">S&P 500 Heatmap</h2>
+          <TradingViewHeatmap dataSource="SPX500" height={heatmapHeight} className="w-full" />
+        </div>
+        <div className="bg-card rounded-lg px-3 pt-2 pb-2 shadow border border-border">
+          <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">ETF Heatmap</h2>
+          <TradingViewEtfHeatmap height={heatmapHeight} className="w-full" />
+        </div>
       </div>
 
       {/* Index Cards */}

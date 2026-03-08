@@ -145,6 +145,84 @@ export function getBaselineY(
   return height - ((data[0] - yMin) / yRange) * height;
 }
 
+// ── Bezier-smooth path generators ────────────────────────────────────────────
+//
+// These replace the legacy generatePath / generateFillPath functions for
+// rendering. Catmull-Rom interpolation is used: the curve passes through
+// every real data point while producing smooth transitions between them.
+// Control points for segment P1→P2:
+//   cp1 = P1 + (P2 - P0) / 6
+//   cp2 = P2 - (P3 - P1) / 6
+// Edge cases: duplicate the first/last point so boundary segments behave.
+
+function toPoints(
+  data: number[],
+  width: number,
+  height: number,
+  padding: number,
+): Array<{ x: number; y: number }> {
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const pad = range * padding;
+  const yMin = min - pad;
+  const yMax = max + pad;
+  const yRange = yMax - yMin;
+  return data.map((v, i) => ({
+    x: (i / (data.length - 1)) * width,
+    y: height - ((v - yMin) / yRange) * height,
+  }));
+}
+
+/**
+ * Generate a smooth SVG path string using Catmull-Rom→cubic-bezier interpolation.
+ * Produces a `<path d={...}>` value; every data point lies on the curve.
+ */
+export function generateSmoothPath(
+  data: number[],
+  width: number,
+  height: number,
+  padding = 0.03,
+): string {
+  if (data.length < 2) return '';
+  const pts = toPoints(data, width, height, padding);
+
+  if (pts.length === 2) {
+    return `M ${pts[0].x.toFixed(2)},${pts[0].y.toFixed(2)} L ${pts[1].x.toFixed(2)},${pts[1].y.toFixed(2)}`;
+  }
+
+  let d = `M ${pts[0].x.toFixed(2)},${pts[0].y.toFixed(2)}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)];
+    const p1 = pts[i];
+    const p2 = pts[i + 1];
+    const p3 = pts[Math.min(pts.length - 1, i + 2)];
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const cp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const cp2y = p2.y - (p3.y - p1.y) / 6;
+    d += ` C ${cp1x.toFixed(2)},${cp1y.toFixed(2)} ${cp2x.toFixed(2)},${cp2y.toFixed(2)} ${p2.x.toFixed(2)},${p2.y.toFixed(2)}`;
+  }
+  return d;
+}
+
+/**
+ * Generate a closed smooth fill path (smooth line + straight close to baseline).
+ * Produces a `<path d={...}>` value suitable for a gradient fill area.
+ */
+export function generateSmoothFillPath(
+  data: number[],
+  width: number,
+  height: number,
+  padding = 0.03,
+): string {
+  if (data.length < 2) return '';
+  const smooth = generateSmoothPath(data, width, height, padding);
+  return `${smooth} L ${width.toFixed(2)},${height.toFixed(2)} L 0,${height.toFixed(2)} Z`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Get the SVG coordinates for a specific data point.
  */

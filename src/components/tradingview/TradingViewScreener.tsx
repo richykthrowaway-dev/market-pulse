@@ -22,13 +22,13 @@ export function TradingViewScreener({
   height = 550,
   className,
 }: TradingViewScreenerProps) {
-  const { resolvedTheme } = useTradingView();
+  const { resolvedTheme, mounted } = useTradingView();
   const containerRef = useRef<HTMLDivElement>(null);
   const containerId = useRef(`tv-screener-${++screenerIdCounter}`);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || !mounted) return;
     container.innerHTML = '';
 
     const widget = document.createElement('div');
@@ -51,13 +51,13 @@ export function TradingViewScreener({
       showToolbar,
       colorTheme: resolvedTheme,
       locale: 'en',
-      isTransparent: true,
+      isTransparent: false,
     });
     widget.appendChild(script);
     container.appendChild(widget);
 
     return () => { container.innerHTML = ''; };
-  }, [resolvedTheme, defaultColumn, defaultScreen, market, showToolbar, width, height]);
+  }, [resolvedTheme, defaultColumn, defaultScreen, market, showToolbar, width, height, mounted]);
 
   return <div ref={containerRef} id={containerId.current} className={className} />;
 }

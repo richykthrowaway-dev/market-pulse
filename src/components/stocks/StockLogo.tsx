@@ -42,9 +42,17 @@ const EXCHANGE_TO_SUFFIX: Record<string, string> = {
   NYSE:   '',
   NASDAQ: '',
   AMEX:   '',
+  ARCA:   '',
+  BATS:   '',
   CBOE:   '',
+  PINK:   '',        // OTC / Pink sheets — treat as US for Logo.dev
+  OTCBB:  '',        // OTC Bulletin Board
   TO:     'TO',      // TSX
+  TSX:    'TO',      // TSX (alternate code)
   V:      'V',       // TSX Venture
+  VENTURE:'V',       // TSX Venture (IBKR listing exchange code)
+  TSXV:   'V',       // TSX Venture (alternate)
+  CVE:    'V',       // TSX Venture (alternate)
   CN:     'CN',      // CSE
   NEO:    'NE',      // NEO Exchange
 
@@ -137,8 +145,9 @@ export function buildQualifiedTicker(
     if (suffix === '') return upper;
     // suffix is defined and non-empty → append
     if (suffix) return `${upper}.${suffix}`;
-    // Unknown exchange code → append raw as fallback
-    return `${upper}.${exchange.toUpperCase()}`;
+    // Unknown exchange code (e.g. a Conid number) → return bare ticker
+    // Never append unrecognized codes — they produce garbage URLs like NFLX.15124833
+    return upper;
   }
 
   // Fallback: infer from country
@@ -164,13 +173,15 @@ export function StockLogo({
     ? `${name} (${ticker.toUpperCase()}) stock logo`
     : `${ticker.toUpperCase()} stock logo`;
 
-  // If an explicit logoUrl is provided and hasn't failed, render it directly
+  // If an explicit logoUrl is provided and hasn't failed, render it directly.
+  // key=logoUrl resets logoUrlFailed state when the URL changes.
   if (logoUrl && !logoUrlFailed) {
     return (
       <span
+        key={logoUrl}
         className={cn(
           sizeClasses[size],
-          'inline-flex items-center justify-center rounded-lg bg-muted ring-1 ring-border shrink-0 overflow-hidden',
+          'inline-flex items-center justify-center rounded-lg shrink-0 overflow-hidden',
           className,
         )}
         role="img"
@@ -189,10 +200,14 @@ export function StockLogo({
     );
   }
 
-  // Delegate to LogoImg with exchange-qualified ticker
+  // Delegate to LogoImg with exchange-qualified ticker.
+  // key= forces a full remount when the ticker changes so useState
+  // inside LogoImg resets to the new ticker's URL instead of keeping
+  // the previous stock's cached src.
   const qualifiedTicker = buildQualifiedTicker(ticker, exchange, country);
   return (
     <LogoImg
+      key={qualifiedTicker}
       ticker={qualifiedTicker}
       size={size}
       alt={altText}

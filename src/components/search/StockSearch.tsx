@@ -6,7 +6,17 @@ import { Input } from '@/components/ui/input';
 import { useAutocomplete } from '@/hooks/useAutocomplete';
 import type { AutocompleteResult } from '@/services/searchService';
 
-export function StockSearch({ className }: { className?: string }) {
+interface StockSearchProps {
+  className?: string;
+  /**
+   * When provided, called instead of navigating to /stocks.
+   * Use this to embed the search in pages that need a "pick a stock" interaction.
+   */
+  onSelect?: (symbol: string, exchange: string, name: string) => void;
+  placeholder?: string;
+}
+
+export function StockSearch({ className, onSelect, placeholder }: StockSearchProps) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
@@ -58,12 +68,16 @@ export function StockSearch({ className }: { className?: string }) {
     setQuery('');
     setIsOpen(false);
     const exchange = result.exchangeCode || 'US';
-    const params = new URLSearchParams({ symbol: result.symbol, exchange });
-    if (result.name && result.name !== result.symbol) {
-      params.set('name', result.name);
+    if (onSelect) {
+      onSelect(result.symbol, exchange, result.name);
+    } else {
+      const params = new URLSearchParams({ symbol: result.symbol, exchange });
+      if (result.name && result.name !== result.symbol) {
+        params.set('name', result.name);
+      }
+      navigate(`/stocks?${params.toString()}`);
     }
-    navigate(`/stocks?${params.toString()}`);
-  }, [navigate]);
+  }, [navigate, onSelect]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!isOpen || results.length === 0) {
@@ -111,7 +125,7 @@ export function StockSearch({ className }: { className?: string }) {
           aria-autocomplete="list"
           aria-controls="search-results-list"
           aria-activedescendant={activeIndex >= 0 ? `search-result-${activeIndex}` : undefined}
-          placeholder="Search stocks..."
+          placeholder={placeholder ?? "Search stocks..."}
           value={query}
           onChange={e => {
             setQuery(e.target.value);

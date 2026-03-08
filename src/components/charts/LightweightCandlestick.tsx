@@ -34,8 +34,12 @@ export function LightweightCandlestick({
 }: LightweightCandlestickProps) {
   const [range, setRange] = useState(30);
 
-  // Fetch from DB when no external bars provided
-  const { data: dbBars = [], isLoading } = useStockHistory(symbol, range > 5000 ? 3650 : range);
+  // Always fetch 1Y of bars (same queryKey as StockChart → shared cache, zero
+  // extra network requests). Shorter ranges are sliced client-side.
+  const { data: allDbBars = [], isLoading } = useStockHistory(
+    externalBars ? '' : symbol,
+    365,
+  );
 
   const chartData = useMemo<CandlestickData[]>(() => {
     if (externalBars && externalBars.length > 0) {
@@ -53,7 +57,7 @@ export function LightweightCandlestick({
 
     // DB may return duplicate dates (e.g. different UTC offsets mapping to same date).
     // Deduplicate by keeping the last bar per date string.
-    const mapped = dbBars.map((b: any) => ({
+    const mapped = allDbBars.map((b: any) => ({
       time: (b.ts as string).slice(0, 10) as Time,
       open: Number(b.open),
       high: Number(b.high),
@@ -64,8 +68,13 @@ export function LightweightCandlestick({
     for (const bar of mapped) {
       deduped.set(bar.time as string, bar);
     }
-    return Array.from(deduped.values());
-  }, [externalBars, dbBars, range]);
+
+    // Slice to selected range client-side (no network cost for range changes)
+    const all = Array.from(deduped.values());
+    if (range >= 365) return all;
+    const cutoff = subDays(new Date(), range);
+    return all.filter(b => new Date(b.time as string) >= cutoff);
+  }, [externalBars, allDbBars, range]);
 
   return (
     <Card className={cn('overflow-hidden', className)}>

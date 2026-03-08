@@ -27,12 +27,12 @@ export function TradingViewMiniChart({
   'aria-label': ariaLabel,
 }: TradingViewMiniChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { resolvedTheme } = useTradingView();
+  const { resolvedTheme, mounted } = useTradingView();
   const containerId = useMemo(() => `tv_minichart_${++miniWidgetIdCounter}`, []);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || !mounted) return;
 
     container.innerHTML = '';
 
@@ -65,7 +65,7 @@ export function TradingViewMiniChart({
     return () => {
       container.innerHTML = '';
     };
-  }, [symbol, resolvedTheme, dateRange, containerId]);
+  }, [symbol, resolvedTheme, dateRange, containerId, mounted]);
 
   return (
     <div

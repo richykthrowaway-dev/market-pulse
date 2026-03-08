@@ -56,14 +56,41 @@ serve(async (req) => {
     // Single SELECT on stocks table — no joins, no OHLCV scan.
     // Scales O(N stocks): 5,000 rows ≈ 5ms, 10,000 rows ≈ 10ms.
     if (timeframe === "1D") {
-      const { data: stocks, error } = await supabase
-        .from("stocks")
-        .select("change_percent");
+      // Paginate to overcome PostgREST's 1000-row default limit
+      const PAGE_SIZE = 1000;
+      const allReturns: number[] = [];
+      let page = 0;
 
-      if (error) throw error;
+      // Fire both queries concurrently: returns + new highs/lows
+      const hlPromise = supabase.rpc("get_new_highs_lows");
 
-      const returns = (stocks ?? []).map((s) => Number(s.change_percent));
-      return respond({ returns, stats: computeStats(returns), stock_count: returns.length });
+      while (true) {
+        const { data: stocks, error } = await supabase
+          .from("stocks")
+          .select("change_percent")
+          .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+        if (error) throw error;
+        if (!stocks || stocks.length === 0) break;
+        for (const s of stocks) {
+          const v = Number(s.change_percent);
+          if (!isNaN(v)) allReturns.push(v);
+        }
+        if (stocks.length < PAGE_SIZE) break;
+        page++;
+      }
+
+      // Await the new-highs/lows RPC (ran concurrently with pagination loop)
+      const { data: hlData } = await hlPromise;
+      const newHigh = hlData?.new_high ?? 0;
+      const newLow  = hlData?.new_low  ?? 0;
+
+      return respond({
+        returns: allReturns,
+        stats: computeStats(allReturns),
+        stock_count: allReturns.length,
+        new_high: newHigh,
+        new_low: newLow,
+      });
     }
 
     // ── Non-1D: read pre-computed cache ───────────────────────────────────────
@@ -95,7 +122,7 @@ serve(async (req) => {
     //   FIRST_VALUE(close) OVER w → open price
     //   LAST_VALUE(close)  OVER w → close price
     // One scan over ohlcv_bars for the date range — no per-listing loops.
-    const startDate = calcStartDate(timeframe);
+    const rawStartDate = calcStartDate(timeframe);
 
     const { data: tf, error: tfErr } = await supabase
       .from("timeframes")
@@ -104,6 +131,20 @@ serve(async (req) => {
       .single();
 
     if (tfErr || !tf) throw new Error("1D timeframe not found");
+
+    // Snap start date backward to the nearest available trading bar.
+    // Financial convention: use close of last trading day on or before the
+    // period start (handles weekends, holidays, and sparse historical data).
+    const { data: snapRow } = await supabase
+      .from("ohlcv_bars")
+      .select("ts")
+      .eq("timeframe_id", tf.id)
+      .lte("ts", rawStartDate.toISOString())
+      .order("ts", { ascending: false })
+      .limit(1)
+      .single();
+
+    const startDate = snapRow ? new Date(snapRow.ts) : rawStartDate;
 
     const { data: rawReturns, error: rpcErr } = await supabase.rpc(
       "get_period_returns",
@@ -170,12 +211,15 @@ function computeStats(returns: number[]): ReturnStats {
 
 function calcStartDate(tf: string): Date {
   const now = new Date();
+  // Truncate to midnight UTC so arithmetic lands on day boundaries,
+  // matching how ohlcv_bars are stored (T00:00:00Z).
+  now.setUTCHours(0, 0, 0, 0);
   switch (tf) {
     case "1W":  return new Date(now.getTime() - 7 * 86_400_000);
-    case "1M":  { const d = new Date(now); d.setMonth(d.getMonth() - 1);        return d; }
-    case "3M":  { const d = new Date(now); d.setMonth(d.getMonth() - 3);        return d; }
-    case "6M":  { const d = new Date(now); d.setMonth(d.getMonth() - 6);        return d; }
-    case "YTD": return new Date(now.getFullYear(), 0, 1);
+    case "1M":  { const d = new Date(now); d.setUTCMonth(d.getUTCMonth() - 1);        return d; }
+    case "3M":  { const d = new Date(now); d.setUTCMonth(d.getUTCMonth() - 3);        return d; }
+    case "6M":  { const d = new Date(now); d.setUTCMonth(d.getUTCMonth() - 6);        return d; }
+    case "YTD": return new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
     case "1Y":  { const d = new Date(now); d.setFullYear(d.getFullYear() - 1);  return d; }
     case "3Y":  { const d = new Date(now); d.setFullYear(d.getFullYear() - 3);  return d; }
     case "5Y":  { const d = new Date(now); d.setFullYear(d.getFullYear() - 5);  return d; }

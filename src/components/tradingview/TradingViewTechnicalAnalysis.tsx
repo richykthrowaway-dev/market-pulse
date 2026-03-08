@@ -20,13 +20,13 @@ export function TradingViewTechnicalAnalysis({
   showIntervalTabs = true,
   className,
 }: TradingViewTechnicalAnalysisProps) {
-  const { resolvedTheme } = useTradingView();
+  const { resolvedTheme, mounted } = useTradingView();
   const containerRef = useRef<HTMLDivElement>(null);
   const containerId = useRef(`tv-ta-${++taWidgetIdCounter}`);
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container) return;
+    if (!container || !mounted) return;
     container.innerHTML = '';
 
     const widget = document.createElement('div');
@@ -54,7 +54,7 @@ export function TradingViewTechnicalAnalysis({
     container.appendChild(widget);
 
     return () => { container.innerHTML = ''; };
-  }, [resolvedTheme, symbol, interval, width, height, showIntervalTabs]);
+  }, [resolvedTheme, symbol, interval, width, height, showIntervalTabs, mounted]);
 
   return <div ref={containerRef} id={containerId.current} className={className} />;
 }
