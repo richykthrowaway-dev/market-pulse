@@ -46,26 +46,73 @@ export function computePnL(t: TradeEntry): number {
   return gross - t.fees;
 }
 
-// ── localStorage store ──────────────────────────────────────────────────────
+// ── Persistent store (localStorage + IndexedDB dual-write) ─────────────────
+//
+// localStorage  — synchronous reads, used by useSyncExternalStore for speed.
+// IndexedDB     — async but robust; survives origin changes, quota issues,
+//                 and scenarios where localStorage is silently wiped.
+//
+// Write path:  every mutation writes to BOTH stores in parallel.
+// Read path:   snapshot is from localStorage (sync).  On init, if localStorage
+//              is empty, an async IndexedDB read hydrates the snapshot.
 
-const STORAGE_KEY = 'trade-journal-v1';
+const LS_KEY = 'trade-journal-v1';
+const IDB_NAME = 'market-pulse-journal';
+const IDB_STORE = 'trades';
+const IDB_DOC = 'all';
 
-function read(): TradeEntry[] {
+// ── IndexedDB helpers (fire-and-forget writes, await-able reads) ────────────
+
+function openIdb(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, 1);
+    req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbRead(): Promise<TradeEntry[]> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const db = await openIdb();
+    return new Promise((resolve) => {
+      const tx = db.transaction(IDB_STORE, 'readonly');
+      const req = tx.objectStore(IDB_STORE).get(IDB_DOC);
+      req.onsuccess = () => resolve(Array.isArray(req.result) ? req.result : []);
+      req.onerror = () => resolve([]);
+    });
+  } catch { return []; }
+}
+
+function idbWrite(entries: TradeEntry[]) {
+  // Fire-and-forget — no await needed on the write path
+  openIdb().then(db => {
+    const tx = db.transaction(IDB_STORE, 'readwrite');
+    tx.objectStore(IDB_STORE).put(entries, IDB_DOC);
+  }).catch(() => {});
+}
+
+// ── localStorage helpers ────────────────────────────────────────────────────
+
+function lsRead(): TradeEntry[] {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
     if (!raw) return [];
     return JSON.parse(raw) as TradeEntry[];
+  } catch { return []; }
+}
+
+function lsWrite(entries: TradeEntry[]): boolean {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(entries));
+    return true;
   } catch {
-    return [];
+    console.warn('[TradeJournal] localStorage write failed — data saved to IndexedDB only');
+    return false;
   }
 }
 
-function write(entries: TradeEntry[]) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  } catch { /* storage full */ }
-  listeners.forEach(l => l());
-}
+// ── Subscription & snapshot (useSyncExternalStore contract) ─────────────────
 
 const listeners = new Set<() => void>();
 
@@ -74,22 +121,46 @@ function subscribe(cb: () => void) {
   return () => { listeners.delete(cb); };
 }
 
-let snapshot = read();
+function notify() { listeners.forEach(l => l()); }
+
+let snapshot: TradeEntry[] = lsRead();
 function getSnapshot() { return snapshot; }
 
+// Cross-tab sync
 if (typeof window !== 'undefined') {
   window.addEventListener('storage', (e) => {
-    if (e.key === STORAGE_KEY) {
-      snapshot = read();
-      listeners.forEach(l => l());
+    if (e.key === LS_KEY) {
+      snapshot = lsRead();
+      notify();
     }
   });
 }
 
+// Bi-directional sync on init:
+//  • localStorage empty + IndexedDB has data → hydrate localStorage (origin change / cleared)
+//  • localStorage has data + IndexedDB empty → seed IndexedDB (migration from pre-IDB code)
+if (typeof window !== 'undefined') {
+  idbRead().then(idbEntries => {
+    if (snapshot.length === 0 && idbEntries.length > 0) {
+      // IDB → LS hydration
+      snapshot = idbEntries;
+      lsWrite(idbEntries);
+      notify();
+    } else if (snapshot.length > 0 && idbEntries.length === 0) {
+      // LS → IDB migration (existing users before dual-write was added)
+      idbWrite(snapshot);
+    }
+  });
+}
+
+// ── Dual-write update ───────────────────────────────────────────────────────
+
 function update(fn: (prev: TradeEntry[]) => TradeEntry[]) {
-  const next = fn(read());
+  const next = fn(lsRead().length > 0 ? lsRead() : snapshot);
   snapshot = next;
-  write(next);
+  lsWrite(next);
+  idbWrite(next); // async, fire-and-forget
+  notify();
 }
 
 // ── Hook ────────────────────────────────────────────────────────────────────

@@ -43,6 +43,8 @@ export interface LightweightChartProps {
    * see data outside that window.  When omitted the chart fits all data.
    */
   visibleFrom?: string;
+  /** Show hours/minutes on the time axis (for intraday data). Default false. */
+  timeVisible?: boolean;
 }
 
 /**
@@ -60,6 +62,7 @@ export function LightweightChart({
   areaTopColor,
   areaBottomColor,
   visibleFrom,
+  timeVisible = false,
 }: LightweightChartProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -117,7 +120,7 @@ export function LightweightChart({
       },
       timeScale: {
         borderColor: colors.border,
-        timeVisible: false,
+        timeVisible,
       },
       handleScroll: true,
       handleScale: true,
@@ -186,7 +189,7 @@ export function LightweightChart({
       chartRef.current = null;
       seriesRef.current = null;
     };
-  }, [colors, type, height, data]);
+  }, [colors, type, height, data, timeVisible]);
 
   // Update visible range without recreating the chart (triggered when
   // the user clicks a timeframe button but data + theme haven't changed)

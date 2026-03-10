@@ -170,7 +170,25 @@ serve(async (req) => {
       // Strip nulls (market gaps, pre/post-market holes)
       const closes = rawCloses.filter((v): v is number => v != null && isFinite(v));
 
-      return new Response(JSON.stringify({ closes }), {
+      // Build timestamped OHLCV bars for charts that need full candle data.
+      // Backwards-compatible: `closes` is still returned for sparklines.
+      const timestamps: number[] = result.timestamp ?? [];
+      const quote = result.indicators?.quote?.[0] ?? {};
+      const bars: Array<{ t: number; o: number; h: number; l: number; c: number; v: number }> = [];
+      for (let i = 0; i < timestamps.length; i++) {
+        const c = rawCloses[i];
+        if (c == null || !isFinite(c)) continue;
+        bars.push({
+          t: timestamps[i],
+          o: quote.open?.[i]   ?? c,
+          h: quote.high?.[i]   ?? c,
+          l: quote.low?.[i]    ?? c,
+          c,
+          v: quote.volume?.[i] ?? 0,
+        });
+      }
+
+      return new Response(JSON.stringify({ closes, bars }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

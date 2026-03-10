@@ -113,6 +113,28 @@ export function useHistoricalPrices(symbol: string | undefined, days = 365) {
   });
 }
 
+// ── Yahoo Hourly Bars (for 1W intraday charts) ─────────────────────────────
+
+import { fetchYahooChart, type YahooBar } from '@/services/yahooFinanceApi';
+
+/**
+ * Fetch hourly OHLCV bars from Yahoo Finance via the api-yahoo edge function.
+ * Used for the 1-week timeframe where daily bars are too coarse.
+ *
+ * @param symbol  Ticker (e.g. "AAPL")
+ * @param enabled Whether to fetch (e.g. only when 1W is selected)
+ */
+export function useYahooHourlyBars(symbol: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: ['yahoo-hourly', symbol],
+    queryFn: () => fetchYahooChart(symbol!, '1h', '7d'),
+    enabled: enabled && !!symbol,
+    staleTime: 15 * 60_000,  // 15 min — intraday data
+    gcTime: 10 * 60_000,
+    select: (bars: YahooBar[]) => bars,
+  });
+}
+
 // ── Earnings Calendar ───────────────────────────────────────────────────────
 
 export interface EarningsEvent {

@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { subDays } from 'date-fns';
 import type { CandlestickData, Time } from 'lightweight-charts';
 import { LightweightChart } from './LightweightChart';
-import { useStockHistory } from '@/hooks/useStockHistory';
+import { useHistoricalPrices, useYahooHourlyBars } from '@/hooks/useDefeatBeta';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -34,12 +34,22 @@ export function LightweightCandlestick({
 }: LightweightCandlestickProps) {
   const [range, setRange] = useState(30);
 
-  // Always fetch 1Y of bars (same queryKey as StockChart → shared cache, zero
-  // extra network requests). Shorter ranges are sliced client-side.
-  const { data: allDbBars = [], isLoading } = useStockHistory(
-    externalBars ? '' : symbol,
-    365,
+  const is1W = range === 7;
+
+  // Fetch daily bars from DefeatBeta backend for the selected range.
+  // Skipped for 1W — we use hourly bars from Yahoo instead.
+  const { data: allDbBars = [], isLoading: dailyLoading } = useHistoricalPrices(
+    externalBars || is1W ? undefined : symbol,
+    Math.min(range, 3650),
   );
+
+  // Fetch hourly OHLCV from Yahoo Finance for 1W candlesticks
+  const { data: hourlyBars = [], isLoading: hourlyLoading } = useYahooHourlyBars(
+    externalBars ? undefined : symbol,
+    is1W,
+  );
+
+  const isLoading = is1W ? hourlyLoading : dailyLoading;
 
   const chartData = useMemo<CandlestickData[]>(() => {
     if (externalBars && externalBars.length > 0) {
@@ -55,10 +65,21 @@ export function LightweightCandlestick({
         }));
     }
 
-    // DB may return duplicate dates (e.g. different UTC offsets mapping to same date).
+    // For 1W, use Yahoo hourly OHLCV (Unix timestamps)
+    if (is1W && hourlyBars.length > 0) {
+      return hourlyBars.map((bar) => ({
+        time: bar.t as unknown as Time, // UTCTimestamp (number)
+        open: bar.o,
+        high: bar.h,
+        low: bar.l,
+        close: bar.c,
+      }));
+    }
+
+    // Map DefeatBeta bars (report_date) or legacy Supabase bars (ts).
     // Deduplicate by keeping the last bar per date string.
     const mapped = allDbBars.map((b: any) => ({
-      time: (b.ts as string).slice(0, 10) as Time,
+      time: String(b.report_date ?? b.ts).slice(0, 10) as Time,
       open: Number(b.open),
       high: Number(b.high),
       low: Number(b.low),
@@ -69,12 +90,13 @@ export function LightweightCandlestick({
       deduped.set(bar.time as string, bar);
     }
 
-    // Slice to selected range client-side (no network cost for range changes)
+    // Backend already limits to `range` rows, but apply date-based clipping
+    // for precise calendar-day alignment on shorter timeframes.
     const all = Array.from(deduped.values());
     if (range >= 365) return all;
     const cutoff = subDays(new Date(), range);
     return all.filter(b => new Date(b.time as string) >= cutoff);
-  }, [externalBars, allDbBars, range]);
+  }, [externalBars, is1W, hourlyBars, allDbBars, range]);
 
   return (
     <Card className={cn('overflow-hidden', className)}>
@@ -100,7 +122,7 @@ export function LightweightCandlestick({
         </div>
       </CardHeader>
       <CardContent className="p-0">
-        {isLoading && !externalBars ? (
+        {(isLoading) && !externalBars ? (
           <Skeleton className="w-full" style={{ height }} />
         ) : chartData.length === 0 ? (
           <div className="flex items-center justify-center text-muted-foreground" style={{ height }}>
@@ -111,6 +133,7 @@ export function LightweightCandlestick({
             data={chartData}
             type="candlestick"
             height={height}
+            timeVisible={is1W}
           />
         )}
       </CardContent>

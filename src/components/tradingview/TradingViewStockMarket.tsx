@@ -1,30 +1,32 @@
 import React, { useEffect, useRef } from 'react';
 import { useTradingView } from './TradingViewProvider';
 
-interface TradingViewHeatmapProps {
-  dataSource?: string;
-  grouping?: 'sector' | 'no_group';
-  blockSize?: 'market_cap_basic' | 'number_of_employees';
-  blockColor?: 'change' | 'Perf.W' | 'Perf.1M' | 'Perf.3M' | 'Perf.6M' | 'Perf.YTD' | 'Perf.Y';
+interface TradingViewStockMarketProps {
+  exchange?: string;
+  dateRange?: '1D' | '1M' | '3M' | '12M';
+  showChart?: boolean;
+  showSymbolLogo?: boolean;
+  showFloatingTooltip?: boolean;
   width?: number | string;
   height?: number;
   className?: string;
 }
 
-let heatmapIdCounter = 0;
+let stockMarketIdCounter = 0;
 
-export function TradingViewHeatmap({
-  dataSource = 'SPX500',
-  grouping = 'sector',
-  blockSize = 'market_cap_basic',
-  blockColor = 'change',
+export function TradingViewStockMarket({
+  exchange = 'US',
+  dateRange = '1D',
+  showChart = true,
+  showSymbolLogo = true,
+  showFloatingTooltip = true,
   width = '100%',
-  height = 500,
+  height = 550,
   className,
-}: TradingViewHeatmapProps) {
+}: TradingViewStockMarketProps) {
   const { resolvedTheme, mounted } = useTradingView();
   const containerRef = useRef<HTMLDivElement>(null);
-  const containerId = useRef(`tv-heatmap-${++heatmapIdCounter}`);
+  const containerId = useRef(`tv-stock-market-${++stockMarketIdCounter}`);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -40,30 +42,26 @@ export function TradingViewHeatmap({
 
     const script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-hotlists.js';
     script.async = true;
     script.textContent = JSON.stringify({
-      exchanges: [],
-      dataSource,
-      grouping,
-      blockSize,
-      blockColor,
-      locale: 'en',
-      symbolUrl: '',
       colorTheme: resolvedTheme,
-      hasTopBar: true,
-      isDataSet498Enabled: false,
-      isZoomEnabled: true,
-      hasSymbolTooltip: true,
-      isMonoSize: false,
+      dateRange,
+      exchange,
+      showChart,
+      locale: 'en',
       width: typeof width === 'number' ? width : '100%',
       height,
+      largeChartUrl: '',
+      isTransparent: false,
+      showSymbolLogo,
+      showFloatingTooltip,
     });
     widget.appendChild(script);
     container.appendChild(widget);
 
     return () => { container.innerHTML = ''; };
-  }, [resolvedTheme, dataSource, grouping, blockSize, blockColor, width, height, mounted]);
+  }, [resolvedTheme, dateRange, exchange, showChart, showSymbolLogo, showFloatingTooltip, width, height, mounted]);
 
   return <div ref={containerRef} id={containerId.current} className={className} />;
 }

@@ -350,6 +350,57 @@ app.get('/api/exchange-rates', async (req, res) => {
   }
 });
 
+// Bulk symbol→country mapping for syncing to Supabase
+// Returns ALL symbol-country pairs from the profile parquet (paginated).
+app.get('/api/bulk-countries', async (req, res) => {
+  const { offset: off, limit: lim } = req.query;
+  const offset = parseInt(off) || 0;
+  const limit = Math.min(parseInt(lim) || 2000, 5000);
+  try {
+    const rows = await query(
+      `SELECT symbol, country, sector, industry
+       FROM '${HF_BASE}/stock_profile.parquet'
+       WHERE country IS NOT NULL AND country != ''
+       ORDER BY symbol
+       LIMIT ? OFFSET ?`,
+      [limit, offset]
+    );
+    res.json({ data: rows, count: rows.length, offset, limit });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Top stocks by country — ranks by employee count (proxy for company size)
+// Returns profile metadata only; frontend enriches with Supabase for live prices.
+app.get('/api/country-stocks', async (req, res) => {
+  const { country, limit: lim } = req.query;
+  if (!country) return res.status(400).json({ error: 'country required (e.g. "United States", "Japan")' });
+  const limit = Math.min(parseInt(lim) || 100, 500);
+  try {
+    const rows = await query(
+      `SELECT symbol, sector, industry, full_time_employees, city
+       FROM '${HF_BASE}/stock_profile.parquet'
+       WHERE country = ?
+       ORDER BY full_time_employees DESC NULLS LAST
+       LIMIT ?`,
+      [country, limit]
+    );
+
+    const data = rows.map(r => ({
+      symbol: r.symbol,
+      sector: r.sector,
+      industry: r.industry,
+      city: r.city,
+      employees: Number(r.full_time_employees) || null,
+    }));
+
+    res.json({ data, country, count: data.length });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── Start server ────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
@@ -373,5 +424,6 @@ app.listen(PORT, () => {
   console.log(`    GET /api/trailing-eps?symbol=AAPL`);
   console.log(`    GET /api/treasury-yields?days=30`);
   console.log(`    GET /api/exchange-rates?from=usd&to=eur`);
+  console.log(`    GET /api/country-stocks?country=United States&limit=100`);
   console.log('');
 });

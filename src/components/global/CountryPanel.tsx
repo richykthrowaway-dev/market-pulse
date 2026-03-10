@@ -2,15 +2,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { X } from "lucide-react";
 import { COUNTRY_META } from "@/data/countryMeta";
 import { useCountryStocks } from "@/hooks/useCountryStocks";
+import type { ExchangeInfo } from "@/data/exchangeData";
 import CountrySummary from "./CountrySummary";
 import CountryScreener from "./CountryScreener";
+import CountryExchanges from "./CountryExchanges";
+import { TradingViewEconomicCalendar } from "@/components/tradingview/TradingViewEconomicCalendar";
 
 interface CountryPanelProps {
   iso2: string;
   onClose: () => void;
+  onTabChange?: (tab: string) => void;
+  onExchangeClick?: (exchange: ExchangeInfo) => void;
 }
 
-export default function CountryPanel({ iso2, onClose }: CountryPanelProps) {
+export default function CountryPanel({ iso2, onClose, onTabChange, onExchangeClick }: CountryPanelProps) {
   const { data: stocks = [], isLoading } = useCountryStocks(iso2);
   const meta = COUNTRY_META[iso2];
 
@@ -29,16 +34,28 @@ export default function CountryPanel({ iso2, onClose }: CountryPanelProps) {
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="summary" className="flex-1 flex flex-col overflow-hidden">
+      <Tabs defaultValue="summary" className="flex-1 flex flex-col overflow-hidden" onValueChange={onTabChange}>
         <TabsList className="mx-4 mt-3 shrink-0">
           <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="screener">Screener</TabsTrigger>
+          <TabsTrigger value="exchanges">Exchanges</TabsTrigger>
+          <TabsTrigger value="economy">Economy</TabsTrigger>
         </TabsList>
         <TabsContent value="summary" className="flex-1 overflow-y-auto px-4 pb-4">
           <CountrySummary iso2={iso2} stocks={stocks} isLoading={isLoading} />
         </TabsContent>
         <TabsContent value="screener" className="flex-1 overflow-y-auto px-4 pb-4">
-          <CountryScreener stocks={stocks} isLoading={isLoading} />
+          <CountryScreener iso2={iso2} />
+        </TabsContent>
+        <TabsContent value="exchanges" className="flex-1 overflow-y-auto px-4 pb-4">
+          <CountryExchanges iso2={iso2} onExchangeClick={onExchangeClick} />
+        </TabsContent>
+        <TabsContent value="economy" className="flex-1 overflow-y-auto px-4 pb-4">
+          <TradingViewEconomicCalendar
+            countryFilter={iso2.toLowerCase()}
+            height={500}
+            className="rounded-lg overflow-hidden"
+          />
         </TabsContent>
       </Tabs>
     </div>

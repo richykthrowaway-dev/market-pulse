@@ -145,6 +145,42 @@ export function getBaselineY(
   return height - ((data[0] - yMin) / yRange) * height;
 }
 
+// ── Linear path generators (straight line segments, matches TradingView) ──────
+
+/**
+ * Generate a linear SVG path string (straight lines between data points).
+ * Produces a `<path d={...}>` value with M/L commands.
+ */
+export function generateLinearPath(
+  data: number[],
+  width: number,
+  height: number,
+  padding = 0.03,
+): string {
+  if (data.length < 2) return '';
+  const pts = toPoints(data, width, height, padding);
+  let d = `M ${pts[0].x.toFixed(2)},${pts[0].y.toFixed(2)}`;
+  for (let i = 1; i < pts.length; i++) {
+    d += ` L ${pts[i].x.toFixed(2)},${pts[i].y.toFixed(2)}`;
+  }
+  return d;
+}
+
+/**
+ * Generate a closed linear fill path (straight line + close to baseline).
+ * Produces a `<path d={...}>` value suitable for a gradient fill area.
+ */
+export function generateLinearFillPath(
+  data: number[],
+  width: number,
+  height: number,
+  padding = 0.03,
+): string {
+  if (data.length < 2) return '';
+  const linear = generateLinearPath(data, width, height, padding);
+  return `${linear} L ${width.toFixed(2)},${height.toFixed(2)} L 0,${height.toFixed(2)} Z`;
+}
+
 // ── Bezier-smooth path generators ────────────────────────────────────────────
 //
 // These replace the legacy generatePath / generateFillPath functions for

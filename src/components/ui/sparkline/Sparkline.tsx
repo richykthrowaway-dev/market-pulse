@@ -17,8 +17,8 @@ import {
   resolveVariant,
   getColorSet,
   getColorSetByPerformance,
-  generateSmoothPath,
-  generateSmoothFillPath,
+  generateLinearPath,
+  generateLinearFillPath,
   getBaselineY,
   getPointCoords,
 } from './utils';
@@ -71,8 +71,8 @@ export function Sparkline({
   }, [data, variant, resolved]);
 
   const svgHeight = height;
-  const linePath = useMemo(() => generateSmoothPath(data, SVG_INTERNAL_WIDTH, svgHeight), [data, svgHeight]);
-  const fillPath = useMemo(() => generateSmoothFillPath(data, SVG_INTERNAL_WIDTH, svgHeight), [data, svgHeight]);
+  const linePath = useMemo(() => generateLinearPath(data, SVG_INTERNAL_WIDTH, svgHeight), [data, svgHeight]);
+  const fillPath = useMemo(() => generateLinearFillPath(data, SVG_INTERNAL_WIDTH, svgHeight), [data, svgHeight]);
   const baselineY = useMemo(() => getBaselineY(data, svgHeight), [data, svgHeight]);
 
   const highlightPoint = useMemo(() => {

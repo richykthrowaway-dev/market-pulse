@@ -4,7 +4,7 @@ import { useTradingView } from './TradingViewProvider';
 interface TradingViewScreenerProps {
   defaultColumn?: 'overview' | 'performance' | 'oscillators' | 'moving_averages';
   defaultScreen?: 'most_capitalized' | 'volume_leaders' | 'top_gainers' | 'top_losers' | 'ath' | 'atl' | 'above_52wk_high' | 'below_52wk_low';
-  market?: 'america' | 'uk' | 'japan' | 'germany' | 'australia' | 'canada';
+  market?: string;
   showToolbar?: boolean;
   width?: number | string;
   height?: number;

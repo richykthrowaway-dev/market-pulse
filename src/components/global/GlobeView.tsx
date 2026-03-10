@@ -3,6 +3,7 @@ import Globe from "react-globe.gl";
 import type { GlobeMethods } from "react-globe.gl";
 import geoJsonUrl from "@/data/countries-110m.geojson";
 import { COUNTRY_META, FLAG_COLORS } from "@/data/countryMeta";
+import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeData";
 
 type GlobeMode = "flags" | "performance";
 type Feature = { properties: Record<string, any>; geometry: any };
@@ -21,11 +22,104 @@ interface GlobeViewProps {
   performanceMap: Record<string, number>;
   selectedCountry: string | null;
   onCountryClick: (iso2: string) => void;
+  showExchangePins?: boolean;
+  onExchangeClick?: (exchange: ExchangeInfo) => void;
+  selectedExchange?: ExchangeInfo | null;
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
 const SIDE_COLOR = () => "rgba(0, 0, 0, 0.15)";
 const STROKE_COLOR = () => "rgba(255, 255, 255, 0.08)";
+
+// ── Exchange HTML pin layer (module-level, stable) ──────────────────────
+const EMPTY_ARRAY: ExchangeInfo[] = [];
+const HTML_PIN_LAT = (d: object) => (d as ExchangeInfo).lat;
+const HTML_PIN_LNG = (d: object) => (d as ExchangeInfo).lng;
+const HTML_PIN_ALT = () => 0.015;
+
+// Ref-holder for click callback — lets HTML element onclick always call
+// the latest React callback without recreating every pin element.
+let _exchangeClickRef: ((ex: ExchangeInfo) => void) | undefined;
+
+function createPinElement(d: object): HTMLElement {
+  const ex = d as ExchangeInfo;
+  const color = CONTINENT_COLORS[ex.continent] ?? "#888";
+
+  const el = document.createElement("div");
+  el.style.cssText = "cursor:pointer;position:relative;pointer-events:auto;";
+
+  // Pin: colored dot with white border + glow
+  const dot = document.createElement("div");
+  dot.style.cssText = `
+    width:14px;height:14px;
+    background:${color};
+    border:2px solid rgba(255,255,255,0.9);
+    border-radius:50%;
+    box-shadow:0 0 6px ${color},0 2px 4px rgba(0,0,0,0.5);
+    transition:transform 0.15s ease,box-shadow 0.15s ease;
+    transform:translate(-50%,-50%);
+  `;
+
+  // Stem: small triangle below the dot
+  const stem = document.createElement("div");
+  stem.style.cssText = `
+    position:absolute;top:5px;left:50%;
+    width:0;height:0;
+    border-left:4px solid transparent;
+    border-right:4px solid transparent;
+    border-top:6px solid ${color};
+    transform:translateX(-50%);
+    filter:drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+    transition:border-top-color 0.15s;
+  `;
+
+  // Tooltip: appears on hover
+  const tip = document.createElement("div");
+  tip.style.cssText = `
+    position:absolute;bottom:16px;left:50%;
+    transform:translateX(-50%);
+    padding:5px 9px;
+    background:rgba(0,0,0,0.88);
+    border-radius:5px;
+    font-size:11px;color:#fff;
+    white-space:nowrap;
+    pointer-events:none;
+    opacity:0;
+    transition:opacity 0.15s;
+    border-left:3px solid ${color};
+  `;
+  tip.innerHTML = `<div style="font-weight:600">${ex.name}</div><div style="opacity:0.7;margin-top:1px">${ex.city} · ${ex.code}</div>`;
+
+  el.appendChild(dot);
+  el.appendChild(stem);
+  el.appendChild(tip);
+
+  // Hover effects — native DOM, no raycasting needed
+  el.addEventListener("mouseenter", () => {
+    dot.style.transform = "translate(-50%,-50%) scale(1.5)";
+    dot.style.boxShadow = `0 0 14px ${color},0 0 24px ${color}40,0 2px 6px rgba(0,0,0,0.5)`;
+    tip.style.opacity = "1";
+  });
+  el.addEventListener("mouseleave", () => {
+    dot.style.transform = "translate(-50%,-50%) scale(1)";
+    dot.style.boxShadow = `0 0 6px ${color},0 2px 4px rgba(0,0,0,0.5)`;
+    tip.style.opacity = "0";
+  });
+
+  // Click — uses module-level ref so it always calls the latest callback
+  el.addEventListener("click", (e) => {
+    e.stopPropagation();
+    _exchangeClickRef?.(ex);
+  });
+
+  return el;
+}
+
+// Fade pins on the far side of the globe
+function handlePinVisibility(el: HTMLElement, isVisible: boolean) {
+  el.style.opacity = isVisible ? "1" : "0";
+  el.style.pointerEvents = isVisible ? "auto" : "none";
+}
 
 function perfColor(changePct: number): string {
   const clamped = Math.max(-5, Math.min(5, changePct));
@@ -67,6 +161,9 @@ export default function GlobeView({
   performanceMap,
   selectedCountry,
   onCountryClick,
+  showExchangePins = false,
+  onExchangeClick,
+  selectedExchange,
 }: GlobeViewProps) {
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
   const [countries, setCountries] = useState<Feature[]>(geoJsonCache ?? []);
@@ -75,7 +172,10 @@ export default function GlobeView({
   // Instead, we imperatively poke the globe to re-evaluate colors.
   const hoverIsoRef = useRef<string | null>(null);
   const hoverRafRef = useRef<number>(0); // rAF handle for coalesced hover updates
-  const draggingRef = useRef(false); // suppress hover during drag
+  const draggingRef = useRef(false); // suppress hover during drag + coast
+  const coastTimerRef = useRef<ReturnType<typeof setTimeout>>(); // delay hover re-enable until coast ends
+  const handleHoverRef = useRef<((p: object | null) => void) | null>(null);
+  const getLabelRef = useRef<((d: object) => string) | null>(null);
 
   // Load GeoJSON (instant if cached from prior mount)
   useEffect(() => {
@@ -104,6 +204,21 @@ export default function GlobeView({
     controls.autoRotate = true;
     controls.autoRotateSpeed = 0.4;
     controls.enableDamping = true;
+    controls.dampingFactor = 0.03; // low = long coast after release
+
+    // ── Intercept globe.gl's per-frame controls.change listener ─────────
+    // globe.gl registers a 'change' listener that fires every frame during
+    // drag, running pointOfView() (trig math) + setPointOfView() (matrix
+    // inversion + layer iteration). Skip it during drag — sync once on release.
+    const origListeners: any[] = (controls as any)._listeners?.['change'] ?? [];
+    const globeChangeHandler = origListeners[origListeners.length - 1]; // globe.gl adds last
+    if (globeChangeHandler) {
+      controls.removeEventListener('change', globeChangeHandler);
+      controls.addEventListener('change', () => {
+        if (draggingRef.current) return; // skip geo-coord math during drag
+        globeChangeHandler();
+      });
+    }
 
     const stopAndRestart = () => {
       controls.autoRotate = false;
@@ -114,20 +229,58 @@ export default function GlobeView({
     };
 
     const onPointerDown = () => {
+      // Disable damping during drag → globe follows mouse 1:1, zero input lag
+      controls.enableDamping = false;
       draggingRef.current = true;
+      clearTimeout(coastTimerRef.current);
       stopAndRestart();
+
+      // Kill library-level raycasting + ALL pointer processing during drag.
+      // Without this, every pointermove (100+/sec) triggers getBoundingClientRect()
+      // layout reflow + ray-mesh intersection against 288 polygon meshes.
+      const g = globeRef.current as any;
+      if (g) {
+        g.onPolygonHover(null);
+        g.polygonLabel(null);
+        g.enablePointerInteraction(false);
+      }
     };
     const onPointerUp = () => {
-      draggingRef.current = false;
+      // Re-enable damping with low factor → remaining velocity becomes smooth coast
+      controls.enableDamping = true;
+      controls.dampingFactor = 0.03;
+
+      // Sync POV state that was skipped during drag (rotateSpeed, layer POV, etc.)
+      if (globeChangeHandler) globeChangeHandler();
+
+      // Keep hover suppressed during coast so restored onPolygonHover doesn't
+      // fire 177 polygon color rebuilds while the globe is still spinning.
+      clearTimeout(coastTimerRef.current);
+      coastTimerRef.current = setTimeout(() => {
+        draggingRef.current = false;
+        // Restore raycasting + pointer processing after coast settles
+        const g = globeRef.current as any;
+        if (g) {
+          g.enablePointerInteraction(true);
+          g.onPolygonHover(handleHoverRef.current);
+          g.polygonLabel(getLabelRef.current);
+        }
+      }, 1500);
     };
 
     // Throttle wheel handler — runs at most once per 100ms to avoid
     // clearing/setting timeouts 60-120× per second during fast scrolls.
+    // Also suppress hover during zoom coast.
     let lastWheelTime = 0;
     const wheelThrottled = () => {
       const now = performance.now();
       if (now - lastWheelTime < 100) return;
       lastWheelTime = now;
+      draggingRef.current = true;
+      clearTimeout(coastTimerRef.current);
+      coastTimerRef.current = setTimeout(() => {
+        draggingRef.current = false;
+      }, 800);
       stopAndRestart();
     };
 
@@ -142,6 +295,7 @@ export default function GlobeView({
       el.removeEventListener("pointerleave", onPointerUp);
       el.removeEventListener("wheel", wheelThrottled);
       clearTimeout(idleTimer.current);
+      clearTimeout(coastTimerRef.current);
     };
   }, [countries]);
 
@@ -157,6 +311,15 @@ export default function GlobeView({
     }
   }, [selectedCountry]);
 
+  // Fly to selected exchange
+  useEffect(() => {
+    if (!globeRef.current || !selectedExchange) return;
+    globeRef.current.pointOfView(
+      { lat: selectedExchange.lat, lng: selectedExchange.lng, altitude: 2.0 },
+      800
+    );
+  }, [selectedExchange]);
+
   // ── Color callback ──
   // Reads hoverIsoRef (a ref, not state) so the callback reference only
   // changes when mode/performanceMap/selectedCountry change — NOT on hover.
@@ -165,6 +328,13 @@ export default function GlobeView({
     (d: object) => {
       const feat = d as Feature;
       const iso = feat.properties.ISO_A2;
+
+      // Exchange mode: clear all fills so only pins + borders are visible
+      if (showExchangePins) {
+        if (iso === selectedCountry) return "rgba(255, 255, 255, 0.12)";
+        if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.08)";
+        return "rgba(0, 0, 0, 0)";
+      }
 
       if (iso === selectedCountry) return "rgba(255, 255, 255, 0.55)";
       if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.35)";
@@ -178,7 +348,7 @@ export default function GlobeView({
       if (change === undefined) return "rgba(80, 80, 80, 0.2)";
       return perfColor(change);
     },
-    [mode, performanceMap, selectedCountry]
+    [mode, performanceMap, selectedCountry, showExchangePins]
   );
 
   // ── Altitude: only elevate selected country ──
@@ -232,6 +402,9 @@ export default function GlobeView({
     [onCountryClick]
   );
 
+  // Keep module-level click ref in sync so HTML pin elements always call latest callback
+  _exchangeClickRef = onExchangeClick;
+
   const getLabel = useCallback((d: object) => {
     const feat = d as Feature;
     const iso = feat.properties.ISO_A2;
@@ -240,12 +413,25 @@ export default function GlobeView({
     return `<div style="padding:4px 8px;background:rgba(0,0,0,0.8);border-radius:4px;font-size:12px;color:#fff">${name}</div>`;
   }, []);
 
+  // Keep refs in sync so the controls effect can restore them after coast
+  handleHoverRef.current = handleHover;
+  getLabelRef.current = getLabel;
+
+  // ── Stroke color: brighter in exchange mode so borders remain visible ──
+  // Use a ref so the callback is stable and doesn't trigger polygon re-evaluation.
+  const showPinsRef = useRef(showExchangePins);
+  showPinsRef.current = showExchangePins;
+  const getStrokeColor = useCallback(
+    () => showPinsRef.current ? "rgba(255, 255, 255, 0.18)" : "rgba(255, 255, 255, 0.08)",
+    []
+  );
+
   const globeSize = Math.min(width, height);
 
   return (
     <div
       className="flex items-center justify-center overflow-hidden"
-      style={{ width, height }}
+      style={{ width, height, touchAction: 'none', isolation: 'isolate' }}
     >
       <Globe
         ref={globeRef as React.MutableRefObject<GlobeMethods | undefined>}
@@ -260,12 +446,23 @@ export default function GlobeView({
         polygonsData={countries}
         polygonCapColor={getCapColor}
         polygonSideColor={SIDE_COLOR}
-        polygonStrokeColor={STROKE_COLOR}
+        polygonStrokeColor={getStrokeColor}
         polygonAltitude={getAltitude}
         polygonLabel={getLabel}
         polygonsTransitionDuration={200}
         onPolygonClick={handleClick}
         onPolygonHover={handleHover}
+        // ── Exchange HTML pin layer ──
+        // Uses real DOM elements instead of Three.js points — native browser
+        // hover detection, never misses. Pins fade via handlePinVisibility
+        // when they rotate to the far side of the globe.
+        htmlElementsData={showExchangePins ? EXCHANGES : EMPTY_ARRAY}
+        htmlLat={HTML_PIN_LAT}
+        htmlLng={HTML_PIN_LNG}
+        htmlAltitude={HTML_PIN_ALT}
+        htmlElement={createPinElement}
+        htmlElementVisibilityModifier={handlePinVisibility}
+        htmlTransitionDuration={300}
       />
     </div>
   );

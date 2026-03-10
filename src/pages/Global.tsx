@@ -7,6 +7,8 @@ import { useNavigate } from "react-router-dom";
 const GlobeView = lazy(() => import("@/components/global/GlobeView"));
 import CountryPanel from "@/components/global/CountryPanel";
 import GlobalSummary from "@/components/global/GlobalSummary";
+import ExchangeDetailDialog from "@/components/global/ExchangeDetailDialog";
+import type { ExchangeInfo } from "@/data/exchangeData";
 
 // ── Realistic space background ──────────────────────────────────────────
 // Multi-layer CSS approach: nebulae, galaxy clouds, backlight glow, and
@@ -20,50 +22,56 @@ function seededRandom(seed: number) {
   };
 }
 
-function useStarfield() {
-  return useMemo(() => {
-    const SIZE = 3000;
-    const canvas = document.createElement("canvas");
-    canvas.width = SIZE;
-    canvas.height = SIZE;
-    const ctx = canvas.getContext("2d")!;
+// Module-level lazy singleton: the starfield is deterministic (seeded PRNG),
+// so it produces the identical image every time. Caching at module scope means
+// the expensive 3000×3000 canvas.toDataURL() runs once per session, not once
+// per page mount — eliminating 50-200ms of main-thread blocking on revisits.
+let _starfieldUri: string | null = null;
+function getStarfieldUri(): string {
+  if (_starfieldUri) return _starfieldUri;
 
-    const rng = seededRandom(42);
+  const SIZE = 3000;
+  const canvas = document.createElement("canvas");
+  canvas.width = SIZE;
+  canvas.height = SIZE;
+  const ctx = canvas.getContext("2d")!;
 
-    // Fine 1px stars (same positions/colors as before)
-    for (let i = 0; i < 400; i++) {
-      const x = Math.floor(rng() * SIZE);
-      const y = Math.floor(rng() * SIZE);
-      const a = 0.15 + rng() * 0.45;
-      const warm = rng() > 0.6;
-      ctx.fillStyle = warm
-        ? `rgba(255,240,220,${a})`
-        : `rgba(220,230,255,${a})`;
-      ctx.fillRect(x, y, 1, 1);
-    }
-    // Medium 2px stars
-    for (let i = 0; i < 80; i++) {
-      const x = Math.floor(rng() * SIZE);
-      const y = Math.floor(rng() * SIZE);
-      const a = 0.4 + rng() * 0.5;
-      ctx.fillStyle = `rgba(190,210,255,${a})`;
-      ctx.beginPath();
-      ctx.arc(x, y, 1, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // Large 3px stars
-    for (let i = 0; i < 25; i++) {
-      const x = Math.floor(rng() * SIZE);
-      const y = Math.floor(rng() * SIZE);
-      const a = 0.55 + rng() * 0.45;
-      ctx.fillStyle = `rgba(225,238,255,${a})`;
-      ctx.beginPath();
-      ctx.arc(x, y, 1.5, 0, Math.PI * 2);
-      ctx.fill();
-    }
+  const rng = seededRandom(42);
 
-    return canvas.toDataURL("image/png");
-  }, []);
+  // Fine 1px stars (same positions/colors as before)
+  for (let i = 0; i < 400; i++) {
+    const x = Math.floor(rng() * SIZE);
+    const y = Math.floor(rng() * SIZE);
+    const a = 0.15 + rng() * 0.45;
+    const warm = rng() > 0.6;
+    ctx.fillStyle = warm
+      ? `rgba(255,240,220,${a})`
+      : `rgba(220,230,255,${a})`;
+    ctx.fillRect(x, y, 1, 1);
+  }
+  // Medium 2px stars
+  for (let i = 0; i < 80; i++) {
+    const x = Math.floor(rng() * SIZE);
+    const y = Math.floor(rng() * SIZE);
+    const a = 0.4 + rng() * 0.5;
+    ctx.fillStyle = `rgba(190,210,255,${a})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Large 3px stars
+  for (let i = 0; i < 25; i++) {
+    const x = Math.floor(rng() * SIZE);
+    const y = Math.floor(rng() * SIZE);
+    const a = 0.55 + rng() * 0.45;
+    ctx.fillStyle = `rgba(225,238,255,${a})`;
+    ctx.beginPath();
+    ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  _starfieldUri = canvas.toDataURL("image/png");
+  return _starfieldUri;
 }
 
 // Multi-layered nebula/galaxy background using stacked radial gradients.
@@ -133,7 +141,9 @@ const Global = () => {
   const { data: indices = [] } = useIndices();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [mode, setMode] = useState<GlobeMode>("flags");
-  const stars = useStarfield();
+  const [showExchangePins, setShowExchangePins] = useState(false);
+  const [selectedExchange, setSelectedExchange] = useState<ExchangeInfo | null>(null);
+  const stars = getStarfieldUri();
 
   const leftRef = useRef<HTMLDivElement | null>(null);
   const { width: leftW, height: leftH } = useContainerSize(leftRef);
@@ -174,6 +184,19 @@ const Global = () => {
 
   const handleClose = useCallback(() => {
     setSelectedCountry(null);
+    setShowExchangePins(false);
+  }, []);
+
+  const handleTabChange = useCallback((tab: string) => {
+    setShowExchangePins(tab === "exchanges");
+  }, []);
+
+  const handleExchangeClick = useCallback((ex: ExchangeInfo) => {
+    setSelectedExchange(ex);
+  }, []);
+
+  const handleExchangeClose = useCallback(() => {
+    setSelectedExchange(null);
   }, []);
 
   return (
@@ -197,24 +220,35 @@ const Global = () => {
             <button
               className={cn(
                 "px-3 py-1 transition-colors",
-                mode === "flags"
+                mode === "flags" && !showExchangePins
                   ? "bg-primary text-primary-foreground"
                   : "hover:bg-muted"
               )}
-              onClick={() => setMode("flags")}
+              onClick={() => { setMode("flags"); setShowExchangePins(false); }}
             >
               Flags
             </button>
             <button
               className={cn(
                 "px-3 py-1 transition-colors",
-                mode === "performance"
+                mode === "performance" && !showExchangePins
                   ? "bg-primary text-primary-foreground"
                   : "hover:bg-muted"
               )}
-              onClick={() => setMode("performance")}
+              onClick={() => { setMode("performance"); setShowExchangePins(false); }}
             >
               Performance
+            </button>
+            <button
+              className={cn(
+                "px-3 py-1 transition-colors",
+                showExchangePins
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-muted"
+              )}
+              onClick={() => setShowExchangePins(v => !v)}
+            >
+              Exchanges
             </button>
           </div>
         </div>
@@ -260,9 +294,15 @@ const Global = () => {
                 performanceMap={performanceMap}
                 selectedCountry={selectedCountry}
                 onCountryClick={handleCountryClick}
+                showExchangePins={showExchangePins}
+                onExchangeClick={handleExchangeClick}
+                selectedExchange={selectedExchange}
               />
             </Suspense>
           )}
+
+          {/* Exchange detail card — anchored to bottom-center of globe area */}
+          <ExchangeDetailDialog exchange={selectedExchange} onClose={handleExchangeClose} />
         </div>
 
         {/* Right — Panel */}
@@ -272,12 +312,15 @@ const Global = () => {
               key={selectedCountry}
               iso2={selectedCountry}
               onClose={handleClose}
+              onTabChange={handleTabChange}
+              onExchangeClick={handleExchangeClick}
             />
           ) : (
             <GlobalSummary onCountryClick={handleCountryClick} />
           )}
         </div>
       </div>
+
     </div>
   );
 };

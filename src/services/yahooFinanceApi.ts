@@ -80,3 +80,59 @@ export async function fetchYahooIntraday(
     return [];
   }
 }
+
+/**
+ * A single OHLCV bar from Yahoo Finance with a Unix timestamp.
+ * `t` is seconds since epoch (UTC).
+ */
+export interface YahooBar {
+  t: number;
+  o: number;
+  h: number;
+  l: number;
+  c: number;
+  v: number;
+}
+
+/**
+ * Fetch timestamped OHLCV bars from the api-yahoo edge function.
+ *
+ * Unlike `fetchYahooIntraday` (which returns only close prices), this
+ * returns full OHLCV bars with Unix timestamps — suitable for rendering
+ * hourly candlestick charts or area charts that need a time axis.
+ *
+ * @param yahooTicker  Yahoo-format ticker: "AAPL", "RY.TO", "LLOY.L"
+ * @param interval     Bar size — "1h" or "1d"
+ * @param range        Lookback — "7d" | "1mo" | "3mo" | "6mo" | "1y"
+ */
+export async function fetchYahooChart(
+  yahooTicker: string,
+  interval: '1h' | '1d' = '1h',
+  range: '7d' | '1mo' | '3mo' | '6mo' | '1y' = '7d',
+): Promise<YahooBar[]> {
+  const qs = new URLSearchParams({
+    endpoint: 'chart',
+    symbol: yahooTicker,
+    interval,
+    range,
+  }).toString();
+
+  const url = `https://${PROJECT_ID}.supabase.co/functions/v1/api-yahoo?${qs}`;
+
+  try {
+    const res = await fetch(url, {
+      headers: { apikey: API_KEY, Authorization: `Bearer ${API_KEY}` },
+      signal: AbortSignal.timeout(10000),
+    });
+
+    if (!res.ok) {
+      console.debug(`[Yahoo chart bars] ${yahooTicker} → ${res.status}`);
+      return [];
+    }
+
+    const json: { bars?: YahooBar[] } = await res.json();
+    return json.bars ?? [];
+  } catch {
+    return [];
+  }
+}

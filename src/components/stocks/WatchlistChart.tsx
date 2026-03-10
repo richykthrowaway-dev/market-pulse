@@ -4,7 +4,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ReferenceLine,
 } from 'recharts';
-import { useStockHistory } from '@/hooks/useStockHistory';
+import { useHistoricalPrices } from '@/hooks/useDefeatBeta';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StockLogo } from '@/components/stocks/StockLogo';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -19,7 +19,7 @@ interface WatchlistChartProps {
 }
 
 export function WatchlistChart({ symbol, name, days = 30, className }: WatchlistChartProps) {
-  const { data: bars = [], isLoading } = useStockHistory(symbol, days);
+  const { data: bars = [], isLoading } = useHistoricalPrices(symbol, days);
 
   const { chartData, baselinePrice, domainMin, domainMax, closes } = useMemo(() => {
     if (bars.length === 0) return { chartData: [], baselinePrice: 0, domainMin: 0, domainMax: 0, closes: [] as number[] };
@@ -27,7 +27,7 @@ export function WatchlistChart({ symbol, name, days = 30, className }: Watchlist
     const baseline = Number(bars[0].close);
     const closePrices: number[] = [];
     const data = bars.map((bar: any) => {
-      const date = new Date(bar.ts);
+      const date = new Date(bar.report_date ?? bar.ts);
       const price = Number(bar.close);
       closePrices.push(price);
       return {

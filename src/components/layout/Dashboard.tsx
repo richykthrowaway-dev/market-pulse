@@ -1,7 +1,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { useStocks, useIndices, useCurrencies, useNews } from '@/hooks/useSupabaseData';
-import { useStockHistory } from '@/hooks/useStockHistory';
+import { useHistoricalPrices } from '@/hooks/useDefeatBeta';
 import { useLogoPrefetch } from '@/hooks/useLogoPrefetch';
 import { formatNumber } from '@/utils/stocksApi';
 import { Navbar } from '@/components/layout/Navbar';
@@ -187,8 +187,8 @@ function StockCardWithHistory({ stock, days, isActive, onClick, compact }: {
   onClick: () => void;
   compact?: boolean;
 }) {
-  const { data: bars = [] } = useStockHistory(stock.symbol, days);
-  const priceHistory = bars.map((b: any) => Number(b.close));
+  const { data: bars = [] } = useHistoricalPrices(stock.symbol, days);
+  const priceHistory = (bars ?? []).map((b: any) => Number(b.close));
 
   // Override change/changePercent with actual timeframe performance
   const overriddenStock = priceHistory.length >= 2

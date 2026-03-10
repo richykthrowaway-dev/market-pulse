@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import { useTheme } from 'next-themes';
 import { subDays, format } from 'date-fns';
-import { useStockHistory } from '@/hooks/useStockHistory';
+import { useHistoricalPrices, useYahooHourlyBars } from '@/hooks/useDefeatBeta';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StockLogo } from '@/components/stocks/StockLogo';
@@ -52,31 +52,47 @@ export function StockChart({
   const [selectedRange, setSelectedRange] = useState(timeRanges[1]); // Default 1M
   const { resolvedTheme } = useTheme();
 
-  // Fetch bars for the selected range — React Query caches per (symbol, days).
-  const { data: allLocalBars = [], isLoading: localLoading } = useStockHistory(
-    externalBars ? '' : symbol,
-    selectedRange.days,
+  const is1W = selectedRange.label === '1W';
+
+  // Fetch daily bars from DefeatBeta backend — React Query caches per (symbol, days).
+  // The backend caps at 3650 rows (≈14 years of trading days).
+  // Skipped for 1W — we use hourly bars from Yahoo instead.
+  const { data: allLocalBars = [], isLoading: localLoading } = useHistoricalPrices(
+    externalBars || is1W ? undefined : symbol,
+    Math.min(selectedRange.days, 3650),
   );
 
-  const isLoading = externalBars ? false : localLoading;
+  // Fetch hourly bars from Yahoo Finance for 1W (gives ~35 bars vs 5 daily bars)
+  const { data: hourlyBars = [], isLoading: hourlyLoading } = useYahooHourlyBars(
+    externalBars ? undefined : symbol,
+    is1W,
+  );
 
-  // The cutoff date string for the selected range (used for band colour + visible range)
+  const isLoading = externalBars ? false : (is1W ? hourlyLoading : localLoading);
+
+  // The cutoff date string for the selected range (used for band colour + visible range).
+  // For 1W (hourly data) we fitContent() instead — all fetched data IS the window.
   const visibleFrom = useMemo(
-    () => selectedRange.days >= 9999 ? undefined : format(subDays(new Date(), selectedRange.days), 'yyyy-MM-dd'),
-    [selectedRange.days],
+    () => (is1W || selectedRange.days >= 9999) ? undefined : format(subDays(new Date(), selectedRange.days), 'yyyy-MM-dd'),
+    [selectedRange.days, is1W],
   );
 
   // All available bars mapped to AreaData[] — the chart holds the full history
   // so the user can scroll/zoom freely beyond the selected timeframe window.
   const lwData = useMemo(() => {
+    // For 1W, use Yahoo hourly bars (Unix timestamps as seconds — lightweight-charts UTCTimestamp)
+    if (is1W && hourlyBars.length > 0) {
+      return hourlyBars.map((bar) => ({
+        time: bar.t as unknown as string, // UTCTimestamp (number) — lightweight-charts accepts this
+        value: bar.c,
+      }));
+    }
     const src: any[] = externalBars ?? allLocalBars;
     return src.map((bar: any) => ({
-      time: (bar.date
-        ? String(bar.date).slice(0, 10)
-        : new Date(bar.ts).toISOString().slice(0, 10)) as string,
+      time: String(bar.date ?? bar.report_date ?? new Date(bar.ts).toISOString()).slice(0, 10) as string,
       value: Number(bar.adjusted_close ?? bar.close),
     }));
-  }, [externalBars, allLocalBars]);
+  }, [is1W, hourlyBars, externalBars, allLocalBars]);
 
   // Slice to selected range for band-colour computation only
   const windowData = useMemo(() => {
@@ -145,6 +161,7 @@ export function StockChart({
             areaTopColor={bandColor.top}
             areaBottomColor={bandColor.bottom}
             visibleFrom={visibleFrom}
+            timeVisible={is1W}
             className="rounded-none"
           />
         )}
