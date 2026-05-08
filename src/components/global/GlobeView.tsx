@@ -220,38 +220,75 @@ export default function GlobeView({
       });
     }
 
-    const stopAndRestart = () => {
-      controls.autoRotate = false;
+    // Idle timer that ONLY restarts auto-rotate if the user isn't dragging.
+    // Without this guard, holding the mouse button for >5s would let
+    // auto-rotate kick in mid-drag and fight the user's input.
+    const scheduleAutoRotateRestart = () => {
       clearTimeout(idleTimer.current);
       idleTimer.current = setTimeout(() => {
-        controls.autoRotate = true;
+        if (!draggingRef.current) controls.autoRotate = true;
       }, 5000);
     };
 
-    const onPointerDown = () => {
+    const onPointerDown = (e: PointerEvent) => {
+      // ── Pointer capture ──
+      // Routes ALL subsequent pointer events for this pointer to the canvas,
+      // even if the cursor moves outside its bounding box. Without this,
+      // dragging past the right-half edge of the screen would fire pointerleave
+      // and end the drag mid-motion, which feels like the globe "stopping".
+      try { el.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+
+      // ── Cancel any in-progress camera tween ──
+      // When the user clicks a country (panel or globe polygon), the fly-to
+      // effect calls globe.pointOfView({...}, 800) — an 800ms tween. If the
+      // user then click-drags the globe, that tween fights OrbitControls for
+      // its remaining lifetime: the tween yanks the camera toward its target
+      // every frame while drag input pushes it elsewhere. The visible result
+      // is a ~500-800ms "stop/stutter" about 1 second into the drag — exactly
+      // the tween's remaining duration. Re-issuing pointOfView at the current
+      // (interpolated) POV with duration 0 supersedes the active tween and
+      // hands camera control back to OrbitControls cleanly.
+      const g = globeRef.current as any;
+      if (g && typeof g.pointOfView === 'function') {
+        try {
+          const currentPov = g.pointOfView();
+          if (currentPov) g.pointOfView(currentPov, 0);
+        } catch { /* ignore — best-effort tween kill */ }
+      }
+
       // Disable damping during drag → globe follows mouse 1:1, zero input lag
       controls.enableDamping = false;
       draggingRef.current = true;
+
+      // Halt auto-rotate immediately; do NOT yet schedule its restart —
+      // that happens on pointer-up so the 5s timer is anchored to release.
+      controls.autoRotate = false;
+      clearTimeout(idleTimer.current);
       clearTimeout(coastTimerRef.current);
-      stopAndRestart();
 
       // Kill library-level raycasting + ALL pointer processing during drag.
       // Without this, every pointermove (100+/sec) triggers getBoundingClientRect()
       // layout reflow + ray-mesh intersection against 288 polygon meshes.
-      const g = globeRef.current as any;
       if (g) {
         g.onPolygonHover(null);
         g.polygonLabel(null);
         g.enablePointerInteraction(false);
       }
     };
-    const onPointerUp = () => {
+
+    const onPointerUp = (e: PointerEvent) => {
+      // Release pointer capture if we held it
+      try { el.releasePointerCapture(e.pointerId); } catch { /* ignore */ }
+
       // Re-enable damping with low factor → remaining velocity becomes smooth coast
       controls.enableDamping = true;
       controls.dampingFactor = 0.03;
 
       // Sync POV state that was skipped during drag (rotateSpeed, layer POV, etc.)
       if (globeChangeHandler) globeChangeHandler();
+
+      // Anchor the 5s idle timer to release, not press
+      scheduleAutoRotateRestart();
 
       // Keep hover suppressed during coast so restored onPolygonHover doesn't
       // fire 177 polygon color rebuilds while the globe is still spinning.
@@ -281,27 +318,35 @@ export default function GlobeView({
       coastTimerRef.current = setTimeout(() => {
         draggingRef.current = false;
       }, 800);
-      stopAndRestart();
+      controls.autoRotate = false;
+      scheduleAutoRotateRestart();
     };
 
     el.addEventListener("pointerdown", onPointerDown);
     el.addEventListener("pointerup", onPointerUp);
-    el.addEventListener("pointerleave", onPointerUp);
+    // pointercancel covers cases where capture is lost involuntarily
+    // (system gesture, browser interruption). pointerleave intentionally
+    // OMITTED: with capture in place, leaving the canvas during a drag
+    // must NOT terminate the gesture — the user is still pressing.
+    el.addEventListener("pointercancel", onPointerUp);
     el.addEventListener("wheel", wheelThrottled, { passive: true });
 
     return () => {
       el.removeEventListener("pointerdown", onPointerDown);
       el.removeEventListener("pointerup", onPointerUp);
-      el.removeEventListener("pointerleave", onPointerUp);
+      el.removeEventListener("pointercancel", onPointerUp);
       el.removeEventListener("wheel", wheelThrottled);
       clearTimeout(idleTimer.current);
       clearTimeout(coastTimerRef.current);
     };
   }, [countries]);
 
-  // Fly to selected country
+  // Fly to selected country.
+  // Skip if the user is currently interacting — a tween started here would
+  // fight their drag input until the 800ms duration elapses.
   useEffect(() => {
     if (!globeRef.current || !selectedCountry) return;
+    if (draggingRef.current) return;
     const meta = COUNTRY_META[selectedCountry];
     if (meta) {
       globeRef.current.pointOfView(
@@ -311,9 +356,10 @@ export default function GlobeView({
     }
   }, [selectedCountry]);
 
-  // Fly to selected exchange
+  // Fly to selected exchange (same drag-aware guard as country fly-to).
   useEffect(() => {
     if (!globeRef.current || !selectedExchange) return;
+    if (draggingRef.current) return;
     globeRef.current.pointOfView(
       { lat: selectedExchange.lat, lng: selectedExchange.lng, altitude: 2.0 },
       800
@@ -442,7 +488,14 @@ export default function GlobeView({
         showAtmosphere
         atmosphereColor="#64a0ff"
         atmosphereAltitude={0.18}
-        animateIn
+        // animateIn DISABLED — react-globe.gl's intro animation runs a 1200ms
+        // scene-rotation tween with Quintic.Out easing on init. It directly
+        // rotates state.scene.setRotationFromAxisAngle(...) every frame,
+        // which overrides any user drag input on OrbitControls. The Quintic.Out
+        // easing back-loads its motion: ~800ms in, the tween is barely moving,
+        // creating a "stutter/stop" sensation as the spin decelerates while the
+        // user is trying to drag. Disabling it makes drag silky from frame 1.
+        animateIn={false}
         polygonsData={countries}
         polygonCapColor={getCapColor}
         polygonSideColor={SIDE_COLOR}
