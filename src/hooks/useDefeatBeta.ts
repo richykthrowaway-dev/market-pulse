@@ -131,6 +131,7 @@ export function useYahooHourlyBars(symbol: string | undefined, enabled = true) {
     enabled: enabled && !!symbol,
     staleTime: 15 * 60_000,  // 15 min — intraday data
     gcTime: 10 * 60_000,
+    refetchOnWindowFocus: false, // avoid jank when user tabs back to the page
     select: (bars: YahooBar[]) => bars,
   });
 }

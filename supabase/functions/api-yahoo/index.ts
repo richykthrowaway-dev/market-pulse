@@ -70,7 +70,10 @@ async function fetchCrumb(): Promise<CrumbCache | null> {
       const a1Match  = rawCookie.match(/\bA1=[^;]+/);
       const cookie   = a1Match ? a1Match[0] : rawCookie.split(";")[0];
 
-      return { crumb, cookie, expiry: Date.now() + 28 * 60 * 1000 }; // 28 min TTL
+      // 22-min TTL: Yahoo's actual crumb lifetime is ~30min, but we expire
+      // pre-emptively so requests near the boundary get a fresh crumb on
+      // their first attempt instead of paying the 401 + retry round trip.
+      return { crumb, cookie, expiry: Date.now() + 22 * 60 * 1000 };
     } catch {
       // Try next host
     }

@@ -101,33 +101,43 @@ async function fetchWithRankedSymbols(
 ): Promise<CountryStock[]> {
   const tickers = ranked.map((r) => r.symbol);
 
-  // Batch fetch from Supabase stocks table
+  // Build all chunked queries upfront, fire in parallel.
+  // Previously: stocks chunks ran sequentially, then symbols chunks ran sequentially.
+  // Now: every chunk × both tables fired together via Promise.all → single round-trip latency.
+  const stocksQueries: Promise<{ data: any[] | null }>[] = [];
+  const symbolsQueries: Promise<{ data: any[] | null }>[] = [];
+  for (let i = 0; i < tickers.length; i += 100) {
+    const chunk = tickers.slice(i, i + 100);
+    stocksQueries.push(
+      supabase
+        .from("stocks")
+        .select("symbol, name, price, change_percent, volume, market_cap")
+        .in("symbol", chunk)
+    );
+    symbolsQueries.push(
+      supabase
+        .from("symbols")
+        .select("canonical_ticker, name, sector")
+        .in("canonical_ticker", chunk)
+    );
+  }
+
+  const [stocksResults, symbolsResults] = await Promise.all([
+    Promise.all(stocksQueries),
+    Promise.all(symbolsQueries),
+  ]);
+
   const stockMap = new Map<
     string,
     { name: string; price: number; change_percent: number; volume: number; market_cap: number }
   >();
-  for (let i = 0; i < tickers.length; i += 100) {
-    const chunk = tickers.slice(i, i + 100);
-    const { data: stocks } = await supabase
-      .from("stocks")
-      .select("symbol, name, price, change_percent, volume, market_cap")
-      .in("symbol", chunk);
-    if (stocks) {
-      for (const s of stocks) stockMap.set(s.symbol, s);
-    }
+  for (const { data: stocks } of stocksResults) {
+    if (stocks) for (const s of stocks) stockMap.set(s.symbol, s);
   }
 
-  // Also try symbols table for names/sectors we might be missing
   const nameMap = new Map<string, { name: string; sector: string | null }>();
-  for (let i = 0; i < tickers.length; i += 100) {
-    const chunk = tickers.slice(i, i + 100);
-    const { data: syms } = await supabase
-      .from("symbols")
-      .select("canonical_ticker, name, sector")
-      .in("canonical_ticker", chunk);
-    if (syms) {
-      for (const s of syms) nameMap.set(s.canonical_ticker, { name: s.name, sector: s.sector });
-    }
+  for (const { data: syms } of symbolsResults) {
+    if (syms) for (const s of syms) nameMap.set(s.canonical_ticker, { name: s.name, sector: s.sector });
   }
 
   // Merge: preserve DefeatBeta ranking order
@@ -162,6 +172,19 @@ async function fetchFromSupabase(iso2: string): Promise<CountryStock[]> {
 
   const tickers = symbols.map((s) => s.canonical_ticker);
 
+  // Parallelize chunked fetches instead of sequential await.
+  const chunkQueries: Promise<{ data: any[] | null; error: any }>[] = [];
+  for (let i = 0; i < tickers.length; i += 200) {
+    const chunk = tickers.slice(i, i + 200);
+    chunkQueries.push(
+      supabase
+        .from("stocks")
+        .select("symbol, name, price, change_percent, volume, market_cap")
+        .in("symbol", chunk)
+    );
+  }
+  const chunkResults = await Promise.all(chunkQueries);
+
   const allStocks: Array<{
     symbol: string;
     name: string;
@@ -170,12 +193,7 @@ async function fetchFromSupabase(iso2: string): Promise<CountryStock[]> {
     volume: number;
     market_cap: number;
   }> = [];
-  for (let i = 0; i < tickers.length; i += 200) {
-    const chunk = tickers.slice(i, i + 200);
-    const { data: stocks, error: stockErr } = await supabase
-      .from("stocks")
-      .select("symbol, name, price, change_percent, volume, market_cap")
-      .in("symbol", chunk);
+  for (const { data: stocks, error: stockErr } of chunkResults) {
     if (stockErr) throw stockErr;
     if (stocks) allStocks.push(...stocks);
   }
