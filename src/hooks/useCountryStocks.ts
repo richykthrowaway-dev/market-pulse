@@ -12,7 +12,7 @@ export interface CountryStock {
   sector: string | null;
 }
 
-const DEFEATBETA_URL = "http://localhost:4400";
+const DEFEATBETA_URL = import.meta.env.DEV ? "http://localhost:4400" : "/_/backend";
 
 /**
  * Yahoo Finance uses slightly different country names than our metadata.

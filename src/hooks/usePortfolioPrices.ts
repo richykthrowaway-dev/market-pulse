@@ -7,7 +7,7 @@ import type { PriceBar } from '@/hooks/useDefeatBeta';
 import { pricesToMap } from '@/lib/performanceCalc';
 import type { BenchmarkKey, PriceMap } from '@/lib/performanceTypes';
 
-const BACKEND_URL = 'http://localhost:4400';
+const BACKEND_URL = import.meta.env.DEV ? 'http://localhost:4400' : '/_/backend';
 const PRICE_DAYS = 1825; // 5 years
 
 // Benchmark symbol mapping

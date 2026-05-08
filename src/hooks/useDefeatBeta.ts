@@ -24,7 +24,7 @@ import type { NewsItem } from '@/utils/stocksApi';
  *   useExchangeRates(from, to)   — currency exchange rates
  */
 
-const BACKEND_URL = 'http://localhost:4400';
+const BACKEND_URL = import.meta.env.DEV ? 'http://localhost:4400' : '/_/backend';
 
 async function fetchApi<T>(endpoint: string, params: Record<string, string | number | undefined>): Promise<T> {
   const url = new URL(`${BACKEND_URL}${endpoint}`);
