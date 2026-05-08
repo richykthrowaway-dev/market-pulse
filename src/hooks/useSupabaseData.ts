@@ -131,8 +131,10 @@ export function useNews(watchlistSymbols?: string[], country?: string) {
   return useQuery({
     queryKey: ['news', country ?? '', watchlistSymbols ?? []],
     queryFn: async (): Promise<NewsItem[]> => {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+      // Trim env vars defensively — Vercel's `vercel env add` via stdin can
+      // leave trailing whitespace that breaks URL construction.
+      const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string).trim();
+      const supabaseKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string).trim();
 
       const url = new URL(`${supabaseUrl}/functions/v1/api-news`);
       if (country) {
