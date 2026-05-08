@@ -2,9 +2,9 @@ import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } fro
 import { useIndices } from "@/hooks/useSupabaseData";
 import { REGION_TO_ISO } from "@/data/countryMeta";
 import { cn } from "@/lib/utils";
-import { Globe as GlobeIcon, ArrowLeft, Loader2, RotateCw, Pause } from "lucide-react";
+import { Globe as GlobeIcon, ArrowLeft, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-const GlobeView = lazy(() => import("@/components/global/GlobeView"));
+const GlobeView = lazy(() => import("@/components/global/MapView"));
 import CountryPanel from "@/components/global/CountryPanel";
 import GlobalSummary from "@/components/global/GlobalSummary";
 import ExchangeDetailDialog from "@/components/global/ExchangeDetailDialog";
@@ -81,28 +81,24 @@ function getStarfieldUri(): string {
 // per-frame rasterization cost. Backlight uses a single 4-stop gradient
 // instead of 3 separate ones; secondary wisps folded into major nebulae.
 const SPACE_BACKGROUND = [
-  // ── Backlight glow (merged 3 → 1) ──
-  "radial-gradient(circle at 50% 50%, rgba(180,225,255,0.18) 0%, rgba(80,200,245,0.28) 10%, rgba(40,120,180,0.08) 28%, transparent 45%)",
+  // ── Backlight glow — dimmed so map colours read clearly ──
+  "radial-gradient(circle at 50% 50%, rgba(80,140,200,0.08) 0%, rgba(40,100,160,0.12) 10%, rgba(20,60,100,0.04) 28%, transparent 45%)",
 
-  // ── 4 corner nebulae ──
-  "radial-gradient(ellipse at 8% 12%, rgba(30,100,200,0.32) 0%, rgba(20,70,150,0.12) 25%, transparent 50%)",
-  "radial-gradient(ellipse at 88% 82%, rgba(20,160,180,0.28) 0%, rgba(12,100,130,0.10) 28%, transparent 52%)",
-  "radial-gradient(ellipse at 82% 8%, rgba(100,50,160,0.26) 0%, rgba(65,35,120,0.10) 22%, transparent 48%)",
-  "radial-gradient(ellipse at 12% 88%, rgba(30,70,160,0.26) 0%, rgba(18,45,110,0.10) 24%, transparent 48%)",
+  // ── 4 corner nebulae — pulled back to ~40% of original opacity ──
+  "radial-gradient(ellipse at 8% 12%, rgba(20,60,140,0.18) 0%, rgba(12,40,90,0.07) 25%, transparent 50%)",
+  "radial-gradient(ellipse at 88% 82%, rgba(12,90,110,0.15) 0%, rgba(8,55,75,0.06) 28%, transparent 52%)",
+  "radial-gradient(ellipse at 82% 8%, rgba(55,25,100,0.14) 0%, rgba(35,18,70,0.06) 22%, transparent 48%)",
+  "radial-gradient(ellipse at 12% 88%, rgba(18,40,100,0.14) 0%, rgba(10,25,65,0.06) 24%, transparent 48%)",
 
-  // ── Edge wisps (merged 4 → 2) ──
-  "radial-gradient(ellipse at 3% 45%, rgba(35,170,195,0.15) 0%, transparent 28%), radial-gradient(ellipse at 45% 2%, rgba(28,65,140,0.16) 0%, transparent 30%)",
-  "radial-gradient(ellipse at 95% 45%, rgba(65,38,125,0.12) 0%, transparent 25%), radial-gradient(ellipse at 55% 95%, rgba(22,120,150,0.13) 0%, transparent 26%)",
+  // ── Edge wisps ──
+  "radial-gradient(ellipse at 3% 45%, rgba(20,90,110,0.08) 0%, transparent 28%), radial-gradient(ellipse at 45% 2%, rgba(16,38,85,0.09) 0%, transparent 30%)",
+  "radial-gradient(ellipse at 95% 45%, rgba(38,20,75,0.07) 0%, transparent 25%), radial-gradient(ellipse at 55% 95%, rgba(12,65,85,0.07) 0%, transparent 26%)",
 
-  // ── Galaxy cluster hints ──
-  "radial-gradient(ellipse at 90% 22%, rgba(75,115,185,0.14) 0%, transparent 20%), radial-gradient(ellipse at 25% 70%, rgba(55,105,165,0.12) 0%, transparent 18%)",
+  // ── Vignette ──
+  "radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(1,2,6,0.65) 100%)",
 
-  // ── Atmosphere + vignette (merged) ──
-  "radial-gradient(ellipse at 50% 40%, rgba(12,30,65,0.45) 0%, rgba(8,18,40,0.20) 45%, transparent 75%)",
-  "radial-gradient(ellipse at 50% 50%, transparent 35%, rgba(2,4,10,0.50) 100%)",
-
-  // ── Base deep space ──
-  "radial-gradient(ellipse at 40% 35%, #0b1626 0%, #070e1c 25%, #050a15 50%, #03060e 75%, #020407 100%)",
+  // ── Base — near-black deep space ──
+  "radial-gradient(ellipse at 40% 35%, #060d18 0%, #040912 25%, #03070f 50%, #02050a 75%, #010306 100%)",
 ].join(",");
 
 type GlobeMode = "flags" | "performance";
@@ -143,9 +139,6 @@ const Global = () => {
   const [mode, setMode] = useState<GlobeMode>("flags");
   const [showExchangePins, setShowExchangePins] = useState(false);
   const [selectedExchange, setSelectedExchange] = useState<ExchangeInfo | null>(null);
-  // Idle auto-rotate (continuous gentle spin). User-toggleable so they can
-  // verify perceived drag smoothness with vs. without idle rotation.
-  const [autoRotate, setAutoRotate] = useState(true);
   const stars = getStarfieldUri();
 
   const leftRef = useRef<HTMLDivElement | null>(null);
@@ -218,20 +211,6 @@ const Global = () => {
           <h1 className="text-base font-semibold">Global Investment Hub</h1>
         </div>
         <div className="flex items-center gap-3">
-          {/* Spin toggle — pause/resume idle auto-rotation */}
-          <button
-            onClick={() => setAutoRotate(v => !v)}
-            className={cn(
-              "flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border text-xs transition-colors",
-              autoRotate ? "bg-primary/10 text-primary hover:bg-primary/15" : "hover:bg-muted text-muted-foreground"
-            )}
-            title={autoRotate ? "Pause globe spin" : "Resume globe spin"}
-            aria-pressed={autoRotate}
-          >
-            {autoRotate ? <RotateCw className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
-            <span>{autoRotate ? "Spin On" : "Spin Off"}</span>
-          </button>
-
           {/* Mode Toggle */}
           <div className="flex rounded-md border border-border overflow-hidden text-xs">
             <button
@@ -314,7 +293,6 @@ const Global = () => {
                 showExchangePins={showExchangePins}
                 onExchangeClick={handleExchangeClick}
                 selectedExchange={selectedExchange}
-                autoRotate={autoRotate}
               />
             </Suspense>
           )}

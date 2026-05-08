@@ -32,6 +32,7 @@ export function Flag({ code, size = 34, className }: FlagProps) {
         src={url}
         alt={code}
         loading="lazy"
+        decoding="async"
         style={{
           display: 'block',
           maxWidth: '100%',
