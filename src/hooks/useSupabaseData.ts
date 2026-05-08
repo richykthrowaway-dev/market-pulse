@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Stock, MarketIndex, CurrencyPair, NewsItem } from '@/utils/stocksApi';
 import { QUERY_CONFIG } from '@/config/queryDefaults';
+import { fetchCached } from '@/lib/apiCache';
 
 function mapStock(row: any): Stock {
   return {
@@ -136,24 +137,30 @@ export function useNews(watchlistSymbols?: string[], country?: string) {
       const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL as string).trim();
       const supabaseKey = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string).trim();
 
-      const url = new URL(`${supabaseUrl}/functions/v1/api-news`);
-      if (country) {
-        url.searchParams.set('country', country);
-      }
-      if (watchlistSymbols && watchlistSymbols.length > 0) {
-        url.searchParams.set('symbols', watchlistSymbols.join(','));
-      }
-      url.searchParams.set('days', '7');
-
-      const res = await fetch(url.toString(), {
-        headers: {
-          apikey: supabaseKey,
-          Authorization: `Bearer ${supabaseKey}`,
+      // 30-min cache — news doesn't change THAT fast and Finnhub has rate limits.
+      // Note: Date objects don't survive JSON.stringify, so we cache the raw
+      // wire format and rehydrate publishedAt on every read.
+      const cacheKey = `api-news:${country ?? ''}:${(watchlistSymbols ?? []).slice().sort().join(',')}`;
+      const rawItems = await fetchCached<any[]>(
+        cacheKey,
+        async () => {
+          const url = new URL(`${supabaseUrl}/functions/v1/api-news`);
+          if (country) url.searchParams.set('country', country);
+          if (watchlistSymbols && watchlistSymbols.length > 0) {
+            url.searchParams.set('symbols', watchlistSymbols.join(','));
+          }
+          url.searchParams.set('days', '7');
+          const res = await fetch(url.toString(), {
+            headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` },
+          });
+          if (!res.ok) throw new Error(`api-news: ${res.status}`);
+          const json = await res.json();
+          return json.news ?? [];
         },
-      });
-      if (!res.ok) throw new Error(`api-news: ${res.status}`);
-      const json = await res.json();
-      return (json.news ?? []).map((item: any) => ({
+        { ttlMs: 30 * 60_000, staleAfterMs: 5 * 60_000 },
+      );
+
+      return rawItems.map((item: any) => ({
         id: item.id,
         title: item.title,
         summary: item.summary,

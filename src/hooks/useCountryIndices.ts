@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCountryIndices, type CountryIndex } from "@/data/countryIndices";
+import { fetchCached } from "@/lib/apiCache";
 
 /**
  * Live quote data for a country index.
@@ -58,10 +59,17 @@ export function useCountryIndices(iso2: string | null) {
       const indices = getCountryIndices(iso2);
       if (indices.length === 0) return [];
 
-      // Fetch all indices in parallel
+      // Fetch all indices in parallel — wrapped in fetchCached for L2 (localStorage)
+      // caching, in-flight dedup, and stale-while-revalidate. 5-min hard TTL
+      // means a hot index symbol is hit Yahoo at most 12 times per hour
+      // PER BROWSER, regardless of how many components / countries reference it.
       const quotes = await Promise.all(
         indices.map(async (idx): Promise<CountryIndexQuote> => {
-          const data = await fetchYahooQuoteRaw(idx.symbol);
+          const data = await fetchCached(
+            `yahoo:quote:${idx.symbol}`,
+            () => fetchYahooQuoteRaw(idx.symbol),
+            { ttlMs: 5 * 60_000, staleAfterMs: 60_000 },
+          );
           if (!data) {
             return {
               ...idx,
