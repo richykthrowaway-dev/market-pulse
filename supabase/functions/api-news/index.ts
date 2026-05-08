@@ -1062,13 +1062,43 @@ serve(async (req) => {
   const toStr = to.toISOString().split("T")[0];
 
   try {
-    // ── Cache check (country-only requests without symbols) ──────────────
-    // Symbol-specific requests bypass cache since they use Finnhub (generous quota)
-    if (country && symbols.length === 0 && !forceFresh) {
+    // ── Cache check ──────────────────────────────────────────────────────
+    // Even when symbols are provided, we serve the country portion from cache
+    // and only add Finnhub company news on top — Finnhub has a generous quota
+    // (60/min), but MarketAux/GNews/NewsAPI do not, so cache-skipping the
+    // country-level fetches is critical to staying under their daily limits.
+    if (country && !forceFresh) {
       const cached = await getCachedNews(country);
       if (cached) {
+        // Pure country request → return cached directly
+        if (symbols.length === 0) {
+          return new Response(
+            JSON.stringify({ news: cached, timestamp: Date.now(), cached: true }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        // Country + symbols → cached country news + fresh Finnhub company news only
+        const companyFetches = symbols.map((sym) =>
+          fetchFinnhubJson(
+            `${FINNHUB_BASE}/company-news?symbol=${encodeURIComponent(sym)}&from=${fromStr}&to=${toStr}&token=${finnhubKey}`,
+          ).then((items) => items.map(finnhubToNewsItem)),
+        );
+        const companyResults = await Promise.all(companyFetches);
+        const seen = new Set<string>(cached.map((n) => n.id));
+        const merged: NewsItem[] = [...cached];
+        for (const items of companyResults) {
+          for (const item of items) {
+            if (!seen.has(item.id)) {
+              seen.add(item.id);
+              merged.push(item);
+            }
+          }
+        }
+        merged.sort((a, b) =>
+          new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime(),
+        );
         return new Response(
-          JSON.stringify({ news: cached, timestamp: Date.now(), cached: true }),
+          JSON.stringify({ news: merged, timestamp: Date.now(), cached: "partial" }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }

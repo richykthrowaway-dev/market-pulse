@@ -47,9 +47,13 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
   // for non-US countries where Supabase has tickers but no price feeds yet.
   const hasNoLiveData = stocks.length > 0 && gainers.length === 0 && losers.length === 0;
 
-  // Fetch news: GNews (country) + MarketAux (country) + Finnhub (tickers)
-  const tickers = meta?.newsTickers ?? [];
-  const { data: news = [] } = useNews(tickers.length > 0 ? tickers : undefined, iso2);
+  // Fetch news for this country.
+  // IMPORTANT: do NOT pass symbols here. The api-news edge function's 6h DB
+  // cache only kicks in when symbols.length === 0. Passing newsTickers caused
+  // every country click to bypass the cache and hammer MarketAux/GNews/etc.
+  // The country-level aggregation already includes major company news for
+  // each market via GNews/NewsAPI, so this loses nothing.
+  const { data: news = [] } = useNews(undefined, iso2);
 
   if (!meta) return <div className="p-4 text-muted-foreground">No data available for this country.</div>;
 
