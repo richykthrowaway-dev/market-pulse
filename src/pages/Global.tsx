@@ -2,9 +2,10 @@ import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } fro
 import { useIndices } from "@/hooks/useSupabaseData";
 import { REGION_TO_ISO } from "@/data/countryMeta";
 import { cn } from "@/lib/utils";
-import { Globe as GlobeIcon, ArrowLeft, Loader2 } from "lucide-react";
+import { Globe as GlobeIcon, ArrowLeft, Loader2, RotateCw, Pause, Map } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-const GlobeView = lazy(() => import("@/components/global/MapView"));
+const GlobeView = lazy(() => import("@/components/global/GlobeView"));
+const MapView  = lazy(() => import("@/components/global/MapView"));
 import CountryPanel from "@/components/global/CountryPanel";
 import GlobalSummary from "@/components/global/GlobalSummary";
 import ExchangeDetailDialog from "@/components/global/ExchangeDetailDialog";
@@ -139,6 +140,8 @@ const Global = () => {
   const [mode, setMode] = useState<GlobeMode>("flags");
   const [showExchangePins, setShowExchangePins] = useState(false);
   const [selectedExchange, setSelectedExchange] = useState<ExchangeInfo | null>(null);
+  const [autoRotate, setAutoRotate] = useState(true);
+  const [flatMap, setFlatMap] = useState(false);
   const stars = getStarfieldUri();
 
   const leftRef = useRef<HTMLDivElement | null>(null);
@@ -211,6 +214,35 @@ const Global = () => {
           <h1 className="text-base font-semibold">Global Investment Hub</h1>
         </div>
         <div className="flex items-center gap-3">
+          {/* Flat map toggle */}
+          <button
+            onClick={() => setFlatMap(v => !v)}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border text-xs transition-colors",
+              flatMap ? "bg-primary/10 text-primary hover:bg-primary/15" : "hover:bg-muted text-muted-foreground"
+            )}
+            title={flatMap ? "Switch to 3D globe" : "Switch to flat map"}
+          >
+            <Map className="h-3 w-3" />
+            <span>{flatMap ? "Flat Map" : "3D Globe"}</span>
+          </button>
+
+          {/* Spin toggle — only relevant for 3D globe */}
+          {!flatMap && (
+            <button
+              onClick={() => setAutoRotate(v => !v)}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border text-xs transition-colors",
+                autoRotate ? "bg-primary/10 text-primary hover:bg-primary/15" : "hover:bg-muted text-muted-foreground"
+              )}
+              title={autoRotate ? "Pause spin" : "Resume spin"}
+              aria-pressed={autoRotate}
+            >
+              {autoRotate ? <RotateCw className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+              <span>{autoRotate ? "Spin On" : "Spin Off"}</span>
+            </button>
+          )}
+
           {/* Mode Toggle */}
           <div className="flex rounded-md border border-border overflow-hidden text-xs">
             <button
@@ -274,7 +306,6 @@ const Global = () => {
               contain: "strict",
             }}
           />
-          {/* Globe — lazy-loaded so the 5MB Three.js bundle doesn't block initial render */}
           {leftW > 0 && leftH > 0 && (
             <Suspense
               fallback={
@@ -283,17 +314,32 @@ const Global = () => {
                 </div>
               }
             >
-              <GlobeView
-                width={leftW}
-                height={leftH}
-                mode={mode}
-                performanceMap={performanceMap}
-                selectedCountry={selectedCountry}
-                onCountryClick={handleCountryClick}
-                showExchangePins={showExchangePins}
-                onExchangeClick={handleExchangeClick}
-                selectedExchange={selectedExchange}
-              />
+              {flatMap ? (
+                <MapView
+                  width={leftW}
+                  height={leftH}
+                  mode={mode}
+                  performanceMap={performanceMap}
+                  selectedCountry={selectedCountry}
+                  onCountryClick={handleCountryClick}
+                  showExchangePins={showExchangePins}
+                  onExchangeClick={handleExchangeClick}
+                  selectedExchange={selectedExchange}
+                />
+              ) : (
+                <GlobeView
+                  width={leftW}
+                  height={leftH}
+                  mode={mode}
+                  performanceMap={performanceMap}
+                  selectedCountry={selectedCountry}
+                  onCountryClick={handleCountryClick}
+                  showExchangePins={showExchangePins}
+                  onExchangeClick={handleExchangeClick}
+                  selectedExchange={selectedExchange}
+                  autoRotate={autoRotate}
+                />
+              )}
             </Suspense>
           )}
 
