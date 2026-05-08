@@ -28,4 +28,44 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: (id) => {
+          // Three.js / globe — already lazy-loaded, keep isolated
+          if (id.includes('three') || id.includes('react-globe') || id.includes('globe.gl')) {
+            return 'vendor-three';
+          }
+          // D3 + topojson — lazy-loaded by MapView, keep isolated
+          if (id.includes('node_modules/d3') || id.includes('node_modules/topojson') || id.includes('node_modules/d3-')) {
+            return 'vendor-d3';
+          }
+          // Recharts + dependencies
+          if (id.includes('recharts') || id.includes('victory-vendor')) {
+            return 'vendor-charts';
+          }
+          // Radix UI primitives
+          if (id.includes('@radix-ui')) {
+            return 'vendor-radix';
+          }
+          // Tanstack (React Query + Table)
+          if (id.includes('@tanstack')) {
+            return 'vendor-tanstack';
+          }
+          // React core
+          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router')) {
+            return 'vendor-react';
+          }
+          // Supabase client
+          if (id.includes('@supabase')) {
+            return 'vendor-supabase';
+          }
+          // Lucide icons
+          if (id.includes('lucide-react')) {
+            return 'vendor-icons';
+          }
+        },
+      },
+    },
+  },
 }));
