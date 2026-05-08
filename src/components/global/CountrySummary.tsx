@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useIndices, useNews } from "@/hooks/useSupabaseData";
+import { useCountryIndices } from "@/hooks/useCountryIndices";
 import { COUNTRY_META } from "@/data/countryMeta";
 import { Flag } from "@/components/ui/Flag";
 import { cn } from "@/lib/utils";
@@ -17,12 +18,13 @@ const NEWS_PER_PAGE = 9;
 export default function CountrySummary({ iso2, stocks, isLoading }: CountrySummaryProps) {
   const meta = COUNTRY_META[iso2];
   const { data: indices = [] } = useIndices();
+  const { data: liveIndices = [], isLoading: indicesLoading } = useCountryIndices(iso2);
   const [newsPage, setNewsPage] = useState(0);
 
   // Reset page when country changes
   useEffect(() => { setNewsPage(0); }, [iso2]);
 
-  // Find this country's index by matching region
+  // Find this country's index by matching region (Supabase fallback for the headline card)
   const countryIndex = useMemo(
     () => meta ? indices.find((idx) => idx.region === meta.region) : undefined,
     [meta, indices]
@@ -62,8 +64,72 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
         </div>
       </div>
 
-      {/* Index Card */}
-      {countryIndex && (
+      {/* ── Major Indices (Yahoo Finance, live) ─────────────────────────── */}
+      {(liveIndices.length > 0 || indicesLoading) && (
+        <div>
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+            Major Indices
+          </h3>
+          {indicesLoading && liveIndices.length === 0 ? (
+            <div className="space-y-2">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="h-16 bg-muted/40 rounded-lg animate-pulse" />
+              ))}
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {liveIndices.map((idx) => {
+                const positive = (idx.changePercent ?? 0) >= 0;
+                const hasData = !idx.unavailable && idx.price !== null;
+                return (
+                  <div
+                    key={idx.symbol}
+                    className="bg-muted/40 rounded-lg p-3 flex justify-between items-center hover:bg-muted/55 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{idx.name}</p>
+                      <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                        {idx.symbol}
+                      </p>
+                    </div>
+                    {hasData ? (
+                      <div className="text-right shrink-0 ml-3">
+                        <p className="text-base font-bold font-mono">
+                          {idx.price!.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}
+                        </p>
+                        <p
+                          className={cn(
+                            "text-xs font-mono flex items-center justify-end gap-0.5",
+                            positive ? "text-success" : "text-danger"
+                          )}
+                        >
+                          {positive ? (
+                            <ArrowUpIcon className="h-3 w-3" />
+                          ) : (
+                            <ArrowDownIcon className="h-3 w-3" />
+                          )}
+                          {positive ? "+" : ""}
+                          {(idx.changePercent ?? 0).toFixed(2)}%
+                        </p>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic shrink-0 ml-3">
+                        unavailable
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Fallback: show the Supabase-based country index card if Yahoo didn't have any */}
+      {!indicesLoading && liveIndices.length === 0 && countryIndex && (
         <div className="bg-muted/50 rounded-lg p-4">
           <div className="flex justify-between items-center">
             <div>
