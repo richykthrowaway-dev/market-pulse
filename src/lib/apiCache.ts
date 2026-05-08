@@ -20,7 +20,9 @@
 //   • Quota-safe: writes that exceed localStorage budget evict oldest first.
 //   • Versioned: bump CACHE_VERSION to invalidate everything across all users.
 
-const CACHE_VERSION = 1;
+// Bump when changing cache semantics (e.g. fixing the "cache empty results" bug)
+// to invalidate everyone's existing bad cache entries.
+const CACHE_VERSION = 2;
 const STORAGE_PREFIX = `api-cache:v${CACHE_VERSION}:`;
 // Cap how much of localStorage we use — 4MB leaves headroom for app state.
 const STORAGE_BUDGET_BYTES = 4 * 1024 * 1024;
@@ -35,7 +37,7 @@ interface CacheEntry<T> {
   staleAfter: number;
 }
 
-export interface CacheOptions {
+export interface CacheOptions<T = unknown> {
   /** Hard TTL (ms). Past this, the value is considered fully expired. */
   ttlMs: number;
   /**
@@ -44,6 +46,28 @@ export interface CacheOptions {
    * to ttlMs / 3 (e.g. for ttlMs=5min → staleAfter 1m40s).
    */
   staleAfterMs?: number;
+  /**
+   * Predicate that returns true if a value should be cached. Defaults to
+   * `defaultShouldCache` which skips null, undefined, and empty arrays —
+   * critical to prevent caching error fallbacks (e.g. Finnhub 429 returns
+   * null, EODHD network failures return []).
+   *
+   * Override only when you legitimately want to cache an empty result
+   * (e.g. "this country has no news" is a valid cacheable answer).
+   */
+  shouldCache?: (value: T) => boolean;
+}
+
+/**
+ * Default predicate: skip caching empty/error results.
+ * - null / undefined → not cached (likely error or 429)
+ * - empty array      → not cached (likely network failure fallback)
+ * - everything else  → cached
+ */
+function defaultShouldCache<T>(value: T): boolean {
+  if (value === null || value === undefined) return false;
+  if (Array.isArray(value) && value.length === 0) return false;
+  return true;
 }
 
 // Module-level Map of in-flight fetches keyed by cache key.
@@ -122,10 +146,11 @@ function evictOldest(): void {
 export async function fetchCached<T>(
   key: string,
   fetcher: () => Promise<T>,
-  options: CacheOptions,
+  options: CacheOptions<T>,
 ): Promise<T> {
   const ttlMs = options.ttlMs;
   const staleAfterMs = options.staleAfterMs ?? Math.max(30_000, Math.floor(ttlMs / 3));
+  const shouldCache = options.shouldCache ?? defaultShouldCache;
 
   const cached = readEntry<T>(key);
   const now = Date.now();
@@ -137,12 +162,12 @@ export async function fetchCached<T>(
 
   // Stale-but-valid hit → return cached value, kick off background refresh.
   if (cached && now < cached.expiry) {
-    void revalidate(key, fetcher, ttlMs, staleAfterMs);
+    void revalidate(key, fetcher, ttlMs, staleAfterMs, shouldCache);
     return cached.value;
   }
 
   // Cache miss or hard-expired → must wait for network.
-  return await revalidate(key, fetcher, ttlMs, staleAfterMs);
+  return await revalidate(key, fetcher, ttlMs, staleAfterMs, shouldCache);
 }
 
 async function revalidate<T>(
@@ -150,6 +175,7 @@ async function revalidate<T>(
   fetcher: () => Promise<T>,
   ttlMs: number,
   staleAfterMs: number,
+  shouldCache: (v: T) => boolean,
 ): Promise<T> {
   // In-flight dedup: if another call for this key is already running, await it.
   const existing = inFlight.get(key) as Promise<T> | undefined;
@@ -158,13 +184,19 @@ async function revalidate<T>(
   const promise = (async () => {
     try {
       const value = await fetcher();
-      const ts = Date.now();
-      writeEntry<T>(key, {
-        value,
-        ts,
-        staleAfter: ts + staleAfterMs,
-        expiry: ts + ttlMs,
-      });
+      // CRITICAL: skip caching null/undefined/[]. A Finnhub 429 returns null
+      // — we don't want to cache that for 2 min and serve stale errors to
+      // every subsequent caller. shouldCache lets the fetcher's "I failed"
+      // signal escape the cache.
+      if (shouldCache(value)) {
+        const ts = Date.now();
+        writeEntry<T>(key, {
+          value,
+          ts,
+          staleAfter: ts + staleAfterMs,
+          expiry: ts + ttlMs,
+        });
+      }
       return value;
     } finally {
       inFlight.delete(key);
