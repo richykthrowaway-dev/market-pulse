@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } fro
 import { useIndices } from "@/hooks/useSupabaseData";
 import { REGION_TO_ISO } from "@/data/countryMeta";
 import { cn } from "@/lib/utils";
-import { Globe as GlobeIcon, ArrowLeft, Loader2 } from "lucide-react";
+import { Globe as GlobeIcon, ArrowLeft, Loader2, RotateCw, Pause } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const GlobeView = lazy(() => import("@/components/global/GlobeView"));
 import CountryPanel from "@/components/global/CountryPanel";
@@ -143,6 +143,9 @@ const Global = () => {
   const [mode, setMode] = useState<GlobeMode>("flags");
   const [showExchangePins, setShowExchangePins] = useState(false);
   const [selectedExchange, setSelectedExchange] = useState<ExchangeInfo | null>(null);
+  // Idle auto-rotate (continuous gentle spin). User-toggleable so they can
+  // verify perceived drag smoothness with vs. without idle rotation.
+  const [autoRotate, setAutoRotate] = useState(true);
   const stars = getStarfieldUri();
 
   const leftRef = useRef<HTMLDivElement | null>(null);
@@ -215,6 +218,20 @@ const Global = () => {
           <h1 className="text-base font-semibold">Global Investment Hub</h1>
         </div>
         <div className="flex items-center gap-3">
+          {/* Spin toggle — pause/resume idle auto-rotation */}
+          <button
+            onClick={() => setAutoRotate(v => !v)}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border text-xs transition-colors",
+              autoRotate ? "bg-primary/10 text-primary hover:bg-primary/15" : "hover:bg-muted text-muted-foreground"
+            )}
+            title={autoRotate ? "Pause globe spin" : "Resume globe spin"}
+            aria-pressed={autoRotate}
+          >
+            {autoRotate ? <RotateCw className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+            <span>{autoRotate ? "Spin On" : "Spin Off"}</span>
+          </button>
+
           {/* Mode Toggle */}
           <div className="flex rounded-md border border-border overflow-hidden text-xs">
             <button
@@ -297,6 +314,7 @@ const Global = () => {
                 showExchangePins={showExchangePins}
                 onExchangeClick={handleExchangeClick}
                 selectedExchange={selectedExchange}
+                autoRotate={autoRotate}
               />
             </Suspense>
           )}

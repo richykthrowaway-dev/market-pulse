@@ -25,6 +25,12 @@ interface GlobeViewProps {
   showExchangePins?: boolean;
   onExchangeClick?: (exchange: ExchangeInfo) => void;
   selectedExchange?: ExchangeInfo | null;
+  /**
+   * Whether the globe should idle-spin (continuous gentle rotation when
+   * the user isn't interacting). When false, the globe is fully static
+   * unless the user drags it.
+   */
+  autoRotate?: boolean;
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -164,7 +170,13 @@ export default function GlobeView({
   showExchangePins = false,
   onExchangeClick,
   selectedExchange,
+  autoRotate = true,
 }: GlobeViewProps) {
+  // Mirror autoRotate prop into a ref so the idle-timer callback (created
+  // once inside a stable useEffect) can read the latest value without
+  // having to re-subscribe whenever the prop changes.
+  const autoRotateRef = useRef(autoRotate);
+  autoRotateRef.current = autoRotate;
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
   const [countries, setCountries] = useState<Feature[]>(geoJsonCache ?? []);
   const idleTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -201,7 +213,7 @@ export default function GlobeView({
     } catch {
       return;
     }
-    controls.autoRotate = true;
+    controls.autoRotate = autoRotateRef.current;
     controls.autoRotateSpeed = 0.4;
     controls.enableDamping = true;
     controls.dampingFactor = 0.03; // low = long coast after release
@@ -220,13 +232,14 @@ export default function GlobeView({
       });
     }
 
-    // Idle timer that ONLY restarts auto-rotate if the user isn't dragging.
-    // Without this guard, holding the mouse button for >5s would let
-    // auto-rotate kick in mid-drag and fight the user's input.
+    // Idle timer that ONLY restarts auto-rotate if the user isn't dragging
+    // AND the autoRotate prop is currently enabled. Without these guards,
+    // holding the mouse for >5s lets auto-rotate fight drag input, and
+    // toggling the prop off doesn't take effect until the next interaction.
     const scheduleAutoRotateRestart = () => {
       clearTimeout(idleTimer.current);
       idleTimer.current = setTimeout(() => {
-        if (!draggingRef.current) controls.autoRotate = true;
+        if (!draggingRef.current && autoRotateRef.current) controls.autoRotate = true;
       }, 5000);
     };
 
@@ -340,6 +353,22 @@ export default function GlobeView({
       clearTimeout(coastTimerRef.current);
     };
   }, [countries]);
+
+  // Live-respond to autoRotate prop changes WITHOUT waiting for the next
+  // idle cycle. Flipping the toggle off mid-spin should stop instantly;
+  // flipping on (when not dragging) should resume the spin immediately.
+  useEffect(() => {
+    if (!globeRef.current) return;
+    let controls: any;
+    try { controls = globeRef.current.controls(); } catch { return; }
+    if (!controls) return;
+    if (autoRotate && !draggingRef.current) {
+      controls.autoRotate = true;
+    } else {
+      controls.autoRotate = false;
+      clearTimeout(idleTimer.current); // cancel any pending restart
+    }
+  }, [autoRotate]);
 
   // Fly to selected country.
   // Skip if the user is currently interacting — a tween started here would
