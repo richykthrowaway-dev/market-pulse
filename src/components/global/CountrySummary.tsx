@@ -41,6 +41,10 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
     [stocks]
   );
 
+  // True only when we have ticker symbols but no live price data — happens
+  // for non-US countries where Supabase has tickers but no price feeds yet.
+  const hasNoLiveData = stocks.length > 0 && gainers.length === 0 && losers.length === 0;
+
   // Fetch news: GNews (country) + MarketAux (country) + Finnhub (tickers)
   const tickers = meta?.newsTickers ?? [];
   const { data: news = [] } = useNews(tickers.length > 0 ? tickers : undefined, iso2);
@@ -144,6 +148,31 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
                   </div>
                 ))}
               </div>
+            </div>
+          )}
+
+          {/* Show a "Major Companies" list when we have tickers but no live prices */}
+          {hasNoLiveData && (
+            <div>
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                Major Companies
+              </h3>
+              <div className="space-y-1">
+                {stocks.slice(0, 10).map((s) => (
+                  <div
+                    key={s.symbol}
+                    className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-medium text-sm">{s.symbol}</span>
+                      <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                Live price data unavailable for {meta.name}.
+              </p>
             </div>
           )}
 

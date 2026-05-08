@@ -82,9 +82,49 @@ export function useCountryStocks(iso2: string | null) {
         return await fetchWithRankedSymbols(rankedSymbols);
       }
 
-      // Fallback: use Supabase symbols table
-      return await fetchFromSupabase(iso2);
+      // Fallback 1: Supabase symbols table by country
+      const fromSupabase = await fetchFromSupabase(iso2);
+      if (fromSupabase.length > 0) return fromSupabase;
+
+      // Fallback 2: hardcoded country tickers from COUNTRY_META
+      // Used when neither DefeatBeta nor Supabase has stocks for this country
+      // (common for non-US markets — most of our stocks data is US-only)
+      return await fetchFromCountryMeta(iso2);
     },
+  });
+}
+
+/**
+ * Final fallback: use the curated `newsTickers` list from COUNTRY_META.
+ * These are well-known, exchange-qualified tickers (e.g. "OR.PA" for L'Oreal)
+ * that should resolve in the Yahoo-fed stocks table when available.
+ */
+async function fetchFromCountryMeta(iso2: string): Promise<CountryStock[]> {
+  const meta = COUNTRY_META[iso2];
+  if (!meta || !meta.newsTickers || meta.newsTickers.length === 0) return [];
+
+  const tickers = meta.newsTickers;
+  const { data: stocks } = await supabase
+    .from("stocks")
+    .select("symbol, name, price, change_percent, volume, market_cap")
+    .in("symbol", tickers);
+
+  const stockMap = new Map((stocks ?? []).map((s) => [s.symbol, s]));
+
+  // Always return one entry per curated ticker, even if the stocks table
+  // doesn't have live data — at least the ticker is shown so the user
+  // sees the major companies for that country.
+  return tickers.map((ticker) => {
+    const stock = stockMap.get(ticker);
+    return {
+      symbol: ticker,
+      name: stock?.name ?? ticker,
+      price: stock?.price ?? 0,
+      change_percent: stock?.change_percent ?? 0,
+      market_cap: stock?.market_cap ?? null,
+      volume: stock?.volume ?? null,
+      sector: null,
+    };
   });
 }
 
