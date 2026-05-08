@@ -2,8 +2,10 @@
  * Finnhub API client utility
  *
  * Calls the `api-finnhub` Edge Function (never Finnhub directly).
- * Includes client-side rate limiting to stay within API tier limits.
+ * Includes client-side rate limiting + L2 (localStorage) caching.
  */
+
+import { fetchCached } from "@/lib/apiCache";
 
 export interface FinnhubQuote {
   /** Current price */
@@ -102,23 +104,39 @@ async function fetchJson<T>(params: Record<string, string>): Promise<T | null> {
 
 /**
  * Get real-time quote for a US stock symbol.
+ * Cached for 2 minutes — quotes change continuously during market hours
+ * but a 2-minute lag is acceptable for sparklines and watchlist tickers.
  */
 export async function fetchFinnhubQuote(symbol: string): Promise<FinnhubQuote | null> {
-  return fetchJson<FinnhubQuote>({ endpoint: "quote", symbol });
+  return fetchCached(
+    `finnhub:quote:${symbol}`,
+    () => fetchJson<FinnhubQuote>({ endpoint: "quote", symbol }),
+    { ttlMs: 2 * 60_000, staleAfterMs: 30_000 },
+  );
 }
 
 /**
  * Get company profile (name, market cap, industry, logo, etc).
+ * Cached for 24h — profile data rarely changes.
  */
 export async function fetchFinnhubProfile(symbol: string): Promise<FinnhubProfile | null> {
-  return fetchJson<FinnhubProfile>({ endpoint: "profile2", symbol });
+  return fetchCached(
+    `finnhub:profile:${symbol}`,
+    () => fetchJson<FinnhubProfile>({ endpoint: "profile2", symbol }),
+    { ttlMs: 24 * 60 * 60_000 },
+  );
 }
 
 // fetchFinnhubCandles removed — historical data now served by EODHD
 
 /**
  * Search for symbols by name or ticker.
+ * Cached for 1h per query — searches for the same query are identical.
  */
 export async function fetchFinnhubSearch(query: string): Promise<{ count: number; result: FinnhubSearchResult[] } | null> {
-  return fetchJson({ endpoint: "search", query });
+  return fetchCached(
+    `finnhub:search:${query.toLowerCase()}`,
+    () => fetchJson<{ count: number; result: FinnhubSearchResult[] }>({ endpoint: "search", query }),
+    { ttlMs: 60 * 60_000 },
+  );
 }
