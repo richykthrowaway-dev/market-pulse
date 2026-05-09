@@ -61,6 +61,18 @@ const ENDPOINT_COST: Record<string, number> = {
 // Keeps the UI responsive (cached data still works) while preventing further burn.
 const QUOTA_SAFETY_FLOOR = 2000;
 
+// ── Server-side fundamentals cache ────────────────────────────────────
+// The 10-credit /fundamentals endpoint is the single biggest quota burner
+// in the app. We back it with a Postgres-backed shared cache (table
+// `public.fundamentals_cache`) so the FIRST user to look up a ticker pays
+// 10 credits and EVERY subsequent user within the TTL gets free reads,
+// even across different browser sessions / devices / users.
+//
+// TTL: 24h. Fundamentals data updates quarterly so a day-long cache is
+// well within the data's natural staleness. Was 12h client-side; bumped
+// for the shared cache.
+const FUNDAMENTALS_CACHE_TTL_HOURS = 24;
+
 // In-memory quota cache shared across requests in this edge-fn instance.
 // EODHD's /user endpoint is free, but we still don't want to call it on every
 // request. Refresh at most once per minute. (Supabase edge fns are short-lived
@@ -119,6 +131,40 @@ serve(async (req) => {
 
   const proxyError = (status: number, msg: string, detail = "") =>
     json({ error: msg, detail: detail.slice(0, 300) }, status);
+
+  // ── Server-side fundamentals cache (BEFORE quota check) ─────────────
+  // Critical ordering: the cache lookup runs BEFORE the quota guardrail.
+  // A cache hit doesn't burn EODHD credits, so it should never be blocked
+  // by the safety floor. Side benefit: when daily quota IS exhausted,
+  // users can still view recently-cached tickers — the app degrades
+  // gracefully instead of going dark.
+  if (endpoint === "fundamentals" && symbol) {
+    const tickerKey = symbol.toUpperCase();
+    try {
+      const sb = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      );
+      const { data: cached } = await sb
+        .from("fundamentals_cache")
+        .select("payload, cached_at")
+        .eq("ticker", tickerKey)
+        .maybeSingle();
+
+      if (cached?.payload && cached.cached_at) {
+        const ageMs    = Date.now() - new Date(cached.cached_at).getTime();
+        const ageHours = ageMs / 3_600_000;
+        if (ageHours < FUNDAMENTALS_CACHE_TTL_HOURS) {
+          console.log(`api-eodhd: fundamentals CACHE HIT for ${tickerKey} (age: ${ageHours.toFixed(1)}h)`);
+          return json(cached.payload);
+        }
+        console.log(`api-eodhd: fundamentals cache STALE for ${tickerKey} (age: ${ageHours.toFixed(1)}h) — refetching`);
+      }
+    } catch (cacheErr) {
+      console.error("fundamentals cache read error:", cacheErr);
+      // Fall through to live fetch on any cache error — don't block the user
+    }
+  }
 
   // ── Quota guardrail ──────────────────────────────────────────────────────────
   // Block paid endpoints when we're near the daily floor. The /user endpoint
@@ -206,6 +252,27 @@ serve(async (req) => {
       const upstream = await eodFetch(`/fundamentals/${encodeURIComponent(symbol)}`, apiKey);
       if (!upstream.ok) return proxyError(upstream.status, "EODHD fundamentals error", await upstream.text());
       const data = await upstream.json();
+      const tickerKey = symbol.toUpperCase();
+
+      // ── Write-through cache ──────────────────────────────────────────
+      // Persist the full payload so subsequent users in the next 24h
+      // can read for free. Fire-and-forget — don't make the user wait
+      // on the upsert. Only cache valid payloads (must have a Code in
+      // General, otherwise it's an error response or empty result).
+      if (data?.General?.Code) {
+        const sb = createClient(
+          Deno.env.get("SUPABASE_URL")!,
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+        );
+        sb.from("fundamentals_cache").upsert({
+          ticker:    tickerKey,
+          payload:   data,
+          cached_at: new Date().toISOString(),
+        }, { onConflict: "ticker" }).then(({ error }) => {
+          if (error) console.error("fundamentals_cache write error:", error.message);
+          else       console.log(`api-eodhd: fundamentals CACHE WRITE for ${tickerKey}`);
+        });
+      }
 
       // Write-through: persist GICS sector/country to symbols table
       if (data?.General) {
