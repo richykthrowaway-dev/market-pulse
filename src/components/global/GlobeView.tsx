@@ -372,6 +372,77 @@ export default function GlobeView({
     };
   }, [countries]);
 
+  // ── Earth texture filtering (fixes pole-pinching streaks) ───────────
+  // The Blue Marble equirectangular texture has all of its top row of
+  // pixels mapped to a single geographic point at each pole. Without
+  // anisotropic filtering, the GPU samples those rows at very oblique
+  // angles using square sample kernels — too few samples along the
+  // elongated axis, too many along the short axis — producing visible
+  // radial streaks at the poles.
+  //
+  // The fix is: enable mipmaps + LinearMipmapLinearFilter (trilinear)
+  // for shimmer-free minification, AND set max anisotropy so oblique
+  // samples take many texture reads along the elongated direction.
+  //
+  // react-globe.gl loads its textures asynchronously inside its own
+  // material, so we poll the material until the textures land, then
+  // tweak filtering on each. Five polls at 200ms is the worst case.
+  useEffect(() => {
+    if (!countries.length) return;
+    const globe = globeRef.current;
+    if (!globe) return;
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const enhanceTexture = (tex: THREE.Texture, maxAniso: number) => {
+      tex.anisotropy   = maxAniso;
+      tex.minFilter    = THREE.LinearMipmapLinearFilter;
+      tex.magFilter    = THREE.LinearFilter;
+      tex.generateMipmaps = true;
+      tex.needsUpdate  = true;
+    };
+
+    const tryApply = () => {
+      if (cancelled) return;
+      let mat: THREE.MeshPhongMaterial | undefined;
+      try { mat = globe.globeMaterial() as THREE.MeshPhongMaterial; } catch { mat = undefined; }
+      if (!mat) {
+        timeoutId = setTimeout(tryApply, 200);
+        return;
+      }
+
+      const renderer = globe.renderer();
+      const maxAniso = renderer.capabilities.getMaxAnisotropy();
+
+      // mat.map / mat.bumpMap may be set but their image may not have
+      // decoded yet — check `texture.image` to confirm readiness.
+      const mapReady     = mat.map     && (mat.map     as THREE.Texture).image;
+      const bumpMapReady = mat.bumpMap && (mat.bumpMap as THREE.Texture).image;
+
+      if (mapReady)     enhanceTexture(mat.map!,     maxAniso);
+      if (bumpMapReady) enhanceTexture(mat.bumpMap!, maxAniso);
+
+      // Slight bump intensity boost so the now-sharper terrain bump
+      // map reads better at this orbit distance.
+      if (bumpMapReady) {
+        mat.bumpScale = 6;
+        mat.needsUpdate = true;
+      }
+
+      if (!mapReady || !bumpMapReady) {
+        timeoutId = setTimeout(tryApply, 200);
+      }
+    };
+
+    tryApply();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [countries]);
+
   // ── Cloud layer ─────────────────────────────────────────────────────
   // Renders a slightly-larger transparent sphere over the Blue Marble globe
   // with an animated slow rotation, simulating the appearance of a real
@@ -399,6 +470,15 @@ export default function GlobeView({
       CLOUDS_TEXTURE_URL,
       (texture) => {
         if (cancelled) { texture.dispose(); return; }
+        // Same pole-streak prevention as the earth diffuse/bump textures —
+        // anisotropic + mipmapped + trilinear filtering. Cloud equirect is
+        // also pinched at the poles, so without these the cloud layer alone
+        // would still show radial streaks even after the earth fix lands.
+        const renderer = globe.renderer();
+        texture.anisotropy      = renderer.capabilities.getMaxAnisotropy();
+        texture.minFilter       = THREE.LinearMipmapLinearFilter;
+        texture.magFilter       = THREE.LinearFilter;
+        texture.generateMipmaps = true;
         cloudsTexture = texture;
         const radius = globe.getGlobeRadius();
         // Altitude 0.025 (radius × 1.025) is chosen to sit clearly above
