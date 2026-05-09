@@ -1,9 +1,27 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Globe from "react-globe.gl";
 import type { GlobeMethods } from "react-globe.gl";
+import * as THREE from "three";
 import geoJsonUrl from "@/data/countries-110m.geojson";
 import { COUNTRY_META, FLAG_COLORS } from "@/data/countryMeta";
 import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeData";
+
+// ── Earth textures (NASA Blue Marble + topology + clouds) ──────────────
+//
+// Source: NASA Visible Earth's Blue Marble dataset, mirrored as the
+// reference texture set for the `three-globe` package (the renderer that
+// powers react-globe.gl). jsDelivr serves it from GitHub at the file's
+// committed SHA, so the URL is stable and the response is edge-cached
+// globally — no Vercel bandwidth, no cold-start latency on first paint.
+//
+// earth-blue-marble.jpg — 8K equirectangular daytime imagery (~1.4 MB)
+// earth-topology.png    — heightmap used as bump map for terrain depth
+// fair_clouds_4k.png    — 4K transparent cloud layer (~5 MB), rendered
+//                         on a slightly larger transparent sphere with
+//                         independent slow rotation to suggest weather.
+const EARTH_TEXTURE_URL    = "https://cdn.jsdelivr.net/gh/vasturiano/three-globe/example/img/earth-blue-marble.jpg";
+const EARTH_BUMP_URL       = "https://cdn.jsdelivr.net/gh/vasturiano/three-globe/example/img/earth-topology.png";
+const CLOUDS_TEXTURE_URL   = "https://cdn.jsdelivr.net/gh/turban/webgl-earth@master/images/fair_clouds_4k.png";
 
 type GlobeMode = "flags" | "performance";
 type Feature = { properties: Record<string, any>; geometry: any };
@@ -354,6 +372,73 @@ export default function GlobeView({
     };
   }, [countries]);
 
+  // ── Cloud layer ─────────────────────────────────────────────────────
+  // Renders a slightly-larger transparent sphere over the Blue Marble globe
+  // with an animated slow rotation, simulating the appearance of a real
+  // satellite view with cloud cover.
+  //
+  // Implementation: imperatively add a Three.js mesh to the globe's scene
+  // graph (react-globe.gl exposes scene() for this kind of customization).
+  // Lives independently of the main globe's rotation so clouds drift across
+  // continents instead of locking to the surface.
+  //
+  // Cleanup: on unmount we remove the mesh, dispose the geometry/material/
+  // texture, and cancel the rAF loop — required to avoid GPU memory leaks
+  // on hot-reload and route changes.
+  useEffect(() => {
+    if (!countries.length) return; // wait for the globe to be mounted
+    const globe = globeRef.current;
+    if (!globe) return;
+
+    let cloudsMesh: THREE.Mesh | null = null;
+    let cloudsTexture: THREE.Texture | null = null;
+    let rafId = 0;
+    let cancelled = false;
+
+    new THREE.TextureLoader().load(
+      CLOUDS_TEXTURE_URL,
+      (texture) => {
+        if (cancelled) { texture.dispose(); return; }
+        cloudsTexture = texture;
+        const radius = globe.getGlobeRadius();
+        const geometry = new THREE.SphereGeometry(radius * 1.005, 75, 75);
+        const material = new THREE.MeshPhongMaterial({
+          map:          texture,
+          transparent:  true,
+          opacity:      0.42,
+          depthWrite:   false, // avoid z-fighting with the underlying globe
+        });
+        cloudsMesh = new THREE.Mesh(geometry, material);
+        cloudsMesh.renderOrder = 1; // draw after the globe surface
+        globe.scene().add(cloudsMesh);
+
+        // Slow independent cloud drift (≈ 1 full rotation per ~9 minutes).
+        let last = performance.now();
+        const tick = () => {
+          if (!cloudsMesh) return;
+          const now = performance.now();
+          cloudsMesh.rotation.y += (now - last) * 0.000012;
+          last = now;
+          rafId = requestAnimationFrame(tick);
+        };
+        rafId = requestAnimationFrame(tick);
+      },
+      undefined,
+      (err) => console.warn("Failed to load cloud texture:", err),
+    );
+
+    return () => {
+      cancelled = true;
+      if (rafId) cancelAnimationFrame(rafId);
+      if (cloudsMesh) {
+        try { globe.scene().remove(cloudsMesh); } catch { /* scene already torn down */ }
+        cloudsMesh.geometry.dispose();
+        (cloudsMesh.material as THREE.Material).dispose();
+      }
+      if (cloudsTexture) cloudsTexture.dispose();
+    };
+  }, [countries]);
+
   // Live-respond to autoRotate prop changes WITHOUT waiting for the next
   // idle cycle. Flipping the toggle off mid-spin should stop instantly;
   // flipping on (when not dragging) should resume the spin immediately.
@@ -513,10 +598,15 @@ export default function GlobeView({
         width={globeSize}
         height={globeSize}
         backgroundColor="rgba(0,0,0,0)"
-        globeImageUrl="/earth-night.jpg"
+        // NASA Blue Marble (8K daylight imagery) + topology bump map for
+        // terrain depth. Both served from jsDelivr's edge cache.
+        globeImageUrl={EARTH_TEXTURE_URL}
+        bumpImageUrl={EARTH_BUMP_URL}
+        // Atmosphere tuned for daylight Earth — slightly warmer blue, taller
+        // shell so the limb glow reads against the dark space backdrop.
         showAtmosphere
-        atmosphereColor="#64a0ff"
-        atmosphereAltitude={0.18}
+        atmosphereColor="#7eb6ff"
+        atmosphereAltitude={0.22}
         // animateIn DISABLED — react-globe.gl's intro animation runs a 1200ms
         // scene-rotation tween with Quintic.Out easing on init. It directly
         // rotates state.scene.setRotationFromAxisAngle(...) every frame,
