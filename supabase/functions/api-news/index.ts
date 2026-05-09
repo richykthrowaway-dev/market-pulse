@@ -167,6 +167,208 @@ const ALLAFRICA_FEEDS: Record<string, string> = {
 /** African countries WITHOUT a dedicated AllAfrica feed */
 const AFRICAN_NO_FEED = new Set(["CV", "KM", "CG", "CD"]);
 
+// ── Country-specific business RSS feeds ──────────────────────────────────
+// FREE, no API key, no rate limits. Each country gets 1-3 high-quality local
+// English-language business outlets. Failures are silent — broken feeds just
+// return [] and the rest of the pipeline (GNews, MarketAux, pan-regional)
+// still runs.
+//
+// Coverage focus: Asia + Middle East (where pan-regional feeds were thin)
+// + supplemental high-traffic outlets for major African economies.
+const COUNTRY_BUSINESS_RSS: Record<string, Array<{ url: string; source: string }>> = {
+  // ── Asia ────────────────────────────────────────────────────────────────
+  IN: [
+    { url: "https://www.thehindu.com/business/feeder/default.rss",            source: "The Hindu Business" },
+    { url: "https://www.livemint.com/rss/markets",                             source: "LiveMint Markets" },
+    { url: "https://www.business-standard.com/rss/markets-106.rss",            source: "Business Standard" },
+  ],
+  CN: [
+    { url: "https://www.chinadaily.com.cn/rss/business_rss.xml",               source: "China Daily Business" },
+    { url: "https://www.globaltimes.cn/rss/economy.xml",                       source: "Global Times Economy" },
+  ],
+  JP: [
+    { url: "https://www3.nhk.or.jp/nhkworld/en/news/rss/all.xml",              source: "NHK World" },
+    { url: "https://japannews.yomiuri.co.jp/feed/",                            source: "The Japan News" },
+  ],
+  HK: [
+    { url: "https://www.scmp.com/rss/91/feed",                                 source: "SCMP Business" },
+    { url: "https://www.scmp.com/rss/2/feed",                                  source: "SCMP Hong Kong" },
+  ],
+  KR: [
+    { url: "https://www.koreaherald.com/rss/020100000000.xml",                 source: "Korea Herald Business" },
+    { url: "https://www.koreatimes.co.kr/www/rss/biz.xml",                     source: "Korea Times Business" },
+  ],
+  TW: [
+    { url: "https://focustaiwan.tw/rss/biz",                                   source: "Focus Taiwan Business" },
+  ],
+  SG: [
+    { url: "https://www.straitstimes.com/news/business/rss.xml",               source: "Straits Times Business" },
+    { url: "https://www.channelnewsasia.com/api/v1/rss-outbound-feed?_format=xml&category=6936",                                       source: "Channel News Asia Business" },
+  ],
+  ID: [
+    { url: "https://www.thejakartapost.com/business/rss",                      source: "Jakarta Post Business" },
+    { url: "https://en.tempo.co/rss/business",                                 source: "Tempo Business" },
+  ],
+  TH: [
+    { url: "https://www.bangkokpost.com/rss/data/business.xml",                source: "Bangkok Post Business" },
+    { url: "https://www.nationthailand.com/rss/business",                      source: "The Nation Business" },
+  ],
+  MY: [
+    { url: "https://www.thestar.com.my/rss/Business/",                         source: "The Star Malaysia Business" },
+    { url: "https://www.malaymail.com/feed/rss/money",                         source: "Malay Mail Money" },
+  ],
+  PH: [
+    { url: "https://business.inquirer.net/feed",                               source: "Inquirer Business" },
+    { url: "https://www.philstar.com/rss/business",                            source: "Philstar Business" },
+  ],
+  VN: [
+    { url: "https://e.vnexpress.net/rss/business.rss",                         source: "VnExpress Business" },
+    { url: "https://vietnamnews.vn/rss/economy.rss",                           source: "Vietnam News Economy" },
+  ],
+  PK: [
+    { url: "https://www.dawn.com/feeds/business",                              source: "Dawn Business" },
+    { url: "https://tribune.com.pk/feed/business",                             source: "Express Tribune Business" },
+  ],
+  BD: [
+    { url: "https://www.thedailystar.net/business/rss.xml",                    source: "Daily Star Business" },
+    { url: "https://www.dhakatribune.com/feed/business",                       source: "Dhaka Tribune Business" },
+  ],
+  LK: [
+    { url: "https://www.dailymirror.lk/RSS_BREAKING_NEWS/107",                 source: "Daily Mirror Sri Lanka" },
+  ],
+  KZ: [
+    { url: "https://astanatimes.com/category/business/feed/",                  source: "Astana Times Business" },
+  ],
+  MM: [
+    { url: "https://www.mmtimes.com/rss/business.xml",                         source: "Myanmar Times Business" },
+  ],
+  KH: [
+    { url: "https://www.phnompenhpost.com/rss/business.xml",                   source: "Phnom Penh Post Business" },
+  ],
+  NP: [
+    { url: "https://kathmandupost.com/rss",                                    source: "Kathmandu Post" },
+  ],
+  MN: [
+    { url: "https://www.montsame.mn/en/rss/0/8",                               source: "MONTSAME Mongolia" },
+  ],
+
+  // ── Middle East ─────────────────────────────────────────────────────────
+  SA: [
+    { url: "https://www.arabnews.com/taxonomy/term/8/feed",                    source: "Arab News Business" },
+    { url: "https://saudigazette.com.sa/rssFeed/120",                          source: "Saudi Gazette Business" },
+  ],
+  AE: [
+    { url: "https://gulfnews.com/rss?xml&page=business",                       source: "Gulf News Business" },
+    { url: "https://www.thenationalnews.com/business/rss.xml",                 source: "The National Business" },
+    { url: "https://www.khaleejtimes.com/rss/business",                        source: "Khaleej Times Business" },
+  ],
+  TR: [
+    { url: "https://www.dailysabah.com/rss/business",                          source: "Daily Sabah Business" },
+    { url: "https://www.hurriyetdailynews.com/rss/business",                   source: "Hurriyet Business" },
+  ],
+  IL: [
+    { url: "https://www.jpost.com/rss/rssfeedsbusinessandinnovation.aspx",     source: "Jerusalem Post Business" },
+    { url: "https://www.timesofisrael.com/topic/business/feed/",               source: "Times of Israel Business" },
+    { url: "https://www.haaretz.com/cmlink/1.628152",                          source: "Haaretz Business" },
+  ],
+  IR: [
+    { url: "https://www.tehrantimes.com/rss/economy",                          source: "Tehran Times Economy" },
+    { url: "https://financialtribune.com/rss.xml",                             source: "Financial Tribune" },
+  ],
+  EG: [
+    { url: "https://egyptindependent.com/feed/",                               source: "Egypt Independent" },
+    { url: "https://english.ahram.org.eg/rss.aspx?CategoryID=3",               source: "Ahram Online Business" },
+  ],
+  QA: [
+    { url: "https://thepeninsulaqatar.com/feed/business",                      source: "The Peninsula Business" },
+    { url: "https://www.gulf-times.com/rss/business",                          source: "Gulf Times Business" },
+  ],
+  KW: [
+    { url: "https://www.arabtimesonline.com/category/business/feed/",          source: "Arab Times Business" },
+  ],
+  BH: [
+    { url: "https://www.gdnonline.com/rss/business.xml",                       source: "Gulf Daily News" },
+  ],
+  OM: [
+    { url: "https://timesofoman.com/rss/business",                             source: "Times of Oman Business" },
+  ],
+  JO: [
+    { url: "https://jordantimes.com/rss/business",                             source: "Jordan Times Business" },
+  ],
+  LB: [
+    { url: "https://www.dailystar.com.lb/RSS.aspx?id=3&fromDate=&toDate=",     source: "Daily Star Lebanon" },
+  ],
+
+  // ── Africa supplemental (per-country business outlets) ─────────────────
+  ZA: [
+    { url: "https://www.businesslive.co.za/feeds/rss/?publication=bd&section=companies", source: "BusinessLive Companies" },
+    { url: "https://feeds.news24.com/articles/fin24/Companies/rss",            source: "News24 Companies" },
+    { url: "https://mg.co.za/section/business/feed/",                          source: "Mail & Guardian Business" },
+  ],
+  NG: [
+    { url: "https://punchng.com/topics/business/feed/",                        source: "Punch Business" },
+    { url: "https://www.premiumtimesng.com/business/feed",                     source: "Premium Times Business" },
+    { url: "https://businessday.ng/feed/",                                     source: "BusinessDay Nigeria" },
+  ],
+  KE: [
+    { url: "https://nation.africa/kenya/business/-/996.atom",                  source: "Daily Nation Business" },
+    { url: "https://www.businessdailyafrica.com/bd/rss",                       source: "Business Daily Africa" },
+  ],
+  GH: [
+    { url: "https://www.myjoyonline.com/business/feed/",                       source: "MyJoy Business" },
+    { url: "https://citinewsroom.com/category/business/feed/",                 source: "Citi News Business" },
+  ],
+  TZ: [
+    { url: "https://www.thecitizen.co.tz/tanzania/news/business/-/1840414.atom", source: "The Citizen Tanzania Business" },
+  ],
+  UG: [
+    { url: "https://www.monitor.co.ug/uganda/business/-/688322.atom",          source: "Monitor Uganda Business" },
+  ],
+  ZW: [
+    { url: "https://www.herald.co.zw/category/business/feed/",                 source: "The Herald Business" },
+    { url: "https://www.chronicle.co.zw/feed/",                                source: "Chronicle Zimbabwe" },
+  ],
+  ET: [
+    { url: "https://capitalethiopia.com/category/business/feed/",              source: "Capital Ethiopia Business" },
+  ],
+};
+
+/**
+ * Fetch all country-specific business RSS feeds for a country in parallel.
+ * Each feed is independent — one failure doesn't block the others. FREE.
+ */
+async function fetchCountryBusinessRss(countryCode: string): Promise<NewsItem[]> {
+  const feeds = COUNTRY_BUSINESS_RSS[countryCode];
+  if (!feeds || feeds.length === 0) return [];
+
+  const results = await Promise.all(
+    feeds.map(async ({ url, source }, feedIdx) => {
+      try {
+        const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+        if (!res.ok) {
+          console.warn(`Country RSS ${source} (${countryCode}): HTTP ${res.status}`);
+          return [];
+        }
+        const xml = await res.text();
+        // Reuse the pan-regional parser (handles HTML in description, media images,
+        // CDATA, both <item> and <entry> patterns better than the AllAfrica parser).
+        const items = parsePanRegionalRss(xml, source, 15);
+        return items.map((item, i) => ({
+          ...item,
+          id: `rss-country-${countryCode}-${feedIdx}-${i}`,
+        }));
+      } catch (e) {
+        console.error(`Country RSS ${source} (${countryCode}) error: ${e}`);
+        return [];
+      }
+    }),
+  );
+
+  const all = results.flat();
+  console.log(`Country RSS ${countryCode}: ${all.length} articles from ${feeds.length} feeds`);
+  return all;
+}
+
 // ── Pan-African RSS Feeds (BBC, Africanews, France24) ────────────────────
 // Fetch ONCE per cache window, distribute to countries via keyword matching.
 // Extremely efficient: 3 HTTP requests cover ALL 54 African countries.
@@ -1131,6 +1333,14 @@ serve(async (req) => {
       if (hasRssFeed) {
         fetches.push(fetchAllAfricaRss(country));
         sourceLabels.push("AllAfrica-RSS");
+      }
+
+      // Country-specific business RSS feeds (Asia, Middle East, supplemental Africa).
+      // Each country in COUNTRY_BUSINESS_RSS gets 1-3 high-quality local outlets.
+      // Always-on for any covered country — FREE, no quota impact.
+      if (country in COUNTRY_BUSINESS_RSS) {
+        fetches.push(fetchCountryBusinessRss(country));
+        sourceLabels.push(`Country-RSS(${COUNTRY_BUSINESS_RSS[country].length})`);
       }
       // Pan-African business feed as supplement for ALL African countries
       // Keyword-filtered to ensure only articles mentioning THIS country are shown
