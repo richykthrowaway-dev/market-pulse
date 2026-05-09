@@ -14,6 +14,8 @@ import { ESGScoresCard } from './ESGScoresCard';
 import { DividendSplitHistoryCard } from './DividendSplitHistoryCard';
 import { SharesOutstandingChart } from './SharesOutstandingChart';
 import { OfficersCard } from './OfficersCard';
+import { TechnicalSignalsCard } from './TechnicalSignalsCard';
+import { HistoricalPriceChart } from './HistoricalPriceChart';
 import { cn } from '@/lib/utils';
 
 // ── Format helpers ────────────────────────────────────────────────────
@@ -240,6 +242,19 @@ function ResultCard({ data, primaryTicker }: { data: EodFundamentals; primaryTic
         currency={currency}
       />
 
+      {/* Historical price chart — 1Y default, toggleable to 3M/6M/5Y/MAX.
+          Costs 1 EODHD credit per range fetch (cached 1h). Reference
+          lines for 50/200 DMA + 52w high/low pulled from the existing
+          (cached, free) fundamentals payload. */}
+      <HistoricalPriceChart
+        symbol={primaryTicker}
+        ma50={t['50DayMA']}
+        ma200={t['200DayMA']}
+        high52={t['52WeekHigh']}
+        low52={t['52WeekLow']}
+        currency={currency}
+      />
+
       {/* Description (truncated) */}
       {g.Description && (
         <p className="text-xs text-muted-foreground line-clamp-2" title={g.Description}>
@@ -308,6 +323,11 @@ function ResultCard({ data, primaryTicker }: { data: EodFundamentals; primaryTic
           null automatically if the company has insufficient earnings
           history (e.g. recent IPOs, ETFs). */}
       <EarningsBeatsChart data={data} />
+
+      {/* Technical signals — golden/death cross, 52w position, beta
+          band, long-term trend. Pure derivation from Technicals in
+          the existing payload (free). */}
+      <TechnicalSignalsCard data={data} />
 
       {/* Short interest tracker — current % of float shorted, days-to-
           cover, and month-over-month change. Sourced from Technicals
