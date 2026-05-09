@@ -144,7 +144,7 @@ export function useAISStream(enabled: boolean): {
       }, NO_DATA_TIMEOUT_MS);
     };
 
-    ws.onmessage = (event) => {
+    ws.onmessage = async (event) => {
       rawCountRef.current += 1;
 
       // First real message means the subscription was accepted by the server.
@@ -157,7 +157,12 @@ export function useAISStream(enabled: boolean): {
       }
 
       try {
-        const msg = JSON.parse(event.data as string);
+        // Browsers deliver WebSocket frames as Blob objects, not strings.
+        // JSON.parse("[object Blob]") throws — convert to text first.
+        const raw = event.data instanceof Blob
+          ? await event.data.text()
+          : (event.data as string);
+        const msg = JSON.parse(raw);
 
         // ── Debug: log first N messages so we can see the real shape ──
         if (debugLoggedRef.current < DEBUG_LOG_COUNT) {
