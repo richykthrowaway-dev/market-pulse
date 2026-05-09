@@ -89,8 +89,12 @@ function SectionDrillDown({ section, chapters, direction }: SectionDrillDownProp
   const top = chapters.slice(0, 6);
   const sectionTotal = chapters.reduce((s, c) => s + c.valueUsd, 0);
 
+  // No min/max width on this wrapper — the parent HoverCardContent now
+  // sets an explicit `w-80` (320px), so we just fill it. Previous version
+  // had `min-w-[260px]` which exceeded the default `w-64` card width and
+  // pushed the percentage column past the right edge.
   return (
-    <div className="space-y-2 min-w-[260px] max-w-[320px]">
+    <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-2 pb-1 border-b border-border">
         <span className="font-semibold text-sm">{fullName}</span>
         <span className="text-xs text-muted-foreground tabular-nums">
@@ -224,7 +228,7 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
                 aria-label={`${displaySectionName(p.code)}: ${(p.share * 100).toFixed(1)}%`}
               />
             </HoverCardTrigger>
-            <HoverCardContent side="top" align="center" className="p-3">
+            <HoverCardContent side="top" align="center" className="w-80 p-3">
               <SectionDrillDown
                 section={p}
                 chapters={chaptersBySection.get(p.code) ?? []}
@@ -261,7 +265,7 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
                 </span>
               </div>
             </HoverCardTrigger>
-            <HoverCardContent side="top" align="start" className="p-3">
+            <HoverCardContent side="top" align="start" className="w-80 p-3">
               <SectionDrillDown
                 section={p}
                 chapters={chaptersBySection.get(p.code) ?? []}
