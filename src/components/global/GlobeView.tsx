@@ -605,7 +605,13 @@ export default function GlobeView({
 
     if (!liveVessels || liveVessels.length === 0) return;
 
-    const radius = globe.getGlobeRadius() * 1.008;
+    // Altitude 1.0055 — sits just barely above the country polygon cap
+    // layer at 1.005 (so vessels aren't depth-occluded by colored fills)
+    // while staying close enough to the surface that parallax against
+    // coastlines is invisible at typical oblique viewing angles.
+    // Was previously 1.008 which produced a visible 3D offset between
+    // vessel dots and the land masses beneath them.
+    const radius = globe.getGlobeRadius() * 1.0055;
     const positions = new Float32Array(liveVessels.length * 3);
 
     // Spherical (lat, lng) → Cartesian — MUST match globe.gl's internal
@@ -715,7 +721,13 @@ export default function GlobeView({
 
     if (!liveFlights || liveFlights.length === 0) return;
 
-    const radius    = globe.getGlobeRadius() * 1.010;
+    // Altitude 1.006 — sits just above vessels (1.0055) and the polygon
+    // cap layer (1.005), close enough to the surface that aircraft dots
+    // appear pinned to the land/sea beneath them at oblique viewing
+    // angles. Was previously 1.010 which produced a visible parallax
+    // gap of ~0.5% of the globe radius between flight dots and the
+    // country polygon they belonged to.
+    const radius    = globe.getGlobeRadius() * 1.006;
     const positions = new Float32Array(liveFlights.length * 3);
 
     // Use globe.gl's polar2Cartesian convention — see vessel block above.
