@@ -456,12 +456,16 @@ export const CAP_COLORS: Record<string, string> = {
  * or in-flight data using the old style names still gets a real color.
  */
 export const STYLE_COLORS: Record<string, string> = {
-  // New per-user trade styles
-  'Swing':           '195 75% 50%',  // cyan-blue — quick in-and-out
-  'Day Trade':       '15 80% 55%',   // hot orange — aggressive
-  'Long Term Hold':  '155 55% 42%',  // deep green — slow growth
-  'Unclassified':    '220 8% 55%',   // neutral gray — needs tagging
-  // Legacy style names — kept for backward compatibility
+  // Per-user trade styles
+  'Day Trade':    '15 80% 55%',   // hot orange — aggressive
+  'Swing Trade':  '195 75% 50%',  // cyan-blue — quick in-and-out
+  'Long Term':    '155 55% 42%',  // deep green — slow growth
+  'Unclassified': '220 8% 55%',   // neutral gray — needs tagging
+  // Legacy keys retained so any cached/mid-flight data using the old
+  // names ('Swing', 'Long Term Hold') still resolves to a real color.
+  'Swing':           '195 75% 50%',
+  'Long Term Hold': '155 55% 42%',
+  // Older "investment style" naming (Value/Growth/Core)
   Value:  '210 55% 50%',
   Growth: '150 55% 45%',
   Core:   '45 55% 50%',

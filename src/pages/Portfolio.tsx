@@ -783,7 +783,9 @@ const Portfolio = () => {
           const sa = symbolInfo[a.ticker]?.tradeStyle || 'Unclassified';
           const sb = symbolInfo[b.ticker]?.tradeStyle || 'Unclassified';
           const rank: Record<string, number> = {
-            'Day Trade': 0, 'Swing': 1, 'Long Term Hold': 2, 'Unclassified': 99,
+            'Day Trade': 0, 'Swing Trade': 1, 'Long Term': 2, 'Unclassified': 99,
+            // Legacy keys for any in-flight pre-migration data
+            'Swing': 1, 'Long Term Hold': 2,
           };
           cmp = (rank[sa] ?? 99) - (rank[sb] ?? 99);
           if (cmp === 0) cmp = a.marketValue - b.marketValue;

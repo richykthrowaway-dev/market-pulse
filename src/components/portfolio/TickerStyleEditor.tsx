@@ -2,7 +2,7 @@
  * TickerStyleEditor — popover for editing per-ticker position annotations.
  *
  * Features:
- *   • Trade style (Swing / Day Trade / Long Term Hold)
+ *   • Trade style (Day Trade / Swing Trade / Long Term)
  *   • Price target + stop loss with live % preview
  *   • Risk/Reward ratio badge (auto-computed)
  *   • Dollar risk / dollar reward (based on shares held)
@@ -24,13 +24,13 @@ import {
 } from '@/hooks/useTickerStyles';
 import { useTickerPerformance } from '@/hooks/useTickerPerformance';
 
-const TRADE_STYLES: TradeStyle[] = ['Swing', 'Day Trade', 'Long Term Hold'];
+const TRADE_STYLES: TradeStyle[] = ['Day Trade', 'Swing Trade', 'Long Term'];
 
 const STYLE_BADGE_COLOR: Record<string, string> = {
-  'Swing':           'bg-cyan-500/15 text-cyan-300 border-cyan-500/40',
-  'Day Trade':       'bg-orange-500/15 text-orange-300 border-orange-500/40',
-  'Long Term Hold':  'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
-  'Unclassified':    'bg-muted/40 text-muted-foreground border-border',
+  'Day Trade':    'bg-orange-500/15 text-orange-300 border-orange-500/40',
+  'Swing Trade':  'bg-cyan-500/15 text-cyan-300 border-cyan-500/40',
+  'Long Term':    'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
+  'Unclassified': 'bg-muted/40 text-muted-foreground border-border',
 };
 
 /** Days between an ISO date string and today */
@@ -383,9 +383,9 @@ export function TickerStyleEditor({
               ⚠ Held {holdDays} days — consider updating trade style
             </p>
           )}
-          {draftStyle === 'Swing' && holdDays != null && holdDays > 60 && (
+          {draftStyle === 'Swing Trade' && holdDays != null && holdDays > 60 && (
             <p className="text-[9px] text-amber-400 mt-0.5">
-              ⚠ Held {holdDays} days — consider updating to Long Term Hold
+              ⚠ Held {holdDays} days — consider updating to Long Term
             </p>
           )}
         </div>

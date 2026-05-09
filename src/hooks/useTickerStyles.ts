@@ -11,7 +11,18 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
-export type TradeStyle = 'Swing' | 'Day Trade' | 'Long Term Hold';
+export type TradeStyle = 'Day Trade' | 'Swing Trade' | 'Long Term';
+
+/**
+ * Legacy → current label map. Existing localStorage entries from earlier
+ * versions used the old names ('Swing', 'Long Term Hold'); these get
+ * transparently rewritten on read so users don't see "Unclassified" for
+ * positions they previously categorized.
+ */
+const LEGACY_LABELS: Record<string, TradeStyle> = {
+  'Swing':          'Swing Trade',
+  'Long Term Hold': 'Long Term',
+};
 
 export interface TickerStyle {
   ticker:      string;
@@ -32,7 +43,19 @@ function loadAll(): Record<string, TickerStyle> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
-    return JSON.parse(raw) as Record<string, TickerStyle>;
+    const data = JSON.parse(raw) as Record<string, TickerStyle>;
+    // Migrate legacy label values in-place so existing user data survives
+    // the rename ('Swing' → 'Swing Trade', 'Long Term Hold' → 'Long Term').
+    let mutated = false;
+    for (const key of Object.keys(data)) {
+      const entry = data[key];
+      if (entry?.tradeStyle && LEGACY_LABELS[entry.tradeStyle as string]) {
+        entry.tradeStyle = LEGACY_LABELS[entry.tradeStyle as string];
+        mutated = true;
+      }
+    }
+    if (mutated) saveAll(data); // persist the migration so it only runs once
+    return data;
   } catch {
     return {};
   }

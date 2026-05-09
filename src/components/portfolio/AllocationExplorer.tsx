@@ -45,7 +45,7 @@ export interface SymbolMeta {
    * Persisted in `user_ticker_styles` so it survives portfolio re-imports.
    * 'Unclassified' when the user hasn't set one yet.
    */
-  tradeStyle?: 'Swing' | 'Day Trade' | 'Long Term Hold' | 'Unclassified';
+  tradeStyle?: 'Day Trade' | 'Swing Trade' | 'Long Term' | 'Unclassified';
   /** Freeform reasoning attached to the trade style. */
   tradeNote?: string;
   /** User-defined take-profit price target, same currency as holding. */
