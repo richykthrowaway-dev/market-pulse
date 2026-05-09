@@ -11,6 +11,7 @@ import {
   WITS_SECTION_CHAPTERS,
 } from '@/lib/hsChapters';
 import { headingName } from '@/lib/hsHeadings';
+import { Sparkline } from '@/components/ui/Sparkline';
 import { cn } from '@/lib/utils';
 
 interface TradeBreakdownProps {
@@ -142,10 +143,14 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
   // Section-level data drives the headline bar.
   const { data: sectionData, isLoading: sectionLoading } =
     useTradeBreakdown(iso2, direction, 'section');
-  // Chapter-level data populates the hover drill-downs. Loaded in parallel
-  // so it's already cached by the time the user hovers — no UI lag.
+  // Chapter-level (HS 4-digit) data populates hover drill-downs. Loaded
+  // in parallel so it's already cached by the time the user hovers.
   const { data: chapterData } =
     useTradeBreakdown(iso2, direction, 'chapter');
+  // 6-year trend data drives the inline sparkline in the panel header.
+  // Also loaded in parallel — small response, no perceptible cost.
+  const { data: trendData } =
+    useTradeBreakdown(iso2, direction, 'trend');
 
   // Group HS 4-digit headings by WITS section. Match by chapter prefix:
   // an HS heading like "8542" belongs to chapter "85", which is in the
@@ -209,7 +214,17 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
 
   return (
     <div className="space-y-2">
-      <PanelHeader title={title} icon={icon} year={year} total={total} />
+      <PanelHeader
+        title={title}
+        icon={icon}
+        year={year}
+        total={total}
+        trendValues={trendData?.products.map((p) => p.valueUsd)}
+        trendLabel={trendData?.products.length
+          ? `Total ${direction} ${trendData.products[0].code}–${trendData.products[trendData.products.length - 1].code}`
+          : undefined}
+        direction={direction}
+      />
 
       {/* Stacked bar — each segment is a HoverCard trigger that shows
           the chapter breakdown for that section. */}
@@ -297,9 +312,21 @@ interface PanelHeaderProps {
   icon: React.ReactNode;
   year?: number | null;
   total?: number;
+  /** 6-year time series of total trade values, oldest first. */
+  trendValues?: number[];
+  trendLabel?: string;
+  direction?: TradeDirection;
 }
 
-function PanelHeader({ title, icon, year, total }: PanelHeaderProps) {
+function PanelHeader({
+  title, icon, year, total, trendValues, trendLabel, direction,
+}: PanelHeaderProps) {
+  // Stroke colour: emerald for exports (positive flow), amber for imports.
+  // Using Tailwind palette colors directly so this works in any theme.
+  const sparklineColor = direction === 'exports'
+    ? 'rgb(16 185 129)'  // emerald-500
+    : 'rgb(245 158 11)'; // amber-500
+
   return (
     <div className="flex items-baseline justify-between gap-2 px-1">
       <div className="flex items-center gap-1.5 text-muted-foreground min-w-0">
@@ -309,6 +336,15 @@ function PanelHeader({ title, icon, year, total }: PanelHeaderProps) {
         </span>
       </div>
       <div className="flex items-center gap-2 text-[10px] text-muted-foreground shrink-0 tabular-nums">
+        {trendValues && trendValues.length >= 2 && (
+          <Sparkline
+            values={trendValues}
+            color={sparklineColor}
+            label={trendLabel}
+            width={56}
+            height={14}
+          />
+        )}
         {total != null && total > 0 && <span>{formatUsdCompact(total)}</span>}
         {year != null && (
           <span className="px-1 rounded bg-muted/50 border border-border">{year}</span>

@@ -464,6 +464,81 @@ async function fetchComtradePartners(
   return rows.slice(0, 20);
 }
 
+/**
+ * Fetch a country's TOTAL trade value for the last 6 years from
+ * UN Comtrade. Used to render mini-sparklines showing "where's the
+ * trend going" alongside the headline total.
+ *
+ * Comtrade accepts comma-separated periods, so 6 years = 1 round trip.
+ * The response is a flat array of one record per year — we just sort
+ * by year ascending and reshape into ProductRow{code: year, valueUsd}.
+ *
+ * Same motCode/customsCode/partner2 filtering as the partners path
+ * to dedup the inevitable transport/customs-procedure splits Comtrade
+ * emits when querying TOTAL with no aggregation.
+ */
+async function fetchComtradeTrend(
+  reporter: string, // ISO3
+  _ignoredYear: number,
+  direction: "exports" | "imports",
+): Promise<ProductRow[] | null> {
+  const m49 = ISO3_TO_M49[reporter];
+  if (!m49) return null;
+
+  const flowCode = direction === "exports" ? "X" : "M";
+  // 6-year window: this year-1 back to this year-6. WITS publishes
+  // annually with a 1-2 year lag, so the latest year may be missing
+  // for some countries — frontend should handle short series gracefully.
+  const now = new Date().getUTCFullYear();
+  const years = Array.from({ length: 6 }, (_, i) => now - 6 + i).join(",");
+
+  const url =
+    `${COMTRADE_BASE}?reporterCode=${m49}` +
+    `&period=${years}` +
+    `&partnerCode=0` +
+    `&cmdCode=TOTAL` +
+    `&flowCode=${flowCode}` +
+    `&motCode=0` +
+    `&customsCode=C00`;
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+  } catch {
+    return null;
+  }
+  if (!upstream.ok) return null;
+
+  let json: any;
+  try { json = await upstream.json(); } catch { return null; }
+  const data: any[] = Array.isArray(json?.data) ? json.data : [];
+  if (data.length === 0) return null;
+
+  // First-write-wins per year — Comtrade returns 2 rows per year
+  // (partner2Code 0 vs 899) with identical primaryValue.
+  const seen = new Set<number>();
+  const rows: ProductRow[] = [];
+  for (const r of data) {
+    const year = r.refYear;
+    if (!Number.isFinite(year)) continue;
+    if (seen.has(year)) continue;
+    const value = typeof r.primaryValue === "number" ? r.primaryValue : 0;
+    if (value <= 0) continue;
+    seen.add(year);
+    rows.push({
+      code:     String(year),
+      name:     String(year),
+      valueUsd: Math.round(value),
+      share:    0,
+    });
+  }
+  if (rows.length < 2) return null;
+
+  // Chronological order so the sparkline draws left-to-right past→present.
+  rows.sort((a, b) => Number(a.code) - Number(b.code));
+  return rows;
+}
+
 async function fetchAndParse(
   reporter: string,
   year: number,
@@ -542,7 +617,7 @@ serve(async (req) => {
   const url       = new URL(req.url);
   const reporter  = (url.searchParams.get("reporter") ?? "").toUpperCase().trim();
   const direction = (url.searchParams.get("direction") ?? "exports") as "exports" | "imports";
-  const level     = (url.searchParams.get("level") ?? "section") as "section" | "chapter" | "partners";
+  const level     = (url.searchParams.get("level") ?? "section") as "section" | "chapter" | "partners" | "trend";
   const explicitYear = url.searchParams.get("year");
 
   if (!reporter || !/^[A-Z]{3}$/.test(reporter)) {
@@ -574,6 +649,7 @@ serve(async (req) => {
   const fetcher =
     level === "chapter"  ? fetchComtradeChapters :
     level === "partners" ? fetchComtradePartners :
+    level === "trend"    ? fetchComtradeTrend :
     fetchAndParse;
 
   for (const year of yearsToTry) {

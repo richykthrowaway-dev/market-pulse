@@ -45,7 +45,7 @@ export interface TradeBreakdown {
 export function useTradeBreakdown(
   iso2: string | null,
   direction: TradeDirection,
-  level: 'section' | 'chapter' | 'partners' = 'section',
+  level: 'section' | 'chapter' | 'partners' | 'trend' = 'section',
 ) {
   const iso3 = toIso3(iso2);
 
