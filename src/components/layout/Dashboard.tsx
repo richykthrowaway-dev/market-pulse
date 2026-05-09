@@ -1,22 +1,48 @@
 
 import React, { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useStocks, useIndices, useCurrencies, useNews } from '@/hooks/useSupabaseData';
 import { useHistoricalPrices } from '@/hooks/useDefeatBeta';
+import { useSparklineData } from '@/hooks/useSparklineData';
 import { useLogoPrefetch } from '@/hooks/useLogoPrefetch';
 import { formatNumber } from '@/utils/stocksApi';
+import { fetchFinnhubProfile } from '@/services/finnhubApi';
+import { fetchEodFundamentals } from '@/services/eodhdApi';
+import { fetchFMPProfile } from '@/services/fmpApi';
+import { fetchAVOverview, avNum } from '@/services/alphaVantageApi';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { StockCard } from '@/components/stocks/StockCard';
 import { StockChart } from '@/components/stocks/StockChart';
+import { StockFundamentalsPanel } from '@/components/stocks/StockFundamentalsPanel';
 import { MarketOverview } from '@/components/markets/MarketOverview';
 import { MarketBreadthCards } from '@/components/widgets/MarketBreadthCards';
 import { NewsCard } from '@/components/news/NewsCard';
 import { StatsCard } from '@/components/ui/StatsCard';
 import { WatchlistChart } from '@/components/stocks/WatchlistChart';
 import { MarketOverviewCard } from '@/components/widgets/MarketOverviewCard';
+import { TopMoverCard } from '@/components/widgets/TopMoverCard';
 import { BarChart3, TrendingDown, TrendingUp, Wallet2, Newspaper } from 'lucide-react';
 import { TradingViewTimeline } from '@/components/tradingview';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+// ── Formatting helpers ───────────────────────────────────────────────────────
+
+function formatMarketCap(cap: number): string {
+  if (!cap || isNaN(cap)) return '—';
+  if (cap >= 1e12) return `$${(cap / 1e12).toFixed(2)}T`;
+  if (cap >= 1e9)  return `$${(cap / 1e9).toFixed(2)}B`;
+  if (cap >= 1e6)  return `$${(cap / 1e6).toFixed(2)}M`;
+  return `$${cap.toLocaleString()}`;
+}
+
+function formatVolume(vol: number): string {
+  if (!vol || isNaN(vol)) return '—';
+  if (vol >= 1e9) return `${(vol / 1e9).toFixed(2)}B`;
+  if (vol >= 1e6) return `${(vol / 1e6).toFixed(2)}M`;
+  if (vol >= 1e3) return `${(vol / 1e3).toFixed(1)}K`;
+  return `${Math.round(vol).toLocaleString()}`;
+}
 
 /** Default sparkline window — syncs with the main chart range buttons */
 const DEFAULT_SPARKLINE_DAYS = 30;
@@ -46,12 +72,71 @@ export function Dashboard() {
   const [selectedStock, setSelectedStock] = useState<typeof stocks[0] | null>(null);
   const activeStock = selectedStock ?? stocks[0];
 
-  // Memoize market statistics so they don't re-sort/reduce on every render
-  const topGainer = useMemo(() => [...stocks].sort((a, b) => b.changePercent - a.changePercent)[0], [stocks]);
-  const topLoser = useMemo(() => [...stocks].sort((a, b) => a.changePercent - b.changePercent)[0], [stocks]);
-  const totalMarketCap = useMemo(() => stocks.reduce((sum, s) => sum + s.marketCap, 0), [stocks]);
-  const totalVolume = useMemo(() => stocks.reduce((sum, s) => sum + s.volume, 0), [stocks]);
-  
+  // ── Per-stock metrics (Market Cap + Volume cards) ──────────────────────────
+  // Fetch 90 days of history for the active stock to compute average daily volume.
+  // This drives Relative Volume = today's volume ÷ 90-day average.
+  const { data: activeBars = [] } = useHistoricalPrices(activeStock?.symbol, 90);
+
+  const avgDailyVolume = useMemo(() => {
+    if (!activeBars || activeBars.length === 0) return 0;
+    const total = activeBars.reduce((sum, b) => sum + Number(b.volume ?? 0), 0);
+    return total / activeBars.length;
+  }, [activeBars]);
+
+  // Relative volume: today's volume relative to the 90-day daily average (1.0 = average)
+  const relativeVolume = avgDailyVolume > 0
+    ? (activeStock?.volume ?? 0) / avgDailyVolume
+    : null;
+
+  // Finnhub profile — used for real market cap (DB stores 0; Finnhub returns millions USD)
+  // Cached 24h so clicking different stocks doesn't hammer the API
+  const { data: activeProfile } = useQuery({
+    queryKey: ['finnhub', 'profile', activeStock?.symbol],
+    queryFn: () => fetchFinnhubProfile(activeStock!.symbol),
+    enabled: !!activeStock?.symbol,
+    staleTime: 24 * 60 * 60_000,
+    gcTime: 24 * 60 * 60_000,
+  });
+  // Finnhub marketCapitalization is in millions USD → multiply by 1e6 for raw dollars
+  const finnhubMarketCap = activeProfile?.marketCapitalization
+    ? activeProfile.marketCapitalization * 1e6
+    : null;
+
+  // EODHD fundamentals — All-in-One plan provides MarketCapitalization directly
+  const eodSymbol = activeStock?.symbol
+    ? (activeStock.symbol.includes('.') ? activeStock.symbol : `${activeStock.symbol}.US`)
+    : undefined;
+  const { data: eodFund } = useQuery({
+    queryKey: ['eodhd', 'fundamentals', eodSymbol],
+    queryFn:  () => fetchEodFundamentals(eodSymbol!),
+    enabled:  !!eodSymbol && finnhubMarketCap == null,
+    staleTime: 12 * 60 * 60_000,
+    gcTime:    12 * 60 * 60_000,
+  });
+  const eodMarketCap = eodFund?.Highlights?.MarketCapitalization ?? null;
+
+  // FMP fallback — fires when Finnhub + EODHD both return null
+  const { data: fmpProfile } = useQuery({
+    queryKey: ['fmp', 'profile', activeStock?.symbol],
+    queryFn:  () => fetchFMPProfile(activeStock!.symbol),
+    enabled:  !!activeStock?.symbol && finnhubMarketCap == null && eodMarketCap == null,
+    staleTime: 24 * 60 * 60_000,
+    gcTime:    24 * 60 * 60_000,
+  });
+  const fmpMarketCap = fmpProfile?.mktCap ?? null;
+
+  // Alpha Vantage — last resort
+  const { data: avOverview } = useQuery({
+    queryKey: ['alphavantage', 'overview', activeStock?.symbol],
+    queryFn:  () => fetchAVOverview(activeStock!.symbol),
+    enabled:  !!activeStock?.symbol && finnhubMarketCap == null && eodMarketCap == null && fmpMarketCap == null,
+    staleTime: 24 * 60 * 60_000,
+    gcTime:    24 * 60 * 60_000,
+  });
+  const avMarketCap = avOverview ? avNum(avOverview.MarketCapitalization) : null;
+
+  const activeMarketCap = finnhubMarketCap ?? eodMarketCap ?? fmpMarketCap ?? avMarketCap;
+
   const toggleSidebar = () => {
     setIsSidebarCollapsed(prev => !prev);
   };
@@ -82,36 +167,27 @@ export function Dashboard() {
             
             {/* Stats Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
-              <StatsCard 
-                title="Market Cap" 
-                value={`$${(totalMarketCap / 1e12).toFixed(2)}T`}
-                trend={0.47}
+              <StatsCard
+                title="Market Cap"
+                value={activeMarketCap != null ? formatMarketCap(activeMarketCap) : '…'}
+                trend={activeStock?.changePercent}
+                trendLabel={activeStock?.symbol}
                 icon={<Wallet2 />}
                 className="bg-card"
               />
-              <StatsCard 
-                title="Trading Volume" 
-                value={`${(totalVolume / 1e6).toFixed(2)}M`}
-                description="Today's volume"
+              <StatsCard
+                title="Trading Volume"
+                value={formatVolume(activeStock?.volume ?? 0)}
+                description={
+                  relativeVolume != null
+                    ? `Rel Vol: ${relativeVolume.toFixed(2)}×`
+                    : 'Today\'s volume'
+                }
                 icon={<BarChart3 />}
                 className="bg-card"
               />
-              <StatsCard 
-                title="Top Gainer" 
-                value={topGainer.symbol}
-                trend={topGainer.changePercent}
-                trendLabel={topGainer.name}
-                icon={<TrendingUp />}
-                className="bg-card"
-              />
-              <StatsCard 
-                title="Top Loser" 
-                value={topLoser.symbol}
-                trend={topLoser.changePercent}
-                trendLabel={topLoser.name}
-                icon={<TrendingDown />}
-                className="bg-card"
-              />
+              <TopMoverCard direction="gainer" className="bg-card" />
+              <TopMoverCard direction="loser"  className="bg-card" />
             </div>
 
             {/* Stock Cards + Chart side-by-side */}
@@ -143,6 +219,17 @@ export function Dashboard() {
                 />
               </div>
             </div>
+
+            {/* Fundamentals Panel — updates when a stock is clicked */}
+            {activeStock && (
+              <div className="mb-6 animate-slide-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
+                <StockFundamentalsPanel
+                  symbol={activeStock.symbol}
+                  name={activeStock.name}
+                  currentPrice={activeStock.price}
+                />
+              </div>
+            )}
 
             {/* Main Content Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -187,8 +274,17 @@ function StockCardWithHistory({ stock, days, isActive, onClick, compact }: {
   onClick: () => void;
   compact?: boolean;
 }) {
-  const { data: bars = [] } = useHistoricalPrices(stock.symbol, days);
-  const priceHistory = (bars ?? []).map((b: any) => Number(b.close));
+  // Primary: EODHD sparkline (reliable, doesn't need local backend running)
+  const { data: eodHistory = [] } = useSparklineData(stock.symbol, days);
+
+  // Fallback: DefeatBeta local backend (only fires when EODHD returns nothing)
+  const { data: bars = [] } = useHistoricalPrices(
+    eodHistory.length === 0 ? stock.symbol : undefined,
+    days,
+  );
+  const defeatBetaHistory = (bars ?? []).map((b: any) => Number(b.close));
+
+  const priceHistory = eodHistory.length > 0 ? eodHistory : defeatBetaHistory;
 
   // Override change/changePercent with actual timeframe performance
   const overriddenStock = priceHistory.length >= 2
@@ -202,7 +298,7 @@ function StockCardWithHistory({ stock, days, isActive, onClick, compact }: {
   return (
     <StockCard
       stock={overriddenStock}
-      priceHistory={priceHistory.length > 0 ? priceHistory : undefined}
+      priceHistory={priceHistory.length >= 2 ? priceHistory : undefined}
       onClick={onClick}
       compact={compact}
       className={isActive ? "ring-2 ring-primary shadow-glow" : ""}

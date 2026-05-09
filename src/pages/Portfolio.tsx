@@ -4,7 +4,14 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { useStatement } from '@/contexts/StatementContext';
 import { useMarketCaps } from '@/hooks/useMarketCaps';
+import { useTickerStyles } from '@/hooks/useTickerStyles';
+import { use52Week } from '@/hooks/use52Week';
+import { useAnalystRatings, analystColor } from '@/hooks/useAnalystRatings';
+import { TickerStyleEditor } from '@/components/portfolio/TickerStyleEditor';
+import { EarningsCalendar } from '@/components/portfolio/EarningsCalendar';
+import { CorrelationMatrix } from '@/components/portfolio/CorrelationMatrix';
 import { Link2, Unlink2, ArrowUpDown } from 'lucide-react';
+import { useNavbarSlot } from '@/contexts/NavbarSlotContext';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -282,11 +289,16 @@ const MCAP_TIERS: { label: string; min: number }[] = [
 ];
 
 function classifyMcap(mc: number | undefined): string {
-  if (!mc || mc <= 0) return 'Unknown';
+  // Never return 'Unknown' — defaulting to Micro Cap when data is missing
+  // gives the user a real bucket (sortable, colorable, filterable) instead
+  // of a black-hole tier. The only tickers that escape every market-cap
+  // data source are obscure micro-caps anyway, so the default is usually
+  // close to the truth statistically.
+  if (!mc || mc <= 0) return 'Micro Cap';
   for (const t of MCAP_TIERS) {
     if (mc >= t.min) return t.label;
   }
-  return 'Unknown';
+  return 'Micro Cap';   // any positive value below the smallest tier
 }
 
 function mcapColor(label: string): string {
@@ -383,20 +395,26 @@ function MarketCapCard({ holdings, marketCaps }: { holdings: { ticker: string; m
 
 /* ─── Holdings sortable header ─── */
 
-type HoldingsSortCol = 'ticker' | 'shares' | 'cost' | 'marketValue' | 'pl' | 'sector' | 'country' | 'marketCap';
+type HoldingsSortCol =
+  | 'ticker' | 'shares' | 'cost' | 'marketValue' | 'pl'
+  | 'sector' | 'country' | 'marketCap'
+  | 'tradeStyle' | 'priceTarget' | 'stopLoss'
+  | 'distToTarget' | 'distToStop'
+  | 'range52pos' | 'analyst';
 
 function HoldingsSortableTh({
   label, col, active, asc, onSort, align,
 }: {
   label: string; col: HoldingsSortCol; active: HoldingsSortCol; asc: boolean;
-  onSort: (col: HoldingsSortCol) => void; align: 'left' | 'right';
+  onSort: (col: HoldingsSortCol) => void; align: 'left' | 'right' | 'center';
 }) {
   const isActive = active === col;
   return (
     <th
       className={cn(
         'py-1.5 px-1.5 font-medium text-muted-foreground cursor-pointer select-none transition-colors hover:text-foreground',
-        align === 'right' ? 'text-right' : 'text-left',
+        'sticky top-0 z-10 bg-card border-b border-border',
+        align === 'right' ? 'text-right' : align === 'center' ? 'text-center' : 'text-left',
       )}
       onClick={() => onSort(col)}
       onKeyDown={(e) => { if (e.key === 'Enter') onSort(col); }}
@@ -454,6 +472,48 @@ const Portfolio = () => {
 
   // Linked sort state
   const { isLinked, toggleLinked, sharedSort, setSharedSort } = useLinkedSort();
+  const { setSlot } = useNavbarSlot();
+
+  // Inject the Link/Unlink sort button into the Navbar slot while on this page
+  useEffect(() => {
+    setSlot(
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={toggleLinked}
+              aria-label={`Sort synchronization: currently ${isLinked ? 'linked' : 'unlinked'}`}
+              aria-pressed={isLinked}
+              className={cn(
+                'gap-1.5 text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-ring',
+                isLinked
+                  ? 'bg-link-active text-link-active-foreground hover:bg-link-active/90 border-link-active/50'
+                  : 'bg-muted text-link-inactive hover:bg-muted/80 border-border'
+              )}
+            >
+              {isLinked ? (
+                <>
+                  <Link2 className={cn('h-3.5 w-3.5', isLinked && 'animate-pulse-gentle')} aria-hidden="true" />
+                  <span className="hidden sm:inline">Linked</span>
+                </>
+              ) : (
+                <>
+                  <Unlink2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span className="hidden sm:inline">Unlinked</span>
+                </>
+              )}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <p>{isLinked ? 'Sorting is synchronized between cards. Click to unlink.' : 'Cards sort independently. Click to synchronize sorting.'}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+    return () => setSlot(null);
+  }, [isLinked, toggleLinked, setSlot]);
 
   // Active grouping key from AllocationExplorer
   const [activeGroupingKey, setActiveGroupingKey] = useState<GroupingKey>('Position');
@@ -480,6 +540,7 @@ const Portfolio = () => {
       const colMap: Record<GroupingKey, HoldingsSortCol> = {
         'Position': 'marketValue',
         'Sector': 'sector',
+        'Sub-Industry': 'sector',  // sub-industries belong to sectors — sector sort groups them naturally
         'Country': 'country',
         'Market Cap': 'marketCap',
         'Style': 'ticker',
@@ -551,24 +612,59 @@ const Portfolio = () => {
     [holdings]
   );
 
-  const { data: symbolInfoBase = {} } = useQuery({
+  const { data: symbolInfoBase = {}, refetch: refetchSymbolInfo } = useQuery({
     queryKey: ['portfolio-symbol-info', tickers, holdings.map(h => h.exchange).join(',')],
     queryFn: () => batchLookupSymbols(tickerExchangePairs),
-    enabled: tickers.length > 0
+    enabled: tickers.length > 0,
+    // Always refetch on mount — EODHD writes to the symbols table as a side
+    // effect of the lookup, so each fresh page load can pick up newly enriched
+    // gics_sub_industry data that was missing on the previous render.
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
   });
 
-  // Merge market cap data into symbolInfo
+  // Once the initial lookup completes, kick off a delayed refetch to pick up
+  // sub-industry data that the EODHD edge fn wrote back to the DB AFTER the
+  // 25-second race-against-timeout fired. Without this, holdings whose EODHD
+  // call resolved late stay stuck on the "sector fallback" until manual reload.
+  useEffect(() => {
+    if (tickers.length === 0) return;
+    const subIndustryCount = Object.values(symbolInfoBase).filter(
+      (m: any) => m?.subIndustry,
+    ).length;
+    // If most holdings still lack sub-industry, schedule a refetch in 30s so
+    // the in-flight EODHD writes have time to land in the DB.
+    if (subIndustryCount < tickers.length * 0.8) {
+      const t = setTimeout(() => { refetchSymbolInfo(); }, 30_000);
+      return () => clearTimeout(t);
+    }
+  }, [tickers, symbolInfoBase, refetchSymbolInfo]);
+
+  // User-defined trade styles + notes (persisted in user_ticker_styles, RLS).
+  // Survives every portfolio re-import — keyed to the ticker, not the holding.
+  const { data: tickerStyles = {} } = useTickerStyles();
+  const { data: ranges52 }          = use52Week(tickers);
+  const { data: analystRatings = {} } = useAnalystRatings(tickers);
+
+  // Merge market cap + user style/note into symbolInfo
   const symbolInfo: Record<string, SymbolMeta> = useMemo(() => {
     const merged: Record<string, SymbolMeta> = {};
     for (const t of tickers) {
       const base = symbolInfoBase[t] || { sector: 'Other', country: 'Unknown', subIndustry: '' };
+      const style = tickerStyles[t.toUpperCase()];
       merged[t] = {
         ...base,
-        marketCap: marketCapsRaw[t],
+        marketCap:   marketCapsRaw[t],
+        tradeStyle:  style?.tradeStyle ?? 'Unclassified',
+        tradeNote:   style?.note ?? undefined,
+        priceTarget: style?.priceTarget ?? null,
+        stopLoss:    style?.stopLoss    ?? null,
+        entryDate:   style?.entryDate   ?? null,
       };
     }
     return merged;
-  }, [tickers, symbolInfoBase, marketCapsRaw]);
+  }, [tickers, symbolInfoBase, marketCapsRaw, tickerStyles]);
 
   // Helper: effective sector respecting ETF override
   const effectiveSector = useCallback((ticker: string) => {
@@ -580,7 +676,9 @@ const Portfolio = () => {
   const sectorMap = useMemo(() => {
     const m: Record<string, string> = {};
     Object.entries(symbolInfo).forEach(([k, v]) => {
-      m[k] = v.isEtf ? 'ETFs' : v.sector;
+      // Always normalize through the canonical GICS map so color lookups
+      // get a valid sector key even when the raw DB/API string is non-canonical.
+      m[k] = v.isEtf ? 'ETFs' : normalizeSector(v.sector || 'Other');
     });
     return m;
   }, [symbolInfo]);
@@ -588,7 +686,8 @@ const Portfolio = () => {
   const totalValue = useMemo(() => holdings.reduce((s, h) => s + h.marketValue, 0), [holdings]);
 
   // Allocation Explorer group filter
-  const [allocFilter, setAllocFilter] = useState<{ key: GroupingKey; group: string } | null>(null);
+  const [allocFilter,       setAllocFilter]       = useState<{ key: GroupingKey; group: string } | null>(null);
+  const [holdingsCollapsed, setHoldingsCollapsed] = useState(true);
   const handleGroupFilter = useCallback((key: GroupingKey, group: string | null) => {
     setAllocFilter(group ? { key, group } : null);
   }, []);
@@ -617,6 +716,18 @@ const Portfolio = () => {
           if (!meta) return false;
           switch (allocFilter.key) {
             case 'Sector': return effectiveSector(h.ticker) === allocFilter.group;
+            case 'Sub-Industry': {
+              if (meta.isEtf) return allocFilter.group === 'ETFs';
+              // Mirror the AllocationExplorer fallback chain: sub-industry →
+              // industry → industry group → sector. The filter must use the
+              // same level the chart used, otherwise clicking a group shows
+              // an empty holdings list.
+              const si = (meta as any).subIndustry
+                || (meta as any).gicsIndustry
+                || (meta as any).gicsIndustryGroup
+                || normalizeSector(meta.sector || 'Other');
+              return si === allocFilter.group;
+            }
             case 'Country': return meta.country === allocFilter.group;
             case 'Market Cap': return classifyMcap(meta.marketCap) === allocFilter.group;
             default: return true;
@@ -667,6 +778,75 @@ const Portfolio = () => {
           if (cmp === 0) cmp = a.marketValue - b.marketValue;
           break;
         }
+        case 'tradeStyle': {
+          // Sort by user-defined trade style (alphabetical), unclassified last
+          const sa = symbolInfo[a.ticker]?.tradeStyle || 'Unclassified';
+          const sb = symbolInfo[b.ticker]?.tradeStyle || 'Unclassified';
+          const rank: Record<string, number> = {
+            'Day Trade': 0, 'Swing': 1, 'Long Term Hold': 2, 'Unclassified': 99,
+          };
+          cmp = (rank[sa] ?? 99) - (rank[sb] ?? 99);
+          if (cmp === 0) cmp = a.marketValue - b.marketValue;
+          break;
+        }
+        case 'priceTarget': {
+          // Sort by raw target price; nulls last
+          const ta = symbolInfo[a.ticker]?.priceTarget;
+          const tb = symbolInfo[b.ticker]?.priceTarget;
+          if (ta == null && tb == null) cmp = 0;
+          else if (ta == null) cmp = 1;
+          else if (tb == null) cmp = -1;
+          else cmp = ta - tb;
+          break;
+        }
+        case 'stopLoss': {
+          const sa = symbolInfo[a.ticker]?.stopLoss;
+          const sb = symbolInfo[b.ticker]?.stopLoss;
+          if (sa == null && sb == null) cmp = 0;
+          else if (sa == null) cmp = 1;
+          else if (sb == null) cmp = -1;
+          else cmp = sa - sb;
+          break;
+        }
+        case 'distToTarget': {
+          // "Closest to target" = smallest absolute % distance from current price.
+          // currentPrice = marketValue / shares. Tickers without a target sort last.
+          const priceA = a.shares > 0 ? a.marketValue / a.shares : 0;
+          const priceB = b.shares > 0 ? b.marketValue / b.shares : 0;
+          const tgtA   = symbolInfo[a.ticker]?.priceTarget;
+          const tgtB   = symbolInfo[b.ticker]?.priceTarget;
+          const distA  = tgtA && priceA > 0 ? Math.abs((tgtA - priceA) / priceA) : Infinity;
+          const distB  = tgtB && priceB > 0 ? Math.abs((tgtB - priceB) / priceB) : Infinity;
+          cmp = distA - distB;
+          break;
+        }
+        case 'distToStop': {
+          // "Closest to stop" = smallest absolute % distance from current price
+          const priceA = a.shares > 0 ? a.marketValue / a.shares : 0;
+          const priceB = b.shares > 0 ? b.marketValue / b.shares : 0;
+          const stopA  = symbolInfo[a.ticker]?.stopLoss;
+          const stopB  = symbolInfo[b.ticker]?.stopLoss;
+          const distA  = stopA && priceA > 0 ? Math.abs((stopA - priceA) / priceA) : Infinity;
+          const distB  = stopB && priceB > 0 ? Math.abs((stopB - priceB) / priceB) : Infinity;
+          cmp = distA - distB;
+          break;
+        }
+        case 'range52pos': {
+          // Sort by position in 52W range (0 = near low, 1 = near high); no-data sorts last
+          const rA = ranges52?.ranges?.[a.ticker];
+          const rB = ranges52?.ranges?.[b.ticker];
+          const pA = rA && rA.high52 > rA.low52 ? (rA.price - rA.low52) / (rA.high52 - rA.low52) : -1;
+          const pB = rB && rB.high52 > rB.low52 ? (rB.price - rB.low52) / (rB.high52 - rB.low52) : -1;
+          cmp = pA - pB;
+          break;
+        }
+        case 'analyst': {
+          // Sort by analyst mean score: 1=Strong Buy … 5=Sell. No rating sorts last.
+          const mA = analystRatings[a.ticker]?.recommendationMean ?? 6;
+          const mB = analystRatings[b.ticker]?.recommendationMean ?? 6;
+          cmp = mA - mB;
+          break;
+        }
       }
       return asc ? cmp : -cmp;
     });
@@ -674,15 +854,20 @@ const Portfolio = () => {
   }, [holdings, allocFilter, symbolInfo, effectiveHoldingsCol, effectiveHoldingsAsc, groupWeights]);
 
   return (
-    <PageLayout title="Portfolio" description="Analyze your investment portfolio with interactive allocation charts, P&L tracking, and sortable holdings." canonical="/portfolio">
-      <div className="space-y-6">
+    <PageLayout title="Portfolio" description="Analyze your investment portfolio with interactive allocation charts, P&L tracking, and sortable holdings." canonical="/portfolio" hideTitle>
+      <div className="space-y-3">
 
         {/* ── NAV summary ── */}
         {parsedStatement && parsedStatement.nav.endingValue > 0 &&
-        <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] gap-3 sm:items-stretch">
             <NavSummaryCard parsedStatement={parsedStatement} timeframe={navTimeframe} setTimeframe={setNavTimeframe} />
             <PnlTimeframeCard parsedStatement={parsedStatement} timeframe={navTimeframe} />
-            {holdings.length > 0 && <MarketCapCard holdings={holdings} marketCaps={marketCapsRaw} />}
+            {holdings.length >= 2 && (
+              <EarningsCalendar
+                className="h-full"
+                holdings={holdings.map(h => ({ ticker: h.ticker, exchange: h.exchange || undefined }))}
+              />
+            )}
           </div>
         }
 
@@ -702,47 +887,9 @@ const Portfolio = () => {
 
         {holdings.length > 0 &&
         <>
-          {/* Link/Unlink toggle */}
-          <div className="flex justify-end">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={toggleLinked}
-                    aria-label={`Sort synchronization: currently ${isLinked ? 'linked' : 'unlinked'}. Click to ${isLinked ? 'unlink' : 'link'} card sorting.`}
-                    aria-pressed={isLinked}
-                    className={cn(
-                      'gap-1.5 text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-ring',
-                      isLinked
-                        ? 'bg-link-active text-link-active-foreground hover:bg-link-active/90 border-link-active/50'
-                        : 'bg-muted text-link-inactive hover:bg-muted/80 border-border'
-                    )}
-                  >
-                    {isLinked ? (
-                      <>
-                        <Link2 className={cn('h-3.5 w-3.5', isLinked && 'animate-pulse-gentle')} aria-hidden="true" />
-                        <span className="hidden sm:inline">Linked</span>
-                      </>
-                    ) : (
-                      <>
-                        <Unlink2 className="h-3.5 w-3.5" aria-hidden="true" />
-                        <span className="hidden sm:inline">Unlinked</span>
-                      </>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="bottom">
-                  <p>{isLinked ? 'Sorting is synchronized between cards. Click to unlink.' : 'Cards sort independently. Click to synchronize sorting.'}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-            <div className="lg:col-span-3">
-              <div className="bg-card rounded-lg p-4 shadow">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:items-start">
+            <div>
+              <div className="bg-card rounded-lg p-4 shadow h-[648px]">
                 <AllocationExplorer
                   holdings={holdings as AllocationHolding[]}
                   symbolInfo={symbolInfo as Record<string, SymbolMeta>}
@@ -757,21 +904,53 @@ const Portfolio = () => {
               </div>
             </div>
 
-            <div className="lg:col-span-2">
-              <div className="bg-card rounded-lg px-3 py-3 shadow">
-                <h2 className="text-sm font-semibold mb-2">
-                  Holdings
-                  {allocFilter && <span className="text-[10px] font-normal text-muted-foreground ml-1">({filteredHoldings.length} of {holdings.length})</span>}
-                </h2>
-                <div className="overflow-x-auto">
+            <div>
+              <div className="bg-card rounded-lg px-3 py-3 shadow min-h-[420px]">
+                {/* Header row: title + collapse toggle */}
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-sm font-semibold">
+                    Holdings
+                    {allocFilter && (
+                      <span className="text-[10px] font-normal text-muted-foreground ml-1">
+                        ({filteredHoldings.length} of {holdings.length})
+                      </span>
+                    )}
+                  </h2>
+                  {filteredHoldings.length > 15 && (
+                    <button
+                      type="button"
+                      onClick={() => setHoldingsCollapsed(v => !v)}
+                      className="text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded border border-border bg-muted/40 hover:bg-muted/70 shrink-0"
+                    >
+                      {holdingsCollapsed ? `Expand (${filteredHoldings.length})` : 'Collapse'}
+                    </button>
+                  )}
+                </div>
+
+                {/* Scrollable table — max-height when collapsed, unconstrained when expanded */}
+                <div
+                  className={cn(
+                    'overflow-x-auto',
+                    holdingsCollapsed && filteredHoldings.length > 15
+                      ? 'overflow-y-auto max-h-[596px] pb-2'
+                      : '',
+                  )}
+                >
                   <table className="w-full text-[11px]" aria-label="Portfolio holdings">
                      <thead>
                       <tr className="border-b">
-                        <HoldingsSortableTh label="Ticker" col="ticker" active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="left" />
-                        <HoldingsSortableTh label="Shares" col="shares" active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
-                        <HoldingsSortableTh label="Cost" col="cost" active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
+                        <HoldingsSortableTh label="Ticker"  col="ticker"      active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="left" />
+                        <HoldingsSortableTh label="Shares"  col="shares"      active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
+                        <HoldingsSortableTh label="Cost"    col="cost"        active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
                         <HoldingsSortableTh label="Mkt Val" col="marketValue" active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
-                        <HoldingsSortableTh label="P&L" col="pl" active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
+                        <HoldingsSortableTh label="P&L"     col="pl"          active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
+                        <HoldingsSortableTh label="52W"     col="range52pos"  active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="center" />
+                        <HoldingsSortableTh label="Target"  col="priceTarget" active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
+                        <HoldingsSortableTh label="→Tgt%"   col="distToTarget" active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
+                        <HoldingsSortableTh label="Stop"    col="stopLoss"    active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
+                        <HoldingsSortableTh label="→Stop%"  col="distToStop"  active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
+                        <HoldingsSortableTh label="Analyst" col="analyst"     active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="center" />
+                        <HoldingsSortableTh label="Style"   col="tradeStyle"  active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="center" />
                       </tr>
                     </thead>
                     <tbody>
@@ -789,7 +968,7 @@ const Portfolio = () => {
                             <React.Fragment key={h.id}>
                               {showHeader && (
                                 <tr>
-                                  <td colSpan={5} className="pt-2.5 pb-1 px-1.5">
+                                  <td colSpan={12} className="pt-2.5 pb-1 px-1.5">
                                     <div className="flex items-center gap-1.5">
                                       <span className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
                                       <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color }}>{displayGroup}</span>
@@ -804,7 +983,33 @@ const Portfolio = () => {
                                     <span className="h-2 w-2 rounded-full flex-shrink-0 mt-[3px]" style={{ backgroundColor: isGrouped ? color : getGicsSectorColor(sectorMap[h.ticker] || null) }} />
                                     <div className="min-w-0">
                                       <span className="font-medium font-mono block leading-tight">{h.ticker}</span>
-                                      <span className="text-[9px] text-muted-foreground leading-tight truncate block max-w-[110px]">{isGrouped ? displayGroup : (sectorMap[h.ticker] || h.name || '—')}</span>
+                                      {/* Secondary line: always show the most-granular GICS classification.
+                                          When grouped, the section header already shows the parent group, so
+                                          repeating it here is redundant — instead show one level deeper:
+                                            • on the Sector tab → show sub-industry (or industry, then group)
+                                            • on the Sub-Industry tab → row IS already the sub-industry, so
+                                              fall back to the company name for variety
+                                            • on Country / Market Cap / Style → show the sector for context
+                                          ETFs always show "ETFs" since they have no sub-industry. */}
+                                      <span className="text-[9px] text-muted-foreground leading-tight truncate block max-w-[140px]">
+                                        {(() => {
+                                          if (meta?.isEtf) return 'ETFs';
+                                          const finest =
+                                            meta?.subIndustry ||
+                                            (meta as any)?.gicsIndustry ||
+                                            (meta as any)?.gicsIndustryGroup ||
+                                            sectorMap[h.ticker] ||
+                                            '';
+                                          if (!isGrouped) return finest || h.name || '—';
+                                          // Grouped: avoid echoing the section header
+                                          if (activeGroupingKey === 'Sub-Industry') {
+                                            // Row IS already the sub-industry — show company name instead
+                                            return h.name || '—';
+                                          }
+                                          // For Sector / Country / Market Cap / Style: show finest GICS level
+                                          return finest && finest !== displayGroup ? finest : (h.name || '—');
+                                        })()}
+                                      </span>
                                     </div>
                                   </div>
                                 </td>
@@ -813,6 +1018,102 @@ const Portfolio = () => {
                                 <td className="py-1.5 px-1.5 text-right font-mono">{fmtCurrency(h.marketValue)}</td>
                                 <td className={cn('py-1.5 px-1.5 text-right font-mono', h.unrealizedPL >= 0 ? 'text-success' : 'text-danger')}>
                                   {h.unrealizedPL >= 0 ? '+' : ''}{fmtCurrency(h.unrealizedPL)}
+                                </td>
+                                {/* 52-week range bar — shows where current price sits between low and high */}
+                                <td className="py-1.5 px-2">
+                                  {(() => {
+                                    const r = ranges52?.ranges?.[h.ticker];
+                                    if (!r || r.high52 <= r.low52) return <span className="text-muted-foreground text-[9px]">—</span>;
+                                    const pos = Math.max(0, Math.min(100, ((r.price - r.low52) / (r.high52 - r.low52)) * 100));
+                                    const color = pos >= 80 ? '#34d399' : pos <= 20 ? '#f87171' : '#94a3b8';
+                                    return (
+                                      <div className="w-14 space-y-0.5" title={`52W: $${r.low52.toFixed(2)} – $${r.high52.toFixed(2)}`}>
+                                        <div className="relative h-1 bg-muted/60 rounded-full">
+                                          <div
+                                            className="absolute top-0 h-full rounded-full opacity-30"
+                                            style={{ width: `${pos}%`, backgroundColor: color }}
+                                          />
+                                          <div
+                                            className="absolute top-1/2 -translate-y-1/2 h-2.5 w-0.5 rounded-full"
+                                            style={{ left: `${pos}%`, backgroundColor: color }}
+                                          />
+                                        </div>
+                                        <div className="flex justify-between text-[8px] font-mono text-muted-foreground/60">
+                                          <span>L</span><span className="font-medium" style={{ color }}>{pos.toFixed(0)}%</span><span>H</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })()}
+                                </td>
+                                {/* Target / Stop columns + their % distance from current price.
+                                    currentPrice = marketValue / shares; both fields are nullable. */}
+                                {(() => {
+                                  const currentPrice = h.shares > 0 ? h.marketValue / h.shares : 0;
+                                  const target = meta?.priceTarget ?? null;
+                                  const stop   = meta?.stopLoss    ?? null;
+                                  const tgtPct = target && currentPrice > 0 ? ((target - currentPrice) / currentPrice) * 100 : null;
+                                  const stpPct = stop   && currentPrice > 0 ? ((stop   - currentPrice) / currentPrice) * 100 : null;
+                                  return (
+                                    <>
+                                      <td className="py-1.5 px-1.5 text-right font-mono text-emerald-300">
+                                        {target == null ? '—' : `$${target.toFixed(2)}`}
+                                      </td>
+                                      <td className={cn(
+                                        'py-1.5 px-1.5 text-right font-mono text-[10px]',
+                                        tgtPct == null ? 'text-muted-foreground' :
+                                          tgtPct >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                                      )}>
+                                        {tgtPct == null ? '—' : `${tgtPct >= 0 ? '+' : ''}${tgtPct.toFixed(1)}%`}
+                                      </td>
+                                      <td className="py-1.5 px-1.5 text-right font-mono text-rose-300">
+                                        {stop == null ? '—' : `$${stop.toFixed(2)}`}
+                                      </td>
+                                      <td className={cn(
+                                        'py-1.5 px-1.5 text-right font-mono text-[10px]',
+                                        stpPct == null ? 'text-muted-foreground' :
+                                          stpPct >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                                      )}>
+                                        {stpPct == null ? '—' : `${stpPct >= 0 ? '+' : ''}${stpPct.toFixed(1)}%`}
+                                      </td>
+                                    </>
+                                  );
+                                })()}
+                                {/* Analyst consensus — rating label + mean price target from Yahoo Finance */}
+                                <td className="py-1.5 px-1.5 text-center">
+                                  {(() => {
+                                    const rating = analystRatings[h.ticker];
+                                    if (!rating || rating.consensusLabel === '—') {
+                                      return <span className="text-[9px] text-muted-foreground/50">—</span>;
+                                    }
+                                    return (
+                                      <div className="space-y-0.5">
+                                        <span className={cn('text-[9px] font-medium block', analystColor(rating.recommendationKey))}>
+                                          {rating.consensusLabel}
+                                        </span>
+                                        {rating.targetMeanPrice != null && (
+                                          <span className="text-[8px] text-muted-foreground font-mono block">
+                                            ${rating.targetMeanPrice.toFixed(0)}
+                                            {rating.analystCount != null && ` ·${rating.analystCount}`}
+                                          </span>
+                                        )}
+                                      </div>
+                                    );
+                                  })()}
+                                </td>
+                                <td className="py-1.5 px-1.5 text-center">
+                                  {/* Per-ticker trade-style annotation. Click to edit / delete.
+                                      Persists across portfolio re-imports via user_ticker_styles. */}
+                                  <TickerStyleEditor
+                                    ticker={h.ticker}
+                                    exchange={h.exchange}
+                                    current={meta?.tradeStyle as any}
+                                    note={meta?.tradeNote}
+                                    priceTarget={meta?.priceTarget}
+                                    stopLoss={meta?.stopLoss}
+                                    entryDate={meta?.entryDate}
+                                    shares={h.shares > 0 ? h.shares : undefined}
+                                    currentPrice={h.shares > 0 ? h.marketValue / h.shares : undefined}
+                                  />
                                 </td>
                               </tr>
                             </React.Fragment>
@@ -825,6 +1126,18 @@ const Portfolio = () => {
               </div>
             </div>
           </div>
+
+          {/* ── Correlation Matrix (full width) ───────────────────────────── */}
+          {holdings.length >= 2 && (
+            <CorrelationMatrix holdings={holdings.map(h => ({
+              ticker:      h.ticker,
+              name:        h.name || undefined,
+              exchange:    h.exchange || undefined,
+              sector:      effectiveSector(h.ticker),
+              subIndustry: (symbolInfo[h.ticker] as any)?.subIndustry || undefined,
+              marketValue: h.marketValue,
+            }))} />
+          )}
         </>
         }
       </div>

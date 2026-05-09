@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { subDays } from 'date-fns';
 import type { CandlestickData, Time } from 'lightweight-charts';
 import { LightweightChart } from './LightweightChart';
-import { useHistoricalPrices, useYahooHourlyBars } from '@/hooks/useDefeatBeta';
+import { useHistoricalPrices, useEodhdIntraday } from '@/hooks/useDefeatBeta';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -37,14 +37,14 @@ export function LightweightCandlestick({
   const is1W = range === 7;
 
   // Fetch daily bars from DefeatBeta backend for the selected range.
-  // Skipped for 1W — we use hourly bars from Yahoo instead.
+  // Skipped for 1W — we use hourly bars from EODHD instead.
   const { data: allDbBars = [], isLoading: dailyLoading } = useHistoricalPrices(
     externalBars || is1W ? undefined : symbol,
     Math.min(range, 3650),
   );
 
-  // Fetch hourly OHLCV from Yahoo Finance for 1W candlesticks
-  const { data: hourlyBars = [], isLoading: hourlyLoading } = useYahooHourlyBars(
+  // Fetch hourly OHLCV from EODHD for 1W candlesticks
+  const { data: hourlyBars = [], isLoading: hourlyLoading } = useEodhdIntraday(
     externalBars ? undefined : symbol,
     is1W,
   );
@@ -65,7 +65,7 @@ export function LightweightCandlestick({
         }));
     }
 
-    // For 1W, use Yahoo hourly OHLCV (Unix timestamps)
+    // For 1W, use EODHD hourly OHLCV (Unix timestamps)
     if (is1W && hourlyBars.length > 0) {
       return hourlyBars.map((bar) => ({
         time: bar.t as unknown as Time, // UTCTimestamp (number)

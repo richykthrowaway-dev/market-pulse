@@ -1,7 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { fetchEodHistorical } from '@/services/eodhdApi';
-import { fetchYahooIntraday } from '@/services/yahooFinanceApi';
-import { buildQualifiedTicker } from '@/components/stocks/StockLogo';
+import { fetchEodHistorical, fetchEodIntraday } from '@/services/eodhdApi';
 import { subDays, format } from 'date-fns';
 
 /**
@@ -38,27 +36,20 @@ export function useSparklineData(
 }
 
 /**
- * Fetches 1 month of hourly close prices from Yahoo Finance.
- *
- * A single fetch covers both short periods:
- *   7D  → last ~35 bars  (5 trading days × 7 hourly bars/day)
- *   30D → all  ~130 bars (21 trading days × 6.5 hours)
- *
- * Uses the Yahoo Finance ticker format (same suffixes as Logo.dev):
- *   US → "AAPL", TSX → "RY.TO", TSX-V → "SCD.V", LSE → "LLOY.L"
- *
- * Falls back gracefully to an empty array if Yahoo is unavailable.
+ * Fetches 1 month of hourly close prices from EODHD intraday API.
+ * Replaces the old Yahoo Finance–based useIntradaySparkline.
  */
 export function useIntradaySparkline(symbol: string, exchange = 'US') {
-  // buildQualifiedTicker produces Yahoo-compatible tickers:
-  //   ("SCD", "V") → "SCD.V",  ("AAPL", "US") → "AAPL",  ("RY", "TO") → "RY.TO"
-  const yahooTicker = buildQualifiedTicker(symbol, exchange);
+  const eodSymbol = symbol.includes('.') ? symbol : `${symbol}.${exchange}`;
 
   return useQuery<number[]>({
-    queryKey: ['sparkline-intraday', yahooTicker],
-    queryFn: () => fetchYahooIntraday(yahooTicker, '1h', '1mo'),
+    queryKey: ['sparkline-intraday-eodhd', eodSymbol],
+    queryFn: async () => {
+      const bars = await fetchEodIntraday(eodSymbol, '1h');
+      return bars.map(b => b.close);
+    },
     enabled: !!symbol,
-    staleTime: 15 * 60_000,      // 15 min — intraday data, moderately fresh
+    staleTime: 15 * 60_000,
     refetchOnWindowFocus: false,
   });
 }

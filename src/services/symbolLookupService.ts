@@ -2,15 +2,23 @@
  * Exchange-aware symbol lookup service.
  *
  * Resolves symbol metadata (sector, country, GICS classification) using
- * a three-layer strategy:
+ * a four-layer strategy:
  *
  *   Layer 1 — Static map (sectorMap.ts):
  *     ~300 top US stocks pre-mapped to GICS sectors. Zero API calls,
  *     O(1) lookup, works offline. Covers 95%+ of typical portfolios.
  *
  *   Layer 2 — Supabase symbols table:
- *     Tickers cached from previous Finnhub lookups. One DB round-trip
- *     for the entire batch. Also provides country, type, exchange data.
+ *     Tickers cached from previous lookups. One DB round-trip for the
+ *     entire batch. Provides sector, full GICS hierarchy (including
+ *     sub-industry), country, and type.
+ *
+ *   Layer 2.5 — EODHD fundamentals (api-eodhd edge function):
+ *     For portfolio tickers missing gics_sub_industry in the DB.
+ *     Returns the complete GICS hierarchy (sector → group → industry →
+ *     sub-industry). The edge fn writes results back to the symbols table
+ *     so subsequent loads hit Layer 2 (instant). Races against a 6s
+ *     timeout so it never hangs the portfolio render.
  *
  *   Layer 3 — Finnhub profile2 (api-finnhub edge function):
  *     For tickers not in the static map and lacking cached sector data.
@@ -20,7 +28,9 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { getStaticSector } from '@/lib/sectorMap';
+import { getStaticSector, getStaticSubIndustry, gicsSubIndustryFromFmp } from '@/lib/sectorMap';
+import { normalizeSector, sectorForSubIndustry } from '@/lib/gicsColors';
+import { fetchCached } from '@/lib/apiCache';
 
 export interface SymbolMeta {
   sector: string;
@@ -59,44 +69,88 @@ function normalizeExchange(exchange: string): string[] {
   return [upper];
 }
 
+// normalizeSector is imported from @/lib/gicsColors — it handles all GICS,
+// Finnhub, EODHD, FMP, and Alpha Vantage taxonomy strings comprehensively.
+
 /**
- * Maps Finnhub / EODHD / raw sector strings to canonical GICS 11 names.
- * Finnhub uses their own taxonomy (e.g. "Consumer Cyclical") so we map
- * those too.
+ * Fetch full GICS hierarchy from EODHD /fundamentals for tickers that
+ * have no gics_sub_industry in the DB yet.
+ *
+ * Why EODHD over Finnhub for this?  EODHD returns the complete official
+ * GICS path (GicSector / GicGroup / GicIndustry / GicSubIndustry) while
+ * Finnhub only provides its own coarser `finnhubIndustry` string.
+ *
+ * The api-eodhd edge function already has write-through caching — it
+ * persists every GICS field back to the symbols table, so the second
+ * time a portfolio loads these tickers, Layer 2 answers instantly.
+ *
+ * EODHD symbol format: plain US tickers get ".US" appended (AAPL.US);
+ * tickers that already carry an exchange suffix (RY.TO) are sent as-is.
  */
-function normalizeSectorName(raw: string | null | undefined): string {
-  if (!raw) return 'Other';
-  const lower = raw.toLowerCase().trim();
-  const MAP: Record<string, string> = {
-    // GICS canonical (pass-through)
-    'information technology': 'Information Technology',
-    'health care':            'Health Care',
-    'financials':             'Financials',
-    'consumer discretionary': 'Consumer Discretionary',
-    'communication services': 'Communication Services',
-    'industrials':            'Industrials',
-    'consumer staples':       'Consumer Staples',
-    'energy':                 'Energy',
-    'utilities':              'Utilities',
-    'real estate':            'Real Estate',
-    'materials':              'Materials',
-    // Finnhub taxonomy
-    'technology':             'Information Technology',
-    'healthcare':             'Health Care',
-    'financial services':     'Financials',
-    'finance':                'Financials',
-    'consumer cyclical':      'Consumer Discretionary',
-    'consumer defensive':     'Consumer Staples',
-    'telecommunications':     'Communication Services',
-    'communication':          'Communication Services',
-    'industrial':             'Industrials',
-    'basic materials':        'Materials',
-    'real estate investment trust (reit)': 'Real Estate',
-    // EODHD / other
-    'software':               'Information Technology',
-    'semiconductors':         'Information Technology',
-  };
-  return MAP[lower] ?? raw;
+async function fetchGicsFromEodhd(
+  tickers: string[],
+  // Caller passes in a shared object so partial results are visible even when
+  // the caller's race-against-timeout fires before all fetches complete.
+  // Without this, in-flight fetches that resolve before timeout would still be
+  // discarded because `Promise.all` only returns when ALL settle.
+  results: Record<string, Partial<SymbolMeta>> = {},
+): Promise<Record<string, Partial<SymbolMeta>>> {
+  if (tickers.length === 0) return results;
+
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const anonKey   = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const baseUrl   = `https://${projectId}.supabase.co/functions/v1/api-eodhd`;
+  const headers   = { apikey: anonKey, Authorization: `Bearer ${anonKey}` };
+
+  // Fully parallel — every ticker fires at once. The race-against-timeout in the
+  // caller (batchLookupSymbols) bounds total wall time; whatever completes is
+  // used immediately, the rest get written to DB by the edge fn for next load.
+  // EODHD allows hundreds of req/s on paid tiers, and Supabase edge functions
+  // handle the request multiplexing gracefully.
+
+  // Each fetchCached call gives us localStorage cache + in-flight dedup +
+  // stale-while-revalidate. GICS data is essentially static (changes < 1×/year)
+  // so a 24h TTL with 6h stale window aggressively cuts EODHD load — 100-stock
+  // portfolio reload goes from 1000 credits to 0 on warm cache.
+  await Promise.all(tickers.map(async (ticker) => {
+    try {
+      const eodSymbol = ticker.includes('.') ? ticker : `${ticker}.US`;
+      const meta = await fetchCached<Partial<SymbolMeta> | null>(
+        `eodhd:gics:${eodSymbol}`,
+        async () => {
+          const res = await fetch(
+            `${baseUrl}?endpoint=fundamentals&symbol=${encodeURIComponent(eodSymbol)}`,
+            { headers },
+          );
+          if (!res.ok) return null;
+          const data = await res.json();
+          const g = data?.General;
+          if (!g) return null;
+
+          const isEtf = g.Type === 'ETF' || g.Type === 'ETP' || g.Type === 'Mutual Fund';
+          return {
+            sector:            isEtf ? 'ETFs' : normalizeSector(g.GicSector || g.Sector || ''),
+            country:           g.CountryISO || g.CountryName || undefined,
+            subIndustry:       g.GicSubIndustry || '',
+            isEtf,
+            gicsIndustryGroup: g.GicGroup    || undefined,
+            gicsIndustry:      g.GicIndustry || g.Industry || undefined,
+          };
+        },
+        {
+          ttlMs:        24 * 60 * 60_000,   // 24h — GICS classifications are near-static
+          staleAfterMs:  6 * 60 * 60_000,   // 6h  — serve stale + revalidate in background
+          // Don't cache null/empty — only persist when EODHD actually returned data
+          shouldCache: (v): v is Partial<SymbolMeta> => v !== null && !!v.sector,
+        },
+      );
+      if (meta) results[ticker] = meta;
+    } catch {
+      // Best-effort — sub-industry enrichment never blocks the UI
+    }
+  }));
+
+  return results;
 }
 
 /**
@@ -132,7 +186,7 @@ async function fetchSectorsFromFinnhub(
         const isEtf = data.type === 'ETP' || data.type === 'ETF' || data.type === 'Mutual Fund';
 
         results[ticker] = {
-          sector:  isEtf ? 'ETFs' : normalizeSectorName(data.finnhubIndustry),
+          sector:  isEtf ? 'ETFs' : normalizeSector(data.finnhubIndustry),
           country: data.country || undefined,
           isEtf,
         };
@@ -141,6 +195,69 @@ async function fetchSectorsFromFinnhub(
       }
     }));
   }
+
+  return results;
+}
+
+/**
+ * Fetch sector + GICS sub-industry from FMP /profile.
+ *
+ * Why FMP: it covers ~30K US-listed stocks for free, the data includes both
+ * sector and a fine-grained industry string, and the response is small (~1 KB)
+ * — perfect as the "after-static-map fallback" for any US ticker we don't
+ * recognize. FMP doesn't have GICS sub-industry directly, so we translate
+ * via gicsSubIndustryFromFmp() built from a hand-curated mapping table.
+ *
+ * Coverage caveat: FMP doesn't reliably cover non-US small-caps (Canadian
+ * .V/.TO, UK .L, AU .AX). Those still need EODHD or the static map.
+ */
+async function fetchFromFmp(
+  tickers: string[],
+  results: Record<string, Partial<SymbolMeta>> = {},
+): Promise<Record<string, Partial<SymbolMeta>>> {
+  if (tickers.length === 0) return results;
+
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const anonKey   = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const baseUrl   = `https://${projectId}.supabase.co/functions/v1/api-fmp`;
+  const headers   = { apikey: anonKey, Authorization: `Bearer ${anonKey}` };
+
+  // Fully parallel — FMP free tier handles 250 calls/day at high rate
+  await Promise.all(tickers.map(async (ticker) => {
+    try {
+      const res = await fetch(
+        `${baseUrl}?endpoint=profile&symbol=${encodeURIComponent(ticker)}`,
+        { headers },
+      );
+      if (!res.ok) return;
+      const data = await res.json();
+      const p = data?.profile;
+      if (!p) return;  // FMP returned []  — ticker not in their universe
+
+      // Translate FMP's industry → GICS sub-industry via the lookup table
+      const fmpIndustry = String(p.industry || '');
+      const subIndustry = gicsSubIndustryFromFmp(fmpIndustry) || '';
+
+      // Sector: FMP uses non-GICS names ("Consumer Cyclical") — normalizeSector
+      // handles the alias mapping. If FMP returns a sub-industry we recognize,
+      // we can also derive the sector via sectorForSubIndustry as a backup.
+      const sector = subIndustry
+        ? (sectorForSubIndustry(subIndustry) || normalizeSector(p.sector || ''))
+        : normalizeSector(p.sector || '');
+
+      const isEtf = String(p.isEtf || '').toLowerCase() === 'true' || p.isFund === true;
+
+      results[ticker] = {
+        sector:       isEtf ? 'ETFs' : sector,
+        country:      p.country || undefined,
+        subIndustry,
+        isEtf,
+        gicsIndustry: fmpIndustry || undefined,  // store raw FMP industry for transparency
+      };
+    } catch {
+      // Best-effort — never blocks the UI
+    }
+  }));
 
   return results;
 }
@@ -163,11 +280,33 @@ export async function batchLookupSymbols(
 
   const uniqueTickers = [...new Set(items.map(i => i.ticker.toUpperCase()))];
 
+  // First-seen exchange per ticker — used to disambiguate Canadian/UK/AU
+  // small-caps in the static sub-industry map. We lower-priority overwrite
+  // so the first occurrence (typically the user's actual holding) wins
+  // when the same ticker appears multiple times across portfolio rows.
+  const exchangeFor: Record<string, string | undefined> = {};
+  for (const i of items) {
+    const key = i.ticker.toUpperCase();
+    if (!exchangeFor[key] && i.exchange) exchangeFor[key] = i.exchange;
+  }
+
   // ── Layer 1: Static sector map ────────────────────────────────────
   const staticSectors: Record<string, string> = {};
   for (const t of uniqueTickers) {
     const s = getStaticSector(t);
     if (s) staticSectors[t] = s;
+  }
+
+  // ── Layer 1.5: Static SUB-INDUSTRY map ────────────────────────────
+  // Hand-curated GICS 163 mapping for ~1,400 commonly-held tickers across
+  // US/Canada/UK/AU. This is the only layer that resolves instantly with
+  // NO network call. Passing the exchange through means a Canadian "TUNG"
+  // (American Tungsten on TSX-V) is looked up as "TUNG.V" automatically,
+  // rather than getting confused with any US ticker of the same name.
+  const staticSubIndustries: Record<string, string> = {};
+  for (const t of uniqueTickers) {
+    const si = getStaticSubIndustry(t, exchangeFor[t]);
+    if (si) staticSubIndustries[t] = si;
   }
 
   // ── Layer 2: DB lookup for all tickers ───────────────────────────
@@ -181,11 +320,75 @@ export async function batchLookupSymbols(
     dbMap.set(row.canonical_ticker.toUpperCase(), row);
   }
 
-  // ── Layer 3: Finnhub for tickers missing sector in both layers ───
+  // ── Layer 2.5: EODHD for tickers missing sub-industry ──────────────
+  // Targets portfolio holdings that have no gics_sub_industry in DB yet.
+  // ETFs are skipped — they have no GICS sub-industry by definition.
+  // Static sub-industry hits are also skipped — Layer 1.5 already resolved them.
+  // The edge fn writes all GICS fields back to symbols as a side effect,
+  // so the very next portfolio load finds everything in Layer 2 (instant).
+  const needsEodhd = uniqueTickers.filter(t => {
+    if (staticSectors[t] === 'ETFs') return false;  // ETFs have no sub-industry
+    if (staticSubIndustries[t]) return false;       // Layer 1.5 already covered
+    const row = dbMap.get(t);
+    return !row?.gics_sub_industry;                  // missing the granular level
+  });
+
+  // Shared accumulator — fetchGicsFromEodhd populates this object as each
+  // ticker resolves. Even if the timeout fires first, we still see whatever
+  // tickers completed in time (instead of losing them all to Promise.race).
+  const eodhdData: Record<string, Partial<SymbolMeta>> = {};
+  if (needsEodhd.length > 0) {
+    // Race against 25s — fully-parallel EODHD fetches typically resolve in 2–5s
+    // for ~30 tickers, but first-load enrichment of a fresh portfolio with no
+    // DB cache needs enough headroom that EVERY ticker has a chance to populate
+    // its sub-industry on the initial render rather than falling back to sector.
+    // Whatever resolves in time is used immediately; the rest are written to
+    // DB by the edge fn (write-through caching) and picked up on the next load.
+    const timeout = new Promise<void>(r => setTimeout(r, 25000));
+    await Promise.race([
+      fetchGicsFromEodhd(needsEodhd, eodhdData),
+      timeout,
+    ]);
+  }
+
+  // ── Layer 2.6: FMP for tickers STILL missing sub-industry ─────────
+  // Catches tickers that aren't in the static map AND that EODHD couldn't
+  // resolve (often because EODHD's daily quota is exhausted). FMP's free
+  // tier covers ~30K US stocks with sector + industry. Their industry strings
+  // ("Software - Infrastructure") are translated to canonical GICS 2023
+  // sub-industries via `gicsSubIndustryFromFmp` in sectorMap.ts.
+  //
+  // Why this layer matters: it's the difference between "company name fallback"
+  // and proper GICS classification for any US ticker not yet in our DB cache.
+  // FMP doesn't reliably cover non-US small-caps — those still need EODHD or
+  // the static map.
+  const needsFmp = uniqueTickers.filter(t => {
+    if (staticSectors[t] === 'ETFs') return false;
+    if (staticSubIndustries[t]) return false;
+    const row = dbMap.get(t);
+    if (row?.gics_sub_industry) return false;
+    if (eodhdData[t]?.subIndustry) return false;
+    return true;
+  });
+
+  const fmpData: Record<string, Partial<SymbolMeta>> = {};
+  if (needsFmp.length > 0) {
+    // Race against 8s — FMP responses are small and fast (~200-500ms each)
+    const timeout = new Promise<void>(r => setTimeout(r, 8000));
+    await Promise.race([
+      fetchFromFmp(needsFmp, fmpData),
+      timeout,
+    ]);
+  }
+
+  // ── Layer 3: Finnhub for tickers missing sector after every prior layer ──
+  // Only fires when neither static map, DB, EODHD, nor FMP resolved the sector.
   const needsFinnhub = uniqueTickers.filter(t => {
     if (staticSectors[t]) return false;          // static map has it
     const row = dbMap.get(t);
-    return !row?.gics_sector;                    // DB doesn't have it either
+    if (row?.gics_sector) return false;          // DB has it
+    if (eodhdData[t]?.sector) return false;     // EODHD has it
+    return !fmpData[t]?.sector;                 // FMP didn't resolve it either
   });
 
   let finnhubData: Record<string, Partial<SymbolMeta>> = {};
@@ -252,18 +455,64 @@ export async function batchLookupSymbols(
       }
     }
 
-    // Priority: static map > DB > Finnhub > 'Other'
-    const staticSector  = staticSectors[key];
-    const dbSector      = normalizeSectorName(matched?.gics_sector);
-    const finnhub       = finnhubData[key];
+    // Priority: static map > derived-from-static-sub-industry > DB > EODHD > Finnhub > 'Other'
+    // EODHD sits above Finnhub because it provides the full canonical GICS
+    // hierarchy rather than Finnhub's coarser proprietary industry strings.
+    //
+    // The "derived from sub-industry" step matters for foreign small-caps:
+    // STATIC_SUBINDUSTRY_MAP has TUNG.V → 'Diversified Metals & Mining' but
+    // STATIC_SECTOR_MAP doesn't list TUNG. Without this step, the sector would
+    // fall through to DB (likely empty) → EODHD (rate-limited) → 'Other'
+    // even though we KNOW the parent sector of every sub-industry.
+    //
+    // CRITICAL: only treat the DB sector as "found" when the row actually has
+    // a gics_sector value. Otherwise normalizeSector(undefined) returns 'Other'
+    // — a truthy string that would short-circuit the EODHD/Finnhub fallbacks.
+    const staticSector       = staticSectors[key];
+    const staticSubIndustry  = staticSubIndustries[key];
+    const derivedFromSubInd  = staticSubIndustry ? (sectorForSubIndustry(staticSubIndustry) ?? '') : '';
+    const dbSector           = matched?.gics_sector ? normalizeSector(matched.gics_sector) : '';
+    const eodhd              = eodhdData[key];
+    const fmp                = fmpData[key];
+    const finnhub            = finnhubData[key];
+
+    const resolvedSector = staticSector
+      || derivedFromSubInd
+      || dbSector
+      || eodhd?.sector
+      || fmp?.sector              // FMP layer between EODHD and Finnhub
+      || finnhub?.sector
+      || 'Other';
+
+    // isEtf: true if static map tagged it as ETF, or any source says so
+    const resolvedIsEtf  = staticSector === 'ETFs'
+      || eodhd?.isEtf   === true
+      || finnhub?.isEtf === true
+      || matched?.type  === 'etf'
+      || matched?.type  === 'ETF'
+      || matched?.type  === 'ETP';
+
+    // Sub-industry priority: static map > DB > EODHD > FMP > empty.
+    // Static map wins because (a) it's instant and (b) it's hand-validated
+    // against canonical GICS 2023 names, so no normalization issues.
+    // FMP comes last because its industry → GICS-sub-industry translation
+    // is approximate (some FMP industries map to multiple GICS sub-industries
+    // and we have to pick one), whereas static/DB/EODHD use canonical names.
+    const resolvedSubIndustry = resolvedIsEtf
+      ? ''
+      : (staticSubIndustries[key]
+         || matched?.gics_sub_industry
+         || eodhd?.subIndustry
+         || fmp?.subIndustry
+         || '');
 
     result[item.ticker] = {
-      sector:            staticSector || dbSector || finnhub?.sector || 'Other',
-      country:           finnhub?.country || matched?.country || 'Unknown',
-      subIndustry:       matched?.gics_sub_industry || '',
-      isEtf:             finnhub?.isEtf ?? (matched?.type === 'etf'),
-      gicsIndustryGroup: matched?.gics_industry_group || undefined,
-      gicsIndustry:      matched?.gics_industry || undefined,
+      sector:            resolvedIsEtf ? 'ETFs' : resolvedSector,
+      country:           eodhd?.country  || fmp?.country || finnhub?.country || matched?.country || 'Unknown',
+      subIndustry:       resolvedSubIndustry,
+      isEtf:             resolvedIsEtf,
+      gicsIndustryGroup: matched?.gics_industry_group || eodhd?.gicsIndustryGroup || undefined,
+      gicsIndustry:      matched?.gics_industry || eodhd?.gicsIndustry || fmp?.gicsIndustry || undefined,
     };
   }
 

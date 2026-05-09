@@ -11,9 +11,11 @@ interface PageLayoutProps {
   description?: string;
   /** Canonical path (e.g. "/portfolio") */
   canonical?: string;
+  /** When true, suppresses the visible h1 heading (page manages its own title via usePageMeta) */
+  hideTitle?: boolean;
 }
 
-export function PageLayout({ children, title, description, canonical }: PageLayoutProps) {
+export function PageLayout({ children, title, description, canonical, hideTitle }: PageLayoutProps) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { parsedStatement, fileName, isParsingFile, handleFileUpload, clearStatement } = useStatement();
 
@@ -63,8 +65,8 @@ export function PageLayout({ children, title, description, canonical }: PageLayo
         />
         
         <main className="flex-1 transition-all duration-300">
-          <div className="container max-w-full p-4 lg:p-6 animate-fade-in">
-            <h1 className="text-2xl font-bold mb-6">{title}</h1>
+          <div className={`container max-w-full animate-fade-in ${hideTitle ? 'p-4 lg:p-4' : 'p-4 lg:p-6'}`}>
+            {!hideTitle && <h1 className="text-2xl font-bold mb-6">{title}</h1>}
             {children}
           </div>
         </main>

@@ -3,8 +3,7 @@ import {
   fetchFinnhubQuote,
   fetchFinnhubProfile,
 } from '@/services/finnhubApi';
-import { fetchEodHistorical, type EodBar } from '@/services/eodhdApi';
-import { fetchYahooQuote } from '@/services/yahooFinanceApi';
+import { fetchEodHistorical, fetchEodFundamentals, type EodBar } from '@/services/eodhdApi';
 
 export interface EodhdStockData {
   stock: {
@@ -47,7 +46,6 @@ export function useEodhdStock(symbol: string | null, exchange: string = 'US', fa
       // ── Step 1: Fundamentals ──
       let quote: Awaited<ReturnType<typeof fetchFinnhubQuote>> | null = null;
       let profile: Awaited<ReturnType<typeof fetchFinnhubProfile>> | null = null;
-      let yahooData: Awaited<ReturnType<typeof fetchYahooQuote>> = null;
 
       if (isUS) {
         // Finnhub for US stocks
@@ -55,23 +53,24 @@ export function useEodhdStock(symbol: string | null, exchange: string = 'US', fa
           fetchFinnhubQuote(symbol).catch(() => null),
           fetchFinnhubProfile(symbol).catch(() => null),
         ]);
-      } else {
-        // Yahoo Finance for non-US stocks — provides currency, name, market data
-        yahooData = await fetchYahooQuote(symbol, exchange).catch(() => null);
       }
+      // For non-US stocks, EODHD fundamentals (fetched below) covers name/currency/market cap
 
-      // ── Step 2: Price bars — EODHD for all stocks ──
+      // ── Step 2: Price bars + EODHD fundamentals (non-US) ─────────────────────
       const eodSymbol = isUS ? `${symbol}.US` : `${symbol}.${exchange}`;
-      const bars: EodBar[] = await fetchEodHistorical(eodSymbol).catch(() => [] as EodBar[]);
+      const [bars, eodFund] = await Promise.all([
+        fetchEodHistorical(eodSymbol).catch(() => [] as EodBar[]),
+        // Fetch EODHD fundamentals for non-US stocks (name, currency, market cap)
+        !isUS ? fetchEodFundamentals(eodSymbol).catch(() => null) : Promise.resolve(null),
+      ]);
 
       const closes = bars.map(b => b.close);
 
       // ── Step 3: Build unified result ──
       const hasQuote = quote && (quote.c !== 0 || quote.pc !== 0);
-      const hasYahoo = yahooData && yahooData.regularMarketPrice !== null;
-      const liveQuoteAvailable = !!(hasQuote || hasYahoo);
+      const liveQuoteAvailable = !!hasQuote;
 
-      // Price resolution: Finnhub quote > Yahoo quote > EODHD bars
+      // Price resolution: Finnhub quote > EODHD bars
       let lastPrice: number;
       let change: number;
       let changePct: number;
@@ -81,11 +80,6 @@ export function useEodhdStock(symbol: string | null, exchange: string = 'US', fa
         change = quote.d ?? 0;
         const prevPrice = quote.pc || 1;
         changePct = quote.dp ?? ((change / prevPrice) * 100);
-      } else if (hasYahoo && yahooData.regularMarketPrice) {
-        lastPrice = yahooData.regularMarketPrice;
-        const prevClose = yahooData.previousClose || lastPrice;
-        change = lastPrice - prevClose;
-        changePct = prevClose !== 0 ? (change / prevClose) * 100 : 0;
       } else {
         lastPrice = closes.length > 0 ? closes[closes.length - 1] : 0;
         change = closes.length >= 2 ? closes[closes.length - 1] - closes[closes.length - 2] : 0;
@@ -93,24 +87,22 @@ export function useEodhdStock(symbol: string | null, exchange: string = 'US', fa
         changePct = prevPrice !== 0 ? (change / prevPrice) * 100 : 0;
       }
 
-      // Market cap: Finnhub profile > Yahoo > 0
+      // Market cap: Finnhub profile > EODHD fundamentals > 0
       const marketCap = profile?.marketCapitalization
         ? profile.marketCapitalization * 1_000_000
-        : (yahooData?.marketCap ?? 0);
+        : (eodFund?.Highlights?.MarketCapitalization ?? 0);
 
-      // Currency: Yahoo > profile currency > fallback USD
-      const currency = yahooData?.currency || profile?.currency || 'USD';
+      // Currency: EODHD fundamentals > profile > fallback USD
+      const currency = eodFund?.General?.CurrencyCode || profile?.currency || 'USD';
 
-      // Name: Finnhub profile > Yahoo > fallback
+      // Name: Finnhub profile > EODHD fundamentals > fallback
       const stockName = profile?.name
-        || yahooData?.longName
-        || yahooData?.shortName
+        || eodFund?.General?.Name
         || fallbackName
         || symbol;
 
-      // Volume: Yahoo > last bar > 0
-      const volume = yahooData?.regularMarketVolume
-        || (bars.length > 0 ? bars[bars.length - 1].volume : 0);
+      // Volume: last bar > 0
+      const volume = bars.length > 0 ? bars[bars.length - 1].volume : 0;
 
       if (lastPrice === 0 && bars.length === 0) {
         console.error(`No data available for ${symbol}.${exchange}`);

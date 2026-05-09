@@ -99,7 +99,14 @@ async function fetchJson<T>(params: Record<string, string>): Promise<T | null> {
     throw new Error(`Finnhub fetch failed (${res.status}): ${body}`);
   }
 
-  return res.json();
+  const data = await res.json();
+  // Finnhub sometimes returns HTTP 200 with {error: "..."} instead of a proper 4xx.
+  // Treat these as null (same as a 429) so callers don't get a partial/error object.
+  if (data && typeof data === 'object' && !Array.isArray(data) && 'error' in data) {
+    console.warn(`Finnhub ${params.endpoint} soft error for ${params.symbol ?? params.query}:`, (data as any).error);
+    return null;
+  }
+  return data as T;
 }
 
 /**
@@ -138,5 +145,84 @@ export async function fetchFinnhubSearch(query: string): Promise<{ count: number
     `finnhub:search:${query.toLowerCase()}`,
     () => fetchJson<{ count: number; result: FinnhubSearchResult[] }>({ endpoint: "search", query }),
     { ttlMs: 60 * 60_000 },
+  );
+}
+
+export interface FinnhubBasicFinancials {
+  metric: {
+    '52WeekHigh': number;
+    '52WeekHighDate': string;
+    '52WeekLow': number;
+    '52WeekLowDate': string;
+    beta: number;
+    peNormalizedAnnual: number | null;
+    peTTM: number | null;
+    epsTTM: number | null;
+    epsGrowthTTMYoy: number | null;
+    dividendYieldIndicatedAnnual: number | null;
+    revenueGrowthTTMYoy: number | null;
+    roeTTM: number | null;
+    debtEquityRatio: number | null;
+    marketCapitalization: number | null;
+    [key: string]: unknown;
+  };
+  metricType: string;
+  symbol: string;
+}
+
+/**
+ * Get basic financial metrics (52-week range, beta, P/E, EPS, etc).
+ * Cached for 60 minutes, stale after 15 minutes.
+ */
+export async function fetchFinnhubBasicFinancials(symbol: string): Promise<FinnhubBasicFinancials | null> {
+  return fetchCached(
+    `finnhub:basic-financials:${symbol}`,
+    () => fetchJson<FinnhubBasicFinancials>({ endpoint: "basic-financials", symbol }),
+    { ttlMs: 60 * 60_000, staleAfterMs: 15 * 60_000 },
+  );
+}
+
+export interface FinnhubRecommendation {
+  buy: number;
+  hold: number;
+  period: string;       // e.g. "2024-03-01"
+  sell: number;
+  strongBuy: number;
+  strongSell: number;
+  symbol: string;
+}
+
+/**
+ * Get analyst buy/hold/sell recommendations history.
+ * Cached for 24h — analyst consensus changes infrequently.
+ */
+export async function fetchFinnhubRecommendations(symbol: string): Promise<FinnhubRecommendation[] | null> {
+  return fetchCached(
+    `finnhub:recommendation:${symbol}`,
+    () => fetchJson<FinnhubRecommendation[]>({ endpoint: "recommendation", symbol }),
+    { ttlMs: 24 * 60 * 60_000 },
+  );
+}
+
+export interface FinnhubEarning {
+  actual: number | null;
+  estimate: number | null;
+  period: string;         // e.g. "2024-03-31"
+  quarter: number;
+  surprise: number | null;
+  surprisePercent: number | null;
+  symbol: string;
+  year: number;
+}
+
+/**
+ * Get EPS beat/miss history (earnings surprises).
+ * Cached for 24h — historical earnings data is static.
+ */
+export async function fetchFinnhubEarnings(symbol: string): Promise<FinnhubEarning[] | null> {
+  return fetchCached(
+    `finnhub:earnings:${symbol}`,
+    () => fetchJson<FinnhubEarning[]>({ endpoint: "earnings", symbol }),
+    { ttlMs: 24 * 60 * 60_000 },
   );
 }

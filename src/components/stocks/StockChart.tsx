@@ -1,8 +1,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { useTheme } from 'next-themes';
+import { useQuery } from '@tanstack/react-query';
 import { subDays, format } from 'date-fns';
-import { useHistoricalPrices, useYahooHourlyBars } from '@/hooks/useDefeatBeta';
+import { useHistoricalPrices, useEodhdIntraday } from '@/hooks/useDefeatBeta';
+import { fetchEodHistorical } from '@/services/eodhdApi';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { StockLogo } from '@/components/stocks/StockLogo';
@@ -62,13 +64,32 @@ export function StockChart({
     Math.min(selectedRange.days, 3650),
   );
 
-  // Fetch hourly bars from Yahoo Finance for 1W (gives ~35 bars vs 5 daily bars)
-  const { data: hourlyBars = [], isLoading: hourlyLoading } = useYahooHourlyBars(
+  // EODHD fallback — fires when DefeatBeta returns nothing (backend not running / prod env).
+  // EODHD symbols use TICKER.US format for US-listed stocks.
+  const eodSymbol = symbol.includes('.') ? symbol : `${symbol}.US`;
+  const fromDate = useMemo(
+    () => format(subDays(new Date(), Math.min(selectedRange.days, 3650)), 'yyyy-MM-dd'),
+    [selectedRange.days],
+  );
+  const needsEodFallback = !externalBars && !is1W && !localLoading && allLocalBars.length === 0;
+  const { data: eodBars = [], isLoading: eodLoading } = useQuery({
+    queryKey: ['eodhd', 'chart', eodSymbol, fromDate],
+    queryFn: () => fetchEodHistorical(eodSymbol, fromDate),
+    enabled: needsEodFallback,
+    staleTime: 60 * 60_000,
+    gcTime: 30 * 60_000,
+  });
+
+  // Merge: prefer DefeatBeta if available, fall back to EODHD
+  const effectiveDailyBars = allLocalBars.length > 0 ? allLocalBars : eodBars;
+
+  // Fetch hourly bars from EODHD for 1W (replaces Yahoo Finance)
+  const { data: hourlyBars = [], isLoading: hourlyLoading } = useEodhdIntraday(
     externalBars ? undefined : symbol,
     is1W,
   );
 
-  const isLoading = externalBars ? false : (is1W ? hourlyLoading : localLoading);
+  const isLoading = externalBars ? false : (is1W ? hourlyLoading : (localLoading || (needsEodFallback && eodLoading)));
 
   // The cutoff date string for the selected range (used for band colour + visible range).
   // For 1W (hourly data) we fitContent() instead — all fetched data IS the window.
@@ -87,7 +108,7 @@ export function StockChart({
         value: bar.c,
       }));
     }
-    const src: any[] = externalBars ?? allLocalBars;
+    const src: any[] = externalBars ?? effectiveDailyBars;
     return src.map((bar: any) => ({
       time: String(bar.date ?? bar.report_date ?? new Date(bar.ts).toISOString()).slice(0, 10) as string,
       value: Number(bar.adjusted_close ?? bar.close),

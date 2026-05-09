@@ -197,22 +197,131 @@ serve(async (req) => {
     }
 
     // ── Quote endpoint ────────────────────────────────────────────────────────
+    // Yahoo now requires crumb auth here too, so we use the same retry-on-401 flow as chart.
     if (endpoint === "quote") {
-      for (const host of YAHOO_HOSTS) {
-        try {
-          const res = await fetch(
-            `${host}/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`,
-            { headers: YF_HEADERS }
-          );
-          if (!res.ok) continue;
-          const data  = await res.json();
-          const quote = data?.quoteResponse?.result?.[0] ?? null;
-          return new Response(JSON.stringify(quote), {
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        } catch { /* try next host */ }
+      const auth = await getCrumb();
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const crumbParam = auth?.crumb ? `&crumb=${encodeURIComponent(auth.crumb)}` : "";
+        const cookieHdr  = auth?.cookie ? { "Cookie": auth.cookie } : {};
+
+        for (const host of YAHOO_HOSTS) {
+          try {
+            const res = await fetch(
+              `${host}/v7/finance/quote?symbols=${encodeURIComponent(symbol)}${crumbParam}`,
+              { headers: { ...YF_HEADERS, ...cookieHdr } },
+            );
+
+            if (res.status === 401 && attempt === 0) {
+              crumbCache = null;
+              const fresh = await getCrumb();
+              if (fresh) Object.assign(auth ?? {}, fresh);
+              break; // retry outer attempt loop
+            }
+
+            if (!res.ok) continue;
+            const data  = await res.json();
+            const quote = data?.quoteResponse?.result?.[0] ?? null;
+            return new Response(JSON.stringify(quote), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          } catch { /* try next host */ }
+        }
       }
+
       return new Response(JSON.stringify(null), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Quote Summary endpoint (richer fundamentals) ─────────────────────────
+    // Returns pre-flattened fundamentals: PE, EPS, beta, 52W range, dividend yield, market cap.
+    // Uses Yahoo's /v10/finance/quoteSummary which supports the `modules` param.
+    if (endpoint === "quoteSummary") {
+      const modules = url.searchParams.get("modules") ?? "summaryDetail,defaultKeyStatistics,price,financialData";
+      const auth = await getCrumb();
+
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const crumbParam = auth?.crumb ? `&crumb=${encodeURIComponent(auth.crumb)}` : "";
+        const cookieHdr  = auth?.cookie ? { "Cookie": auth.cookie } : {};
+
+        for (const host of YAHOO_HOSTS) {
+          try {
+            const res = await fetch(
+              `${host}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=${encodeURIComponent(modules)}${crumbParam}`,
+              { headers: { ...YF_HEADERS, ...cookieHdr } },
+            );
+
+            if (res.status === 401 && attempt === 0) {
+              crumbCache = null;
+              const fresh = await getCrumb();
+              if (fresh) Object.assign(auth ?? {}, fresh);
+              break;
+            }
+
+            if (!res.ok) continue;
+            const data   = await res.json();
+            const result = data?.quoteSummary?.result?.[0] ?? null;
+            return new Response(JSON.stringify(result), {
+              headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+          } catch { /* try next host */ }
+        }
+      }
+
+      return new Response(JSON.stringify(null), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Perf endpoint — price + 1D/1W/1M/3M % changes ───────────────────────
+    // Returns { price, d1, w1, m1, m3 } — all pct values, null on missing data.
+    // Fetches 3-month daily adjclose (covers ~63 trading days, enough for 3M).
+    if (endpoint === "perf") {
+      const upstream = await fetchChart(symbol, "1d", "3mo");
+
+      const emptyPerf = { price: null, d1: null, w1: null, m1: null, m3: null };
+      if (!upstream) {
+        return new Response(JSON.stringify(emptyPerf), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const data   = await upstream.json();
+      const result = data?.chart?.result?.[0];
+      if (!result) {
+        return new Response(JSON.stringify(emptyPerf), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Prefer adjclose (handles splits), fall back to close
+      const rawCloses: (number | null)[] =
+        result.indicators?.adjclose?.[0]?.adjclose ??
+        result.indicators?.quote?.[0]?.close       ??
+        [];
+      const closes = rawCloses.filter((v): v is number => v != null && isFinite(v));
+
+      const n = closes.length;
+      if (n < 2) {
+        return new Response(JSON.stringify(emptyPerf), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const pct = (curr: number, prev: number | undefined) =>
+        prev == null || prev === 0 ? null : Math.round(((curr / prev) - 1) * 10000) / 100;
+
+      const last = closes[n - 1];
+      const price = result.meta?.regularMarketPrice ?? last;
+
+      return new Response(JSON.stringify({
+        price,
+        d1: pct(last, closes[n - 2]),
+        w1: pct(last, closes[Math.max(0, n - 6)]),
+        m1: pct(last, closes[Math.max(0, n - 22)]),
+        m3: pct(last, closes[0]),
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

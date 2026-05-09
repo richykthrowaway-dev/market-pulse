@@ -102,6 +102,30 @@ serve(async (req) => {
         });
       }
       finnhubUrl = `${FINNHUB_BASE}/search?q=${encodeURIComponent(q)}&token=${apiKey}`;
+    } else if (endpoint === "basic-financials") {
+      if (!symbol) {
+        return new Response(JSON.stringify({ error: "symbol param required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      finnhubUrl = `${FINNHUB_BASE}/stock/basic-financials?symbol=${encodeURIComponent(symbol)}&metric=all&token=${apiKey}`;
+    } else if (endpoint === "recommendation") {
+      if (!symbol) {
+        return new Response(JSON.stringify({ error: "symbol param required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      finnhubUrl = `${FINNHUB_BASE}/stock/recommendation?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`;
+    } else if (endpoint === "earnings") {
+      if (!symbol) {
+        return new Response(JSON.stringify({ error: "symbol param required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      finnhubUrl = `${FINNHUB_BASE}/stock/earnings?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`;
     } else {
       return new Response(JSON.stringify({ error: `Unknown endpoint: ${endpoint}` }), {
         status: 400,

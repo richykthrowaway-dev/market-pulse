@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { TradingViewProvider } from "@/components/tradingview";
 import { StatementProvider } from "@/contexts/StatementContext";
+import { NavbarSlotProvider } from "@/contexts/NavbarSlotContext";
 import { queryClientDefaults } from "@/config/queryDefaults";
 import { initBatchQuoteService } from "@/services/batchQuoteService";
 import Index from "./pages/Index";
@@ -39,6 +40,7 @@ const App = () => (
       <TooltipProvider>
         <TradingViewProvider>
           <StatementProvider>
+            <NavbarSlotProvider>
             <Toaster />
             <Sonner />
             <BrowserRouter>
@@ -62,6 +64,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
+            </NavbarSlotProvider>
           </StatementProvider>
         </TradingViewProvider>
       </TooltipProvider>

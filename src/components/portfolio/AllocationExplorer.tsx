@@ -1,6 +1,6 @@
 /**
  * AllocationExplorer — tabbed grouping of portfolio holdings by
- * Sector | Country | Market Cap | Investment Style.
+ * Position | Sector | Sub-Industry | Country | Market Cap | Investment Style.
  *
  * To add a new grouping key later, add an entry to GROUPING_KEYS and
  * implement the classifier in `classifyHolding`.
@@ -9,7 +9,13 @@
 import React, { useMemo, useState, useCallback } from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
-import { getCategoryColor, normalizeSector } from '@/lib/gicsColors';
+import {
+  getCategoryColor,
+  normalizeSector,
+  sectorForSubIndustry,
+  sectorForIndustryGroup,
+  industryGroupForIndustry,
+} from '@/lib/gicsColors';
 import { SectorBadge } from '@/components/ui/SectorBadge';
 import { StockLogo } from '@/components/stocks/StockLogo';
 
@@ -27,14 +33,32 @@ export interface AllocationHolding {
 export interface SymbolMeta {
   sector: string;
   country: string;
+  /** GICS Sub-Industry (163 classifications, most granular level) */
   subIndustry: string;
+  /** GICS Industry (74 classifications, level 3) */
+  gicsIndustry?: string;
+  /** GICS Industry Group (25 classifications, level 2) */
+  gicsIndustryGroup?: string;
   marketCap?: number;
-  style?: 'Value' | 'Growth' | 'Core';
+  /**
+   * User-defined trade style — set in the Style editor on the holdings table.
+   * Persisted in `user_ticker_styles` so it survives portfolio re-imports.
+   * 'Unclassified' when the user hasn't set one yet.
+   */
+  tradeStyle?: 'Swing' | 'Day Trade' | 'Long Term Hold' | 'Unclassified';
+  /** Freeform reasoning attached to the trade style. */
+  tradeNote?: string;
+  /** User-defined take-profit price target, same currency as holding. */
+  priceTarget?: number | null;
+  /** User-defined stop-loss price, same currency as holding. */
+  stopLoss?: number | null;
+  /** ISO date string (YYYY-MM-DD) of when the position was entered. */
+  entryDate?: string | null;
   isEtf?: boolean;
 }
 
 /** Add new grouping keys here — the rest adapts automatically. */
-const GROUPING_KEYS = ['Position', 'Sector', 'Country', 'Market Cap', 'Style'] as const;
+const GROUPING_KEYS = ['Position', 'Sector', 'Sub-Industry', 'Country', 'Market Cap', 'Style'] as const;
 export type GroupingKey = (typeof GROUPING_KEYS)[number];
 
 export type SortCol = 'group' | 'weightPct' | 'holdingCount';
@@ -50,7 +74,14 @@ const MARKET_CAP_TIERS = [
 ] as const;
 
 function classifyMarketCap(mc: number | undefined): string {
-  if (mc == null || mc <= 0) return 'Unknown';
+  // Never return 'Unknown' — when no market-cap data is available, assume
+  // Micro Cap. This is statistically the right prior because the only
+  // tickers that escape both the DB cache AND FMP's ~30K-stock universe
+  // are obscure micro-caps (Canadian Venture, OTC pinks, freshly listed
+  // SPACs, delisted symbols). Defaulting to Micro Cap produces a real,
+  // sortable, colorable bucket instead of a black-hole "Unknown" tier
+  // that the user can't reason about.
+  if (mc == null || mc <= 0) return 'Micro Cap';
   for (const tier of MARKET_CAP_TIERS) {
     if (mc >= tier.min) return tier.label;
   }
@@ -69,12 +100,29 @@ export function classifyHolding(
     case 'Sector':
       if (meta!.isEtf) return 'ETFs';
       return normalizeSector(meta!.sector || 'Other');
+    case 'Sub-Industry':
+      if (meta!.isEtf) return 'ETFs';
+      // GICS hierarchy fallback chain (most → least granular):
+      //   sub-industry (163) → industry (74) → industry group (25) → sector (11)
+      // We never want a holding to display the bare sector here — the user is
+      // explicitly asking for finer-grained classification. Going industry-first
+      // means a software company shows "Application Software" or "Software"
+      // rather than collapsing into "Information Technology" with 14 siblings.
+      return (
+        meta!.subIndustry ||
+        meta!.gicsIndustry ||
+        meta!.gicsIndustryGroup ||
+        normalizeSector(meta!.sector || 'Other')
+      );
     case 'Country':
       return meta!.country || 'Unknown';
     case 'Market Cap':
       return classifyMarketCap(meta!.marketCap);
     case 'Style':
-      return meta!.style || 'Core';
+      // User-defined trade style; default to 'Unclassified' so holdings without
+      // a user annotation still appear in the chart as a real bucket the user
+      // can spot and act on (e.g. "23 unclassified holdings — go tag them").
+      return meta!.tradeStyle || 'Unclassified';
     default:
       return 'Other';
   }
@@ -88,6 +136,30 @@ export function groupColor(key: GroupingKey, groupName: string, meta?: SymbolMet
       return getCategoryColor('sector', meta?.isEtf ? 'ETFs' : (meta?.sector ?? ''));
     case 'Sector':
       return getCategoryColor('sector', groupName);
+    case 'Sub-Industry': {
+      // The Sub-Industry tab can display any of four GICS levels depending on
+      // what data is available for the holding. Try each walk-up in order so
+      // we always anchor to the correct parent-sector color:
+      //   1. sub-industry → industry → industry group → sector
+      //   2. industry      → industry group → sector
+      //   3. industry group → sector
+      //   4. raw sector name (last-resort fallback)
+      if (groupName === 'ETFs') return getCategoryColor('sector', 'ETFs');
+      const fromSubIndustry = sectorForSubIndustry(groupName);
+      if (fromSubIndustry) return getCategoryColor('sector', fromSubIndustry);
+
+      const parentGroup = industryGroupForIndustry(groupName);
+      if (parentGroup) {
+        const sec = sectorForIndustryGroup(parentGroup);
+        if (sec) return getCategoryColor('sector', sec);
+      }
+
+      const fromGroup = sectorForIndustryGroup(groupName);
+      if (fromGroup) return getCategoryColor('sector', fromGroup);
+
+      // Last resort: maybe groupName is itself a sector (unenriched fallback)
+      return getCategoryColor('sector', groupName);
+    }
     case 'Country':
       return getCategoryColor('country', groupName);
     case 'Market Cap':
@@ -239,9 +311,9 @@ export function AllocationExplorer({
   if (holdings.length === 0) return null;
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3 h-full">
       {/* Summary stats + tab pills */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
+      <div className="flex items-center justify-between gap-2 flex-wrap shrink-0">
         <div className="flex items-baseline gap-5">
           <div>
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Market Value</p>
@@ -282,20 +354,20 @@ export function AllocationExplorer({
         </div>
       </div>
 
-      {/* Donut chart + breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-3 items-start">
-        {/* Donut */}
-        <div className="h-[400px] flex-shrink-0" aria-hidden="true">
+      {/* Donut chart + breakdown — flex-1 consumes the fixed card height minus the stats row */}
+      <div className="flex-1 min-h-0 flex flex-col md:flex-row gap-2">
+        {/* Donut — 60% width on desktop; zero PieChart margin removes Recharts' built-in padding */}
+        <div className="h-[340px] md:h-auto md:flex-[3] min-w-0" aria-hidden="true">
           <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
+            <PieChart margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
               <Pie
                 data={sorted}
                 dataKey="totalValue"
                 nameKey="group"
                 cx="50%"
                 cy="50%"
-                innerRadius={70}
-                outerRadius={160}
+                innerRadius={90}
+                outerRadius={190}
                 strokeWidth={1.5}
                 stroke="hsl(var(--card))"
                 minAngle={2}
@@ -336,25 +408,25 @@ export function AllocationExplorer({
           </ResponsiveContainer>
         </div>
 
-        {/* Breakdown: legend in Position mode, sortable table otherwise */}
-        <div className="overflow-x-auto overflow-y-auto max-h-[400px]" role="tabpanel" aria-label={`${activeKey} allocation breakdown`}>
+        {/* Breakdown: legend in Position mode, sortable table otherwise — 40% width on desktop */}
+        <div className="md:flex-[2] overflow-x-auto overflow-y-auto min-w-0" role="tabpanel" aria-label={`${activeKey} allocation breakdown`}>
           {isPositionMode ? (
             <div className="space-y-0.5">
               {sorted.map((row) => (
-                <div key={row.group} className="flex items-center gap-2">
+                <div key={row.group} className="flex items-center gap-2 py-0.5">
                   <StockLogo ticker={row.group} exchange={holdings.find(h => h.ticker === row.group)?.exchange} country={symbolInfo[row.group]?.country} size="sm" className="ring-0 bg-transparent" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-mono font-medium truncate">{row.group}</span>
-                      <span className="text-xs font-mono text-muted-foreground ml-2">{row.weightPct.toFixed(1)}%</span>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-mono font-medium">{row.group}</span>
+                      <span className="text-xs font-mono text-muted-foreground tabular-nums">{row.weightPct.toFixed(1)}%</span>
+                      <span
+                        className="h-2 w-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: row.color }}
+                        aria-label={symbolInfo[row.group]?.sector || ''}
+                      />
                     </div>
-                    <p className="text-[10px] text-muted-foreground truncate">{row.subIndustry || ''}</p>
+                    <p className="text-[10px] text-muted-foreground truncate leading-tight">{row.subIndustry || ''}</p>
                   </div>
-                  <span
-                    className="h-2 w-2 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: row.color }}
-                    aria-label={symbolInfo[row.group]?.sector || ''}
-                  />
                 </div>
               ))}
             </div>
@@ -407,7 +479,7 @@ export function AllocationExplorer({
 
       {/* Active filter indicator */}
       {selectedGroup && (
-        <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1 border-t border-border">
+        <div className="shrink-0 flex items-center gap-2 text-xs text-muted-foreground pt-1 border-t border-border">
           <span>
             Filtering by <strong className="text-foreground">{displayGroupName(selectedGroup)}</strong>
           </span>

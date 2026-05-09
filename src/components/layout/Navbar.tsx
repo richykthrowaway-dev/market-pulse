@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { StockSearch } from '@/components/search/StockSearch';
+import { useNavbarSlot } from '@/contexts/NavbarSlotContext';
 
 interface NavbarProps {
   className?: string;
@@ -16,6 +17,7 @@ export function Navbar({ className }: NavbarProps) {
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
   const isDark = mounted && resolvedTheme === 'dark';
+  const { slot } = useNavbarSlot();
 
   return (
     <header className={cn("bg-background/95 backdrop-blur-sm sticky top-0 z-30 border-b", className)}>
@@ -51,6 +53,9 @@ export function Navbar({ className }: NavbarProps) {
               <User className="h-5 w-5" />
             </AvatarFallback>
           </Avatar>
+
+          {/* Page-injected slot — Portfolio uses this for the Link/Unlink sort button */}
+          {slot && <div className="flex items-center">{slot}</div>}
         </div>
       </div>
     </header>

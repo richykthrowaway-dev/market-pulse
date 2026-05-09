@@ -113,26 +113,148 @@ export function useHistoricalPrices(symbol: string | undefined, days = 365) {
   });
 }
 
-// ── Yahoo Hourly Bars (for 1W intraday charts) ─────────────────────────────
+// ── EODHD Intraday Bars (replaces Yahoo hourly) ───────────────────────────────
 
-import { fetchYahooChart, type YahooBar } from '@/services/yahooFinanceApi';
+import {
+  fetchEodIntraday,
+  fetchEodNews,
+  fetchEodDividends,
+  fetchEodSplits,
+  fetchEodTechnical,
+  fetchEodEconomicEvents,
+  fetchEodInsiderTransactions,
+  type EodIntradayBar,
+  type EodNewsItem,
+  type EodDividend,
+  type EodSplit,
+  type EodTechnicalPoint,
+  type EodMacdPoint,
+  type EodTechnicalFunction,
+  type EodEconomicEvent,
+  type EodInsiderTransaction,
+} from '@/services/eodhdApi';
 
 /**
- * Fetch hourly OHLCV bars from Yahoo Finance via the api-yahoo edge function.
- * Used for the 1-week timeframe where daily bars are too coarse.
- *
- * @param symbol  Ticker (e.g. "AAPL")
- * @param enabled Whether to fetch (e.g. only when 1W is selected)
+ * Fetch hourly intraday bars from EODHD.
+ * Drop-in replacement for the old useYahooHourlyBars.
+ * Returns bars shaped identically to the old YahooBar interface so
+ * StockChart.tsx needs minimal changes.
  */
-export function useYahooHourlyBars(symbol: string | undefined, enabled = true) {
+export function useEodhdIntraday(symbol: string | undefined, enabled = true) {
   return useQuery({
-    queryKey: ['yahoo-hourly', symbol],
-    queryFn: () => fetchYahooChart(symbol!, '1h', '7d'),
+    queryKey: ['eodhd-intraday', symbol],
+    queryFn: async () => {
+      // EODHD intraday needs the .US suffix for US stocks
+      const eodSymbol = symbol!.includes('.') ? symbol! : `${symbol}.US`;
+      const bars = await fetchEodIntraday(eodSymbol, '1h');
+      // Normalise to the { t, o, h, l, c, v } shape StockChart expects
+      return bars.map((b: EodIntradayBar) => ({
+        t: b.timestamp,
+        o: b.open,
+        h: b.high,
+        l: b.low,
+        c: b.close,
+        v: b.volume,
+      }));
+    },
     enabled: enabled && !!symbol,
-    staleTime: 15 * 60_000,  // 15 min — intraday data
-    gcTime: 10 * 60_000,
-    refetchOnWindowFocus: false, // avoid jank when user tabs back to the page
-    select: (bars: YahooBar[]) => bars,
+    staleTime: 10 * 60_000,
+    gcTime:    10 * 60_000,
+    refetchOnWindowFocus: false,
+  });
+}
+
+/** @deprecated Use useEodhdIntraday instead */
+export const useYahooHourlyBars = useEodhdIntraday;
+
+// ── EODHD News ────────────────────────────────────────────────────────────────
+
+export function useEodhdNews(symbol?: string, limit = 50) {
+  return useQuery({
+    queryKey: ['eodhd', 'news', symbol ?? 'market', limit],
+    queryFn:  () => fetchEodNews(symbol, limit),
+    staleTime: 5 * 60_000,
+    gcTime:   10 * 60_000,
+  });
+}
+
+// ── EODHD Dividends ───────────────────────────────────────────────────────────
+
+export function useEodhdDividends(symbol: string | undefined) {
+  return useQuery({
+    queryKey: ['eodhd', 'dividends', symbol],
+    queryFn:  () => {
+      const eodSymbol = symbol!.includes('.') ? symbol! : `${symbol}.US`;
+      return fetchEodDividends(eodSymbol);
+    },
+    enabled:   !!symbol,
+    staleTime: 24 * 60 * 60_000,
+    gcTime:    24 * 60 * 60_000,
+  });
+}
+
+// ── EODHD Splits ──────────────────────────────────────────────────────────────
+
+export function useEodhdSplits(symbol: string | undefined) {
+  return useQuery({
+    queryKey: ['eodhd', 'splits', symbol],
+    queryFn:  () => {
+      const eodSymbol = symbol!.includes('.') ? symbol! : `${symbol}.US`;
+      return fetchEodSplits(eodSymbol);
+    },
+    enabled:   !!symbol,
+    staleTime: 24 * 60 * 60_000,
+    gcTime:    24 * 60 * 60_000,
+  });
+}
+
+// ── EODHD Technical Indicators ────────────────────────────────────────────────
+
+export function useEodhdTechnical(
+  symbol: string | undefined,
+  fn: EodTechnicalFunction,
+  period = 14,
+  from?: string,
+) {
+  return useQuery({
+    queryKey: ['eodhd', 'technical', symbol, fn, period, from],
+    queryFn:  () => {
+      const eodSymbol = symbol!.includes('.') ? symbol! : `${symbol}.US`;
+      return fetchEodTechnical(eodSymbol, fn, period, from);
+    },
+    enabled:   !!symbol,
+    staleTime: 60 * 60_000,
+    gcTime:    60 * 60_000,
+  });
+}
+
+// ── EODHD Economic Events ─────────────────────────────────────────────────────
+
+export function useEodhdEconomicEvents(
+  country = 'US',
+  from?: string,
+  to?: string,
+) {
+  return useQuery({
+    queryKey: ['eodhd', 'economic-events', country, from, to],
+    queryFn:  () => fetchEodEconomicEvents(country, from, to),
+    staleTime: 60 * 60_000,
+    gcTime:    60 * 60_000,
+  });
+}
+
+// ── EODHD Insider Transactions ────────────────────────────────────────────────
+
+export function useEodhdInsider(symbol: string | undefined, limit = 50) {
+  return useQuery({
+    queryKey: ['eodhd', 'insider', symbol, limit],
+    queryFn:  () => {
+      const eodSymbol = symbol!.includes('.') ? symbol! : `${symbol}.US`;
+      return fetchEodInsiderTransactions(eodSymbol, limit);
+    },
+    enabled:   !!symbol,
+    staleTime: 24 * 60 * 60_000,
+    gcTime:    24 * 60 * 60_000,
   });
 }
 
