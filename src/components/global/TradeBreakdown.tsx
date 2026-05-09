@@ -1,33 +1,29 @@
 import { useMemo } from 'react';
 import { ArrowUpRight, ArrowDownRight, Package } from 'lucide-react';
 import { useTradeBreakdown, type TradeProduct, type TradeDirection } from '@/hooks/useTradeBreakdown';
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import {
+  WITS_SECTION_DISPLAY,
+  WITS_SECTION_CHAPTERS,
+  chapterName,
+} from '@/lib/hsChapters';
 import { cn } from '@/lib/utils';
 
 interface TradeBreakdownProps {
   iso2: string;
 }
 
-// ── Product → color mapping ──────────────────────────────────────────
-// Stable hash so the same product code always gets the same color
-// across countries. Users learn the palette: Fuels is always orange,
-// Mach+Elec is always blue, etc.
+// ── Stable per-product color ──────────────────────────────────────────
+// Hash so the same code always gets the same color across countries.
 const PALETTE = [
-  '#3b82f6', // blue-500    — large industrial categories
-  '#10b981', // emerald-500
-  '#f59e0b', // amber-500   — fuels-ish
-  '#ef4444', // red-500
-  '#8b5cf6', // violet-500
-  '#06b6d4', // cyan-500
-  '#ec4899', // pink-500
-  '#84cc16', // lime-500
-  '#f97316', // orange-500
-  '#a855f7', // purple-500
-  '#14b8a6', // teal-500
-  '#dc2626', // red-600
-  '#0ea5e9', // sky-500
-  '#22c55e', // green-500
-  '#eab308', // yellow-500
-  '#d946ef', // fuchsia-500
+  '#3b82f6', '#10b981', '#f59e0b', '#ef4444',
+  '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16',
+  '#f97316', '#a855f7', '#14b8a6', '#dc2626',
+  '#0ea5e9', '#22c55e', '#eab308', '#d946ef',
 ];
 
 function colorFor(code: string): string {
@@ -47,7 +43,87 @@ function formatUsdCompact(value: number): string {
   return `$${value.toLocaleString()}`;
 }
 
+/**
+ * Friendlier section display name. Falls back to a paraphrase of the
+ * raw WITS code (`27-27_Fuels` → `Fuels`) when the section isn't in
+ * our explicit display map.
+ */
+function displaySectionName(code: string): string {
+  return WITS_SECTION_DISPLAY[code] ?? code.replace(/^[\d-]+_/, '').replace(/([A-Z])/g, ' $1').trim();
+}
+
 // ── Sub-components ────────────────────────────────────────────────────
+
+interface SectionDrillDownProps {
+  section: TradeProduct;
+  chapters: TradeProduct[];   // already filtered to this section's chapters
+  direction: TradeDirection;
+}
+
+/**
+ * The HoverCard content shown when the user hovers over a section
+ * segment or its legend row. Lists the top HS 2-digit chapters within
+ * that section, with their share OF THE SECTION (renormalised so the
+ * top chapters sum to ~100% within the popover, not against world total).
+ */
+function SectionDrillDown({ section, chapters, direction }: SectionDrillDownProps) {
+  const fullName = displaySectionName(section.code);
+
+  if (chapters.length === 0) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between gap-2 pb-1 border-b border-border">
+          <span className="font-semibold text-sm">{fullName}</span>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {(section.share * 100).toFixed(1)}% of {direction}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground italic">
+          Subcategory data not available for this section.
+        </p>
+      </div>
+    );
+  }
+
+  // Top 6 chapters within the section
+  const top = chapters.slice(0, 6);
+  const sectionTotal = chapters.reduce((s, c) => s + c.valueUsd, 0);
+
+  return (
+    <div className="space-y-2 min-w-[260px] max-w-[320px]">
+      <div className="flex items-baseline justify-between gap-2 pb-1 border-b border-border">
+        <span className="font-semibold text-sm">{fullName}</span>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {(section.share * 100).toFixed(1)}% of {direction}
+        </span>
+      </div>
+      <p className="text-[10px] text-muted-foreground -mt-1">
+        ${(sectionTotal / 1e9).toFixed(1)}B total · top {top.length} of {chapters.length} HS chapters
+      </p>
+      <div className="space-y-1">
+        {top.map((c) => {
+          const shareWithinSection = sectionTotal > 0 ? c.valueUsd / sectionTotal : 0;
+          return (
+            <div key={c.code} className="flex items-center gap-2 text-xs">
+              <span className="font-mono text-[10px] text-muted-foreground w-7 shrink-0">
+                HS {c.code.padStart(2, '0')}
+              </span>
+              <span
+                className="flex-1 min-w-0 truncate text-foreground/90"
+                title={chapterName(c.code)}
+              >
+                {chapterName(c.code)}
+              </span>
+              <span className="tabular-nums text-muted-foreground shrink-0 w-12 text-right">
+                {(shareWithinSection * 100).toFixed(1)}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 interface BreakdownPanelProps {
   title: string;
@@ -57,22 +133,47 @@ interface BreakdownPanelProps {
 }
 
 function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
-  const { data, isLoading } = useTradeBreakdown(iso2, direction);
+  // Section-level data drives the headline bar.
+  const { data: sectionData, isLoading: sectionLoading } =
+    useTradeBreakdown(iso2, direction, 'section');
+  // Chapter-level data populates the hover drill-downs. Loaded in parallel
+  // so it's already cached by the time the user hovers — no UI lag.
+  const { data: chapterData } =
+    useTradeBreakdown(iso2, direction, 'chapter');
+
+  // Group the chapter-level data by section using the static
+  // WITS_SECTION_CHAPTERS map so we can pass the right slice to each
+  // section's HoverCard.
+  const chaptersBySection = useMemo(() => {
+    const map = new Map<string, TradeProduct[]>();
+    if (!chapterData?.products) return map;
+    const byCode = new Map<string, TradeProduct>();
+    for (const p of chapterData.products) byCode.set(p.code.padStart(2, '0'), p);
+    for (const [sectionCode, chapterCodes] of Object.entries(WITS_SECTION_CHAPTERS)) {
+      const list: TradeProduct[] = [];
+      for (const c of chapterCodes) {
+        const found = byCode.get(c);
+        if (found && found.valueUsd > 0) list.push(found);
+      }
+      list.sort((a, b) => b.valueUsd - a.valueUsd);
+      map.set(sectionCode, list);
+    }
+    return map;
+  }, [chapterData]);
 
   // Group long tail (rank 6+) into a single "Other" bucket so the visible
-  // bar segments stay readable. The labeled list shows top 5 by name +
-  // "Other" with combined share.
+  // bar segments stay readable. The labeled list shows top 5 + "Other".
   const { topProducts, otherShare, otherValue } = useMemo(() => {
-    const products = data?.products ?? [];
+    const products = sectionData?.products ?? [];
     const TOP_N = 5;
     const top = products.slice(0, TOP_N);
     const rest = products.slice(TOP_N);
     const otherShare = rest.reduce((s, r) => s + r.share, 0);
     const otherValue = rest.reduce((s, r) => s + r.valueUsd, 0);
     return { topProducts: top, otherShare, otherValue };
-  }, [data]);
+  }, [sectionData]);
 
-  if (isLoading) {
+  if (sectionLoading) {
     return (
       <div className="space-y-2">
         <PanelHeader title={title} icon={icon} />
@@ -86,7 +187,7 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
     );
   }
 
-  if (!data || data.products.length === 0) {
+  if (!sectionData || sectionData.products.length === 0) {
     return (
       <div className="space-y-2">
         <PanelHeader title={title} icon={icon} />
@@ -97,28 +198,40 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
     );
   }
 
-  const total = data.totalUsd ?? 0;
-  const year = data.year;
+  const total = sectionData.totalUsd ?? 0;
+  const year = sectionData.year;
 
   return (
     <div className="space-y-2">
       <PanelHeader title={title} icon={icon} year={year} total={total} />
 
-      {/* Stacked bar — one segment per top product, last segment = Other */}
+      {/* Stacked bar — each segment is a HoverCard trigger that shows
+          the chapter breakdown for that section. */}
       <div
-        className="flex h-3 w-full overflow-hidden rounded-md bg-muted/30"
+        className="flex h-4 w-full overflow-hidden rounded-md bg-muted/30"
         role="img"
         aria-label={`${title} composition for ${iso2}`}
       >
         {topProducts.map((p) => (
-          <div
-            key={p.code}
-            style={{
-              width: `${p.share * 100}%`,
-              backgroundColor: colorFor(p.code),
-            }}
-            title={`${p.name}: ${(p.share * 100).toFixed(1)}% (${formatUsdCompact(p.valueUsd)})`}
-          />
+          <HoverCard key={p.code} openDelay={150} closeDelay={50}>
+            <HoverCardTrigger asChild>
+              <div
+                style={{
+                  width: `${p.share * 100}%`,
+                  backgroundColor: colorFor(p.code),
+                }}
+                className="cursor-help transition-opacity hover:opacity-80"
+                aria-label={`${displaySectionName(p.code)}: ${(p.share * 100).toFixed(1)}%`}
+              />
+            </HoverCardTrigger>
+            <HoverCardContent side="top" align="center" className="p-3">
+              <SectionDrillDown
+                section={p}
+                chapters={chaptersBySection.get(p.code) ?? []}
+                direction={direction}
+              />
+            </HoverCardContent>
+          </HoverCard>
         ))}
         {otherShare > 0.001 && (
           <div
@@ -129,16 +242,38 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
         )}
       </div>
 
-      {/* Two-column legend listing top products */}
+      {/* Two-column legend — also HoverCard-enabled so users can hover
+          the legend row instead of trying to hit a thin bar segment. */}
       <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-xs">
         {topProducts.map((p) => (
-          <ProductRow key={p.code} product={p} />
+          <HoverCard key={p.code} openDelay={150} closeDelay={50}>
+            <HoverCardTrigger asChild>
+              <div className="flex items-center gap-1.5 min-w-0 cursor-help rounded px-1 -mx-1 hover:bg-muted/40 transition-colors">
+                <span
+                  className="inline-block w-2 h-2 rounded-sm shrink-0"
+                  style={{ backgroundColor: colorFor(p.code) }}
+                />
+                <span className="truncate text-foreground/90">
+                  {displaySectionName(p.code)}
+                </span>
+                <span className="ml-auto tabular-nums text-muted-foreground shrink-0">
+                  {(p.share * 100).toFixed(1)}%
+                </span>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent side="top" align="start" className="p-3">
+              <SectionDrillDown
+                section={p}
+                chapters={chaptersBySection.get(p.code) ?? []}
+                direction={direction}
+              />
+            </HoverCardContent>
+          </HoverCard>
         ))}
         {otherShare > 0.001 && (
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0 px-1 -mx-1">
             <span
-              className="inline-block w-2 h-2 rounded-sm shrink-0"
-              style={{ backgroundColor: 'hsl(var(--muted-foreground) / 0.4)' }}
+              className="inline-block w-2 h-2 rounded-sm shrink-0 bg-muted-foreground/40"
             />
             <span className="truncate text-muted-foreground">Other</span>
             <span className="ml-auto tabular-nums text-muted-foreground shrink-0">
@@ -147,26 +282,6 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function ProductRow({ product }: { product: TradeProduct }) {
-  return (
-    <div className="flex items-center gap-1.5 min-w-0">
-      <span
-        className="inline-block w-2 h-2 rounded-sm shrink-0"
-        style={{ backgroundColor: colorFor(product.code) }}
-      />
-      <span
-        className="truncate text-foreground/90"
-        title={product.name}
-      >
-        {product.name}
-      </span>
-      <span className="ml-auto tabular-nums text-muted-foreground shrink-0">
-        {(product.share * 100).toFixed(1)}%
-      </span>
     </div>
   );
 }
@@ -201,16 +316,15 @@ function PanelHeader({ title, icon, year, total }: PanelHeaderProps) {
 
 /**
  * Side-by-side product-composition visualization for a country's
- * exports and imports. Lives in the Economy tab below the World Bank
- * trade snapshot and above the EODHD economic calendar.
+ * exports and imports.
  *
- * For each direction:
- *   - A stacked horizontal bar showing the top 5 product categories
- *     plus an "Other" bucket
- *   - A 2-column legend listing each segment with its % share
- *
- * Returns null only when BOTH directions have no data (e.g. small
- * territories not in WITS' reporter list).
+ * Each side shows a stacked horizontal bar with the top 5 HS Section
+ * categories (sourced from World Bank WITS) plus an "Other" bucket
+ * for the long tail. Hovering over a section reveals a popover with
+ * the top HS 2-digit chapters within that section (sourced from UN
+ * Comtrade preview), so the user can see e.g. that "Machinery &
+ * Electronics" breaks down into "Industrial machinery (HS 84): 53%,
+ * Electrical equipment (HS 85): 47%" of that section's value.
  */
 export function TradeBreakdown({ iso2 }: TradeBreakdownProps) {
   return (
@@ -218,7 +332,7 @@ export function TradeBreakdown({ iso2 }: TradeBreakdownProps) {
       <div className="flex items-center gap-1.5 text-muted-foreground pb-1">
         <Package className="w-3.5 h-3.5 shrink-0" />
         <span className="text-[10px] font-semibold uppercase tracking-wide">
-          Trade Composition · World Bank WITS
+          Trade Composition · World Bank WITS &amp; UN Comtrade
         </span>
       </div>
 

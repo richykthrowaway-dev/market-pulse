@@ -31,15 +31,13 @@ export interface TradeBreakdown {
 }
 
 /**
- * Fetch a country's product-level export or import breakdown from the
- * World Bank's WITS Trade Stats API (proxied through our `api-wits`
- * edge function which handles SDMX parsing).
+ * Fetch a country's product-level trade breakdown from the api-wits
+ * edge function (proxies WITS for sections, Comtrade for chapters).
  *
- * The product breakdown uses HS Sections (`01-05_Animal`, `27-27_Fuels`,
- * `84-85_MachElec`, etc.) — ~16 mutually-exclusive categories that
- * partition all merchandise trade. Aggregates like "Total" and
- * "Manufactures" are filtered out server-side so percentages always
- * sum to ~100%.
+ * @param level  'section' (default, ~16 broad HS Section categories from
+ *               WITS — fastest, drives the headline stacked bar) or
+ *               'chapter' (~99 HS 2-digit chapters from Comtrade — used
+ *               by hover drill-downs to show what's inside each section).
  *
  * Cached 24 hours: trade data publishes annually with a 1-2 year lag,
  * so a fresh fetch within a day is wasteful.
@@ -47,11 +45,12 @@ export interface TradeBreakdown {
 export function useTradeBreakdown(
   iso2: string | null,
   direction: TradeDirection,
+  level: 'section' | 'chapter' = 'section',
 ) {
   const iso3 = toIso3(iso2);
 
   return useQuery<TradeBreakdown>({
-    queryKey: ['trade-breakdown', iso3, direction],
+    queryKey: ['trade-breakdown', iso3, direction, level],
     enabled: !!iso3,
     staleTime:            24 * 60 * 60_000,
     gcTime:               48 * 60 * 60_000,
@@ -62,7 +61,7 @@ export function useTradeBreakdown(
       };
       if (!iso3) return empty;
 
-      const params = new URLSearchParams({ reporter: iso3, direction });
+      const params = new URLSearchParams({ reporter: iso3, direction, level });
       const url = `${ENDPOINT}?${params}`;
 
       try {
