@@ -41,12 +41,14 @@ const NASA_TYCHO_SKYMAP_URL =
 //      shader feeling like it has light to work with.
 //   3. Strong vignette — anchors the eye toward the globe at center.
 const SPACE_OVERLAY = [
-  // Backlight halo behind the globe (front layer)
-  "radial-gradient(circle at 50% 50%, rgba(80,135,200,0.10) 0%, rgba(40,80,140,0.06) 18%, transparent 42%)",
+  // Backlight halo behind the globe (front layer) — alphas reduced 25%
+  // (0.10 → 0.075, 0.06 → 0.045) to tone down the aura around the Earth.
+  "radial-gradient(circle at 50% 50%, rgba(80,135,200,0.075) 0%, rgba(40,80,140,0.045) 18%, transparent 42%)",
   // Strong vignette
   "radial-gradient(ellipse at 50% 50%, transparent 28%, rgba(0,0,0,0.60) 78%, rgba(0,0,0,0.85) 100%)",
-  // Heavy darkening tint over the photo
-  "linear-gradient(rgba(0,0,2,0.62), rgba(0,0,2,0.62))",
+  // Darkening tint — dropped from 0.62 → 0.45 so the Milky Way band of
+  // the NASA photo reads more clearly through the overlay.
+  "linear-gradient(rgba(0,0,2,0.45), rgba(0,0,2,0.45))",
 ].join(",");
 
 

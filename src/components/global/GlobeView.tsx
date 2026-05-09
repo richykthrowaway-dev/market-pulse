@@ -696,11 +696,12 @@ export default function GlobeView({
         // terrain depth. Both served from jsDelivr's edge cache.
         globeImageUrl={EARTH_TEXTURE_URL}
         bumpImageUrl={EARTH_BUMP_URL}
-        // Atmosphere tuned for daylight Earth — slightly warmer blue, taller
-        // shell so the limb glow reads against the dark space backdrop.
+        // Atmosphere tuned for daylight Earth — slightly warmer blue.
+        // Shell altitude reduced 25% (0.22 → 0.165) per user request to
+        // tone down the prominent rim glow around the planet.
         showAtmosphere
         atmosphereColor="#7eb6ff"
-        atmosphereAltitude={0.22}
+        atmosphereAltitude={0.165}
         // animateIn DISABLED — react-globe.gl's intro animation runs a 1200ms
         // scene-rotation tween with Quintic.Out easing on init. It directly
         // rotates state.scene.setRotationFromAxisAngle(...) every frame,
