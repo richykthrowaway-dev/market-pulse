@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Search, BarChart3, TrendingUp, Users, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
 import { fetchEodFundamentals, type EodFundamentals } from '@/services/eodhdApi';
+import { EarningsBeatsChart } from './EarningsBeatsChart';
 import { cn } from '@/lib/utils';
 
 // ── Format helpers ────────────────────────────────────────────────────
@@ -281,6 +282,12 @@ function ResultCard({ data }: { data: EodFundamentals }) {
           <MetricRow label="Institutions"      value={fmtRawPercent(ss?.PercentInstitutions)} />
         </MetricGroup>
       </div>
+
+      {/* Earnings beats history — sourced from the same fundamentals
+          payload above, so this section adds 0 EODHD credits. Renders
+          null automatically if the company has insufficient earnings
+          history (e.g. recent IPOs, ETFs). */}
+      <EarningsBeatsChart data={data} />
     </div>
   );
 }
