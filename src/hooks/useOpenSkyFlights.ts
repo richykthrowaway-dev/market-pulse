@@ -70,7 +70,7 @@ export type FlightStatus =
  * In dev, vite.config.ts proxies /api/opensky → opensky-network.org/api/states/all.
  * In production, api/opensky.ts (Vercel serverless function) handles the call.
  */
-const OPENSKY_BASE_URL   = '/api/opensky';
+const OPENSKY_BASE_URL   = 'https://fzokumkbgvwsyftwwprx.functions.supabase.co/api-opensky';
 const OPENSKY_TOKEN_URL  = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
 /**
  * 60 s polling — conservative but correct for anonymous users.
