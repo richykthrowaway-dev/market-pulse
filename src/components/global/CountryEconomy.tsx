@@ -5,6 +5,7 @@ import { useEodhdEconomicEvents, type EodhdEconomicEvent } from '@/hooks/useEodh
 import { TradingViewEconomicCalendar } from '@/components/tradingview/TradingViewEconomicCalendar';
 import { TradeSnapshot } from './TradeSnapshot';
 import { TradeBreakdown } from './TradeBreakdown';
+import { TradePartners } from './TradePartners';
 
 const PAGE_SIZE = 20;
 
@@ -218,6 +219,9 @@ export default function CountryEconomy({ iso2 }: CountryEconomyProps) {
 
       {/* ── Section 0.5: Trade composition (top exports + imports) ── */}
       <TradeBreakdown iso2={iso2} />
+
+      {/* ── Section 0.6: Top trading partners (geographic counterparties) ── */}
+      <TradePartners iso2={iso2} />
 
       {/* ── Section 1: EODHD Economic Calendar ── */}
       <div className="space-y-1">

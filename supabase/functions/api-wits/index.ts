@@ -85,6 +85,197 @@ const ISO3_TO_M49: Record<string, string> = {
   ZWE: "716",
 };
 
+// ── M49 → { ISO2, country name } ──────────────────────────────────────
+// Used to decorate Comtrade partner responses, which return only the
+// numeric M49 code (`partnerCode`) and leave `partnerISO` / `partnerDesc`
+// null on the public preview tier. We resolve them server-side so the
+// client receives ready-to-display country codes + names.
+const M49_TO_INFO: Record<string, { iso2: string; name: string }> = {
+  "4":   { iso2: "AF", name: "Afghanistan" },
+  "8":   { iso2: "AL", name: "Albania" },
+  "12":  { iso2: "DZ", name: "Algeria" },
+  "24":  { iso2: "AO", name: "Angola" },
+  "31":  { iso2: "AZ", name: "Azerbaijan" },
+  "32":  { iso2: "AR", name: "Argentina" },
+  "36":  { iso2: "AU", name: "Australia" },
+  "40":  { iso2: "AT", name: "Austria" },
+  "44":  { iso2: "BS", name: "Bahamas" },
+  "48":  { iso2: "BH", name: "Bahrain" },
+  "50":  { iso2: "BD", name: "Bangladesh" },
+  "51":  { iso2: "AM", name: "Armenia" },
+  "56":  { iso2: "BE", name: "Belgium" },
+  "64":  { iso2: "BT", name: "Bhutan" },
+  "68":  { iso2: "BO", name: "Bolivia" },
+  "70":  { iso2: "BA", name: "Bosnia & Herzegovina" },
+  "72":  { iso2: "BW", name: "Botswana" },
+  "76":  { iso2: "BR", name: "Brazil" },
+  "84":  { iso2: "BZ", name: "Belize" },
+  "90":  { iso2: "SB", name: "Solomon Islands" },
+  "96":  { iso2: "BN", name: "Brunei" },
+  "100": { iso2: "BG", name: "Bulgaria" },
+  "104": { iso2: "MM", name: "Myanmar" },
+  "108": { iso2: "BI", name: "Burundi" },
+  "112": { iso2: "BY", name: "Belarus" },
+  "116": { iso2: "KH", name: "Cambodia" },
+  "120": { iso2: "CM", name: "Cameroon" },
+  "124": { iso2: "CA", name: "Canada" },
+  "132": { iso2: "CV", name: "Cape Verde" },
+  "140": { iso2: "CF", name: "C.A.R." },
+  "144": { iso2: "LK", name: "Sri Lanka" },
+  "148": { iso2: "TD", name: "Chad" },
+  "152": { iso2: "CL", name: "Chile" },
+  "156": { iso2: "CN", name: "China" },
+  "170": { iso2: "CO", name: "Colombia" },
+  "174": { iso2: "KM", name: "Comoros" },
+  "178": { iso2: "CG", name: "Congo" },
+  "180": { iso2: "CD", name: "DR Congo" },
+  "188": { iso2: "CR", name: "Costa Rica" },
+  "191": { iso2: "HR", name: "Croatia" },
+  "192": { iso2: "CU", name: "Cuba" },
+  "196": { iso2: "CY", name: "Cyprus" },
+  "203": { iso2: "CZ", name: "Czechia" },
+  "204": { iso2: "BJ", name: "Benin" },
+  "208": { iso2: "DK", name: "Denmark" },
+  "214": { iso2: "DO", name: "Dominican Rep." },
+  "218": { iso2: "EC", name: "Ecuador" },
+  "222": { iso2: "SV", name: "El Salvador" },
+  "226": { iso2: "GQ", name: "Equatorial Guinea" },
+  "231": { iso2: "ET", name: "Ethiopia" },
+  "232": { iso2: "ER", name: "Eritrea" },
+  "233": { iso2: "EE", name: "Estonia" },
+  "238": { iso2: "FK", name: "Falkland Islands" },
+  "242": { iso2: "FJ", name: "Fiji" },
+  "246": { iso2: "FI", name: "Finland" },
+  "251": { iso2: "FR", name: "France" },
+  "262": { iso2: "DJ", name: "Djibouti" },
+  "266": { iso2: "GA", name: "Gabon" },
+  "268": { iso2: "GE", name: "Georgia" },
+  "270": { iso2: "GM", name: "Gambia" },
+  "275": { iso2: "PS", name: "Palestine" },
+  "276": { iso2: "DE", name: "Germany" },
+  "288": { iso2: "GH", name: "Ghana" },
+  "300": { iso2: "GR", name: "Greece" },
+  "304": { iso2: "GL", name: "Greenland" },
+  "320": { iso2: "GT", name: "Guatemala" },
+  "324": { iso2: "GN", name: "Guinea" },
+  "328": { iso2: "GY", name: "Guyana" },
+  "332": { iso2: "HT", name: "Haiti" },
+  "340": { iso2: "HN", name: "Honduras" },
+  "344": { iso2: "HK", name: "Hong Kong" },
+  "348": { iso2: "HU", name: "Hungary" },
+  "352": { iso2: "IS", name: "Iceland" },
+  "360": { iso2: "ID", name: "Indonesia" },
+  "364": { iso2: "IR", name: "Iran" },
+  "368": { iso2: "IQ", name: "Iraq" },
+  "372": { iso2: "IE", name: "Ireland" },
+  "376": { iso2: "IL", name: "Israel" },
+  "381": { iso2: "IT", name: "Italy" },
+  "384": { iso2: "CI", name: "Ivory Coast" },
+  "388": { iso2: "JM", name: "Jamaica" },
+  "392": { iso2: "JP", name: "Japan" },
+  "398": { iso2: "KZ", name: "Kazakhstan" },
+  "400": { iso2: "JO", name: "Jordan" },
+  "404": { iso2: "KE", name: "Kenya" },
+  "408": { iso2: "KP", name: "North Korea" },
+  "410": { iso2: "KR", name: "South Korea" },
+  "412": { iso2: "XK", name: "Kosovo" },
+  "414": { iso2: "KW", name: "Kuwait" },
+  "417": { iso2: "KG", name: "Kyrgyzstan" },
+  "418": { iso2: "LA", name: "Laos" },
+  "422": { iso2: "LB", name: "Lebanon" },
+  "426": { iso2: "LS", name: "Lesotho" },
+  "428": { iso2: "LV", name: "Latvia" },
+  "430": { iso2: "LR", name: "Liberia" },
+  "434": { iso2: "LY", name: "Libya" },
+  "440": { iso2: "LT", name: "Lithuania" },
+  "442": { iso2: "LU", name: "Luxembourg" },
+  "450": { iso2: "MG", name: "Madagascar" },
+  "454": { iso2: "MW", name: "Malawi" },
+  "458": { iso2: "MY", name: "Malaysia" },
+  "466": { iso2: "ML", name: "Mali" },
+  "478": { iso2: "MR", name: "Mauritania" },
+  "480": { iso2: "MU", name: "Mauritius" },
+  "484": { iso2: "MX", name: "Mexico" },
+  "490": { iso2: "TW", name: "Taiwan" },
+  "496": { iso2: "MN", name: "Mongolia" },
+  "498": { iso2: "MD", name: "Moldova" },
+  "499": { iso2: "ME", name: "Montenegro" },
+  "504": { iso2: "MA", name: "Morocco" },
+  "508": { iso2: "MZ", name: "Mozambique" },
+  "512": { iso2: "OM", name: "Oman" },
+  "516": { iso2: "NA", name: "Namibia" },
+  "524": { iso2: "NP", name: "Nepal" },
+  "528": { iso2: "NL", name: "Netherlands" },
+  "540": { iso2: "NC", name: "New Caledonia" },
+  "548": { iso2: "VU", name: "Vanuatu" },
+  "554": { iso2: "NZ", name: "New Zealand" },
+  "558": { iso2: "NI", name: "Nicaragua" },
+  "562": { iso2: "NE", name: "Niger" },
+  "566": { iso2: "NG", name: "Nigeria" },
+  "578": { iso2: "NO", name: "Norway" }, // common alt M49 for Norway
+  "579": { iso2: "NO", name: "Norway" },
+  "586": { iso2: "PK", name: "Pakistan" },
+  "591": { iso2: "PA", name: "Panama" },
+  "598": { iso2: "PG", name: "Papua New Guinea" },
+  "600": { iso2: "PY", name: "Paraguay" },
+  "604": { iso2: "PE", name: "Peru" },
+  "608": { iso2: "PH", name: "Philippines" },
+  "616": { iso2: "PL", name: "Poland" },
+  "620": { iso2: "PT", name: "Portugal" },
+  "624": { iso2: "GW", name: "Guinea-Bissau" },
+  "626": { iso2: "TL", name: "Timor-Leste" },
+  "630": { iso2: "PR", name: "Puerto Rico" },
+  "634": { iso2: "QA", name: "Qatar" },
+  "642": { iso2: "RO", name: "Romania" },
+  "643": { iso2: "RU", name: "Russia" },
+  "646": { iso2: "RW", name: "Rwanda" },
+  "678": { iso2: "ST", name: "São Tomé & Príncipe" },
+  "682": { iso2: "SA", name: "Saudi Arabia" },
+  "686": { iso2: "SN", name: "Senegal" },
+  "688": { iso2: "RS", name: "Serbia" },
+  "690": { iso2: "SC", name: "Seychelles" },
+  "694": { iso2: "SL", name: "Sierra Leone" },
+  "699": { iso2: "IN", name: "India" },
+  "702": { iso2: "SG", name: "Singapore" },
+  "703": { iso2: "SK", name: "Slovakia" },
+  "704": { iso2: "VN", name: "Vietnam" },
+  "705": { iso2: "SI", name: "Slovenia" },
+  "706": { iso2: "SO", name: "Somalia" },
+  "710": { iso2: "ZA", name: "South Africa" },
+  "716": { iso2: "ZW", name: "Zimbabwe" },
+  "724": { iso2: "ES", name: "Spain" },
+  "728": { iso2: "SS", name: "South Sudan" },
+  "729": { iso2: "SD", name: "Sudan" },
+  "732": { iso2: "EH", name: "Western Sahara" },
+  "740": { iso2: "SR", name: "Suriname" },
+  "748": { iso2: "SZ", name: "Eswatini" },
+  "752": { iso2: "SE", name: "Sweden" },
+  "756": { iso2: "CH", name: "Switzerland" },
+  "760": { iso2: "SY", name: "Syria" },
+  "762": { iso2: "TJ", name: "Tajikistan" },
+  "764": { iso2: "TH", name: "Thailand" },
+  "768": { iso2: "TG", name: "Togo" },
+  "780": { iso2: "TT", name: "Trinidad & Tobago" },
+  "784": { iso2: "AE", name: "UAE" },
+  "788": { iso2: "TN", name: "Tunisia" },
+  "792": { iso2: "TR", name: "Turkey" },
+  "795": { iso2: "TM", name: "Turkmenistan" },
+  "800": { iso2: "UG", name: "Uganda" },
+  "804": { iso2: "UA", name: "Ukraine" },
+  "807": { iso2: "MK", name: "North Macedonia" },
+  "818": { iso2: "EG", name: "Egypt" },
+  "826": { iso2: "GB", name: "United Kingdom" },
+  "834": { iso2: "TZ", name: "Tanzania" },
+  "840": { iso2: "US", name: "United States" }, // common Comtrade code for USA
+  "842": { iso2: "US", name: "United States" },
+  "854": { iso2: "BF", name: "Burkina Faso" },
+  "858": { iso2: "UY", name: "Uruguay" },
+  "860": { iso2: "UZ", name: "Uzbekistan" },
+  "862": { iso2: "VE", name: "Venezuela" },
+  "887": { iso2: "YE", name: "Yemen" },
+  "894": { iso2: "ZM", name: "Zambia" },
+};
+
 // Pattern that identifies an HS Section product code (e.g. "01-05_Animal",
 // "27-27_Fuels", "84-85_MachElec"). Filtering to these guarantees a clean
 // mutually-exclusive partition of trade — without this filter we'd also
@@ -168,6 +359,106 @@ async function fetchComtradeChapters(
   return rows;
 }
 
+/**
+ * Fetch a country's TOP TRADING PARTNERS — i.e. the geographic
+ * counterparties of its exports/imports.
+ *
+ * Trick: omit Comtrade's `partnerCode` parameter entirely. With no
+ * partner constraint, the response groups by partner instead of
+ * collapsing to a single world total. We then drop the world-total
+ * row (partnerCode=0) and aggregate-region rows (anything not in
+ * our M49_TO_INFO real-country map).
+ *
+ * Each surviving row is decorated with its ISO2 + display name on
+ * the server, since Comtrade preview leaves `partnerISO`/`partnerDesc`
+ * null. The client receives ready-to-render country-level rows.
+ */
+async function fetchComtradePartners(
+  reporter: string, // ISO3
+  year: number,
+  direction: "exports" | "imports",
+): Promise<ProductRow[] | null> {
+  const m49 = ISO3_TO_M49[reporter];
+  if (!m49) return null;
+
+  const flowCode = direction === "exports" ? "X" : "M";
+  // No partnerCode → grouped-by-partner response.
+  //
+  // motCode=0      — keep only the mode-of-transport AGGREGATE row per
+  //                  partner (Comtrade otherwise returns one row per
+  //                  sea/road/rail/air segment, exploding the response
+  //                  past the 500-row preview cap and truncating big
+  //                  reporters like Germany).
+  // customsCode=C00 — keep only the general-trade customs procedure;
+  //                  drops re-export-specific rows (C03) and other
+  //                  procedural breakdowns that are subsets of C00.
+  //
+  // After these two server-side filters Comtrade still returns 2 rows
+  // per partner (with partner2Code = 0 vs 899; values are IDENTICAL),
+  // which we collapse client-side below.
+  const url =
+    `${COMTRADE_BASE}?reporterCode=${m49}` +
+    `&period=${year}` +
+    `&cmdCode=TOTAL` +
+    `&flowCode=${flowCode}` +
+    `&motCode=0` +
+    `&customsCode=C00`;
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+  } catch {
+    return null;
+  }
+  if (!upstream.ok) return null;
+
+  let json: any;
+  try { json = await upstream.json(); } catch { return null; }
+  const data: any[] = Array.isArray(json?.data) ? json.data : [];
+  if (data.length === 0) return null;
+
+  // Dedup map: even after motCode=0 + customsCode=C00 server-side
+  // filters, Comtrade still returns 2 rows per partner (one with
+  // partner2Code=0, one with partner2Code=899) with IDENTICAL values.
+  // Map-by-partner with first-write-wins collapses them.
+  const seen = new Set<string>();
+  const rows: ProductRow[] = [];
+  for (const r of data) {
+    const partnerM49 = String(r.partnerCode ?? "");
+    // Drop world-total + self-trade + aggregate regions (only keep
+    // codes that map to a real country in our M49 lookup table).
+    if (!partnerM49 || partnerM49 === "0") continue;
+    if (partnerM49 === m49) continue; // self
+    const info = M49_TO_INFO[partnerM49];
+    if (!info) continue;
+
+    const value = typeof r.primaryValue === "number" ? r.primaryValue : 0;
+    if (value <= 0) continue;
+
+    // First-write-wins per partner — Comtrade returns 2 identical rows
+    // per partner (varying only by partner2Code), and the rows really
+    // ARE identical in our verified probes, so first-wins is fine.
+    if (seen.has(partnerM49)) continue;
+    seen.add(partnerM49);
+
+    rows.push({
+      code:     info.iso2,    // client uses ISO2 to look up Flag + COUNTRY_META
+      name:     info.name,
+      valueUsd: Math.round(value),
+      share:    0,
+    });
+  }
+  if (rows.length === 0) return null;
+
+  const total = rows.reduce((s, r) => s + r.valueUsd, 0);
+  for (const r of rows) r.share = total > 0 ? r.valueUsd / total : 0;
+  rows.sort((a, b) => b.valueUsd - a.valueUsd);
+
+  // Cap at top 20 — UI shows top 10, the extra 10 are headroom for
+  // possible client-side filtering.
+  return rows.slice(0, 20);
+}
+
 async function fetchAndParse(
   reporter: string,
   year: number,
@@ -246,7 +537,7 @@ serve(async (req) => {
   const url       = new URL(req.url);
   const reporter  = (url.searchParams.get("reporter") ?? "").toUpperCase().trim();
   const direction = (url.searchParams.get("direction") ?? "exports") as "exports" | "imports";
-  const level     = (url.searchParams.get("level") ?? "section") as "section" | "chapter";
+  const level     = (url.searchParams.get("level") ?? "section") as "section" | "chapter" | "partners";
   const explicitYear = url.searchParams.get("year");
 
   if (!reporter || !/^[A-Z]{3}$/.test(reporter)) {
@@ -275,7 +566,10 @@ serve(async (req) => {
     ? [parseInt(explicitYear, 10)]
     : [new Date().getFullYear() - 3, new Date().getFullYear() - 4, new Date().getFullYear() - 5];
 
-  const fetcher = level === "chapter" ? fetchComtradeChapters : fetchAndParse;
+  const fetcher =
+    level === "chapter"  ? fetchComtradeChapters :
+    level === "partners" ? fetchComtradePartners :
+    fetchAndParse;
 
   for (const year of yearsToTry) {
     if (!Number.isFinite(year)) continue;
