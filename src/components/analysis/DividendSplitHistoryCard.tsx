@@ -38,11 +38,16 @@ export function DividendSplitHistoryCard({ data }: Props) {
 
   const yearlyData = useMemo(() => {
     if (!sd?.NumberDividendsByYear) return [];
-    return Object.values(sd.NumberDividendsByYear)
-      .filter((y) => y && y.Year)
-      .sort((a, b) => a.Year - b.Year)
-      .slice(-15)
-      .map((y) => ({ year: y.Year, count: y.Count }));
+    try {
+      return Object.values(sd.NumberDividendsByYear)
+        .filter((y) => y && y.Year != null)
+        .map((y) => ({ year: Number(y.Year), count: Number(y.Count ?? 0) }))
+        .filter((y) => isFinite(y.year))
+        .sort((a, b) => a.year - b.year)
+        .slice(-15);
+    } catch {
+      return [];
+    }
   }, [sd]);
 
   // Render nothing if there's no dividend signal at all

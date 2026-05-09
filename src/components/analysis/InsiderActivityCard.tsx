@@ -36,10 +36,18 @@ function fmtUsd(n: number): string {
 export function InsiderActivityCard({ data }: Props) {
   const txns = useMemo(() => {
     if (!data.InsiderTransactions) return [];
-    return Object.values(data.InsiderTransactions)
-      .filter((t) => t.transactionAmount > 0)
-      .sort((a, b) => (b.transactionDate || b.date).localeCompare(a.transactionDate || a.date))
-      .slice(0, 8);
+    try {
+      return Object.values(data.InsiderTransactions)
+        .filter((t) => t && (t.transactionAmount ?? 0) > 0)
+        .sort((a, b) => {
+          const da = a.transactionDate || a.date || '';
+          const db = b.transactionDate || b.date || '';
+          return db.localeCompare(da);
+        })
+        .slice(0, 8);
+    } catch {
+      return [];
+    }
   }, [data]);
 
   const totals = useMemo(() => {

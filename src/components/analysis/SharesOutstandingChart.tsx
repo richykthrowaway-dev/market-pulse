@@ -32,11 +32,15 @@ export function SharesOutstandingChart({ data }: Props) {
   const series = useMemo(() => {
     const q = data.outstandingShares?.quarterly;
     if (!q) return [];
-    return Object.values(q)
-      .filter((p) => p?.shares && isFinite(p.shares))
-      .sort((a, b) => a.dateFormatted.localeCompare(b.dateFormatted))
-      .slice(-20) // last 5 years
-      .map((p) => ({ date: p.dateFormatted, shares: p.shares }));
+    try {
+      return Object.values(q)
+        .filter((p) => p && p.shares != null && isFinite(p.shares) && p.dateFormatted)
+        .sort((a, b) => (a.dateFormatted ?? '').localeCompare(b.dateFormatted ?? ''))
+        .slice(-20) // last 5 years
+        .map((p) => ({ date: p.dateFormatted, shares: p.shares }));
+    } catch {
+      return [];
+    }
   }, [data]);
 
   if (series.length < 2) return null;

@@ -257,25 +257,37 @@ export interface EodFundamentals {
  * Results are cached 12 h in localStorage — fundamentals update quarterly.
  */
 export async function fetchEodFundamentals(symbol: string): Promise<EodFundamentals | null> {
-  try {
-    return await fetchCached<EodFundamentals>(
-      `eodhd:fundamentals:${symbol}`,
-      async () => {
-        const res = await fetch(
-          `${EODHD_FN_BASE}?${new URLSearchParams({ endpoint: 'fundamentals', symbol })}`,
-          { headers: EODHD_HEADERS },
-        );
-        if (!res.ok) throw new Error(`EODHD fundamentals failed (${res.status})`);
-        const data = await res.json();
-        // Guard: EODHD returns { "message": "..." } for missing/restricted tickers
-        if (!data?.General?.Code) throw new Error('No fundamentals data');
-        return data as EodFundamentals;
-      },
-      { ttlMs: 12 * 60 * 60_000 }, // 12 h
-    );
-  } catch {
-    return null;
-  }
+  return await fetchCached<EodFundamentals>(
+    `eodhd:fundamentals:${symbol}`,
+    async () => {
+      const res = await fetch(
+        `${EODHD_FN_BASE}?${new URLSearchParams({ endpoint: 'fundamentals', symbol })}`,
+        { headers: EODHD_HEADERS },
+      );
+      // Surface the real edge-fn error (quota exhaustion → 429 with a
+      // structured detail) instead of swallowing it. The UI catches this
+      // and shows the message verbatim, so the user understands WHY the
+      // lookup failed (quota vs bad ticker vs upstream EODHD outage).
+      if (!res.ok) {
+        let detail = '';
+        try {
+          const j = await res.json();
+          detail = j?.detail || j?.error || '';
+        } catch {
+          detail = await res.text().catch(() => '');
+        }
+        if (res.status === 429) {
+          throw new Error(`EODHD daily quota exhausted. ${detail || 'Resets at UTC midnight.'}`);
+        }
+        throw new Error(`EODHD fundamentals failed (${res.status}). ${detail}`.trim());
+      }
+      const data = await res.json();
+      // Guard: EODHD returns { "message": "..." } for missing/restricted tickers
+      if (!data?.General?.Code) throw new Error('No fundamentals data for this ticker — try a different .EXCHANGE suffix (e.g. .US, .TO, .L, .XETRA).');
+      return data as EodFundamentals;
+    },
+    { ttlMs: 12 * 60 * 60_000 }, // 12 h
+  );
 }
 
 // ── Convenience helpers ───────────────────────────────────────────────────────

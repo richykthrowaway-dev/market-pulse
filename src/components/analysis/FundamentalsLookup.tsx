@@ -16,6 +16,7 @@ import { SharesOutstandingChart } from './SharesOutstandingChart';
 import { OfficersCard } from './OfficersCard';
 import { TechnicalSignalsCard } from './TechnicalSignalsCard';
 import { HistoricalPriceChart } from './HistoricalPriceChart';
+import { WidgetBoundary } from './WidgetBoundary';
 import { cn } from '@/lib/utils';
 
 // ── Format helpers ────────────────────────────────────────────────────
@@ -246,14 +247,16 @@ function ResultCard({ data, primaryTicker }: { data: EodFundamentals; primaryTic
           Costs 1 EODHD credit per range fetch (cached 1h). Reference
           lines for 50/200 DMA + 52w high/low pulled from the existing
           (cached, free) fundamentals payload. */}
-      <HistoricalPriceChart
-        symbol={primaryTicker}
-        ma50={t['50DayMA']}
-        ma200={t['200DayMA']}
-        high52={t['52WeekHigh']}
-        low52={t['52WeekLow']}
-        currency={currency}
-      />
+      <WidgetBoundary name="HistoricalPriceChart">
+        <HistoricalPriceChart
+          symbol={primaryTicker}
+          ma50={t?.['50DayMA']}
+          ma200={t?.['200DayMA']}
+          high52={t?.['52WeekHigh']}
+          low52={t?.['52WeekLow']}
+          currency={currency}
+        />
+      </WidgetBoundary>
 
       {/* Description (truncated) */}
       {g.Description && (
@@ -309,67 +312,19 @@ function ResultCard({ data, primaryTicker }: { data: EodFundamentals; primaryTic
         </MetricGroup>
       </div>
 
-      {/* Analyst recommendation distribution — Strong Buy/Buy/Hold/Sell
-          /Strong Sell breakdown. Sourced from AnalystRatings (free). */}
-      <AnalystRatingsBreakdown data={data} />
-
-      {/* Forward analyst estimates — what consensus expects for this
-          quarter, next quarter, this year, next year. Sourced from
-          Earnings.Trend in the same fundamentals payload (free). */}
-      <ForwardEstimates data={data} />
-
-      {/* Earnings beats history — sourced from the same fundamentals
-          payload above, so this section adds 0 EODHD credits. Renders
-          null automatically if the company has insufficient earnings
-          history (e.g. recent IPOs, ETFs). */}
-      <EarningsBeatsChart data={data} />
-
-      {/* Technical signals — golden/death cross, 52w position, beta
-          band, long-term trend. Pure derivation from Technicals in
-          the existing payload (free). */}
-      <TechnicalSignalsCard data={data} />
-
-      {/* Short interest tracker — current % of float shorted, days-to-
-          cover, and month-over-month change. Sourced from Technicals
-          in the existing payload (free). */}
-      <ShortInterestCard data={data} />
-
-      {/* Insider transactions (SEC Form 4) — recent buys/sells from
-          executives and directors. Sourced from InsiderTransactions
-          in the existing payload (free). */}
-      <InsiderActivityCard data={data} />
-
-      {/* Top institutional + mutual-fund holders. Sourced from Holders
-          in the existing payload (free). Tab-switches between the two. */}
-      <TopHoldersCard data={data} />
-
-      {/* Buyback / dilution trend over last 5 years. Sourced from
-          outstandingShares.quarterly in the existing payload (free). */}
-      <SharesOutstandingChart data={data} />
-
-      {/* Dividend stream + split history + payout-policy snapshot.
-          Sourced from SplitsDividends + Highlights in the existing
-          payload (free). */}
-      <DividendSplitHistoryCard data={data} />
-
-      {/* Sustainalytics-style ESG risk scores. Sourced from ESGScores
-          in the existing payload (free). Renders null cleanly when
-          the company has no ESG coverage. */}
-      <ESGScoresCard data={data} />
-
-      {/* Income statement / balance sheet / cash flow viewer with
-          quarterly + annual toggles. Sourced from Financials in the
-          existing payload (free). */}
-      <FinancialStatements data={data} />
-
-      {/* Leadership / executives table. Sourced from General.Officers
-          in the existing payload (free). */}
-      <OfficersCard data={data} />
-
-      {/* Peer comparison — opt-in (user must add tickers). Each peer
-          ticker added costs 10 EODHD credits on cold lookup; cached
-          12h via the same fetchCached layer as the primary. */}
-      <PeerComparison primary={data} primaryTicker={primaryTicker} />
+      <WidgetBoundary name="AnalystRatingsBreakdown"><AnalystRatingsBreakdown data={data} /></WidgetBoundary>
+      <WidgetBoundary name="ForwardEstimates"><ForwardEstimates data={data} /></WidgetBoundary>
+      <WidgetBoundary name="EarningsBeatsChart"><EarningsBeatsChart data={data} /></WidgetBoundary>
+      <WidgetBoundary name="TechnicalSignalsCard"><TechnicalSignalsCard data={data} /></WidgetBoundary>
+      <WidgetBoundary name="ShortInterestCard"><ShortInterestCard data={data} /></WidgetBoundary>
+      <WidgetBoundary name="InsiderActivityCard"><InsiderActivityCard data={data} /></WidgetBoundary>
+      <WidgetBoundary name="TopHoldersCard"><TopHoldersCard data={data} /></WidgetBoundary>
+      <WidgetBoundary name="SharesOutstandingChart"><SharesOutstandingChart data={data} /></WidgetBoundary>
+      <WidgetBoundary name="DividendSplitHistoryCard"><DividendSplitHistoryCard data={data} /></WidgetBoundary>
+      <WidgetBoundary name="ESGScoresCard"><ESGScoresCard data={data} /></WidgetBoundary>
+      <WidgetBoundary name="FinancialStatements"><FinancialStatements data={data} /></WidgetBoundary>
+      <WidgetBoundary name="OfficersCard"><OfficersCard data={data} /></WidgetBoundary>
+      <WidgetBoundary name="PeerComparison"><PeerComparison primary={data} primaryTicker={primaryTicker} /></WidgetBoundary>
     </div>
   );
 }
@@ -476,16 +431,31 @@ export function FundamentalsLookup() {
           Loading fundamentals for {normalisedTicker}…
         </div>
       ) : isError || !data ? (
-        <div className="rounded-lg border border-border bg-card p-4 flex items-start gap-2">
-          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <div className="text-sm">
-            <p className="font-medium">No fundamentals found for {normalisedTicker}.</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              {(error as Error)?.message ||
-                'Try a different ticker. EODHD requires the .EXCHANGE suffix (e.g. AAPL.US, BMW.XETRA, RY.TO). EODHD daily quota may also be exhausted.'}
-            </p>
-          </div>
-        </div>
+        (() => {
+          const msg = (error as Error)?.message ?? '';
+          const isQuota = /quota/i.test(msg);
+          return (
+            <div className="rounded-lg border border-border bg-card p-4 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium">
+                  {isQuota
+                    ? 'EODHD daily quota exhausted'
+                    : `No fundamentals found for ${normalisedTicker}.`}
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {msg ||
+                    'Try a different ticker. EODHD requires the .EXCHANGE suffix (e.g. AAPL.US, BMW.XETRA, RY.TO).'}
+                </p>
+                {isQuota && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Quota resets at UTC midnight. Already-cached tickers (looked up earlier today) still work — they read from the shared <span className="font-mono">fundamentals_cache</span> table without burning credits.
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })()
       ) : (
         <ResultCard data={data} primaryTicker={normalisedTicker!} />
       )}
