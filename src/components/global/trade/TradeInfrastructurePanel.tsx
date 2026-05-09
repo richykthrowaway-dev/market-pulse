@@ -11,6 +11,7 @@ import {
 } from '@/data/tradeInfrastructure';
 import type { AISStatus } from '@/hooks/useAISStream';
 import { FLIGHT_DATA_SOURCE, type FlightStatus } from '@/hooks/useOpenSkyFlights';
+import { CommodityProducersCard } from './CommodityProducersCard';
 import { useAirportDetail } from '@/hooks/useAirportDetail';
 
 /**
@@ -188,6 +189,9 @@ export function TradeInfrastructurePanel({
           toggleLayer={toggleLayer}
         />
       </Section>
+
+      {/* ── Commodity producers lookup ─────────────────────────────────── */}
+      <CommodityProducersCard />
 
       {/* ── AIS Live Vessels banner (only when that layer is on) ───────── */}
       {activeLayers.has('liveVessels') && (
