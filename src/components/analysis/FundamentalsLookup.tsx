@@ -7,6 +7,13 @@ import { PeerComparison } from './PeerComparison';
 import { ForwardEstimates } from './ForwardEstimates';
 import { ShortInterestCard } from './ShortInterestCard';
 import { FinancialStatements } from './FinancialStatements';
+import { AnalystRatingsBreakdown } from './AnalystRatingsBreakdown';
+import { InsiderActivityCard } from './InsiderActivityCard';
+import { TopHoldersCard } from './TopHoldersCard';
+import { ESGScoresCard } from './ESGScoresCard';
+import { DividendSplitHistoryCard } from './DividendSplitHistoryCard';
+import { SharesOutstandingChart } from './SharesOutstandingChart';
+import { OfficersCard } from './OfficersCard';
 import { cn } from '@/lib/utils';
 
 // ── Format helpers ────────────────────────────────────────────────────
@@ -287,6 +294,10 @@ function ResultCard({ data, primaryTicker }: { data: EodFundamentals; primaryTic
         </MetricGroup>
       </div>
 
+      {/* Analyst recommendation distribution — Strong Buy/Buy/Hold/Sell
+          /Strong Sell breakdown. Sourced from AnalystRatings (free). */}
+      <AnalystRatingsBreakdown data={data} />
+
       {/* Forward analyst estimates — what consensus expects for this
           quarter, next quarter, this year, next year. Sourced from
           Earnings.Trend in the same fundamentals payload (free). */}
@@ -303,10 +314,37 @@ function ResultCard({ data, primaryTicker }: { data: EodFundamentals; primaryTic
           in the existing payload (free). */}
       <ShortInterestCard data={data} />
 
+      {/* Insider transactions (SEC Form 4) — recent buys/sells from
+          executives and directors. Sourced from InsiderTransactions
+          in the existing payload (free). */}
+      <InsiderActivityCard data={data} />
+
+      {/* Top institutional + mutual-fund holders. Sourced from Holders
+          in the existing payload (free). Tab-switches between the two. */}
+      <TopHoldersCard data={data} />
+
+      {/* Buyback / dilution trend over last 5 years. Sourced from
+          outstandingShares.quarterly in the existing payload (free). */}
+      <SharesOutstandingChart data={data} />
+
+      {/* Dividend stream + split history + payout-policy snapshot.
+          Sourced from SplitsDividends + Highlights in the existing
+          payload (free). */}
+      <DividendSplitHistoryCard data={data} />
+
+      {/* Sustainalytics-style ESG risk scores. Sourced from ESGScores
+          in the existing payload (free). Renders null cleanly when
+          the company has no ESG coverage. */}
+      <ESGScoresCard data={data} />
+
       {/* Income statement / balance sheet / cash flow viewer with
           quarterly + annual toggles. Sourced from Financials in the
           existing payload (free). */}
       <FinancialStatements data={data} />
+
+      {/* Leadership / executives table. Sourced from General.Officers
+          in the existing payload (free). */}
+      <OfficersCard data={data} />
 
       {/* Peer comparison — opt-in (user must add tickers). Each peer
           ticker added costs 10 EODHD credits on cold lookup; cached

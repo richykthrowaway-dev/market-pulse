@@ -78,6 +78,11 @@ export interface EodFundamentals {
     LogoURL:         string;
     WebURL:          string;
     FullTimeEmployees: number;
+    Officers?: Record<string, {
+      Name:        string;
+      Title:       string;
+      YearBorn?:   string | number;
+    }>;
   };
   Highlights: {
     MarketCapitalization:       number;
@@ -176,6 +181,74 @@ export interface EodFundamentals {
       quarterly: Record<string, Record<string, number | null>>;
       yearly:    Record<string, Record<string, number | null>>;
     };
+  };
+  /**
+   * The following sections are present in EODHD's `/fundamentals/{ticker}`
+   * payload but are optional (some are missing for non-US, ETF, or
+   * recent-IPO tickers). All widgets read from the SAME 10-credit cached
+   * payload — adding readers here costs zero additional EODHD credits.
+   */
+  Holders?: {
+    Institutions?: Record<string, {
+      name:         string;
+      date:         string;
+      totalShares:  number;       // % of shares outstanding
+      totalAssets:  number;       // % of fund's portfolio
+      currentShares: number;      // absolute share count
+      change:       number;       // shares delta vs prior filing
+      change_p:     number;       // % delta
+    }>;
+    Funds?: Record<string, {
+      name:         string;
+      date:         string;
+      totalShares:  number;
+      totalAssets:  number;
+      currentShares: number;
+      change:       number;
+      change_p:     number;
+    }>;
+  };
+  InsiderTransactions?: Record<string, {
+    date:               string;   // "YYYY-MM-DD"
+    ownerCik:           string | null;
+    ownerName:          string;
+    ownerRelationship:  string;   // "Director" / "Officer" / "10% owner" etc.
+    ownerTitle:         string;
+    transactionDate:    string;
+    transactionCode:    string;   // "P"=Purchase, "S"=Sale, "M"=Option exercise...
+    transactionAmount:  number;   // share count
+    transactionPrice:   number;
+    transactionAcquiredDisposed: 'A' | 'D' | string;
+    postTransactionAmount: number;
+    secLink:            string | null;
+  }>;
+  ESGScores?: {
+    Disclaimer:                string;
+    RatingDate:                string;
+    TotalEsg:                  number;
+    TotalEsgPercentile:        number;
+    EnvironmentScore:          number;
+    EnvironmentScorePercentile: number;
+    SocialScore:               number;
+    SocialScorePercentile:     number;
+    GovernanceScore:           number;
+    GovernanceScorePercentile: number;
+    ControversyLevel:          number;       // 0=none, 5=severe
+    ActivitiesInvolvement?: Record<string, { Involvement: 'Yes' | 'No' }>;
+  };
+  outstandingShares?: {
+    annual?:    Record<string, { dateFormatted: string; sharesMln: string; shares: number }>;
+    quarterly?: Record<string, { dateFormatted: string; sharesMln: string; shares: number }>;
+  };
+  SplitsDividends?: {
+    ForwardAnnualDividendRate:  number | null;
+    ForwardAnnualDividendYield: number | null;
+    PayoutRatio:                number | null;
+    DividendDate:               string | null;
+    ExDividendDate:             string | null;
+    LastSplitFactor:            string | null;
+    LastSplitDate:              string | null;
+    NumberDividendsByYear?:     Record<string, { Year: number; Count: number }>;
   };
 }
 
