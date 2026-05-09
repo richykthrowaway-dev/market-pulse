@@ -56,14 +56,17 @@ export function useEodhdExchangeStocks(
       const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string).trim();
       const anonKey   = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string).trim();
 
+      // EODHD screener `filters` param expects an array of [field, op, value]
+      // tuples — NOT an array of objects. Object form is silently ignored
+      // (returns []). Sort uses dot-separated `field.direction` form.
       const filters = JSON.stringify([
-        { field: 'exchange', operator: '=', value: exchange },
+        ['exchange', '=', exchange],
       ]);
 
       const params = new URLSearchParams({
         endpoint: 'screener',
         filters,
-        sort:  'market_cap_basic-desc',
+        sort:  'market_capitalization.desc',
         limit: String(limit),
         offset: '0',
       });
@@ -84,7 +87,11 @@ export function useEodhdExchangeStocks(
         exchange:  r.exchange  ?? exchange ?? '',
         sector:    r.sector    ?? null,
         industry:  r.industry  ?? null,
-        marketCap: r.market_cap_basic != null ? Number(r.market_cap_basic) : null,
+        // EODHD returns market cap as `market_capitalization` (not `_basic`).
+        // Keep the legacy field as a fallback for older cache entries.
+        marketCap: r.market_capitalization != null
+          ? Number(r.market_capitalization)
+          : (r.market_cap_basic != null ? Number(r.market_cap_basic) : null),
         price:     r.price          != null ? Number(r.price)          : null,
         change:    r.change_p       != null ? Number(r.change_p)       : null,
         volume:    r.volume         != null ? Number(r.volume)         : null,

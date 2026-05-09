@@ -2,12 +2,23 @@ import { useState, useEffect, useMemo } from "react";
 import { useIndices, useNews } from "@/hooks/useSupabaseData";
 import { useCountryIndices } from "@/hooks/useCountryIndices";
 import { useEodhdExchangeStocks } from "@/hooks/useEodhdExchangeStocks";
+import { useCountryQuotes } from "@/hooks/useCountryQuotes";
 import { COUNTRY_META } from "@/data/countryMeta";
 import { Flag } from "@/components/ui/Flag";
 import { cn } from "@/lib/utils";
 import { ArrowUpIcon, ArrowDownIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import type { CountryStock } from "@/hooks/useCountryStocks";
 import { MacroSnapshot } from "./MacroSnapshot";
+
+/** Unified shape for company display, normalized across data sources. */
+interface DisplayCompany {
+  symbol: string;
+  name: string;
+  changePercent: number | null;
+  marketCap: number | null;
+}
+
+type ViewMode = 'movers' | 'companies';
 
 interface CountrySummaryProps {
   iso2: string;
@@ -32,30 +43,91 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
     [meta, indices]
   );
 
-  // Top movers — memoized to avoid filter/sort on every render
+  // ── View mode toggle (persists per session) ─────────────────────────────
+  const [viewMode, setViewMode] = useState<ViewMode>('movers');
+
+  // ── Data sources, in priority order ─────────────────────────────────────
+  // 1. EODHD screener — top by market cap, with live price + change %.
+  //    Best when EODHD daily quota is available.
+  const { data: eodhdStocks = [], isLoading: eodhdLoading } =
+    useEodhdExchangeStocks(iso2, 15);
+  // 2. Yahoo Finance quotes for COUNTRY_META.newsTickers — curated 5-7 majors,
+  //    works for every country independent of EODHD quota.
+  const { data: yahooQuotes = [], isLoading: yahooLoading } =
+    useCountryQuotes(iso2);
+
+  // ── Unified display list ────────────────────────────────────────────────
+  // Priority: EODHD (richest) → useCountryStocks with REAL change% (US-only,
+  // 100+ stocks) → Yahoo curated quotes (every country) → useCountryStocks
+  // raw fallback (last resort, may show small caps).
+  const displayCompanies: DisplayCompany[] = useMemo(() => {
+    if (eodhdStocks.length > 0) {
+      return eodhdStocks.map((s) => ({
+        symbol:        s.code.split('.')[0],
+        name:          s.name,
+        changePercent: s.change,
+        marketCap:     s.marketCap,
+      }));
+    }
+    // useCountryStocks has REAL change% (i.e. at least one non-zero) →
+    // it's a healthy data source (US has full DefeatBeta/Supabase coverage)
+    const stocksHaveLiveData =
+      stocks.length > 0 && stocks.some((s) => s.change_percent !== 0);
+    if (stocksHaveLiveData) {
+      return stocks.map((s) => ({
+        symbol:        s.symbol,
+        name:          s.name,
+        changePercent: s.change_percent,
+        marketCap:     s.market_cap,
+      }));
+    }
+    // Yahoo curated list — ~5-7 quality entries with live prices
+    if (yahooQuotes.length > 0) {
+      return yahooQuotes.map((q) => ({
+        symbol:        q.baseSymbol,
+        name:          q.name,
+        changePercent: q.changePercent,
+        marketCap:     null,
+      }));
+    }
+    // Last resort: raw stocks list (may show small caps for non-US)
+    return stocks.map((s) => ({
+      symbol:        s.symbol,
+      name:          s.name,
+      changePercent: s.change_percent,
+      marketCap:     s.market_cap,
+    }));
+  }, [eodhdStocks, stocks, yahooQuotes]);
+
+  // ── View-mode-derived slices ────────────────────────────────────────────
   const gainers = useMemo(
-    () => stocks.filter((s) => s.change_percent > 0).slice(0, 5),
-    [stocks]
+    () => displayCompanies
+      .filter((s) => s.changePercent != null && s.changePercent > 0)
+      .sort((a, b) => (b.changePercent ?? 0) - (a.changePercent ?? 0))
+      .slice(0, 5),
+    [displayCompanies]
   );
   const losers = useMemo(
-    () => [...stocks]
-      .filter((s) => s.change_percent < 0)
-      .sort((a, b) => a.change_percent - b.change_percent)
+    () => displayCompanies
+      .filter((s) => s.changePercent != null && s.changePercent < 0)
+      .sort((a, b) => (a.changePercent ?? 0) - (b.changePercent ?? 0))
       .slice(0, 5),
-    [stocks]
+    [displayCompanies]
   );
+  const topByMarketCap = useMemo(() => {
+    // EODHD already returns sorted by market cap; preserve that order when
+    // marketCap is mostly null. Otherwise sort.
+    const hasMarketCap = displayCompanies.some((s) => s.marketCap != null);
+    if (hasMarketCap) {
+      return [...displayCompanies]
+        .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
+        .slice(0, 10);
+    }
+    return displayCompanies.slice(0, 10);
+  }, [displayCompanies]);
 
-  // True only when we have ticker symbols but no live price data — happens
-  // for non-US countries where Supabase has tickers but no price feeds yet.
-  const hasNoLiveData = stocks.length > 0 && gainers.length === 0 && losers.length === 0;
-
-  // EODHD screener fallback — used when useCountryStocks has no live data.
-  // Limit matches CountryScreener (15) so both tabs share the same React Query
-  // cache key → first warm-up is free for the second tab.
-  const { data: eodhdStocks = [] } = useEodhdExchangeStocks(
-    stocks.length === 0 || hasNoLiveData ? iso2 : null,
-    15,
-  );
+  const stocksLoading = isLoading || eodhdLoading || yahooLoading;
+  const hasMoversData = gainers.length > 0 || losers.length > 0;
 
   // Fetch news for this country.
   // IMPORTANT: do NOT pass symbols here. The api-news edge function's 6h DB
@@ -177,147 +249,133 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
         </div>
       )}
 
-      {/* Top Movers */}
-      {isLoading ? (
+      {/* ── Companies / Movers section with toggle ─────────────────────── */}
+      {stocksLoading && displayCompanies.length === 0 ? (
         <div className="space-y-2">
           {Array.from({ length: 5 }).map((_, i) => (
             <div key={i} className="h-8 bg-muted rounded animate-pulse" />
           ))}
         </div>
+      ) : displayCompanies.length === 0 ? (
+        <p className="text-sm text-muted-foreground">No stock data available for {meta.name}.</p>
       ) : (
-        <>
-          {gainers.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                Top Gainers
-              </h3>
-              <div className="space-y-1">
-                {gainers.map((s) => (
-                  <div
-                    key={s.symbol}
-                    className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <span className="font-medium text-sm">{s.symbol}</span>
-                      <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
-                    </div>
-                    <span className="text-success text-sm font-mono shrink-0">
-                      +{s.change_percent.toFixed(2)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
+        <div className="space-y-3">
+          {/* Section header with toggle */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+              {viewMode === 'movers' ? 'Top Movers' : 'Largest Companies'}
+            </h3>
+            <div className="inline-flex items-center bg-muted/40 rounded-md p-0.5 text-xs">
+              <button
+                onClick={() => setViewMode('movers')}
+                className={cn(
+                  'px-2.5 py-1 rounded transition-colors',
+                  viewMode === 'movers'
+                    ? 'bg-background text-foreground font-medium shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                Movers
+              </button>
+              <button
+                onClick={() => setViewMode('companies')}
+                className={cn(
+                  'px-2.5 py-1 rounded transition-colors',
+                  viewMode === 'companies'
+                    ? 'bg-background text-foreground font-medium shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                Companies
+              </button>
             </div>
-          )}
+          </div>
 
-          {losers.length > 0 && (
-            <div>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                Top Losers
-              </h3>
-              <div className="space-y-1">
-                {losers.map((s) => (
-                  <div
-                    key={s.symbol}
-                    className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <span className="font-medium text-sm">{s.symbol}</span>
-                      <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
-                    </div>
-                    <span className="text-danger text-sm font-mono shrink-0">
-                      {s.change_percent.toFixed(2)}%
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Show a "Major Companies" list when we have tickers but no live prices */}
-          {hasNoLiveData && (
-            <div>
-              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                {eodhdStocks.length > 0 ? "Top Companies · EODHD" : "Major Companies"}
-              </h3>
-              {eodhdStocks.length > 0 ? (
-                <div className="space-y-1">
-                  {eodhdStocks.slice(0, 10).map((s) => {
-                    const positive = (s.change ?? 0) >= 0;
-                    return (
-                      <div
-                        key={s.code}
-                        className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="min-w-0">
-                          <span className="font-medium text-sm">{s.code.split(".")[0]}</span>
-                          <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
-                        </div>
-                        {s.change != null && (
-                          <span className={cn("text-sm font-mono shrink-0", positive ? "text-success" : "text-danger")}>
-                            {positive ? "+" : ""}{s.change.toFixed(2)}%
+          {/* Movers view — gainers + losers */}
+          {viewMode === 'movers' && (
+            hasMoversData ? (
+              <>
+                {gainers.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Gainers</p>
+                    <div className="space-y-1">
+                      {gainers.map((s) => (
+                        <div
+                          key={`g-${s.symbol}`}
+                          className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <span className="font-medium text-sm">{s.symbol}</span>
+                            <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
+                          </div>
+                          <span className="text-success text-sm font-mono shrink-0">
+                            +{(s.changePercent ?? 0).toFixed(2)}%
                           </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  {stocks.slice(0, 10).map((s) => (
-                    <div
-                      key={s.symbol}
-                      className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="min-w-0">
-                        <span className="font-medium text-sm">{s.symbol}</span>
-                        <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {eodhdStocks.length === 0 && (
-                <p className="text-xs text-muted-foreground mt-2 italic">
-                  Live price data unavailable for {meta.name}.
-                </p>
-              )}
-            </div>
-          )}
-
-          {stocks.length === 0 && (
-            eodhdStocks.length > 0 ? (
-              <div>
-                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                  Top Companies · EODHD
-                </h3>
-                <div className="space-y-1">
-                  {eodhdStocks.slice(0, 10).map((s) => {
-                    const positive = (s.change ?? 0) >= 0;
-                    return (
-                      <div
-                        key={s.code}
-                        className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
-                      >
-                        <div className="min-w-0">
-                          <span className="font-medium text-sm">{s.code.split(".")[0]}</span>
-                          <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
                         </div>
-                        {s.change != null && (
-                          <span className={cn("text-sm font-mono shrink-0", positive ? "text-success" : "text-danger")}>
-                            {positive ? "+" : ""}{s.change.toFixed(2)}%
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {losers.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-1.5">Losers</p>
+                    <div className="space-y-1">
+                      {losers.map((s) => (
+                        <div
+                          key={`l-${s.symbol}`}
+                          className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
+                        >
+                          <div className="min-w-0">
+                            <span className="font-medium text-sm">{s.symbol}</span>
+                            <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
+                          </div>
+                          <span className="text-danger text-sm font-mono shrink-0">
+                            {(s.changePercent ?? 0).toFixed(2)}%
                           </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
-              <p className="text-sm text-muted-foreground">No stock data available for {meta.name}.</p>
+              <p className="text-xs text-muted-foreground italic">
+                No live price data available for {meta.name} right now —
+                switch to <span className="font-medium">Companies</span> to see major listings.
+              </p>
             )
           )}
-        </>
+
+          {/* Companies view — top by market cap */}
+          {viewMode === 'companies' && (
+            <div className="space-y-1">
+              {topByMarketCap.map((s) => {
+                const positive = (s.changePercent ?? 0) >= 0;
+                return (
+                  <div
+                    key={`c-${s.symbol}`}
+                    className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <span className="font-medium text-sm">{s.symbol}</span>
+                      <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
+                    </div>
+                    {s.changePercent != null ? (
+                      <span className={cn(
+                        'text-sm font-mono shrink-0',
+                        positive ? 'text-success' : 'text-danger'
+                      )}>
+                        {positive ? '+' : ''}{s.changePercent.toFixed(2)}%
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic shrink-0">—</span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {/* News Headlines (paginated) */}
