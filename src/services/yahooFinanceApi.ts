@@ -13,41 +13,63 @@ import { fetchCached } from "@/lib/apiCache";
 const PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 const API_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+/**
+ * A normalized Yahoo Finance quote.
+ *
+ * All fields are sourced from Yahoo's v8/finance/chart `meta` object via the
+ * `api-yahoo?endpoint=quote` proxy. v7/finance/quote and v10/quoteSummary have
+ * been killed by Yahoo, so chart-meta is the only reliable source.
+ *
+ * Fundamentals fields (`marketCap`, `trailingPE`, etc.) are NOT available from
+ * v8/chart and always come back as `null`. Use Finnhub, EODHD, or the Supabase
+ * `stocks` table for those.
+ */
 export interface YahooQuote {
   symbol: string;
-  shortName: string;
-  longName: string;
+  shortName: string | null;
+  longName: string | null;
   currency: string | null;
   exchangeName: string | null;
   fullExchangeName: string | null;
   regularMarketPrice: number | null;
   previousClose: number | null;
+  regularMarketChange: number | null;
+  regularMarketChangePercent: number | null;
+  regularMarketDayHigh: number | null;
+  regularMarketDayLow: number | null;
   regularMarketVolume: number | null;
-  marketCap: number | null;
   fiftyTwoWeekHigh: number | null;
   fiftyTwoWeekLow: number | null;
+  /** Always null from v8/chart — use a fundamentals source if needed. */
+  marketCap: null;
 }
 
+/**
+ * Fetch a normalized quote for a Yahoo Finance symbol via the api-yahoo proxy.
+ * The `exchange` arg is currently unused (kept for API compatibility) — exchange
+ * suffixing should already be encoded in the `symbol` (e.g. `RY.TO`, `BP.L`).
+ */
 export async function fetchYahooQuote(
   symbol: string,
-  exchange: string
+  exchange?: string
 ): Promise<YahooQuote | null> {
+  void exchange; // reserved for future symbol-format normalisation
   return fetchCached(
-    `yahoo:quote-fundamentals:${symbol}:${exchange}`,
+    `yahoo:quote-v8:${symbol}`,
     async () => {
-      const qs = new URLSearchParams({ symbol, exchange }).toString();
+      const qs = new URLSearchParams({ endpoint: 'quote', symbol }).toString();
       const url = `https://${PROJECT_ID}.supabase.co/functions/v1/api-yahoo?${qs}`;
       const res = await fetch(url, {
         headers: { apikey: API_KEY, Authorization: `Bearer ${API_KEY}` },
       });
       if (!res.ok) {
-        console.warn(`Yahoo Finance API returned ${res.status} for ${symbol}.${exchange}`);
+        console.warn(`Yahoo Finance API returned ${res.status} for ${symbol}`);
         await res.text();
         return null;
       }
       return res.json();
     },
-    { ttlMs: 15 * 60_000 }, // fundamentals change slowly — 15min
+    { ttlMs: 15 * 60_000 }, // 15 min — quotes are good enough for a fundamentals card
   );
 }
 

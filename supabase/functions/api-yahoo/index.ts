@@ -196,80 +196,100 @@ serve(async (req) => {
       });
     }
 
-    // ── Quote endpoint ────────────────────────────────────────────────────────
-    // Yahoo now requires crumb auth here too, so we use the same retry-on-401 flow as chart.
-    if (endpoint === "quote") {
-      const auth = await getCrumb();
-
-      for (let attempt = 0; attempt < 2; attempt++) {
-        const crumbParam = auth?.crumb ? `&crumb=${encodeURIComponent(auth.crumb)}` : "";
-        const cookieHdr  = auth?.cookie ? { "Cookie": auth.cookie } : {};
-
-        for (const host of YAHOO_HOSTS) {
-          try {
-            const res = await fetch(
-              `${host}/v7/finance/quote?symbols=${encodeURIComponent(symbol)}${crumbParam}`,
-              { headers: { ...YF_HEADERS, ...cookieHdr } },
-            );
-
-            if (res.status === 401 && attempt === 0) {
-              crumbCache = null;
-              const fresh = await getCrumb();
-              if (fresh) Object.assign(auth ?? {}, fresh);
-              break; // retry outer attempt loop
-            }
-
-            if (!res.ok) continue;
-            const data  = await res.json();
-            const quote = data?.quoteResponse?.result?.[0] ?? null;
-            return new Response(JSON.stringify(quote), {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-          } catch { /* try next host */ }
-        }
+    // ── Quote endpoint (v8 chart-based, future-proofed) ──────────────────────
+    // Yahoo's v7/finance/quote and v10/finance/quoteSummary endpoints have been
+    // progressively killed by Yahoo (return null even with valid crumb auth).
+    // The v8/finance/chart endpoint embeds a rich `meta` object that contains
+    // most of what callers historically wanted from `quote` — we just surface it.
+    //
+    // Returns: { regularMarketPrice, previousClose, regularMarketChange,
+    //   regularMarketChangePercent, regularMarketDayHigh/Low, fiftyTwoWeekHigh/Low,
+    //   regularMarketVolume, currency, exchangeName, fullExchangeName, shortName,
+    //   longName, marketState, gmtoffset, timezone, instrumentType }
+    //
+    // Fields that v8/chart cannot provide (marketCap, trailingPE, dividendYield,
+    // earnings dates, analyst ratings) are returned as `null`. Callers that need
+    // those should use a non-Yahoo source (Finnhub, EODHD fundamentals, Supabase).
+    if (endpoint === "quote" || endpoint === "quoteSummary") {
+      const upstream = await fetchChart(symbol, "1d", "5d");
+      if (!upstream) {
+        return new Response(JSON.stringify(null), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
-      return new Response(JSON.stringify(null), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+      const data   = await upstream.json();
+      const result = data?.chart?.result?.[0];
+      const meta   = result?.meta;
 
-    // ── Quote Summary endpoint (richer fundamentals) ─────────────────────────
-    // Returns pre-flattened fundamentals: PE, EPS, beta, 52W range, dividend yield, market cap.
-    // Uses Yahoo's /v10/finance/quoteSummary which supports the `modules` param.
-    if (endpoint === "quoteSummary") {
-      const modules = url.searchParams.get("modules") ?? "summaryDetail,defaultKeyStatistics,price,financialData";
-      const auth = await getCrumb();
-
-      for (let attempt = 0; attempt < 2; attempt++) {
-        const crumbParam = auth?.crumb ? `&crumb=${encodeURIComponent(auth.crumb)}` : "";
-        const cookieHdr  = auth?.cookie ? { "Cookie": auth.cookie } : {};
-
-        for (const host of YAHOO_HOSTS) {
-          try {
-            const res = await fetch(
-              `${host}/v10/finance/quoteSummary/${encodeURIComponent(symbol)}?modules=${encodeURIComponent(modules)}${crumbParam}`,
-              { headers: { ...YF_HEADERS, ...cookieHdr } },
-            );
-
-            if (res.status === 401 && attempt === 0) {
-              crumbCache = null;
-              const fresh = await getCrumb();
-              if (fresh) Object.assign(auth ?? {}, fresh);
-              break;
-            }
-
-            if (!res.ok) continue;
-            const data   = await res.json();
-            const result = data?.quoteSummary?.result?.[0] ?? null;
-            return new Response(JSON.stringify(result), {
-              headers: { ...corsHeaders, "Content-Type": "application/json" },
-            });
-          } catch { /* try next host */ }
-        }
+      if (!meta) {
+        return new Response(JSON.stringify(null), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
 
-      return new Response(JSON.stringify(null), {
+      // Yesterday's close = second-to-last bar in the chart range.
+      // (meta.previousClose / meta.chartPreviousClose are both the close BEFORE
+      // the chart range starts — i.e. 5 days ago when range=5d. They give the
+      // wrong change% if used directly.)
+      const rawCloses: (number | null)[] =
+        result.indicators?.adjclose?.[0]?.adjclose ??
+        result.indicators?.quote?.[0]?.close       ??
+        [];
+      const closes = rawCloses.filter((v): v is number => v != null && isFinite(v));
+
+      const price         = typeof meta.regularMarketPrice === "number"
+        ? meta.regularMarketPrice
+        : (closes.length > 0 ? closes[closes.length - 1] : null);
+      const previousClose = closes.length >= 2
+        ? closes[closes.length - 2]
+        : null;
+      const change        = price !== null && previousClose !== null ? price - previousClose : null;
+      const changePercent = change !== null && previousClose !== null && previousClose !== 0
+        ? (change / previousClose) * 100
+        : null;
+
+      const quote = {
+        symbol:                       meta.symbol ?? symbol,
+        // Price + change
+        regularMarketPrice:           price,
+        previousClose,
+        chartPreviousClose:           meta.chartPreviousClose ?? null,
+        regularMarketChange:          change,
+        regularMarketChangePercent:   changePercent,
+        // Day range
+        regularMarketDayHigh:         meta.regularMarketDayHigh ?? null,
+        regularMarketDayLow:          meta.regularMarketDayLow  ?? null,
+        regularMarketVolume:          meta.regularMarketVolume  ?? null,
+        // 52-week range
+        fiftyTwoWeekHigh:             meta.fiftyTwoWeekHigh ?? null,
+        fiftyTwoWeekLow:              meta.fiftyTwoWeekLow  ?? null,
+        // Identification
+        currency:                     meta.currency         ?? null,
+        exchangeName:                 meta.exchangeName     ?? null,
+        fullExchangeName:             meta.fullExchangeName ?? null,
+        instrumentType:               meta.instrumentType   ?? null,
+        shortName:                    meta.shortName        ?? null,
+        longName:                     meta.longName         ?? null,
+        // Market state + timezone
+        marketState:                  meta.marketState ?? null,
+        gmtoffset:                    meta.gmtoffset   ?? null,
+        timezone:                     meta.timezone    ?? null,
+        exchangeTimezoneName:         meta.exchangeTimezoneName ?? null,
+        // Fields v8/chart cannot provide — explicitly null so callers know
+        marketCap:                    null,
+        trailingPE:                   null,
+        forwardPE:                    null,
+        epsTrailingTwelveMonths:      null,
+        dividendYield:                null,
+        bookValue:                    null,
+        priceToBook:                  null,
+        beta:                         null,
+        averageDailyVolume3Month:     null,
+        averageDailyVolume10Day:      null,
+      };
+
+      return new Response(JSON.stringify(quote), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
