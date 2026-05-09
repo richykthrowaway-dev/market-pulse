@@ -655,6 +655,44 @@ export default function GlobeView({
       opacity:         0.85,
       depthWrite:      false,
     });
+
+    /**
+     * Hemisphere lazy-load via shader injection.
+     *
+     * Without this, all ~12,000 aircraft positions are rasterised every
+     * frame even though half are behind the globe relative to the camera.
+     * Three.js built-in depth testing alone is unreliable here because
+     * the points use `transparent: true` + `depthWrite: false` and
+     * `renderOrder: 3` to stay above other transparent overlays — that
+     * combination lets back-side points "bleed through" the globe.
+     *
+     * The fix is a two-line patch to PointsMaterial's vertex shader:
+     * after Three's standard `#include <project_vertex>` runs, we test
+     * the dot product of (point-normal-from-globe-centre) and
+     * (vector-from-point-to-camera).  Negative dot = point is on the
+     * far hemisphere; we set gl_Position outside the clip volume so the
+     * rasterizer discards it before fragment shading.
+     *
+     * Cost: zero JavaScript per frame.  Saves ~6,000 fragment-shader
+     * invocations every frame at full OpenSky coverage.
+     */
+    mat.onBeforeCompile = (shader) => {
+      shader.vertexShader = shader.vertexShader.replace(
+        '#include <project_vertex>',
+        `#include <project_vertex>
+        {
+          vec3 worldPos  = (modelMatrix * vec4(position, 1.0)).xyz;
+          vec3 toCam     = normalize(cameraPosition - worldPos);
+          vec3 outwardN  = normalize(worldPos);
+          if (dot(toCam, outwardN) < 0.0) {
+            // Far hemisphere — push outside clip volume to discard.
+            gl_Position = vec4(2.0, 2.0, 2.0, 1.0);
+          }
+        }
+        `,
+      );
+    };
+
     flightMatRef.current = mat;
     return () => { mat.dispose(); flightMatRef.current = null; };
   }, [countries.length]);
