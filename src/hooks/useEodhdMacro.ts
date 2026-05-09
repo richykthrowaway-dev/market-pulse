@@ -19,8 +19,11 @@ export interface MacroSnapshot {
 /**
  * ISO 3166-1 alpha-2 → alpha-3 map for EODHD macro-indicator endpoint.
  * EODHD requires the 3-letter country code in the URL path.
+ *
+ * Exported so other EODHD macro-indicator hooks (useEodhdTrade, etc.)
+ * can reuse the same mapping rather than duplicate it.
  */
-const ISO2_TO_ISO3: Record<string, string> = {
+export const ISO2_TO_ISO3: Record<string, string> = {
   US: 'USA', GB: 'GBR', DE: 'DEU', JP: 'JPN', CA: 'CAN', AU: 'AUS',
   FR: 'FRA', HK: 'HKG', CN: 'CHN', IN: 'IND', KR: 'KOR', BR: 'BRA',
   IT: 'ITA', ES: 'ESP', NL: 'NLD', CH: 'CHE', SG: 'SGP', ZA: 'ZAF',
@@ -33,7 +36,15 @@ const ISO2_TO_ISO3: Record<string, string> = {
   AE: 'ARE', KW: 'KWT', BH: 'BHR', OM: 'OMN', JO: 'JOR',
 };
 
-async function fetchIndicator(
+/**
+ * Fetch the most recent value for a single macro indicator + ISO3 country.
+ * Returns null on any error or empty response — never throws.
+ *
+ * Exported for reuse by sibling hooks (useEodhdTrade, etc.) that need to
+ * fan out across the same `/api/macro-indicator/{ISO3}?indicator=...`
+ * endpoint with different indicator codes.
+ */
+export async function fetchIndicator(
   projectId: string,
   anonKey: string,
   iso3: string,
