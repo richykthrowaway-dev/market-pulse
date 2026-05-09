@@ -296,18 +296,23 @@ interface ProductRow {
 }
 
 /**
- * Fetch HS 2-digit Chapter-level trade data from UN Comtrade's public
- * preview endpoint (no auth, no key, ~99 rows per call). Used for the
- * hover-drill-down inside each WITS section.
+ * Fetch HS 4-digit Heading-level trade data from UN Comtrade's public
+ * preview endpoint. Used for the hover-drill-down inside each WITS
+ * section, e.g. hovering "Machinery & Electronics" reveals concrete
+ * products like "Integrated circuits", "Telephones", "Aircraft engines"
+ * rather than just "Industrial machinery (HS 84) vs Electrical (HS 85)".
+ *
+ * AG4 returns up to 1,229 distinct codes per country; the 500-row
+ * Comtrade preview cap means very-large reporters might lose long-tail
+ * codes, but the top 100 always come through (which is what hover
+ * popovers actually display).
  *
  * Comtrade quirks:
- *   - Country code is M49 numeric (842 for USA), NOT ISO3
- *   - Field is `cmdCode` (HS chapter as string), value is `primaryValue`
- *     in plain USD (not thousands like WITS)
- *   - Returns one row per chapter that had reported trade in the year;
- *     chapters with zero trade are simply omitted
- *   - Aggregate row with cmdCode "TOTAL" or special chapters (99, 98)
- *     may appear — we keep all but the explicit TOTAL aggregate
+ *   - Country code is M49 numeric, NOT ISO3
+ *   - cmdCode is the HS heading as a 4-digit string ("8542", "2710")
+ *   - primaryValue is plain USD
+ *   - cmdDesc is null on preview tier — names are resolved client-side
+ *     via the static HS_HEADING_NAMES map (1,229 entries)
  */
 async function fetchComtradeChapters(
   reporter: string, // ISO3
@@ -322,7 +327,7 @@ async function fetchComtradeChapters(
     `${COMTRADE_BASE}?reporterCode=${m49}` +
     `&period=${year}` +
     `&partnerCode=0` +     // 0 = world
-    `&cmdCode=AG2` +       // HS 2-digit
+    `&cmdCode=AG4` +       // HS 4-digit (Heading) — was AG2 (Chapter)
     `&flowCode=${flowCode}`;
 
   let upstream: Response;

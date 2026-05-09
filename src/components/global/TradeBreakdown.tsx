@@ -9,8 +9,8 @@ import {
 import {
   WITS_SECTION_DISPLAY,
   WITS_SECTION_CHAPTERS,
-  chapterName,
 } from '@/lib/hsChapters';
+import { headingName } from '@/lib/hsHeadings';
 import { cn } from '@/lib/utils';
 
 interface TradeBreakdownProps {
@@ -102,21 +102,23 @@ function SectionDrillDown({ section, chapters, direction }: SectionDrillDownProp
         </span>
       </div>
       <p className="text-[10px] text-muted-foreground -mt-1">
-        ${(sectionTotal / 1e9).toFixed(1)}B total · top {top.length} of {chapters.length} HS chapters
+        ${(sectionTotal / 1e9).toFixed(1)}B total · top {top.length} of {chapters.length} products
       </p>
       <div className="space-y-1">
         {top.map((c) => {
           const shareWithinSection = sectionTotal > 0 ? c.valueUsd / sectionTotal : 0;
+          const padded = c.code.padStart(4, '0');
+          const fullName = headingName(c.code);
           return (
             <div key={c.code} className="flex items-center gap-2 text-xs">
-              <span className="font-mono text-[10px] text-muted-foreground w-7 shrink-0">
-                HS {c.code.padStart(2, '0')}
+              <span className="font-mono text-[10px] text-muted-foreground w-9 shrink-0">
+                {padded}
               </span>
               <span
                 className="flex-1 min-w-0 truncate text-foreground/90"
-                title={chapterName(c.code)}
+                title={fullName}
               >
-                {chapterName(c.code)}
+                {fullName}
               </span>
               <span className="tabular-nums text-muted-foreground shrink-0 w-12 text-right">
                 {(shareWithinSection * 100).toFixed(1)}%
@@ -145,20 +147,20 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
   const { data: chapterData } =
     useTradeBreakdown(iso2, direction, 'chapter');
 
-  // Group the chapter-level data by section using the static
-  // WITS_SECTION_CHAPTERS map so we can pass the right slice to each
-  // section's HoverCard.
+  // Group HS 4-digit headings by WITS section. Match by chapter prefix:
+  // an HS heading like "8542" belongs to chapter "85", which is in the
+  // 84-85_MachElec section. WITS_SECTION_CHAPTERS maps section→chapters,
+  // so we filter headings by extracting their first 2 digits.
   const chaptersBySection = useMemo(() => {
     const map = new Map<string, TradeProduct[]>();
     if (!chapterData?.products) return map;
-    const byCode = new Map<string, TradeProduct>();
-    for (const p of chapterData.products) byCode.set(p.code.padStart(2, '0'), p);
     for (const [sectionCode, chapterCodes] of Object.entries(WITS_SECTION_CHAPTERS)) {
-      const list: TradeProduct[] = [];
-      for (const c of chapterCodes) {
-        const found = byCode.get(c);
-        if (found && found.valueUsd > 0) list.push(found);
-      }
+      const chapterSet = new Set(chapterCodes);
+      const list = chapterData.products.filter((p) => {
+        const padded = p.code.padStart(4, '0');
+        const chapter = padded.slice(0, 2);
+        return p.valueUsd > 0 && chapterSet.has(chapter);
+      });
       list.sort((a, b) => b.valueUsd - a.valueUsd);
       map.set(sectionCode, list);
     }
