@@ -126,6 +126,22 @@ serve(async (req) => {
         });
       }
       finnhubUrl = `${FINNHUB_BASE}/stock/earnings?symbol=${encodeURIComponent(symbol)}&token=${apiKey}`;
+    } else if (endpoint === "calendar-earnings") {
+      // Forward-looking earnings calendar. Optional `symbol` param filters
+      // to a single ticker; without it Finnhub returns all companies in
+      // the date range, which we filter client-side. `from` / `to` are
+      // required and accept ISO YYYY-MM-DD.
+      const from = url.searchParams.get("from") ?? "";
+      const to   = url.searchParams.get("to")   ?? "";
+      if (!from || !to) {
+        return new Response(JSON.stringify({ error: "from and to params required (YYYY-MM-DD)" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const symbolParam = symbol ? `&symbol=${encodeURIComponent(symbol)}` : "";
+      finnhubUrl =
+        `${FINNHUB_BASE}/calendar/earnings?from=${from}&to=${to}${symbolParam}&token=${apiKey}`;
     } else {
       return new Response(JSON.stringify({ error: `Unknown endpoint: ${endpoint}` }), {
         status: 400,
