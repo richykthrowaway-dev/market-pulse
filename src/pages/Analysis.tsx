@@ -11,6 +11,7 @@ import { getStaticSector } from '@/lib/sectorMap';
 import { getGicsSectorColor } from '@/lib/gicsColors';
 import { fetchFinnhubQuote } from '@/services/finnhubApi';
 import { TradingViewHeatmap, TradingViewTechnicalAnalysis, TradingViewScreener } from '@/components/tradingview';
+import { FundamentalsLookup } from '@/components/analysis/FundamentalsLookup';
 import { cn } from '@/lib/utils';
 
 // ── 11 SPDR Sector ETFs → real-time sector performance via Finnhub ─────────
@@ -104,6 +105,12 @@ const Analysis = () => {
 
   return (
     <PageLayout title="Market Analysis">
+
+      {/* Stock Fundamentals — search any ticker, get a comprehensive
+          single-card snapshot. Sourced from EODHD. */}
+      <div className="mb-6 bg-card rounded-lg p-4 shadow border border-border">
+        <FundamentalsLookup />
+      </div>
 
       {/* NASDAQ 100 Heatmap */}
       <div className="mb-6 bg-card rounded-lg p-4 shadow border border-border">
