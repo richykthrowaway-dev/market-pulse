@@ -40,6 +40,8 @@ const FINNHUB_BASE = "https://finnhub.io/api/v1";
 const GNEWS_BASE = "https://gnews.io/api/v4/top-headlines";
 const MARKETAUX_BASE = "https://api.marketaux.com/v1/news/all";
 const NEWSAPI_BASE = "https://newsapi.org/v2";
+const NEWSDATA_BASE = "https://newsdata.io/api/1/news";
+const CURRENTS_BASE = "https://api.currentsapi.services/v1/latest-news";
 const TIMEOUT_MS = 8_000;
 
 /**
@@ -78,6 +80,21 @@ const NEWSAPI_COUNTRIES = new Set([
   "PH", "PL", "PT", "RO", "RS", "RU", "SA", "SE", "SG", "SI", "SK", "TH",
   "TR", "TW", "UA", "US", "VE", "ZA",
 ]);
+
+// Currents API supports a limited set of countries — calling with an
+// unsupported country returns HTTP 400. Verified live against the API.
+const CURRENTS_COUNTRIES = new Set([
+  "US", "GB", "CA", "AU", "NZ", "IE",
+  "DE", "FR", "IT", "ES", "NL", "CH", "SE", "NO", "DK", "FI", "PL", "AT",
+  "PT", "GR", "CZ", "HU", "RO", "BE", "RU", "UA",
+  "JP", "CN", "KR", "HK", "TW", "SG", "ID", "TH", "MY", "PH", "PK", "IN", "VN",
+  "BR", "MX", "AR", "CO", "CL",
+  "SA", "AE", "IR", "IQ", "LB", "QA", "TR", "IL",
+  "NG", "KE", "EG", "GH",
+]);
+
+// NewsData.io has effectively universal country coverage (60+ ISO2 codes).
+// We don't gate on a country list — failures are silent and fall through.
 
 const COUNTRY_NAMES: Record<string, string> = {
   GH: "Ghana", TZ: "Tanzania", ET: "Ethiopia", UG: "Uganda",
@@ -1227,6 +1244,67 @@ async function fetchMarketAux(country: string, apiKey: string): Promise<NewsItem
   }
 }
 
+// ── NewsData.io ─────────────────────────────────────────────────────────────
+// Universal country coverage (60+ ISO2 codes), free tier 200/day. The
+// per-country `country=` filter is server-side, so results are real news
+// FROM the country (not just ABOUT it). Excellent fit for under-covered
+// regions where our other sources are thin.
+
+async function fetchNewsData(country: string, apiKey: string): Promise<NewsItem[]> {
+  const url = `${NEWSDATA_BASE}?apikey=${apiKey}&country=${country.toLowerCase()}&language=en&size=10`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    if (res.status === 429) { await res.text(); console.warn("NewsData.io rate limited"); return []; }
+    if (!res.ok) { await res.text(); console.warn(`NewsData.io ${country}: HTTP ${res.status}`); return []; }
+    const data = await res.json();
+    if (data?.status !== "success") return [];
+    const articles = Array.isArray(data.results) ? data.results : [];
+    return articles.map((a: any, i: number) => ({
+      id: `newsdata-${country}-${a.article_id || i}-${Date.now()}`,
+      title: a.title || "",
+      summary: a.description || a.content || "",
+      source: a.source_name || a.source_id || "NewsData",
+      url: a.link || "",
+      imageUrl: a.image_url && a.image_url.startsWith("http") ? a.image_url : undefined,
+      publishedAt: a.pubDate ? new Date(a.pubDate).toISOString() : new Date().toISOString(),
+      relatedSymbols: [],
+    })).filter((n: NewsItem) => n.title && n.url);
+  } catch (e) {
+    console.error(`NewsData.io error: ${e}`);
+    return [];
+  }
+}
+
+// ── Currents API ────────────────────────────────────────────────────────────
+// Limited country support (~50 countries — see CURRENTS_COUNTRIES). Free
+// tier 600/day. Returns articles tagged with country. Skipped for unsupported
+// countries to avoid burning quota on guaranteed 400s.
+
+async function fetchCurrents(country: string, apiKey: string): Promise<NewsItem[]> {
+  const url = `${CURRENTS_BASE}?apiKey=${apiKey}&country=${country.toUpperCase()}&page_size=15`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(TIMEOUT_MS) });
+    if (res.status === 429) { await res.text(); console.warn("Currents API rate limited"); return []; }
+    if (!res.ok) { await res.text(); console.warn(`Currents ${country}: HTTP ${res.status}`); return []; }
+    const data = await res.json();
+    if (data?.status !== "ok") return [];
+    const articles = Array.isArray(data.news) ? data.news : [];
+    return articles.map((a: any) => ({
+      id: `currents-${country}-${a.id || Date.now()}`,
+      title: a.title || "",
+      summary: a.description || "",
+      source: a.author || "Currents",
+      url: a.url || "",
+      imageUrl: a.image && a.image !== "None" && a.image.startsWith("http") ? a.image : undefined,
+      publishedAt: a.published ? new Date(a.published).toISOString() : new Date().toISOString(),
+      relatedSymbols: [],
+    })).filter((n: NewsItem) => n.title && n.url);
+  } catch (e) {
+    console.error(`Currents error: ${e}`);
+    return [];
+  }
+}
+
 // ── Finnhub ─────────────────────────────────────────────────────────────────
 
 interface FinnhubItem {
@@ -1274,6 +1352,8 @@ serve(async (req) => {
   const gnewsKeys = getGNewsKeys();
   const marketauxKey = Deno.env.get("MARKETAUX_API_KEY");
   const newsapiKey = Deno.env.get("NEWSAPI_KEY");
+  const newsdataKey = Deno.env.get("NEWSDATA_API_KEY");
+  const currentsKey = Deno.env.get("CURRENTSAPI_KEY");
 
   const url = new URL(req.url);
   const country = url.searchParams.get("country")?.toUpperCase() ?? "";
@@ -1419,6 +1499,22 @@ serve(async (req) => {
       if (marketauxKey) {
         fetches.push(fetchMarketAux(country, marketauxKey));
         sourceLabels.push("MarketAux");
+      }
+
+      // ── NewsData.io — universal country coverage (60+ countries) ────
+      // Particularly strong for under-covered Africa/Asia/ME small markets
+      // where our other sources are thin. Free tier 200/day, gracefully
+      // degrades to [] on 429.
+      if (newsdataKey) {
+        fetches.push(fetchNewsData(country, newsdataKey));
+        sourceLabels.push("NewsData.io");
+      }
+
+      // ── Currents API — 50+ supported countries ──────────────────────
+      // Skipped for unsupported countries (would 400). Free tier 600/day.
+      if (currentsKey && CURRENTS_COUNTRIES.has(country)) {
+        fetches.push(fetchCurrents(country, currentsKey));
+        sourceLabels.push("Currents");
       }
 
       // ── Pan-European wire feeds (Euronews, France24 Europe) ────────
