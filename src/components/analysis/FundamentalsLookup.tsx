@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Search, BarChart3, TrendingUp, Users, ExternalLink, Loader2, AlertCircle } from 'lucide-react';
 import { fetchEodFundamentals, type EodFundamentals } from '@/services/eodhdApi';
 import { EarningsBeatsChart } from './EarningsBeatsChart';
+import { PeerComparison } from './PeerComparison';
 import { cn } from '@/lib/utils';
 
 // ── Format helpers ────────────────────────────────────────────────────
@@ -156,7 +157,7 @@ function FiftyTwoWeekBar({
 
 // ── Main result card ──────────────────────────────────────────────────
 
-function ResultCard({ data }: { data: EodFundamentals }) {
+function ResultCard({ data, primaryTicker }: { data: EodFundamentals; primaryTicker: string }) {
   const g  = data.General;
   const h  = data.Highlights;
   const t  = data.Technicals;
@@ -288,6 +289,11 @@ function ResultCard({ data }: { data: EodFundamentals }) {
           null automatically if the company has insufficient earnings
           history (e.g. recent IPOs, ETFs). */}
       <EarningsBeatsChart data={data} />
+
+      {/* Peer comparison — opt-in (user must add tickers). Each peer
+          ticker added costs 10 EODHD credits on cold lookup; cached
+          12h via the same fetchCached layer as the primary. */}
+      <PeerComparison primary={data} primaryTicker={primaryTicker} />
     </div>
   );
 }
@@ -405,7 +411,7 @@ export function FundamentalsLookup() {
           </div>
         </div>
       ) : (
-        <ResultCard data={data} />
+        <ResultCard data={data} primaryTicker={normalisedTicker!} />
       )}
     </div>
   );
