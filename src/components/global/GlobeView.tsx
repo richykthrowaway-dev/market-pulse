@@ -608,17 +608,23 @@ export default function GlobeView({
     const radius = globe.getGlobeRadius() * 1.008;
     const positions = new Float32Array(liveVessels.length * 3);
 
-    // Spherical (lat, lng) → Cartesian using react-globe.gl convention:
-    // x = -r sinφ cosθ,  y = r cosφ,  z = r sinφ sinθ
-    // where φ = colatitude (90 − lat), θ = (lng + 180) in radians.
+    // Spherical (lat, lng) → Cartesian — MUST match globe.gl's internal
+    // polar2Cartesian (node_modules/globe.gl/dist/globe.gl.js:63859),
+    // since that is what positions all the library-rendered objects
+    // (countries, trade points, arcs).  Diverging gives a Y-axis
+    // rotation that looks correct on first glance but places NYC where
+    // Cairo should be, etc.
+    //   φ = (90 − lat) · π/180   (colatitude)
+    //   θ = (90 − lng) · π/180
+    //   x =  r sinφ cosθ,   y = r cosφ,   z = r sinφ sinθ
     for (let i = 0; i < liveVessels.length; i++) {
       const v = liveVessels[i];
       const phi    = (90 - v.lat) * (Math.PI / 180);
-      const theta  = (v.lng + 180) * (Math.PI / 180);
+      const theta  = (90 - v.lng) * (Math.PI / 180);
       const sinPhi = Math.sin(phi);
-      positions[i * 3]     = -radius * sinPhi * Math.cos(theta);
-      positions[i * 3 + 1] =  radius * Math.cos(phi);
-      positions[i * 3 + 2] =  radius * sinPhi * Math.sin(theta);
+      positions[i * 3]     = radius * sinPhi * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.cos(phi);
+      positions[i * 3 + 2] = radius * sinPhi * Math.sin(theta);
     }
 
     const geometry = new THREE.BufferGeometry();
@@ -712,14 +718,15 @@ export default function GlobeView({
     const radius    = globe.getGlobeRadius() * 1.010;
     const positions = new Float32Array(liveFlights.length * 3);
 
+    // Use globe.gl's polar2Cartesian convention — see vessel block above.
     for (let i = 0; i < liveFlights.length; i++) {
       const f = liveFlights[i];
       const phi    = (90 - f.lat) * (Math.PI / 180);
-      const theta  = (f.lng + 180) * (Math.PI / 180);
+      const theta  = (90 - f.lng) * (Math.PI / 180);
       const sinPhi = Math.sin(phi);
-      positions[i * 3]     = -radius * sinPhi * Math.cos(theta);
-      positions[i * 3 + 1] =  radius * Math.cos(phi);
-      positions[i * 3 + 2] =  radius * sinPhi * Math.sin(theta);
+      positions[i * 3]     = radius * sinPhi * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.cos(phi);
+      positions[i * 3 + 2] = radius * sinPhi * Math.sin(theta);
     }
 
     const geometry = new THREE.BufferGeometry();
