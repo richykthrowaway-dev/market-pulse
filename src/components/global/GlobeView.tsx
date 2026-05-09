@@ -401,24 +401,38 @@ export default function GlobeView({
         if (cancelled) { texture.dispose(); return; }
         cloudsTexture = texture;
         const radius = globe.getGlobeRadius();
-        const geometry = new THREE.SphereGeometry(radius * 1.005, 75, 75);
+        // Altitude 0.025 (radius × 1.025) is chosen to sit clearly above
+        // the default unselected polygon cap altitude (0.005) AND below
+        // the selected-country highlight altitude (0.030) — so clouds
+        // float over normal countries but the highlighted country still
+        // pokes above the cloud layer for emphasis. The 0.020 separation
+        // from polygon caps is enough z-distance to defeat 24-bit depth
+        // buffer precision; smaller gaps cause z-fighting which renders
+        // as the "jiggling" / "clipping in and out" the previous version
+        // showed at radius × 1.005 (which collided exactly with the
+        // polygon altitude).
+        const geometry = new THREE.SphereGeometry(radius * 1.025, 96, 96);
         const material = new THREE.MeshPhongMaterial({
           map:          texture,
           transparent:  true,
-          opacity:      0.42,
-          depthWrite:   false, // avoid z-fighting with the underlying globe
+          opacity:      0.40,
+          depthWrite:   false, // transparent → don't write depth, only test
+          depthTest:    true,
         });
         cloudsMesh = new THREE.Mesh(geometry, material);
-        cloudsMesh.renderOrder = 1; // draw after the globe surface
+        cloudsMesh.renderOrder = 1; // draw after the globe + polygon caps
         globe.scene().add(cloudsMesh);
 
-        // Slow independent cloud drift (≈ 1 full rotation per ~9 minutes).
-        let last = performance.now();
+        // Slow cloud drift (~1 full rotation per ~9 minutes). Uses an
+        // absolute-time formula rather than `+= dt * speed`. Reasons:
+        //   - Avoids frame-to-frame drift accumulation from float imprecision.
+        //   - Keeps cloud position purely a function of wall-clock time,
+        //     so a tab pause + resume doesn't cause a sudden cloud jump.
+        const startTime = performance.now();
+        const ROT_SPEED = 0.000012; // radians per millisecond
         const tick = () => {
           if (!cloudsMesh) return;
-          const now = performance.now();
-          cloudsMesh.rotation.y += (now - last) * 0.000012;
-          last = now;
+          cloudsMesh.rotation.y = (performance.now() - startTime) * ROT_SPEED;
           rafId = requestAnimationFrame(tick);
         };
         rafId = requestAnimationFrame(tick);
