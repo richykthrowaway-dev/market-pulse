@@ -20,10 +20,12 @@ export default defineConfig(({ mode }) => ({
       },
       // ── OpenSky proxy: avoids CORS issues with direct browser requests ──
       // In production the same path is served by api/opensky.ts (Vercel function).
+      // OpenSky proxy kept for local dev only — production uses direct browser fetch
+      // (OpenSky blocks cloud/datacenter IPs so server-side proxies fail)
       '/api/opensky': {
-        target: 'https://fzokumkbgvwsyftwwprx.functions.supabase.co',
+        target: 'https://opensky-network.org',
         changeOrigin: true,
-        rewrite: () => '/api-opensky',
+        rewrite: () => '/api/states/all',
       },
     },
   },

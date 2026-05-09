@@ -60,18 +60,18 @@ export type FlightStatus =
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /**
- * Route through our own Vercel serverless proxy (/api/opensky) instead of
- * calling OpenSky directly from the browser.  This solves two problems:
- *   1. CORS — OpenSky does not guarantee Access-Control-Allow-Origin headers
- *      on every response, so a direct browser fetch() is unreliable.
- *   2. Auth — client credentials stay in Vercel environment variables, never
- *      shipped to the browser bundle.
+ * Call OpenSky directly from the browser.
  *
- * In dev, vite.config.ts proxies /api/opensky → opensky-network.org/api/states/all.
- * In production, api/opensky.ts (Vercel serverless function) handles the call.
+ * The proxy approach (Vercel → OpenSky, Supabase → OpenSky) fails because
+ * OpenSky blocks all datacenter/cloud-provider IPs at the network level.
+ * The user's browser runs on a residential/ISP address which is NOT blocked.
+ *
+ * CORS: OpenSky includes Access-Control-Allow-Origin: * on /api/states/all
+ * for anonymous GET requests in practice, even though their docs don't
+ * guarantee it.  If a CORS preflight fails, the fetch error handler will
+ * trigger the exponential backoff as normal.
  */
-const OPENSKY_BASE_URL   = 'https://fzokumkbgvwsyftwwprx.functions.supabase.co/api-opensky';
-const OPENSKY_TOKEN_URL  = 'https://auth.opensky-network.org/auth/realms/opensky-network/protocol/openid-connect/token';
+const OPENSKY_BASE_URL   = 'https://opensky-network.org/api/states/all';
 /**
  * 60 s polling — conservative but correct for anonymous users.
  * Global fetch costs 4 credits; budget is 400/day → 100 calls/day.
