@@ -18,6 +18,13 @@ export default defineConfig(({ mode }) => ({
           'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ6b2t1bWtiZ3Z3c3lmdHd3cHJ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3NTM2MDAsImV4cCI6MjA4ODMyOTYwMH0.7gg92KfZxouICjHJAwSeImmnqVxQhK7Evt8xit5vMYE',
         },
       },
+      // ── OpenSky proxy: avoids CORS issues with direct browser requests ──
+      // In production the same path is served by api/opensky.ts (Vercel function).
+      '/api/opensky': {
+        target: 'https://opensky-network.org',
+        changeOrigin: true,
+        rewrite: () => '/api/states/all',
+      },
     },
   },
   plugins: [

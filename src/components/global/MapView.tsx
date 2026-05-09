@@ -5,6 +5,7 @@ import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeD
 import { NODE_COLOR, ROUTE_COLOR, type TradeNode, type TradeRoute } from "@/data/tradeInfrastructure";
 import { smoothRouteCoords } from "@/data/tradeInfrastructure/smoothing";
 import type { Vessel } from "@/hooks/useAISStream";
+import type { Flight } from "@/hooks/useOpenSkyFlights";
 
 type GlobeMode = "flags" | "performance";
 
@@ -33,6 +34,7 @@ export interface MapViewProps {
   selectedTradeNodeId?: string | null;
   onTradeNodeClick?: (node: TradeNode) => void;
   liveVessels?: Vessel[];
+  liveFlights?: Flight[];
 }
 
 // ── Performance color (matches GlobeView) ───────────────────────────────────
@@ -128,6 +130,7 @@ export default function MapView({
   selectedTradeNodeId = null,
   onTradeNodeClick,
   liveVessels = [],
+  liveFlights = [],
 }: MapViewProps) {
   const svgRef  = useRef<SVGSVGElement>(null);
   const zoomBehaviorRef = useRef<any>(null);
@@ -270,22 +273,47 @@ export default function MapView({
     });
   }, [pathGen, tradePoints]);
 
-  // ── Derived: projected live vessel positions ─────────────────────────────
-  // Only the visible MMSI / lat / lng are kept in the projected list — keeps
-  // the React diff cheap when AISStream flushes 5000+ updates every 2s.
+  // ── Derived: projected live vessel positions — viewport-culled ──────────
   const liveVesselPins = useMemo(() => {
     if (!pathGen || !liveVessels.length) return [];
-    const pins = liveVessels.flatMap((v) => {
+    const margin = 20 / zoom.k;
+    const minX = -zoom.x / zoom.k - margin;
+    const maxX = minX + width  / zoom.k + 2 * margin;
+    const minY = -zoom.y / zoom.k - margin;
+    const maxY = minY + height / zoom.k + 2 * margin;
+    return liveVessels.flatMap((v) => {
       const pos = pathGen.project([v.lng, v.lat]);
       if (!pos) return [];
+      const [x, y] = pos;
+      if (x < minX || x > maxX || y < minY || y > maxY) return [];
       return [{ mmsi: v.mmsi, x: pos[0], y: pos[1] }];
     });
-    // Verify projection is producing usable pins — projection silently
-    // returns null for points outside its visible region, so a globally-
-    // distributed vessel set should produce far more pins than nulls.
-    console.log(`[MapView] liveVessels=${liveVessels.length} → projected pins=${pins.length}`);
-    return pins;
-  }, [pathGen, liveVessels]);
+  }, [pathGen, liveVessels, zoom.x, zoom.y, zoom.k, width, height]);
+
+  // ── Derived: projected live flight positions — viewport-culled ───────────
+  // "Lazy loading" for the flat map: only create SVG <circle> elements for
+  // aircraft that project inside the current visible viewport (+ 20 px margin).
+  // A global OpenSky response has 8k-12k aircraft; without culling, the full
+  // DOM tree is built and layout/paint runs on ~10k off-screen circles every
+  // render.  With culling, at default zoom only ~1k are visible; zoomed-in
+  // on a region the count drops further, matching what the eye actually needs.
+  const liveFlightPins = useMemo(() => {
+    if (!pathGen || !liveFlights.length) return [];
+    // Convert screen-space viewport bounds to pre-transform map coordinates
+    const margin = 20 / zoom.k;
+    const minX = -zoom.x / zoom.k - margin;
+    const maxX = minX + width  / zoom.k + 2 * margin;
+    const minY = -zoom.y / zoom.k - margin;
+    const maxY = minY + height / zoom.k + 2 * margin;
+
+    return liveFlights.flatMap((f) => {
+      const pos = pathGen.project([f.lng, f.lat]);
+      if (!pos) return [];
+      const [x, y] = pos;
+      if (x < minX || x > maxX || y < minY || y > maxY) return [];
+      return [{ icao24: f.icao24, x, y }];
+    });
+  }, [pathGen, liveFlights, zoom.x, zoom.y, zoom.k, width, height]);
 
   // ── Derived: projected trade route paths (smoothed waypoints) ────────────
   // The Catmull-Rom smoother (./smoothing.ts) densifies the route's high-
@@ -408,19 +436,32 @@ export default function MapView({
             );
           })}
 
-          {/* ── Live AIS vessels (between arcs and trade nodes) ──
-              Size: at zoom k=1 we draw 2.5 px circles — visible without
-              looking spammy.  Floor of 0.6 keeps them on-screen at deep
-              zoom; otherwise sub-pixel sizes get rasterised away. */}
+          {/* ── Live AIS vessels ──
+              Simple filled circles. Baseline r = 2.5/zoom.k × 1.15 ≈ 2.875,
+              floor 0.69 (was 0.6). pointerEvents none — read-only layer. */}
           {liveVesselPins.map(({ mmsi, x, y }) => (
             <circle
               key={mmsi}
               cx={x} cy={y}
-              r={Math.max(0.6, 2.5 / zoom.k)}
+              r={Math.max(0.69, 2.875 / zoom.k)}
               fill="#67e8f9"
               fillOpacity={0.95}
               stroke="#0f172a"
               strokeWidth={0.3 / zoom.k}
+              style={{ pointerEvents: 'none' }}
+            />
+          ))}
+
+          {/* ── Live flights (OpenSky) — purple dots above vessels ── */}
+          {liveFlightPins.map(({ icao24, x, y }) => (
+            <circle
+              key={icao24}
+              cx={x} cy={y}
+              r={Math.max(0.5, 2.0 / zoom.k)}
+              fill="#a855f7"
+              fillOpacity={0.9}
+              stroke="#0f172a"
+              strokeWidth={0.2 / zoom.k}
               style={{ pointerEvents: 'none' }}
             />
           ))}

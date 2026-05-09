@@ -8,6 +8,7 @@ import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeD
 import { NODE_COLOR, ROUTE_COLOR, type TradeNode, type TradeRoute } from "@/data/tradeInfrastructure";
 import { smoothRouteCoords } from "@/data/tradeInfrastructure/smoothing";
 import type { Vessel } from "@/hooks/useAISStream";
+import type { Flight } from "@/hooks/useOpenSkyFlights";
 
 // ── Earth textures (NASA Blue Marble + topology + clouds) ──────────────
 //
@@ -67,6 +68,11 @@ interface GlobeViewProps {
    * data-transition reconciliation, which would lock up at AIS update rates.
    */
   liveVessels?:           Vessel[];
+  /**
+   * Live flight positions from OpenSky. Same imperative Points approach as
+   * vessels — altitude 1.010 keeps flights visually above ship layer (1.008).
+   */
+  liveFlights?:           Flight[];
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -212,6 +218,7 @@ export default function GlobeView({
   selectedTradeNodeId,
   onTradeNodeClick,
   liveVessels,
+  liveFlights,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -556,69 +563,69 @@ export default function GlobeView({
     };
   }, [countries]);
 
-  // ── Live AIS vessels (imperative three.js Points layer) ──────────────
-  // We bypass react-globe.gl's pointsData here because AIS feeds emit
-  // hundreds of position updates per second and re-running react-globe.gl's
-  // data transition every flush would lock the main thread. Instead we
-  // attach a single THREE.Points mesh directly to the scene and
-  // re-allocate its position attribute each time `liveVessels` changes.
+    // ── Live AIS vessels (imperative three.js Points layer) ──────────────
+  // Performance split: material is created ONCE on mount and reused across
+  // all vessel updates. PointsMaterial creation triggers GLSL shader
+  // compilation — doing it every 2-second AIS flush was the source of the
+  // render-thread stutter. Geometry (positions array) is cheap to recreate.
   //
-  // Altitude factor 1.008 sits above the trade-path layer (1.006) so
-  // vessels are never z-occluded by ports or routes underneath them.
+  // Altitude 1.008 sits above the trade-path layer (1.006).
   const vesselMeshRef = useRef<THREE.Points | null>(null);
+  const vesselMatRef  = useRef<THREE.PointsMaterial | null>(null);
+
+  // Create the material once when the globe is ready; dispose on unmount.
+  useEffect(() => {
+    if (!countries.length) return;
+    const mat = new THREE.PointsMaterial({
+      color:           0x67e8f9, // sky-300
+      size:            3.5,      // screen px (sizeAttenuation off)
+      sizeAttenuation: false,
+      transparent:     true,
+      opacity:         0.9,
+      depthWrite:      false,
+    });
+    vesselMatRef.current = mat;
+    return () => {
+      mat.dispose();
+      vesselMatRef.current = null;
+    };
+  }, [countries.length]);
+
+  // Update geometry whenever the vessel list changes — reuse the material.
   useEffect(() => {
     const globe = globeRef.current;
-    if (!globe || !countries.length) return;
+    if (!globe || !countries.length || !vesselMatRef.current) return;
 
-    // Tear down whatever's there — fresh build is cheap for ≤10k points.
+    // Remove the old mesh (geometry only — material stays alive).
     if (vesselMeshRef.current) {
       try { globe.scene().remove(vesselMeshRef.current); } catch { /* scene gone */ }
       vesselMeshRef.current.geometry.dispose();
-      (vesselMeshRef.current.material as THREE.Material).dispose();
       vesselMeshRef.current = null;
     }
 
-    if (!liveVessels || liveVessels.length === 0) {
-      console.log('[GlobeView] vessel mesh: no vessels to render');
-      return;
-    }
-
-    console.log(`[GlobeView] vessel mesh: building ${liveVessels.length} points`);
+    if (!liveVessels || liveVessels.length === 0) return;
 
     const radius = globe.getGlobeRadius() * 1.008;
     const positions = new Float32Array(liveVessels.length * 3);
 
-    // Spherical (lat, lng) → Cartesian (x, y, z) using react-globe.gl's
-    // coordinate convention: x = -r sinφ cosθ, y = r cosφ, z = r sinφ sinθ
-    // where φ is colatitude (90 - lat) and θ is (lng + 180) in radians.
+    // Spherical (lat, lng) → Cartesian using react-globe.gl convention:
+    // x = -r sinφ cosθ,  y = r cosφ,  z = r sinφ sinθ
+    // where φ = colatitude (90 − lat), θ = (lng + 180) in radians.
     for (let i = 0; i < liveVessels.length; i++) {
       const v = liveVessels[i];
-      const phi   = (90 - v.lat) * (Math.PI / 180);
-      const theta = (v.lng + 180) * (Math.PI / 180);
+      const phi    = (90 - v.lat) * (Math.PI / 180);
+      const theta  = (v.lng + 180) * (Math.PI / 180);
       const sinPhi = Math.sin(phi);
       positions[i * 3]     = -radius * sinPhi * Math.cos(theta);
-      positions[i * 3 + 1] = radius * Math.cos(phi);
-      positions[i * 3 + 2] = radius * sinPhi * Math.sin(theta);
+      positions[i * 3 + 1] =  radius * Math.cos(phi);
+      positions[i * 3 + 2] =  radius * sinPhi * Math.sin(theta);
     }
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
 
-    // Size: globe radius ≈ 100 world units.  With sizeAttenuation OFF the
-    // size is in screen pixels, which is what we actually want for a
-    // dashboard — vessels stay readable regardless of zoom.  3 px is bright
-    // enough to spot at globe-fit while not turning into blobs when zoomed.
-    const material = new THREE.PointsMaterial({
-      color:            0x67e8f9, // sky-300 — readable against ocean + land
-      size:             3,
-      sizeAttenuation:  false,
-      transparent:      true,
-      opacity:          0.9,
-      depthWrite:       false,    // don't occlude paths underneath
-    });
-
-    const points = new THREE.Points(geometry, material);
-    points.renderOrder = 2; // draw after polygons (1) and clouds (1)
+    const points = new THREE.Points(geometry, vesselMatRef.current);
+    points.renderOrder = 2;
     globe.scene().add(points);
     vesselMeshRef.current = points;
 
@@ -626,11 +633,73 @@ export default function GlobeView({
       if (vesselMeshRef.current) {
         try { globe.scene().remove(vesselMeshRef.current); } catch { /* ignore */ }
         vesselMeshRef.current.geometry.dispose();
-        (vesselMeshRef.current.material as THREE.Material).dispose();
         vesselMeshRef.current = null;
+        // Note: material is NOT disposed here — vesselMatRef effect owns it.
       }
     };
   }, [liveVessels, countries.length]);
+
+  // ── Live flights (OpenSky) — same two-effect pattern as vessels ───────
+  // Material: purple (#a855f7), altitude 1.010 (above vessels at 1.008).
+  // Size 2.5 px — slightly smaller than vessels since there are ~10k flights.
+  const flightMeshRef = useRef<THREE.Points | null>(null);
+  const flightMatRef  = useRef<THREE.PointsMaterial | null>(null);
+
+  useEffect(() => {
+    if (!countries.length) return;
+    const mat = new THREE.PointsMaterial({
+      color:           0xa855f7, // purple-500
+      size:            2.5,
+      sizeAttenuation: false,
+      transparent:     true,
+      opacity:         0.85,
+      depthWrite:      false,
+    });
+    flightMatRef.current = mat;
+    return () => { mat.dispose(); flightMatRef.current = null; };
+  }, [countries.length]);
+
+  useEffect(() => {
+    const globe = globeRef.current;
+    if (!globe || !countries.length || !flightMatRef.current) return;
+
+    if (flightMeshRef.current) {
+      try { globe.scene().remove(flightMeshRef.current); } catch { /* ignore */ }
+      flightMeshRef.current.geometry.dispose();
+      flightMeshRef.current = null;
+    }
+
+    if (!liveFlights || liveFlights.length === 0) return;
+
+    const radius    = globe.getGlobeRadius() * 1.010;
+    const positions = new Float32Array(liveFlights.length * 3);
+
+    for (let i = 0; i < liveFlights.length; i++) {
+      const f = liveFlights[i];
+      const phi    = (90 - f.lat) * (Math.PI / 180);
+      const theta  = (f.lng + 180) * (Math.PI / 180);
+      const sinPhi = Math.sin(phi);
+      positions[i * 3]     = -radius * sinPhi * Math.cos(theta);
+      positions[i * 3 + 1] =  radius * Math.cos(phi);
+      positions[i * 3 + 2] =  radius * sinPhi * Math.sin(theta);
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    const mesh = new THREE.Points(geometry, flightMatRef.current);
+    mesh.renderOrder = 3; // above vessels (2)
+    globe.scene().add(mesh);
+    flightMeshRef.current = mesh;
+
+    return () => {
+      if (flightMeshRef.current) {
+        try { globe.scene().remove(flightMeshRef.current); } catch { /* ignore */ }
+        flightMeshRef.current.geometry.dispose();
+        flightMeshRef.current = null;
+      }
+    };
+  }, [liveFlights, countries.length]);
 
   // Live-respond to autoRotate prop changes WITHOUT waiting for the next
   // idle cycle. Flipping the toggle off mid-spin should stop instantly;

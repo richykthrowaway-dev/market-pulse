@@ -15,6 +15,7 @@ import {
   type LayerKey, type TradeNode,
 } from "@/data/tradeInfrastructure";
 import { useAISStream } from "@/hooks/useAISStream";
+import { useOpenSkyFlights } from "@/hooks/useOpenSkyFlights";
 
 // ── Realistic space background — NASA Tycho-2 Skymap ────────────────────
 // 4096×2048 photographic-quality star map covering the entire celestial
@@ -226,6 +227,18 @@ const Global = () => {
     rawMsgCount: aisRawMsgCount,
   } = useAISStream(liveVesselsEnabled);
 
+  // ── Live OpenSky flight feed ─────────────────────────────────────────
+  // Poll ONLY when the Trade tab is active AND the 'liveFlights' layer
+  // is toggled on. Mirrors the AIS gate above to prevent background
+  // HTTP requests when the user isn't looking at the Trade overlay.
+  const liveFlightsEnabled =
+    tradeTabActive && tradeActiveLayers.has('liveFlights');
+  const {
+    flights: liveFlights,
+    status: flightStatus,
+    flightCount,
+  } = useOpenSkyFlights(liveFlightsEnabled);
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Header Bar */}
@@ -364,6 +377,7 @@ const Global = () => {
                   selectedTradeNodeId={tradeSelectedNode?.id ?? null}
                   onTradeNodeClick={handleTradeNodeClick}
                   liveVessels={liveVesselsEnabled ? liveVessels : undefined}
+                  liveFlights={liveFlightsEnabled ? liveFlights : undefined}
                 />
               ) : (
                 <GlobeView
@@ -382,6 +396,7 @@ const Global = () => {
                   selectedTradeNodeId={tradeSelectedNode?.id ?? null}
                   onTradeNodeClick={handleTradeNodeClick}
                   liveVessels={liveVesselsEnabled ? liveVessels : undefined}
+                  liveFlights={liveFlightsEnabled ? liveFlights : undefined}
                 />
               )}
             </Suspense>
@@ -411,6 +426,8 @@ const Global = () => {
               aisStatus={aisStatus}
               aisVesselCount={aisVesselCount}
               aisRawMsgCount={aisRawMsgCount}
+              flightStatus={flightStatus}
+              flightCount={flightCount}
             />
           ) : (
             <GlobalSummary onCountryClick={handleCountryClick} />

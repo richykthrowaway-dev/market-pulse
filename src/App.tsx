@@ -1,4 +1,5 @@
 /* app root */
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -10,22 +11,32 @@ import { StatementProvider } from "@/contexts/StatementContext";
 import { NavbarSlotProvider } from "@/contexts/NavbarSlotContext";
 import { queryClientDefaults } from "@/config/queryDefaults";
 import { initBatchQuoteService } from "@/services/batchQuoteService";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Stocks from "./pages/Stocks";
-import Markets from "./pages/Markets";
-import Currencies from "./pages/Currencies";
-import Global from "./pages/Global";
-import Portfolio from "./pages/Portfolio";
-import Performance from "./pages/Performance";
-import Analysis from "./pages/Analysis";
-import Settings from "./pages/Settings";
-import Screener from "./pages/Screener";
-import Trading from "./pages/Trading";
-import RiskAnalysis from "./pages/RiskAnalysis";
-import FeeCalculators from "./pages/FeeCalculators";
-import Watchlists from "./pages/Watchlists";
-import TradeJournal from "./pages/TradeJournal";
+
+// ── Lazy page chunks ──────────────────────────────────────────────────────────
+// Each page is a separate async chunk. Vite splits them automatically when
+// React.lazy() is used; the browser only downloads a page's JS the first
+// time the user navigates to that route. This keeps the initial bundle
+// (providers + router shell) small so the app is interactive faster.
+//
+// Notable win: /global pulls in Three.js (1.7 MB gz: 482 kB) and D3 —
+// with lazy loading those chunks are deferred until the user actually
+// visits the globe page.
+const Index         = lazy(() => import("./pages/Index"));
+const NotFound      = lazy(() => import("./pages/NotFound"));
+const Stocks        = lazy(() => import("./pages/Stocks"));
+const Markets       = lazy(() => import("./pages/Markets"));
+const Currencies    = lazy(() => import("./pages/Currencies"));
+const Global        = lazy(() => import("./pages/Global"));
+const Portfolio     = lazy(() => import("./pages/Portfolio"));
+const Performance   = lazy(() => import("./pages/Performance"));
+const Analysis      = lazy(() => import("./pages/Analysis"));
+const Settings      = lazy(() => import("./pages/Settings"));
+const Screener      = lazy(() => import("./pages/Screener"));
+const Trading       = lazy(() => import("./pages/Trading"));
+const RiskAnalysis  = lazy(() => import("./pages/RiskAnalysis"));
+const FeeCalculators = lazy(() => import("./pages/FeeCalculators"));
+const Watchlists    = lazy(() => import("./pages/Watchlists"));
+const TradeJournal  = lazy(() => import("./pages/TradeJournal"));
 
 const queryClient = new QueryClient({
   defaultOptions: queryClientDefaults,
@@ -44,6 +55,11 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-screen w-screen bg-background">
+                  <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                </div>
+              }>
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/stocks" element={<Stocks />} />
@@ -63,6 +79,7 @@ const App = () => (
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
             </BrowserRouter>
             </NavbarSlotProvider>
           </StatementProvider>

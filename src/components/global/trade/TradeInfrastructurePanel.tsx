@@ -2,7 +2,7 @@ import { useMemo, useState, useCallback } from 'react';
 import {
   Anchor, Plane, Train, MapPin, AlertTriangle,
   Layers, Compass, Search, Sparkles,
-  Network, ShieldAlert, Globe2, Radio,
+  Network, ShieldAlert, Globe2, Radio, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -10,6 +10,8 @@ import {
   type LayerKey, type TradeNode, type TradeRoute, type StoryMode,
 } from '@/data/tradeInfrastructure';
 import type { AISStatus } from '@/hooks/useAISStream';
+import type { FlightStatus } from '@/hooks/useOpenSkyFlights';
+import { useAirportDetail } from '@/hooks/useAirportDetail';
 
 /**
  * TradeInfrastructurePanel — the "intelligence panel" half of the Global
@@ -55,7 +57,7 @@ const LAYERS: LayerOption[] = [
   { key: 'connectivity',   label: 'Connectivity',     icon: Network, color: '#94a3b8', group: 'overlays', future: true, hint: 'UNCTAD LSCI / port-importance overlay (coming soon)' },
   { key: 'risk',           label: 'Risk / Disruption', icon: ShieldAlert, color: '#ef4444', group: 'overlays', future: true, hint: 'Live disruption + chokepoint risk score (coming soon)' },
   { key: 'liveVessels',    label: 'Live Vessels',     icon: Radio,  color: '#67e8f9', group: 'overlays', hint: 'Real-time AIS feed (aisstream.io) — every cargo / tanker reporting position right now.' },
-  { key: 'liveFlights',    label: 'Live Flights',     icon: Plane,  color: '#a855f7', group: 'overlays', future: true, hint: 'OpenSky / similar (free) — to be wired in' },
+  { key: 'liveFlights',    label: 'Live Flights',     icon: Plane,  color: '#a855f7', group: 'overlays', hint: 'Live aircraft positions via OpenSky Network — all airborne traffic globally.' },
 ];
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -79,12 +81,17 @@ interface Props {
   aisVesselCount?:  number;
   /** Total raw WebSocket messages received — shown for debugging when count is 0. */
   aisRawMsgCount?:  number;
+  /** OpenSky poll status — surfaced in the Live Flights banner when that layer is on. */
+  flightStatus?:    FlightStatus;
+  /** Number of airborne aircraft currently tracked. */
+  flightCount?:     number;
 }
 
 export function TradeInfrastructurePanel({
   activeLayers, onLayersChange, selectedNode, onSelectNode,
   visibleNodes, visibleRoutes, worldwide, onToggleWorldwide, countryName,
   aisStatus = 'idle', aisVesselCount = 0, aisRawMsgCount = 0,
+  flightStatus = 'idle', flightCount = 0,
 }: Props) {
   const [search, setSearch] = useState('');
 
@@ -185,6 +192,11 @@ export function TradeInfrastructurePanel({
       {/* ── AIS Live Vessels banner (only when that layer is on) ───────── */}
       {activeLayers.has('liveVessels') && (
         <AISStatusBanner status={aisStatus} count={aisVesselCount} rawMsgCount={aisRawMsgCount} />
+      )}
+
+      {/* ── OpenSky Live Flights banner (only when that layer is on) ──── */}
+      {activeLayers.has('liveFlights') && (
+        <FlightStatusBanner status={flightStatus} count={flightCount} />
       )}
 
       {/* ── Story modes ──────────────────────────────────────────────── */}
@@ -323,9 +335,31 @@ function MetricCard({ label, value, color, subText }: {
 
 function NodeDetail({ node, onClose }: { node: TradeNode; onClose: () => void }) {
   const color = NODE_COLOR[node.kind];
+  const iata  = node.kind === 'airport' ? node.iata : undefined;
+
+  // Fetch live AirportDB enrichment only for airport nodes that have an
+  // IATA code.  React Query caches per ICAO for 24 h, so subsequent
+  // selections of the same airport cost 0 extra API calls.
+  const { data: apDetail, isLoading: apLoading, isError: apError } =
+    useAirportDetail(iata);
+
+  const longestRunway = apDetail?.runways?.length
+    ? Math.max(...apDetail.runways.map((r) => r.length_ft ?? 0))
+    : null;
+
+  const surfaceLabel = apDetail?.runways?.[0]?.surface ?? null;
+
+  const typeLabel: Record<string, string> = {
+    large_airport:  'Large airport',
+    medium_airport: 'Medium airport',
+    small_airport:  'Small airport',
+    heliport:       'Heliport',
+    seaplane_base:  'Seaplane base',
+  };
 
   return (
     <div className="px-4 py-3 border-t border-border bg-card/50">
+      {/* Header */}
       <div className="flex items-baseline justify-between gap-2">
         <div className="flex items-center gap-2">
           <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}80` }} />
@@ -353,6 +387,7 @@ function NodeDetail({ node, onClose }: { node: TradeNode; onClose: () => void })
         </div>
       )}
 
+      {/* Static stats grid */}
       <div className="grid grid-cols-2 gap-2 mt-3">
         <DetailStat label="Importance" value={`${node.importance}/100`} />
         {node.kind === 'seaport' && <DetailStat label="Category" value={node.category} />}
@@ -369,6 +404,86 @@ function NodeDetail({ node, onClose }: { node: TradeNode; onClose: () => void })
           <DetailStat label="Tonnes / yr" value={`${node.metrics.cargo_tonnage.toFixed(1)}M`} />
         )}
       </div>
+
+      {/* ── AirportDB live enrichment (airport nodes only) ─────────────── */}
+      {node.kind === 'airport' && iata && (
+        <div className="mt-3 pt-2.5 border-t border-border/60">
+          <p className="text-[9px] uppercase tracking-wide text-muted-foreground/70 mb-2 flex items-center gap-1">
+            <Plane className="w-2.5 h-2.5" />
+            Live airport data · airportdb.io
+          </p>
+
+          {apLoading && (
+            <div className="flex items-center gap-2 text-[11px] text-muted-foreground py-1">
+              <Loader2 className="w-3 h-3 animate-spin shrink-0" />
+              Fetching airport data…
+            </div>
+          )}
+
+          {apError && !apLoading && (
+            <p className="text-[11px] text-destructive/80">
+              Could not load airport data — check API key or network.
+            </p>
+          )}
+
+          {apDetail && (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                {apDetail.municipality && (
+                  <DetailStat label="City" value={apDetail.municipality} />
+                )}
+                {apDetail.elevation_ft != null && (
+                  <DetailStat label="Elevation" value={`${apDetail.elevation_ft.toLocaleString()} ft`} />
+                )}
+                {apDetail.type && (
+                  <DetailStat label="Class" value={typeLabel[apDetail.type] ?? apDetail.type} />
+                )}
+                {apDetail.runways?.length > 0 && (
+                  <DetailStat label="Runways" value={String(apDetail.runways.length)} />
+                )}
+                {longestRunway != null && longestRunway > 0 && (
+                  <DetailStat label="Longest runway" value={`${longestRunway.toLocaleString()} ft`} />
+                )}
+                {surfaceLabel && (
+                  <DetailStat label="Surface" value={surfaceLabel} />
+                )}
+              </div>
+
+              {/* Runway list — show if ≥ 2 runways */}
+              {(apDetail.runways?.length ?? 0) >= 2 && (
+                <div className="mt-2 space-y-1">
+                  {apDetail.runways.slice(0, 4).map((rwy, i) => (
+                    <div key={i} className="flex items-center justify-between text-[10px] text-muted-foreground bg-muted/30 px-2 py-1 rounded">
+                      <span className="font-mono font-medium text-foreground/80">
+                        {rwy.le_ident}/{rwy.he_ident}
+                      </span>
+                      <span>{rwy.length_ft?.toLocaleString() ?? '—'} ft</span>
+                      <span className="uppercase">{rwy.surface?.slice(0, 3) ?? '—'}</span>
+                      {rwy.lighted && <span className="text-yellow-400">💡</span>}
+                    </div>
+                  ))}
+                  {apDetail.runways.length > 4 && (
+                    <p className="text-[10px] text-muted-foreground/60 text-right">
+                      +{apDetail.runways.length - 4} more
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {apDetail.wikipedia_link && (
+                <a
+                  href={apDetail.wikipedia_link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-2 block text-[10px] text-primary/70 hover:text-primary underline underline-offset-2 truncate"
+                >
+                  Wikipedia →
+                </a>
+              )}
+            </>
+          )}
+        </div>
+      )}
 
       {(node.tags?.length ?? 0) > 0 && (
         <div className="flex flex-wrap gap-1 mt-3">
@@ -388,6 +503,65 @@ function DetailStat({ label, value }: { label: string; value: string }) {
     <div className="bg-muted/40 rounded p-1.5">
       <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="text-xs font-medium capitalize mt-0.5 truncate">{value}</p>
+    </div>
+  );
+}
+
+function FlightStatusBanner({ status, count }: { status: FlightStatus; count: number }) {
+  let dotColor = '#94a3b8';
+  let label    = 'Idle';
+  let detail: React.ReactNode = null;
+
+  switch (status) {
+    case 'loading':
+      dotColor = '#f59e0b';
+      label    = 'Fetching live flights…';
+      detail   = <p className="text-[10px] text-muted-foreground mt-1">Polling OpenSky Network for airborne aircraft…</p>;
+      break;
+    case 'live':
+      dotColor = '#a855f7';
+      label    = `Live · tracking ${count.toLocaleString()} aircraft`;
+      detail   = (
+        <div className="mt-1 space-y-0.5">
+          <p className="text-[10px] text-muted-foreground">
+            Positions refresh every 60 s · OpenSky free tier (400 credits/day; global fetch = 4 credits/call).
+          </p>
+          <p className="text-[10px] text-muted-foreground/60">
+            Set <span className="font-mono text-foreground/70">VITE_OPENSKY_CLIENT_ID</span> +{' '}
+            <span className="font-mono text-foreground/70">VITE_OPENSKY_CLIENT_SECRET</span> for 4,000 credits/day.
+          </p>
+        </div>
+      );
+      break;
+    case 'error':
+      dotColor = '#ef4444';
+      label    = 'Fetch error';
+      detail   = (
+        <p className="text-[10px] text-muted-foreground mt-1">
+          Could not reach OpenSky Network — retrying with backoff. Check network or daily credit limit (400 credits anonymous).
+        </p>
+      );
+      break;
+    case 'idle':
+    default:
+      break;
+  }
+
+  return (
+    <div className="px-4 py-2.5 border-t border-border bg-purple-500/5">
+      <div className="flex items-center gap-2">
+        <span
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{
+            backgroundColor: dotColor,
+            boxShadow: status === 'loading' || status === 'live' ? `0 0 6px ${dotColor}` : undefined,
+            animation: status === 'loading' ? 'pulse 1.4s ease-in-out infinite' : undefined,
+          }}
+        />
+        <span className="text-xs font-medium">{label}</span>
+        <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">OpenSky</span>
+      </div>
+      {detail}
     </div>
   );
 }

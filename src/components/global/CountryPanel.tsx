@@ -11,6 +11,7 @@ import CountryEconomy from "./CountryEconomy";
 import { TradeInfrastructurePanel } from "./trade/TradeInfrastructurePanel";
 import type { LayerKey, TradeNode, TradeRoute } from "@/data/tradeInfrastructure";
 import type { AISStatus } from "@/hooks/useAISStream";
+import type { FlightStatus } from "@/hooks/useOpenSkyFlights";
 
 interface CountryPanelProps {
   iso2: string;
@@ -36,6 +37,10 @@ interface CountryPanelProps {
   aisVesselCount?:  number;
   /** Total raw WebSocket messages received — used to distinguish "connected/no data" from "connected/parsing dropped" */
   aisRawMsgCount?:  number;
+
+  // ── Live flights feed status (passed through to TradeInfrastructurePanel) ──
+  flightStatus?:    FlightStatus;
+  flightCount?:     number;
 }
 
 export default function CountryPanel({
@@ -43,6 +48,7 @@ export default function CountryPanel({
   tradeActiveLayers, onTradeLayersChange, tradeSelectedNode, onTradeSelectNode,
   tradeVisibleNodes, tradeVisibleRoutes, tradeWorldwide, onToggleTradeWorldwide,
   aisStatus, aisVesselCount, aisRawMsgCount,
+  flightStatus, flightCount,
 }: CountryPanelProps) {
   const { data: stocks = [], isLoading } = useCountryStocks(iso2);
   const meta = COUNTRY_META[iso2];
@@ -105,6 +111,8 @@ export default function CountryPanel({
               aisStatus={aisStatus}
               aisVesselCount={aisVesselCount}
               aisRawMsgCount={aisRawMsgCount}
+              flightStatus={flightStatus}
+              flightCount={flightCount}
             />
           ) : (
             <p className="text-xs text-muted-foreground p-4">Trade overlay not initialised.</p>
