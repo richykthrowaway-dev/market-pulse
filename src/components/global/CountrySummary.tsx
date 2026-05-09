@@ -6,6 +6,7 @@ import { Flag } from "@/components/ui/Flag";
 import { cn } from "@/lib/utils";
 import { ArrowUpIcon, ArrowDownIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import type { CountryStock } from "@/hooks/useCountryStocks";
+import { MacroSnapshot } from "./MacroSnapshot";
 
 interface CountrySummaryProps {
   iso2: string;
@@ -67,6 +68,9 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
           {meta.indexName && <p className="text-sm text-muted-foreground">{meta.indexName}</p>}
         </div>
       </div>
+
+      {/* ── EODHD Macro Snapshot ──────────────────────────────────────────── */}
+      <MacroSnapshot iso2={iso2} />
 
       {/* ── Major Indices (Yahoo Finance, live) ─────────────────────────── */}
       {(liveIndices.length > 0 || indicesLoading) && (

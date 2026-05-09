@@ -32,6 +32,9 @@ const imgSizes: Record<LogoSize, string> = {
   lg: '56px',
 };
 
+/** Stages in the logo fallback cascade. */
+type LogoStage = 'logodev' | 'nvstly' | 'eodhd' | 'finnhub' | 'failed';
+
 interface LogoImgProps {
   /** Exchange-qualified ticker, e.g. "SCD.V", "AAPL", "RY.TO" */
   ticker: string;
@@ -47,52 +50,120 @@ interface LogoImgProps {
  *  - retina=true  → high-DPI 2× image
  *  - theme=auto   → automatically matches the site's light/dark mode
  *  - fallback=monogram → shows a text monogram when no logo exists
- *
- * Supports exchange-qualified tickers like SCD.V or RY.TO.
  */
 export function getLogoDevUrl(ticker: string): string {
   return `https://img.logo.dev/ticker/${ticker.toUpperCase()}?token=${LOGO_DEV_KEY}&retina=true&theme=auto&fallback=monogram`;
 }
 
 /**
- * Reusable logo component with multi-source fallback.
+ * Build the nvstly/icons CDN URL for a given ticker.
+ *
+ * nvstly hosts ~500 popular US stock logos as transparent PNGs on jsDelivr.
+ * Icons are white-on-transparent, optimised for dark interfaces. In light
+ * mode apply `invert` to flip them dark; in dark mode show as-is.
+ *
+ * jsDelivr provides proper CDN edge-caching (unlike raw.githubusercontent.com).
+ * URL format: https://cdn.jsdelivr.net/gh/nvstly/icons@main/ticker_icons/{TICKER}.png
+ *
+ * Exchange suffix is stripped — nvstly uses bare symbols only:
+ *   "AAPL.US" → AAPL.png
+ *   "RY.TO"   → RY.png  (likely 404 — nvstly is US-focused; cascade continues)
+ */
+export function getNvstlyLogoUrl(ticker: string): string {
+  const upper = ticker.toUpperCase();
+  const baseTicker = upper.includes('.') ? upper.slice(0, upper.lastIndexOf('.')) : upper;
+  return `https://cdn.jsdelivr.net/gh/nvstly/icons@main/ticker_icons/${baseTicker}.png`;
+}
+
+/**
+ * Build the EODHD logo API URL for a given ticker.
+ *
+ * EODHD serves 40,000+ company logos via their logo API endpoint.
+ * The `demo` token is EODHD's public key for logo fetches — safe to use
+ * client-side since it only grants access to logo images, not financial data.
+ * Logos are ~3–5 KB PNGs with transparent backgrounds.
+ *
+ * URL format: https://eodhd.com/api/logo/{TICKER}.{EXCHANGE}?api_token=demo
+ *
+ * Ticker format maps directly from our exchange-qualified tickers:
+ *   "AAPL"    → AAPL.US   (no suffix = US market)
+ *   "RY.TO"   → RY.TO     (Toronto Stock Exchange)
+ *   "SCD.V"   → SCD.V     (TSX Venture Exchange)
+ *   "BARC.L"  → BARC.L    (London Stock Exchange)
+ *   "BHP.AU"  → BHP.AU    (Australian Securities Exchange)
+ */
+export function getEodhdLogoUrl(ticker: string): string {
+  const upper = ticker.toUpperCase();
+  // Add .US suffix for bare tickers (no exchange qualifier)
+  const eodhdTicker = upper.includes('.') ? upper : `${upper}.US`;
+  return `https://eodhd.com/api/logo/${eodhdTicker}?api_token=demo`;
+}
+
+/**
+ * Reusable logo component with 3-source fallback cascade.
  *
  * Load chain:
- * 1. logo.dev (primary — fast, covers 95% of stocks)
- * 2. Finnhub (fallback — for lesser-known stocks)
- * 3. Building2 icon (last resort)
+ * 1. logo.dev    — fast, covers ~95% of US stocks; auto light/dark mode
+ * 2. EODHD       — free static CDN, 40k+ tickers across 60+ global exchanges,
+ *                  no API key or credits needed, resolves instantly
+ * 3. Finnhub     — serialised queue (500 ms between calls) via edge function;
+ *                  last resort for tickers missed by both sources above
+ * 4. Building2 icon — all sources exhausted
  *
- * Fetches Finnhub logos in the background to cache for future visits.
+ * EODHD and Finnhub PNGs have white backgrounds and get a white wrapper span
+ * so they render correctly in dark mode.
  */
 export function LogoImg({ ticker, size = 'sm', alt, className }: LogoImgProps) {
-  const [failed, setFailed] = useState(false);
-  const [logoSrc, setLogoSrc] = useState<string>(getLogoDevUrl(ticker));
+  const [stage, setStage] = useState<LogoStage>('logodev');
 
-  const { handleLogoDevLoad, handleLogoDevError, fallbackUrl } = useLogoWithFallback(ticker);
+  const { fallbackUrl } = useLogoWithFallback(ticker);
+
+  // Reset stage when ticker changes
+  useEffect(() => {
+    setStage('logodev');
+  }, [ticker]);
+
+  // When Finnhub URL arrives and we're already past EODHD, flip to finnhub
+  useEffect(() => {
+    if (fallbackUrl && stage === 'finnhub') {
+      // already set — nothing to do, src is derived below
+    }
+    // If we hit EODHD failure before Finnhub arrived, retry now that it's here
+    if (fallbackUrl && stage === 'failed') {
+      // edge case: EODHD failed but Finnhub just arrived — show it
+      setStage('finnhub');
+    }
+  }, [fallbackUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const altText = alt || `${ticker.toUpperCase()} logo`;
 
-  // Only swap to Finnhub when Logo.dev actually failed — not just because Finnhub responded
-  useEffect(() => {
-    if (fallbackUrl && failed) {
-      setLogoSrc(fallbackUrl);
-      setFailed(false);
-    }
-  }, [fallbackUrl, failed]);
-
-  const handleImgLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    // Notify the hook that logo.dev loaded (might queue Finnhub fetch)
-    handleLogoDevLoad(e);
-  };
-
   const handleImgError = () => {
-    // If logo.dev fails, try Finnhub
-    handleLogoDevError();
-    setFailed(true);
+    if (stage === 'logodev') {
+      setStage('nvstly');
+    } else if (stage === 'nvstly') {
+      setStage('eodhd');
+    } else if (stage === 'eodhd') {
+      if (fallbackUrl) {
+        setStage('finnhub');
+      } else {
+        // Finnhub URL not yet fetched — mark as failed for now;
+        // the useEffect above will flip to 'finnhub' once it arrives.
+        setStage('failed');
+      }
+    } else {
+      // Finnhub also failed — give up
+      setStage('failed');
+    }
   };
 
-  if (failed && !fallbackUrl) {
-    // All sources exhausted — show Building icon
+  // ── Derive current src ──────────────────────────────────────────────────────
+  let logoSrc: string | null = null;
+  if (stage === 'logodev') logoSrc = getLogoDevUrl(ticker);
+  if (stage === 'nvstly')  logoSrc = getNvstlyLogoUrl(ticker);
+  if (stage === 'eodhd')   logoSrc = getEodhdLogoUrl(ticker);
+  if (stage === 'finnhub') logoSrc = fallbackUrl ?? null;
+
+  if (stage === 'failed' || (stage === 'finnhub' && !logoSrc)) {
     return (
       <span
         className={cn(
@@ -108,15 +179,30 @@ export function LogoImg({ ticker, size = 'sm', alt, className }: LogoImgProps) {
     );
   }
 
-  // Detect if the current src is a Finnhub PNG (has white background)
-  const isFinnhubPng = logoSrc.includes('finnhub.io');
+  // ── Per-source rendering treatment ─────────────────────────────────────────
+  //
+  // logo.dev   – native theme=auto, no treatment needed
+  //
+  // nvstly     – white-on-transparent PNGs optimised for dark interfaces.
+  //              Light mode: `invert` flips white → black so logos are visible.
+  //              Dark mode:  `invert-0` shows them as-is (white on dark = ✓).
+  //
+  // EODHD      – coloured-on-transparent PNGs. Works natively on both modes.
+  //              `mix-blend-multiply` in light mode removes any residual white;
+  //              `mix-blend-normal` in dark mode — transparent bg just works.
+  //
+  // Finnhub    – white-background PNGs. Wrap with white container so they look
+  //              correct on dark backgrounds too.
+  //
+  const isFinnhub = stage === 'finnhub';
+  const isNvstly  = stage === 'nvstly';
+  const isEodhd   = stage === 'eodhd';
 
   return (
     <span
       className={cn(
         sizeClasses[size],
-        // Use white background for Finnhub PNGs so they look correct in dark mode
-        isFinnhubPng
+        isFinnhub
           ? 'inline-flex items-center justify-center rounded-lg bg-white dark:bg-white/90 shrink-0 overflow-hidden'
           : 'inline-flex items-center justify-center rounded-lg shrink-0 overflow-hidden',
         className
@@ -125,14 +211,17 @@ export function LogoImg({ ticker, size = 'sm', alt, className }: LogoImgProps) {
       aria-label={altText}
     >
       <img
-        src={logoSrc}
+        src={logoSrc!}
         alt={altText}
         loading="lazy"
         decoding="async"
         sizes={imgSizes[size]}
-        onLoad={handleImgLoad}
         onError={handleImgError}
-        className="h-full w-full object-contain p-1"
+        className={cn(
+          'h-full w-full object-contain p-1',
+          isNvstly && 'invert dark:invert-0',
+          isEodhd  && 'mix-blend-multiply dark:mix-blend-normal',
+        )}
       />
     </span>
   );

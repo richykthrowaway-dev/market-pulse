@@ -3,7 +3,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { CurrencyConverter } from '@/components/currencies/CurrencyConverter';
 import { TradingViewForexRates, TradingViewForexHeatmap } from '@/components/tradingview';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Flag } from '@/components/ui/Flag';
+import { CurrencyIcon } from '@/components/ui/CurrencyIcon';
 import { ArrowUpIcon, ArrowDownIcon, ArrowRightIcon, TrendingUp, Loader2, Globe, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCurrencyRates, POPULAR_PAIRS, CURRENCIES } from '@/hooks/useCurrencyRates';
@@ -59,8 +59,8 @@ const Currencies = () => {
                       {/* Pair header */}
                       <div className="flex items-center gap-2 mb-3">
                         <div className="flex items-center -space-x-1">
-                          <Flag code={from} size={24} />
-                          <Flag code={to} size={24} />
+                          <CurrencyIcon code={from} size={24} />
+                          <CurrencyIcon code={to} size={24} />
                         </div>
                         <span className="text-sm font-semibold">{from}/{to}</span>
                       </div>

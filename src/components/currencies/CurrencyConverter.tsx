@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowDownUp, Loader2 } from 'lucide-react';
-import { Flag } from '@/components/ui/Flag';
+import { CurrencyIcon } from '@/components/ui/CurrencyIcon';
 import { cn } from '@/lib/utils';
 import { CURRENCIES, type FxRate } from '@/hooks/useCurrencyRates';
 
@@ -68,7 +68,7 @@ export function CurrencyConverter({ rates, convert, isLoading }: CurrencyConvert
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">From</label>
             <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-3">
-              <Flag code={fromCurrency} size={28} />
+              <CurrencyIcon code={fromCurrency} size={28} />
               <select
                 value={fromCurrency}
                 onChange={(e) => setFromCurrency(e.target.value)}
@@ -105,7 +105,7 @@ export function CurrencyConverter({ rates, convert, isLoading }: CurrencyConvert
           <div className="space-y-2">
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">To</label>
             <div className="flex items-center gap-2 rounded-lg border border-border bg-background p-3">
-              <Flag code={toCurrency} size={28} />
+              <CurrencyIcon code={toCurrency} size={28} />
               <select
                 value={toCurrency}
                 onChange={(e) => setToCurrency(e.target.value)}

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowUpIcon, ArrowDownIcon, ArrowRightIcon, DollarSignIcon } from 'lucide-react';
 import { CurrencyPair, formatDate } from '@/utils/stocksApi';
 import { cn } from '@/lib/utils';
-import { Flag } from '@/components/ui/Flag';
+import { CurrencyIcon } from '@/components/ui/CurrencyIcon';
 
 interface CurrencyExchangeProps {
   currencies: CurrencyPair[];
@@ -28,10 +28,10 @@ export function CurrencyExchange({ currencies, className }: CurrencyExchangeProp
               className="flex items-center justify-between p-3 rounded-md bg-secondary/40"
             >
               <div className="flex items-center">
-                <Flag code={currency.fromCurrency} size={34} className="mr-3" />
+                <CurrencyIcon code={currency.fromCurrency} size={34} className="mr-3" />
                 <span className="text-xs font-semibold text-foreground mr-1">{currency.fromCurrency}</span>
                 <ArrowRightIcon className="h-4 w-4 mx-2 text-muted-foreground" />
-                <Flag code={currency.toCurrency} size={34} className="mr-3" />
+                <CurrencyIcon code={currency.toCurrency} size={34} className="mr-3" />
                 <span className="text-xs font-semibold text-foreground">{currency.toCurrency}</span>
               </div>
               

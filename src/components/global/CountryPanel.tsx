@@ -6,7 +6,8 @@ import type { ExchangeInfo } from "@/data/exchangeData";
 import CountrySummary from "./CountrySummary";
 import CountryScreener from "./CountryScreener";
 import CountryExchanges from "./CountryExchanges";
-import { TradingViewEconomicCalendar } from "@/components/tradingview/TradingViewEconomicCalendar";
+import CountryNews from "./CountryNews";
+import CountryEconomy from "./CountryEconomy";
 
 interface CountryPanelProps {
   iso2: string;
@@ -37,12 +38,16 @@ export default function CountryPanel({ iso2, onClose, onTabChange, onExchangeCli
       <Tabs defaultValue="summary" className="flex-1 flex flex-col overflow-hidden" onValueChange={onTabChange}>
         <TabsList className="mx-4 mt-3 shrink-0">
           <TabsTrigger value="summary">Summary</TabsTrigger>
+          <TabsTrigger value="news">News</TabsTrigger>
           <TabsTrigger value="screener">Screener</TabsTrigger>
           <TabsTrigger value="exchanges">Exchanges</TabsTrigger>
           <TabsTrigger value="economy">Economy</TabsTrigger>
         </TabsList>
         <TabsContent value="summary" className="flex-1 overflow-y-auto px-4 pb-4">
           <CountrySummary iso2={iso2} stocks={stocks} isLoading={isLoading} />
+        </TabsContent>
+        <TabsContent value="news" className="flex-1 overflow-y-auto px-4 pb-4">
+          <CountryNews iso2={iso2} />
         </TabsContent>
         <TabsContent value="screener" className="flex-1 overflow-y-auto px-4 pb-4">
           <CountryScreener iso2={iso2} />
@@ -51,11 +56,7 @@ export default function CountryPanel({ iso2, onClose, onTabChange, onExchangeCli
           <CountryExchanges iso2={iso2} onExchangeClick={onExchangeClick} />
         </TabsContent>
         <TabsContent value="economy" className="flex-1 overflow-y-auto px-4 pb-4">
-          <TradingViewEconomicCalendar
-            countryFilter={iso2.toLowerCase()}
-            height={500}
-            className="rounded-lg overflow-hidden"
-          />
+          <CountryEconomy iso2={iso2} />
         </TabsContent>
       </Tabs>
     </div>

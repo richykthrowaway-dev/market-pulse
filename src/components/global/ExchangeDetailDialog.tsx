@@ -6,7 +6,8 @@ import {
   getTimezoneAbbr,
 } from "@/data/exchangeData";
 import { COUNTRY_META } from "@/data/countryMeta";
-import { X, ExternalLink } from "lucide-react";
+import { X, ExternalLink, Loader2 } from "lucide-react";
+import { useEodhdExchangeStocks } from '@/hooks/useEodhdExchangeStocks';
 
 interface ExchangeDetailDialogProps {
   exchange: ExchangeInfo | null;
@@ -23,6 +24,8 @@ export default function ExchangeDetailDialog({ exchange, onClose }: ExchangeDeta
     const id = setInterval(() => setTick(t => t + 1), 30_000);
     return () => clearInterval(id);
   }, [exchange]);
+
+  const { data: stocks = [], isLoading: stocksLoading } = useEodhdExchangeStocks(exchange?.code ?? '', 8);
 
   if (!exchange) return null;
 
@@ -135,6 +138,39 @@ export default function ExchangeDetailDialog({ exchange, onClose }: ExchangeDeta
           <ExternalLink className="h-2.5 w-2.5" />
           Visit Website
         </a>
+
+        {/* EODHD Top Stocks */}
+        <div className="border-t border-border/50 pt-2">
+          <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+            Top Stocks · EODHD
+          </p>
+          {stocksLoading ? (
+            <div className="flex items-center gap-1.5 py-1">
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+              <span className="text-[10px] text-muted-foreground">Loading…</span>
+            </div>
+          ) : stocks.length === 0 ? (
+            <p className="text-[10px] text-muted-foreground">No data available</p>
+          ) : (
+            <div className="space-y-0.5">
+              {stocks.slice(0, 8).map((s) => {
+                const ticker = s.code.includes('.') ? s.code.slice(0, s.code.lastIndexOf('.')) : s.code;
+                const isUp = (s.change ?? 0) >= 0;
+                return (
+                  <div key={s.code} className="flex items-center justify-between text-[10px]">
+                    <span className="font-mono font-medium truncate max-w-[80px]">{ticker}</span>
+                    <span className="text-muted-foreground truncate flex-1 mx-1.5 text-[9px]">{s.name}</span>
+                    {s.change != null && (
+                      <span className={isUp ? 'text-emerald-500 shrink-0' : 'text-red-500 shrink-0'}>
+                        {isUp ? '+' : ''}{s.change.toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

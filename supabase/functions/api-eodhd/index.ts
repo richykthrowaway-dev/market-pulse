@@ -52,6 +52,7 @@ const ENDPOINT_COST: Record<string, number> = {
   search:            1,
   earnings:          1,
   "bulk-eod":        100,
+  "macro-indicator": 1,
   user:              0,    // meta — free, never gate this
 };
 
@@ -231,15 +232,21 @@ serve(async (req) => {
     }
 
     // ── Financial news + sentiment ────────────────────────────────────────────
-    // params: s (ticker, optional), limit, offset, from, to
+    // params: s (ticker, optional), t (tag, optional), limit, offset, from, to
+    // The `t` param filters by news tag/topic (e.g. "merger", "earnings").
+    // For country-level news, callers pass the country's primary index symbol
+    // as `s` (e.g. s=FTSE.INDX for UK) — EODHD tags articles with tickers,
+    // so index-tagged results are naturally country-scoped.
     if (endpoint === "news") {
       const s      = url.searchParams.get("s")      ?? symbol;
+      const t      = url.searchParams.get("t")      ?? "";
       const limit  = url.searchParams.get("limit")  ?? "50";
       const offset = url.searchParams.get("offset") ?? "0";
       const from   = url.searchParams.get("from")   ?? "";
       const to     = url.searchParams.get("to")     ?? "";
       let path = `/financial-news?limit=${limit}&offset=${offset}`;
       if (s)    path += `&s=${encodeURIComponent(s)}`;
+      if (t)    path += `&t=${encodeURIComponent(t)}`;
       if (from) path += `&from=${from}`;
       if (to)   path += `&to=${to}`;
       const upstream = await eodFetch(path, apiKey);
@@ -417,6 +424,27 @@ serve(async (req) => {
       if (date) path += `?date=${date}`;
       const upstream = await eodFetch(path, apiKey);
       if (!upstream.ok) return proxyError(upstream.status, "EODHD bulk-eod error", await upstream.text());
+      return new Response(await upstream.text(), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // ── Macro economic indicators ─────────────────────────────────────────────
+    // country: ISO 3166-1 alpha-3 code (e.g. USA, GBR, DEU)
+    // indicator: one of: gdp_growth_rate | inflation_consumer_prices_annual |
+    //            unemployment_total_percent | real_interest_rate | gdp_current_usd
+    // Returns array of { Date, Period, Value, CountryCode, Indicator } sorted oldest→newest.
+    // Cost: 1 credit per indicator per call.
+    if (endpoint === "macro-indicator") {
+      const country   = url.searchParams.get("country")   ?? "USA";
+      const indicator = url.searchParams.get("indicator") ?? "gdp_growth_rate";
+      const from      = url.searchParams.get("from")      ?? "";
+      const to        = url.searchParams.get("to")        ?? "";
+      let path = `/macro-indicator/${encodeURIComponent(country)}?indicator=${indicator}`;
+      if (from) path += `&from=${from}`;
+      if (to)   path += `&to=${to}`;
+      const upstream = await eodFetch(path, apiKey);
+      if (!upstream.ok) return proxyError(upstream.status, "EODHD macro-indicator error", await upstream.text());
       return new Response(await upstream.text(), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
