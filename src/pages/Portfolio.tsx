@@ -867,7 +867,14 @@ const Portfolio = () => {
             {holdings.length >= 2 && (
               <EarningsCalendar
                 className="h-full"
-                holdings={holdings.map(h => ({ ticker: h.ticker, exchange: h.exchange || undefined }))}
+                holdings={holdings.map(h => ({
+                  ticker:   h.ticker,
+                  exchange: h.exchange || undefined,
+                  // Enrich with the GICS sector that drives the dot color
+                  // in EarningsCalendar rows. symbolInfo is built from the
+                  // 3-layer sector lookup (static map → Supabase → Finnhub).
+                  sector:   symbolInfo[h.ticker]?.sector ?? null,
+                }))}
               />
             )}
           </div>

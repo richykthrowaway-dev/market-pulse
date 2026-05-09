@@ -1,5 +1,7 @@
+import { useMemo } from 'react';
 import { Calendar } from 'lucide-react';
 import { useEarningsCalendar, EarningsEvent, type HoldingPair } from '@/hooks/useEarningsCalendar';
+import { getCategoryColor } from '@/lib/gicsColors';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -64,15 +66,30 @@ function formatBam(bam: string | null): string | null {
   return null;
 }
 
-function EventRow({ event }: { event: EarningsEvent }) {
+function EventRow({ event, sector }: { event: EarningsEvent; sector?: string | null }) {
   const days = event.daysUntil ?? 0;
   const { border, badge } = urgencyClasses(days);
   const bam = formatBam(event.beforeAfterMarket ?? null);
+
+  // Sector dot — uses the central GICS color registry so the same
+  // sector gets the same hue here as in the holdings table, allocation
+  // donut, and correlation matrix legend. Falls back to a neutral
+  // muted dot when sector is unknown so the layout stays consistent
+  // across rows whether sector data exists or not.
+  const sectorColor = sector ? getCategoryColor('sector', sector) : null;
 
   return (
     <div
       className={`flex flex-wrap items-center gap-x-3 gap-y-1 border-l-2 pl-3 py-1 ${border}`}
     >
+      {/* Sector dot */}
+      <span
+        className="inline-block w-2 h-2 rounded-full shrink-0"
+        style={{ backgroundColor: sectorColor ?? 'hsl(var(--muted-foreground) / 0.3)' }}
+        title={sector || 'Sector unknown'}
+        aria-label={sector ? `Sector: ${sector}` : 'Sector unknown'}
+      />
+
       {/* Ticker */}
       <span className="font-mono font-bold text-sm min-w-[4rem]">
         {event.ticker}
@@ -138,6 +155,21 @@ export function EarningsCalendar({ holdings, className }: EarningsCalendarProps)
 
   const upcoming = data?.slice(0, 8) ?? [];
 
+  // Build a ticker→sector lookup so EventRow can color its dot. We key
+  // by the BARE upper-case ticker (no exchange suffix) because that's
+  // what the Finnhub-sourced events return; portfolio holdings might
+  // have ticker like "RY.TO" while the event has "RY", so normalize.
+  const sectorByTicker = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const h of holdings) {
+      if (h.sector) {
+        const bare = h.ticker.split('.')[0].toUpperCase();
+        m.set(bare, h.sector);
+      }
+    }
+    return m;
+  }, [holdings]);
+
   return (
     <div className={`bg-card border border-border rounded-lg p-4 flex flex-col${className ? ` ${className}` : ''}`}>
       {/* Header */}
@@ -157,7 +189,11 @@ export function EarningsCalendar({ holdings, className }: EarningsCalendarProps)
         ) : (
           <div className="space-y-2">
             {upcoming.map((event) => (
-              <EventRow key={event.ticker} event={event} />
+              <EventRow
+                key={event.ticker}
+                event={event}
+                sector={sectorByTicker.get(event.ticker.toUpperCase())}
+              />
             ))}
           </div>
         )}

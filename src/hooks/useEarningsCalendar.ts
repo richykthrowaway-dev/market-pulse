@@ -3,6 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 export interface HoldingPair {
   ticker:    string;
   exchange?: string;
+  /**
+   * Optional GICS-style sector for the holding. Not used by the
+   * earnings-calendar fetch itself — passed through so the rendering
+   * component (e.g. <EarningsCalendar>) can color rows by sector
+   * without needing a second data source.
+   */
+  sector?:   string | null;
 }
 
 export interface EarningsEvent {
