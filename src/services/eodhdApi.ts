@@ -8,12 +8,62 @@
  */
 
 import { fetchCached } from "@/lib/apiCache";
+import { fetchYahooChart, type YahooBar } from "@/services/yahooFinanceApi";
 
 const EODHD_FN_BASE = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/api-eodhd`;
 const EODHD_HEADERS = {
   apikey:        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
   Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string}`,
 };
+
+// ── Yahoo fallback helpers ────────────────────────────────────────────────────
+// When EODHD's daily quota is exhausted, the api-eodhd edge function 429s
+// every paid endpoint. Sparklines and price charts then break across the
+// whole app. Yahoo Finance has independent infrastructure (no EODHD-related
+// quota) so we transparently fall back to it for visualization-only paths.
+
+/**
+ * Strip EODHD's `.US` suffix because Yahoo expects bare US tickers.
+ * Other suffixes (`.TO`, `.L`, `.HK`) mostly match Yahoo's conventions.
+ * `.XETRA` → `.DE` is the one common mismatch we map explicitly.
+ */
+function toYahooSymbol(eodSymbol: string): string {
+  const upper = eodSymbol.toUpperCase();
+  if (upper.endsWith('.US'))    return upper.slice(0, -3);
+  if (upper.endsWith('.XETRA')) return `${upper.slice(0, -6)}.DE`;
+  return upper;
+}
+
+/** Pick a Yahoo range close to the requested EODHD `from`-date window. */
+function daysAgoToYahooRange(days: number):
+  '7d' | '1mo' | '3mo' | '6mo' | '1y' | '2y' | '5y' | '10y' | 'max' {
+  if (days <=   8) return '7d';
+  if (days <=  35) return '1mo';
+  if (days <= 100) return '3mo';
+  if (days <= 200) return '6mo';
+  if (days <= 400) return '1y';
+  if (days <= 800) return '2y';
+  if (days <= 2000) return '5y';
+  if (days <= 4000) return '10y';
+  return 'max';
+}
+
+/** Convert a Yahoo OHLCV bar to the EODHD bar shape (date string, no adj close). */
+function yahooBarsToEodBars(bars: YahooBar[]): EodBar[] {
+  return bars.map((b) => {
+    const d = new Date(b.t * 1000);
+    const date = d.toISOString().slice(0, 10);
+    return {
+      date,
+      open:           b.o,
+      high:           b.h,
+      low:            b.l,
+      close:          b.c,
+      adjusted_close: b.c, // Yahoo's chart endpoint already prefers adjclose
+      volume:         b.v,
+    };
+  });
+}
 
 // ── EOD bars ─────────────────────────────────────────────────────────────────
 
@@ -46,8 +96,32 @@ export async function fetchEodHistorical(
       const res = await fetch(`${EODHD_FN_BASE}?${new URLSearchParams(params)}`, {
         headers: EODHD_HEADERS,
       });
-      if (!res.ok) throw new Error(`EODHD eod failed (${res.status})`);
-      return res.json();
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data as EodBar[];
+        // EODHD returned 200 but empty — fall through to Yahoo (handles
+        // the case where the symbol exists but EODHD lacks data for the
+        // requested window).
+      }
+      // EODHD failed or returned nothing — try Yahoo. The most common reason
+      // for failure is a 429 quota-exhausted response, which used to break
+      // every sparkline and price chart in the app once daily credits ran
+      // out. Yahoo has independent infra so this restores visualization
+      // even with the EODHD account at 0/100k.
+      const days = from
+        ? Math.max(1, Math.round((Date.now() - new Date(from).getTime()) / 86_400_000))
+        : 30;
+      const yahooBars = await fetchYahooChart(
+        toYahooSymbol(symbol),
+        '1d',
+        daysAgoToYahooRange(days),
+      );
+      if (yahooBars.length > 0) {
+        console.debug(`[fetchEodHistorical] EODHD failed for ${symbol} — using Yahoo fallback (${yahooBars.length} bars)`);
+        return yahooBarsToEodBars(yahooBars);
+      }
+      // Both failed — surface a meaningful error so the UI can show it
+      throw new Error(`No price data available for ${symbol} (EODHD ${res.status}, Yahoo also returned empty)`);
     },
     { ttlMs: 60 * 60_000 }, // 1 h
   );
@@ -351,10 +425,34 @@ export async function fetchEodIntraday(
           `${EODHD_FN_BASE}?${new URLSearchParams(params)}`,
           { headers: EODHD_HEADERS },
         );
-        if (!res.ok) throw new Error(`EODHD intraday failed (${res.status})`);
-        const data = await res.json();
-        if (!Array.isArray(data)) return [];
-        return data as EodIntradayBar[];
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) return data as EodIntradayBar[];
+        }
+        // EODHD failed (most often a 429 quota response) or returned empty.
+        // Fall back to Yahoo so 1W/intraday charts keep working when EODHD
+        // credits are exhausted. Yahoo's `1h` interval is a perfect match;
+        // `1m` and `5m` we approximate by 1h since Yahoo doesn't expose
+        // sub-hourly bars for free anyway.
+        const yahooBars = await fetchYahooChart(
+          toYahooSymbol(symbol),
+          '1h',
+          '1mo',
+        );
+        if (yahooBars.length > 0) {
+          console.debug(`[fetchEodIntraday] EODHD failed for ${symbol} — using Yahoo fallback (${yahooBars.length} bars)`);
+          return yahooBars.map((b): EodIntradayBar => ({
+            timestamp: b.t,
+            gmtoffset: 0,
+            datetime:  new Date(b.t * 1000).toISOString().slice(0, 19).replace('T', ' '),
+            open:      b.o,
+            high:      b.h,
+            low:       b.l,
+            close:     b.c,
+            volume:    b.v,
+          }));
+        }
+        return [];
       },
       { ttlMs: 10 * 60_000 }, // 10 min — intraday data
     );

@@ -143,7 +143,7 @@ export interface YahooBar {
 export async function fetchYahooChart(
   yahooTicker: string,
   interval: '1h' | '1d' = '1h',
-  range: '7d' | '1mo' | '3mo' | '6mo' | '1y' = '7d',
+  range: '7d' | '1mo' | '3mo' | '6mo' | '1y' | '2y' | '5y' | '10y' | 'max' = '7d',
 ): Promise<YahooBar[]> {
   return fetchCached(
     `yahoo:chart:${yahooTicker}:${interval}:${range}`,
