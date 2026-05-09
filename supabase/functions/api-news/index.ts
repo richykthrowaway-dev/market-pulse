@@ -300,17 +300,25 @@ const COUNTRY_BUSINESS_RSS: Record<string, Array<{ url: string; source: string }
   ],
 
   // ── Africa supplemental (per-country business outlets) ─────────────────
+  // These augment the per-country AllAfrica feeds + the pan-African wire
+  // feeds. URLs were probed for liveness; broken ones are kept commented as
+  // breadcrumbs for future revivals.
   ZA: [
-    { url: "https://www.businesslive.co.za/feeds/rss/?publication=bd&section=companies", source: "BusinessLive Companies" },
+    { url: "https://mg.co.za/feed/",                                           source: "Mail & Guardian" },
     { url: "https://feeds.news24.com/articles/fin24/Companies/rss",            source: "News24 Companies" },
-    { url: "https://mg.co.za/section/business/feed/",                          source: "Mail & Guardian Business" },
+    { url: "https://www.businesslive.co.za/feeds/rss/?publication=bd&section=companies", source: "BusinessLive Companies" },
   ],
   NG: [
+    { url: "https://www.vanguardngr.com/feed/",                                source: "Vanguard Nigeria" },
+    { url: "https://www.thisdaylive.com/feed/",                                source: "ThisDay Nigeria" },
+    { url: "https://dailytrust.com/feed/",                                     source: "Daily Trust" },
+    { url: "https://leadership.ng/feed/",                                      source: "Leadership Nigeria" },
     { url: "https://punchng.com/topics/business/feed/",                        source: "Punch Business" },
     { url: "https://www.premiumtimesng.com/business/feed",                     source: "Premium Times Business" },
     { url: "https://businessday.ng/feed/",                                     source: "BusinessDay Nigeria" },
   ],
   KE: [
+    { url: "https://www.standardmedia.co.ke/rss/business.php",                 source: "Standard Media Business" },
     { url: "https://nation.africa/kenya/business/-/996.atom",                  source: "Daily Nation Business" },
     { url: "https://www.businessdailyafrica.com/bd/rss",                       source: "Business Daily Africa" },
   ],
@@ -329,7 +337,14 @@ const COUNTRY_BUSINESS_RSS: Record<string, Array<{ url: string; source: string }
     { url: "https://www.chronicle.co.zw/feed/",                                source: "Chronicle Zimbabwe" },
   ],
   ET: [
+    { url: "https://www.thereporterethiopia.com/feed/",                        source: "The Reporter Ethiopia" },
     { url: "https://capitalethiopia.com/category/business/feed/",              source: "Capital Ethiopia Business" },
+  ],
+  LY: [
+    { url: "https://libyaherald.com/feed/",                                    source: "Libya Herald" },
+  ],
+  NA: [
+    { url: "https://www.namibian.com.na/feed/",                                source: "The Namibian" },
   ],
 };
 
@@ -377,6 +392,14 @@ const PAN_AFRICAN_FEED_URLS = [
   { url: "http://www.africanews.com/feed/", source: "Africanews", maxItems: 80 },
   { url: "https://feeds.bbci.co.uk/news/world/africa/rss.xml", source: "BBC Africa", maxItems: 50 },
   { url: "https://www.france24.com/en/africa/rss", source: "France24 Africa", maxItems: 50 },
+  // Continental business / development outlets — verified live RSS feeds.
+  // Each one auto-distributes across all 54 African countries via keyword matching.
+  { url: "https://www.theafricareport.com/feed/", source: "The Africa Report", maxItems: 50 },
+  { url: "https://www.howwemadeitinafrica.com/feed/", source: "How We Made It In Africa", maxItems: 40 },
+  { url: "https://furtherafrica.com/feed/", source: "FurtherAfrica", maxItems: 30 },
+  { url: "https://techcabal.com/feed/", source: "TechCabal", maxItems: 30 },
+  { url: "https://news.un.org/feed/subscribe/en/news/region/africa/feed/rss.xml", source: "UN News Africa", maxItems: 50 },
+  { url: "https://www.theguardian.com/world/africa/rss", source: "Guardian Africa", maxItems: 40 },
 ];
 
 /** Country code → keywords for matching pan-African articles to countries.
@@ -869,7 +892,11 @@ function filterForCountry(
 
 // Convenience wrappers for each region
 function fetchPanAfricanFeeds() {
-  return fetchPanRegionalFeeds("_PAN_AFRICA", PAN_AFRICAN_FEED_URLS);
+  // _PAN_AFRICA_v2 cache key — bumped from _PAN_AFRICA when we expanded from
+  // 3 to 9 pan-African feeds. The version bump invalidates any stale cache
+  // entry written with the smaller feed set so users immediately see the
+  // expanded coverage rather than waiting up to 6h for the old cache to expire.
+  return fetchPanRegionalFeeds("_PAN_AFRICA_v2", PAN_AFRICAN_FEED_URLS);
 }
 function filterPanAfricanForCountry(articles: NewsItem[], cc: string) {
   return filterForCountry(articles, cc, PAN_AFRICAN_KEYWORDS);
