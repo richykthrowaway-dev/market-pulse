@@ -14,6 +14,7 @@ import {
   getVisibleNodes, getVisibleRoutes,
   type LayerKey, type TradeNode,
 } from "@/data/tradeInfrastructure";
+import { useAISStream } from "@/hooks/useAISStream";
 
 // ── Realistic space background — NASA Tycho-2 Skymap ────────────────────
 // 4096×2048 photographic-quality star map covering the entire celestial
@@ -211,6 +212,20 @@ const Global = () => {
     setTradeWorldwide((v) => !v);
   }, []);
 
+  // ── Live AIS vessel feed ─────────────────────────────────────────────
+  // Connect ONLY when the Trade tab is active AND the user has flipped
+  // on the 'liveVessels' overlay layer. Toggling either off tears the
+  // WebSocket down so we don't burn AISStream rate-limit credits in the
+  // background.
+  const liveVesselsEnabled =
+    tradeTabActive && tradeActiveLayers.has('liveVessels');
+  const {
+    vessels: liveVessels,
+    status: aisStatus,
+    vesselCount: aisVesselCount,
+    rawMsgCount: aisRawMsgCount,
+  } = useAISStream(liveVesselsEnabled);
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Header Bar */}
@@ -344,6 +359,11 @@ const Global = () => {
                   showExchangePins={showExchangePins}
                   onExchangeClick={handleExchangeClick}
                   selectedExchange={selectedExchange}
+                  tradePoints={tradeTabActive ? tradeVisibleNodes : undefined}
+                  tradeArcs={tradeTabActive ? tradeVisibleRoutes : undefined}
+                  selectedTradeNodeId={tradeSelectedNode?.id ?? null}
+                  onTradeNodeClick={handleTradeNodeClick}
+                  liveVessels={liveVesselsEnabled ? liveVessels : undefined}
                 />
               ) : (
                 <GlobeView
@@ -361,6 +381,7 @@ const Global = () => {
                   tradeArcs={tradeTabActive ? tradeVisibleRoutes : undefined}
                   selectedTradeNodeId={tradeSelectedNode?.id ?? null}
                   onTradeNodeClick={handleTradeNodeClick}
+                  liveVessels={liveVesselsEnabled ? liveVessels : undefined}
                 />
               )}
             </Suspense>
@@ -387,6 +408,9 @@ const Global = () => {
               tradeVisibleRoutes={tradeVisibleRoutes}
               tradeWorldwide={tradeWorldwide}
               onToggleTradeWorldwide={handleToggleTradeWorldwide}
+              aisStatus={aisStatus}
+              aisVesselCount={aisVesselCount}
+              aisRawMsgCount={aisRawMsgCount}
             />
           ) : (
             <GlobalSummary onCountryClick={handleCountryClick} />

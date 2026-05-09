@@ -2,6 +2,9 @@ import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import geoJsonUrl from "@/data/countries-110m.geojson";
 import { COUNTRY_META, FLAG_COLORS } from "@/data/countryMeta";
 import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeData";
+import { NODE_COLOR, ROUTE_COLOR, type TradeNode, type TradeRoute } from "@/data/tradeInfrastructure";
+import { smoothRouteCoords } from "@/data/tradeInfrastructure/smoothing";
+import type { Vessel } from "@/hooks/useAISStream";
 
 type GlobeMode = "flags" | "performance";
 
@@ -24,6 +27,12 @@ export interface MapViewProps {
   onExchangeClick?: (exchange: ExchangeInfo) => void;
   selectedExchange?: ExchangeInfo | null;
   autoRotate?: boolean; // not applicable to flat map — accepted for prop compat
+  // ── Trade overlay (mirrors GlobeView props) ─────────────────────────────
+  tradePoints?: TradeNode[];
+  tradeArcs?: TradeRoute[];
+  selectedTradeNodeId?: string | null;
+  onTradeNodeClick?: (node: TradeNode) => void;
+  liveVessels?: Vessel[];
 }
 
 // ── Performance color (matches GlobeView) ───────────────────────────────────
@@ -83,6 +92,27 @@ interface PathGen {
   project: (lngLat: [number, number]) => [number, number] | null;
 }
 
+// ── Build an SVG path through a series of projected [x,y] points ────────────
+// Handles date-line crossings: when two consecutive projected x-coordinates
+// jump by more than 40% of the total map width, the route wraps around the
+// edge of the flat map. We start a new sub-path (M) at that point so the
+// renderer doesn't draw a horizontal line across the entire world.
+function buildWaypointPath(pts: Array<[number, number]>, mapWidth: number): string {
+  if (pts.length < 2) return '';
+  let d = `M${pts[0][0].toFixed(1)},${pts[0][1].toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) {
+    const [x, y] = pts[i];
+    const [px]   = pts[i - 1];
+    // Date-line jump — restart sub-path instead of drawing across the world
+    if (Math.abs(x - px) > mapWidth * 0.4) {
+      d += ` M${x.toFixed(1)},${y.toFixed(1)}`;
+    } else {
+      d += ` L${x.toFixed(1)},${y.toFixed(1)}`;
+    }
+  }
+  return d;
+}
+
 export default function MapView({
   width,
   height,
@@ -93,6 +123,11 @@ export default function MapView({
   showExchangePins = false,
   onExchangeClick,
   selectedExchange,
+  tradePoints = [],
+  tradeArcs   = [],
+  selectedTradeNodeId = null,
+  onTradeNodeClick,
+  liveVessels = [],
 }: MapViewProps) {
   const svgRef  = useRef<SVGSVGElement>(null);
   const zoomBehaviorRef = useRef<any>(null);
@@ -225,6 +260,51 @@ export default function MapView({
     });
   }, [pathGen, showExchangePins]);
 
+  // ── Derived: projected trade node positions ──────────────────────────────
+  const tradeNodePins = useMemo(() => {
+    if (!pathGen || !tradePoints.length) return [];
+    return tradePoints.flatMap((node) => {
+      const pos = pathGen.project([node.lng, node.lat]);
+      if (!pos) return [];
+      return [{ node, x: pos[0], y: pos[1] }];
+    });
+  }, [pathGen, tradePoints]);
+
+  // ── Derived: projected live vessel positions ─────────────────────────────
+  // Only the visible MMSI / lat / lng are kept in the projected list — keeps
+  // the React diff cheap when AISStream flushes 5000+ updates every 2s.
+  const liveVesselPins = useMemo(() => {
+    if (!pathGen || !liveVessels.length) return [];
+    const pins = liveVessels.flatMap((v) => {
+      const pos = pathGen.project([v.lng, v.lat]);
+      if (!pos) return [];
+      return [{ mmsi: v.mmsi, x: pos[0], y: pos[1] }];
+    });
+    // Verify projection is producing usable pins — projection silently
+    // returns null for points outside its visible region, so a globally-
+    // distributed vessel set should produce far more pins than nulls.
+    console.log(`[MapView] liveVessels=${liveVessels.length} → projected pins=${pins.length}`);
+    return pins;
+  }, [pathGen, liveVessels]);
+
+  // ── Derived: projected trade route paths (smoothed waypoints) ────────────
+  // The Catmull-Rom smoother (./smoothing.ts) densifies the route's high-
+  // level waypoint chain into ~150 points along a smooth curve. We then
+  // project each through D3's Natural Earth projection. The resulting SVG
+  // path uses many short L segments — at this density the eye reads it
+  // as a continuous curve, matching the slow turning radii ships use.
+  const tradeArcPaths = useMemo(() => {
+    if (!pathGen || !tradeArcs.length) return [];
+    return tradeArcs.flatMap((arc) => {
+      const smoothed = smoothRouteCoords(arc, 10); // [lng, lat]
+      const projected = smoothed
+        .map(([lng, lat]) => pathGen.project([lng, lat]))
+        .filter((p): p is [number, number] => p !== null);
+      if (projected.length < 2) return [];
+      return [{ arc, d: buildWaypointPath(projected, width) }];
+    });
+  }, [pathGen, tradeArcs, width]);
+
   // ── Country fill color ───────────────────────────────────────────────────
   const getCountryFill = useCallback((iso: string): string => {
     if (showExchangePins) {
@@ -310,6 +390,64 @@ export default function MapView({
               }}
             />
           ))}
+
+          {/* ── Trade arcs (below nodes) ── */}
+          {tradeArcPaths.map(({ arc, d }) => {
+            const color   = ROUTE_COLOR[arc.mode as keyof typeof ROUTE_COLOR] ?? '#94a3b8';
+            const opacity = 0.25 + (arc.importance / 100) * 0.30;
+            return (
+              <path
+                key={arc.id}
+                d={d}
+                fill="none"
+                stroke={color}
+                strokeWidth={(0.8 + (arc.importance / 100) * 0.7) / zoom.k}
+                strokeOpacity={opacity}
+                style={{ pointerEvents: 'none' }}
+              />
+            );
+          })}
+
+          {/* ── Live AIS vessels (between arcs and trade nodes) ──
+              Size: at zoom k=1 we draw 2.5 px circles — visible without
+              looking spammy.  Floor of 0.6 keeps them on-screen at deep
+              zoom; otherwise sub-pixel sizes get rasterised away. */}
+          {liveVesselPins.map(({ mmsi, x, y }) => (
+            <circle
+              key={mmsi}
+              cx={x} cy={y}
+              r={Math.max(0.6, 2.5 / zoom.k)}
+              fill="#67e8f9"
+              fillOpacity={0.95}
+              stroke="#0f172a"
+              strokeWidth={0.3 / zoom.k}
+              style={{ pointerEvents: 'none' }}
+            />
+          ))}
+
+          {/* ── Trade nodes (above arcs) ── */}
+          {tradeNodePins.map(({ node, x, y }) => {
+            const color      = NODE_COLOR[node.kind] ?? '#94a3b8';
+            const isSelected = selectedTradeNodeId === node.id;
+            const r          = (3 + (node.importance / 100) * 2.5) / zoom.k;
+            return (
+              <g
+                key={node.id}
+                style={{ cursor: 'pointer' }}
+                onClick={(e) => { e.stopPropagation(); onTradeNodeClick?.(node); }}
+              >
+                <circle
+                  cx={x} cy={y} r={r}
+                  fill={color}
+                  fillOpacity={isSelected ? 1 : 0.75}
+                  stroke={isSelected ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.35)'}
+                  strokeWidth={(isSelected ? 1.5 : 0.7) / zoom.k}
+                >
+                  <title>{node.name}</title>
+                </circle>
+              </g>
+            );
+          })}
 
           {/* ── Exchange pins ── */}
           {pins.map(({ ex, x, y }) => {

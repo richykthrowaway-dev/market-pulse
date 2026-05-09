@@ -6,6 +6,8 @@ import geoJsonUrl from "@/data/countries-110m.geojson";
 import { COUNTRY_META, FLAG_COLORS } from "@/data/countryMeta";
 import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeData";
 import { NODE_COLOR, ROUTE_COLOR, type TradeNode, type TradeRoute } from "@/data/tradeInfrastructure";
+import { smoothRouteCoords } from "@/data/tradeInfrastructure/smoothing";
+import type { Vessel } from "@/hooks/useAISStream";
 
 // ── Earth textures (NASA Blue Marble + topology + clouds) ──────────────
 //
@@ -59,6 +61,12 @@ interface GlobeViewProps {
   tradeArcs?:             TradeRoute[];
   selectedTradeNodeId?:   string | null;
   onTradeNodeClick?:      (node: TradeNode) => void;
+  /**
+   * Live vessel positions from AIS. Rendered imperatively as a three.js
+   * Points mesh attached directly to the scene — bypasses react-globe.gl's
+   * data-transition reconciliation, which would lock up at AIS update rates.
+   */
+  liveVessels?:           Vessel[];
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -203,6 +211,7 @@ export default function GlobeView({
   tradeArcs,
   selectedTradeNodeId,
   onTradeNodeClick,
+  liveVessels,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -547,6 +556,82 @@ export default function GlobeView({
     };
   }, [countries]);
 
+  // ── Live AIS vessels (imperative three.js Points layer) ──────────────
+  // We bypass react-globe.gl's pointsData here because AIS feeds emit
+  // hundreds of position updates per second and re-running react-globe.gl's
+  // data transition every flush would lock the main thread. Instead we
+  // attach a single THREE.Points mesh directly to the scene and
+  // re-allocate its position attribute each time `liveVessels` changes.
+  //
+  // Altitude factor 1.008 sits above the trade-path layer (1.006) so
+  // vessels are never z-occluded by ports or routes underneath them.
+  const vesselMeshRef = useRef<THREE.Points | null>(null);
+  useEffect(() => {
+    const globe = globeRef.current;
+    if (!globe || !countries.length) return;
+
+    // Tear down whatever's there — fresh build is cheap for ≤10k points.
+    if (vesselMeshRef.current) {
+      try { globe.scene().remove(vesselMeshRef.current); } catch { /* scene gone */ }
+      vesselMeshRef.current.geometry.dispose();
+      (vesselMeshRef.current.material as THREE.Material).dispose();
+      vesselMeshRef.current = null;
+    }
+
+    if (!liveVessels || liveVessels.length === 0) {
+      console.log('[GlobeView] vessel mesh: no vessels to render');
+      return;
+    }
+
+    console.log(`[GlobeView] vessel mesh: building ${liveVessels.length} points`);
+
+    const radius = globe.getGlobeRadius() * 1.008;
+    const positions = new Float32Array(liveVessels.length * 3);
+
+    // Spherical (lat, lng) → Cartesian (x, y, z) using react-globe.gl's
+    // coordinate convention: x = -r sinφ cosθ, y = r cosφ, z = r sinφ sinθ
+    // where φ is colatitude (90 - lat) and θ is (lng + 180) in radians.
+    for (let i = 0; i < liveVessels.length; i++) {
+      const v = liveVessels[i];
+      const phi   = (90 - v.lat) * (Math.PI / 180);
+      const theta = (v.lng + 180) * (Math.PI / 180);
+      const sinPhi = Math.sin(phi);
+      positions[i * 3]     = -radius * sinPhi * Math.cos(theta);
+      positions[i * 3 + 1] = radius * Math.cos(phi);
+      positions[i * 3 + 2] = radius * sinPhi * Math.sin(theta);
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    // Size: globe radius ≈ 100 world units.  With sizeAttenuation OFF the
+    // size is in screen pixels, which is what we actually want for a
+    // dashboard — vessels stay readable regardless of zoom.  3 px is bright
+    // enough to spot at globe-fit while not turning into blobs when zoomed.
+    const material = new THREE.PointsMaterial({
+      color:            0x67e8f9, // sky-300 — readable against ocean + land
+      size:             3,
+      sizeAttenuation:  false,
+      transparent:      true,
+      opacity:          0.9,
+      depthWrite:       false,    // don't occlude paths underneath
+    });
+
+    const points = new THREE.Points(geometry, material);
+    points.renderOrder = 2; // draw after polygons (1) and clouds (1)
+    globe.scene().add(points);
+    vesselMeshRef.current = points;
+
+    return () => {
+      if (vesselMeshRef.current) {
+        try { globe.scene().remove(vesselMeshRef.current); } catch { /* ignore */ }
+        vesselMeshRef.current.geometry.dispose();
+        (vesselMeshRef.current.material as THREE.Material).dispose();
+        vesselMeshRef.current = null;
+      }
+    };
+  }, [liveVessels, countries.length]);
+
   // Live-respond to autoRotate prop changes WITHOUT waiting for the next
   // idle cycle. Flipping the toggle off mid-spin should stop instantly;
   // flipping on (when not dragging) should resume the spin immediately.
@@ -713,7 +798,10 @@ export default function GlobeView({
   // react-globe.gl only does a transition when the data identity flips.
   const tradePointLat   = useCallback((d: object) => (d as TradeNode).lat, []);
   const tradePointLng   = useCallback((d: object) => (d as TradeNode).lng, []);
-  const tradePointAlt   = useCallback((d: object) => 0.01 + ((d as TradeNode).importance / 100) * 0.04, []);
+  // 0.006 sits just above the polygon-cap altitude (0.005) so the marker
+  // is never z-occluded by the country polygon when it lands on a coast.
+  // The 0.1%-of-radius offset is visually imperceptible — still reads flat.
+  const tradePointAlt   = useCallback((_d: object) => 0.006, []);
   const tradePointRadius = useCallback((d: object) => {
     const n = d as TradeNode;
     const isSelected = n.id === selectedTradeNodeId;
@@ -736,27 +824,26 @@ export default function GlobeView({
     onTradeNodeClick?.(d as TradeNode);
   }, [onTradeNodeClick]);
 
-  // Arcs: color by transport mode, width and opacity scaled by importance.
-  const tradeArcStartLat = useCallback((d: object) => (d as TradeRoute).startLat, []);
-  const tradeArcStartLng = useCallback((d: object) => (d as TradeRoute).startLng, []);
-  const tradeArcEndLat   = useCallback((d: object) => (d as TradeRoute).endLat,   []);
-  const tradeArcEndLng   = useCallback((d: object) => (d as TradeRoute).endLng,   []);
-  const tradeArcColor    = useCallback((d: object) => {
+  // Routes: use pathsData so waypoints are followed rather than drawing a
+  // direct chord that cuts through land. The Catmull-Rom smoother turns
+  // the high-level waypoint chain into a dense, smooth curve so the path
+  // shows realistic gradual turn radii instead of sharp polyline kinks.
+  const tradePathPoints = useCallback((d: object) => {
+    const r = d as TradeRoute;
+    // smoothRouteCoords returns [lng, lat]; react-globe.gl expects [lat, lng]
+    return smoothRouteCoords(r, 10).map(([lng, lat]) => [lat, lng] as [number, number]);
+  }, []);
+  const tradePathColor = useCallback((d: object) => {
     const r = d as TradeRoute;
     const c = ROUTE_COLOR[r.mode];
-    // Two-tone gradient — slightly brighter mid-arc gives the line dimensionality.
-    return [`${c}80`, `${c}ff`];
+    return [`${c}70`, `${c}ee`];
   }, []);
-  const tradeArcStroke   = useCallback((d: object) => 0.25 + ((d as TradeRoute).importance / 100) * 0.6, []);
-  const tradeArcAltitude = useCallback((d: object) => {
-    // Scale arc altitude by route length so long routes don't pancake to the surface.
-    const r = d as TradeRoute;
-    const dLat = r.endLat - r.startLat;
-    const dLng = r.endLng - r.startLng;
-    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
-    return Math.min(0.45, 0.08 + dist * 0.003);
-  }, []);
-  const tradeArcLabel = useCallback((d: object) => {
+  const tradePathStroke   = useCallback((d: object) => 0.3 + ((d as TradeRoute).importance / 100) * 0.7, []);
+  // Same trick as tradePointAlt — 0.006 clears the polygon caps so the
+  // route stays visible at coastal start/end points instead of being
+  // hidden underneath the country mesh. Still reads flat to the eye.
+  const tradePathAltitude = useCallback((_d: object) => 0.006, []);
+  const tradePathLabel = useCallback((d: object) => {
     const r = d as TradeRoute;
     return `<div style="padding:4px 8px;background:rgba(0,0,0,0.85);border-radius:4px;font-size:11px;color:#fff;border-left:3px solid ${ROUTE_COLOR[r.mode]}">
       <div style="font-weight:600">${r.name}</div>
@@ -764,8 +851,8 @@ export default function GlobeView({
     </div>`;
   }, []);
 
-  const EMPTY_POINTS: TradeNode[] = [];
-  const EMPTY_ARCS:   TradeRoute[] = [];
+  const EMPTY_POINTS:  TradeNode[]  = [];
+  const EMPTY_ARCS:    TradeRoute[] = [];
 
   const globeSize = Math.min(width, height);
 
@@ -830,18 +917,16 @@ export default function GlobeView({
         pointLabel={tradePointLabel}
         onPointClick={tradePointClick}
         pointsTransitionDuration={300}
-        arcsData={tradeArcs ?? EMPTY_ARCS}
-        arcStartLat={tradeArcStartLat}
-        arcStartLng={tradeArcStartLng}
-        arcEndLat={tradeArcEndLat}
-        arcEndLng={tradeArcEndLng}
-        arcColor={tradeArcColor}
-        arcStroke={tradeArcStroke}
-        arcAltitude={tradeArcAltitude}
-        arcLabel={tradeArcLabel}
-        arcDashLength={0.4}
-        arcDashGap={0.05}
-        arcDashAnimateTime={6000}
+        pathsData={tradeArcs ?? EMPTY_ARCS}
+        pathPoints={tradePathPoints}
+        pathColor={tradePathColor}
+        pathStroke={tradePathStroke}
+        pathAltitude={tradePathAltitude}
+        pathLabel={tradePathLabel}
+        pathDashLength={1}
+        pathDashGap={0}
+        pathDashAnimateTime={0}
+        pathTransitionDuration={300}
       />
     </div>
   );

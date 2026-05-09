@@ -2,13 +2,14 @@ import { useMemo, useState, useCallback } from 'react';
 import {
   Anchor, Plane, Train, MapPin, AlertTriangle,
   Layers, Compass, Search, Sparkles,
-  Network, ShieldAlert, Globe2,
+  Network, ShieldAlert, Globe2, Radio,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   STORY_MODES, NODE_COLOR, ROUTE_COLOR,
   type LayerKey, type TradeNode, type TradeRoute, type StoryMode,
 } from '@/data/tradeInfrastructure';
+import type { AISStatus } from '@/hooks/useAISStream';
 
 /**
  * TradeInfrastructurePanel — the "intelligence panel" half of the Global
@@ -53,7 +54,7 @@ const LAYERS: LayerOption[] = [
   { key: 'inlandHubs',     label: 'Inland Hubs',      icon: MapPin, color: NODE_COLOR.inlandHub,  group: 'nodes' },
   { key: 'connectivity',   label: 'Connectivity',     icon: Network, color: '#94a3b8', group: 'overlays', future: true, hint: 'UNCTAD LSCI / port-importance overlay (coming soon)' },
   { key: 'risk',           label: 'Risk / Disruption', icon: ShieldAlert, color: '#ef4444', group: 'overlays', future: true, hint: 'Live disruption + chokepoint risk score (coming soon)' },
-  { key: 'liveVessels',    label: 'Live Vessels',     icon: Anchor, color: '#06b6d4', group: 'overlays', future: true, hint: 'AIS feed (free tier) — to be wired in' },
+  { key: 'liveVessels',    label: 'Live Vessels',     icon: Radio,  color: '#67e8f9', group: 'overlays', hint: 'Real-time AIS feed (aisstream.io) — every cargo / tanker reporting position right now.' },
   { key: 'liveFlights',    label: 'Live Flights',     icon: Plane,  color: '#a855f7', group: 'overlays', future: true, hint: 'OpenSky / similar (free) — to be wired in' },
 ];
 
@@ -72,11 +73,18 @@ interface Props {
   worldwide:       boolean;
   onToggleWorldwide: () => void;
   countryName?:    string;
+  /** AIS WebSocket status — surfaced in the Live Vessels banner when that layer is on. */
+  aisStatus?:       AISStatus;
+  /** Number of vessels currently tracked. */
+  aisVesselCount?:  number;
+  /** Total raw WebSocket messages received — shown for debugging when count is 0. */
+  aisRawMsgCount?:  number;
 }
 
 export function TradeInfrastructurePanel({
   activeLayers, onLayersChange, selectedNode, onSelectNode,
   visibleNodes, visibleRoutes, worldwide, onToggleWorldwide, countryName,
+  aisStatus = 'idle', aisVesselCount = 0, aisRawMsgCount = 0,
 }: Props) {
   const [search, setSearch] = useState('');
 
@@ -173,6 +181,11 @@ export function TradeInfrastructurePanel({
           toggleLayer={toggleLayer}
         />
       </Section>
+
+      {/* ── AIS Live Vessels banner (only when that layer is on) ───────── */}
+      {activeLayers.has('liveVessels') && (
+        <AISStatusBanner status={aisStatus} count={aisVesselCount} rawMsgCount={aisRawMsgCount} />
+      )}
 
       {/* ── Story modes ──────────────────────────────────────────────── */}
       <Section title="Story modes" icon={Sparkles}>
@@ -375,6 +388,91 @@ function DetailStat({ label, value }: { label: string; value: string }) {
     <div className="bg-muted/40 rounded p-1.5">
       <p className="text-[9px] uppercase tracking-wide text-muted-foreground">{label}</p>
       <p className="text-xs font-medium capitalize mt-0.5 truncate">{value}</p>
+    </div>
+  );
+}
+
+function AISStatusBanner({
+  status, count, rawMsgCount,
+}: {
+  status:      AISStatus;
+  count:       number;
+  rawMsgCount: number;
+}) {
+  let dotColor    = '#94a3b8';
+  let label       = 'Disabled';
+  let detail: React.ReactNode = null;
+
+  switch (status) {
+    case 'connecting':
+      dotColor = '#f59e0b';
+      label    = 'Connecting to AIS feed…';
+      detail   = <p className="text-[10px] text-muted-foreground mt-1">Opening WebSocket to aisstream.io</p>;
+      break;
+    case 'connected':
+      dotColor = '#22c55e';
+      label    = `Live · tracking ${count.toLocaleString()} vessel${count === 1 ? '' : 's'}`;
+      detail   = (
+        <div className="mt-1 space-y-0.5">
+          <p className="text-[10px] text-muted-foreground">
+            Position reports flow in continuously; the globe refreshes every 2 s.
+          </p>
+          {count === 0 && rawMsgCount === 0 && (
+            <p className="text-[10px] text-amber-400">
+              No messages received yet — server may be rate-limiting. Check browser DevTools → Console for <code>[AISStream]</code> entries.
+            </p>
+          )}
+          {count === 0 && rawMsgCount > 0 && (
+            <p className="text-[10px] text-amber-400">
+              {rawMsgCount} message{rawMsgCount === 1 ? '' : 's'} received but 0 vessels parsed — see <code>[AISStream]</code> in DevTools Console for the raw message shape.
+            </p>
+          )}
+          {count > 0 && rawMsgCount > 0 && (
+            <p className="text-[10px] text-muted-foreground/70">
+              {rawMsgCount.toLocaleString()} messages received total.
+            </p>
+          )}
+        </div>
+      );
+      break;
+    case 'error':
+      dotColor = '#ef4444';
+      label    = 'Connection error';
+      detail   = <p className="text-[10px] text-muted-foreground mt-1">Check your API key, network, or rate limits.</p>;
+      break;
+    case 'no-key':
+      dotColor = '#ef4444';
+      label    = 'API key missing';
+      detail   = (
+        <p className="text-[10px] text-muted-foreground mt-1 leading-relaxed">
+          Get a free key at <span className="font-mono text-foreground/80">aisstream.io</span> (GitHub login),
+          then add <span className="font-mono text-foreground/80">VITE_AISSTREAM_KEY=…</span> to your
+          <span className="font-mono text-foreground/80"> .env.local</span> and restart the dev server.
+        </p>
+      );
+      break;
+    case 'idle':
+    default:
+      dotColor = '#94a3b8';
+      label    = 'Idle';
+      detail   = null;
+  }
+
+  return (
+    <div className="px-4 py-2.5 border-t border-border bg-cyan-500/5">
+      <div className="flex items-center gap-2">
+        <span
+          className="w-2 h-2 rounded-full shrink-0"
+          style={{
+            backgroundColor: dotColor,
+            boxShadow: status === 'connecting' || status === 'connected' ? `0 0 6px ${dotColor}` : undefined,
+            animation: status === 'connecting' ? 'pulse 1.4s ease-in-out infinite' : undefined,
+          }}
+        />
+        <span className="text-xs font-medium">{label}</span>
+        <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">AIS</span>
+      </div>
+      {detail}
     </div>
   );
 }

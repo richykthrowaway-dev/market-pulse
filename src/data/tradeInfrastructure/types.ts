@@ -103,6 +103,14 @@ export interface TradeRoute {
   /** IDs of chokepoints / nodes this route passes through. */
   passesThrough?: string[];
   tags?:        string[];
+  /**
+   * Intermediate waypoints that guide the route around land masses.
+   * When present, the renderer traces start → wp[0] → … → wp[n] → end
+   * instead of drawing a straight great-circle chord.
+   * Maritime routes always supply these; air routes use them only for
+   * transpolar legs where the GC path needs to arc visibly over the pole.
+   */
+  waypoints?: Array<{ lat: number; lng: number }>;
 }
 
 /** A guided story-mode preset that reframes the globe + panel. */

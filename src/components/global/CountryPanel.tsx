@@ -10,6 +10,7 @@ import CountryNews from "./CountryNews";
 import CountryEconomy from "./CountryEconomy";
 import { TradeInfrastructurePanel } from "./trade/TradeInfrastructurePanel";
 import type { LayerKey, TradeNode, TradeRoute } from "@/data/tradeInfrastructure";
+import type { AISStatus } from "@/hooks/useAISStream";
 
 interface CountryPanelProps {
   iso2: string;
@@ -29,12 +30,19 @@ interface CountryPanelProps {
   tradeVisibleRoutes?:   TradeRoute[];
   tradeWorldwide?:       boolean;
   onToggleTradeWorldwide?: () => void;
+
+  // ── Live AIS feed status (passed through to TradeInfrastructurePanel) ──
+  aisStatus?:       AISStatus;
+  aisVesselCount?:  number;
+  /** Total raw WebSocket messages received — used to distinguish "connected/no data" from "connected/parsing dropped" */
+  aisRawMsgCount?:  number;
 }
 
 export default function CountryPanel({
   iso2, onClose, onTabChange, onExchangeClick,
   tradeActiveLayers, onTradeLayersChange, tradeSelectedNode, onTradeSelectNode,
   tradeVisibleNodes, tradeVisibleRoutes, tradeWorldwide, onToggleTradeWorldwide,
+  aisStatus, aisVesselCount, aisRawMsgCount,
 }: CountryPanelProps) {
   const { data: stocks = [], isLoading } = useCountryStocks(iso2);
   const meta = COUNTRY_META[iso2];
@@ -94,6 +102,9 @@ export default function CountryPanel({
               worldwide={tradeWorldwide ?? true}
               onToggleWorldwide={onToggleTradeWorldwide!}
               countryName={meta?.name}
+              aisStatus={aisStatus}
+              aisVesselCount={aisVesselCount}
+              aisRawMsgCount={aisRawMsgCount}
             />
           ) : (
             <p className="text-xs text-muted-foreground p-4">Trade overlay not initialised.</p>
