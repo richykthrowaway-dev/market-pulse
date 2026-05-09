@@ -57,7 +57,7 @@ const LAYERS: LayerOption[] = [
   { key: 'connectivity',   label: 'Connectivity',     icon: Network, color: '#94a3b8', group: 'overlays', future: true, hint: 'UNCTAD LSCI / port-importance overlay (coming soon)' },
   { key: 'risk',           label: 'Risk / Disruption', icon: ShieldAlert, color: '#ef4444', group: 'overlays', future: true, hint: 'Live disruption + chokepoint risk score (coming soon)' },
   { key: 'liveVessels',    label: 'Live Vessels',     icon: Radio,  color: '#67e8f9', group: 'overlays', hint: 'Real-time AIS feed (aisstream.io) — every cargo / tanker reporting position right now.' },
-  { key: 'liveFlights',    label: 'Live Flights',     icon: Plane,  color: '#a855f7', group: 'overlays', hint: 'Live aircraft positions via OpenSky Network — all airborne traffic globally.' },
+  { key: 'liveFlights',    label: 'Live Flights',     icon: Plane,  color: '#a855f7', group: 'overlays', hint: 'Live aircraft positions via airplanes.live ADS-B feed — major air-traffic centres globally.' },
 ];
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -516,21 +516,15 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
     case 'loading':
       dotColor = '#f59e0b';
       label    = 'Fetching live flights…';
-      detail   = <p className="text-[10px] text-muted-foreground mt-1">Polling OpenSky Network for airborne aircraft…</p>;
+      detail   = <p className="text-[10px] text-muted-foreground mt-1">Polling airplanes.live for airborne aircraft…</p>;
       break;
     case 'live':
       dotColor = '#a855f7';
       label    = `Live · tracking ${count.toLocaleString()} aircraft`;
       detail   = (
-        <div className="mt-1 space-y-0.5">
-          <p className="text-[10px] text-muted-foreground">
-            Positions refresh every 60 s · OpenSky free tier (400 credits/day; global fetch = 4 credits/call).
-          </p>
-          <p className="text-[10px] text-muted-foreground/60">
-            Set <span className="font-mono text-foreground/70">VITE_OPENSKY_CLIENT_ID</span> +{' '}
-            <span className="font-mono text-foreground/70">VITE_OPENSKY_CLIENT_SECRET</span> for 4,000 credits/day.
-          </p>
-        </div>
+        <p className="text-[10px] text-muted-foreground mt-1">
+          Positions refresh every 30 s · airplanes.live community ADS-B feed · 14 regional snapshots covering major air-traffic centres.
+        </p>
       );
       break;
     case 'error':
@@ -538,7 +532,7 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
       label    = 'Fetch error';
       detail   = (
         <p className="text-[10px] text-muted-foreground mt-1">
-          Could not reach OpenSky Network — retrying with backoff. Check network or daily credit limit (400 credits anonymous).
+          Could not reach airplanes.live — retrying with backoff.
         </p>
       );
       break;
@@ -559,7 +553,7 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
           }}
         />
         <span className="text-xs font-medium">{label}</span>
-        <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">OpenSky</span>
+        <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">airplanes.live</span>
       </div>
       {detail}
     </div>

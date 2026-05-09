@@ -1,14 +1,13 @@
 /**
- * useOpenSkyFlights — polls the OpenSky Network REST API for live
+ * useOpenSkyFlights — polls a live ADS-B aggregator (airplanes.live) for
  * airborne aircraft positions and exposes them to the trade overlay.
  *
- * Why REST polling (not WebSocket):
- *   OpenSky's public API is REST-only.  Anonymous users get 10-second
- *   server-side state-vector resolution; authenticated users get 5 s.
+ * (Filename kept for git-history continuity; the hook originally used
+ *  OpenSky Network but had to be migrated — see REGIONS below.)
  *
  * Call-efficiency design (mirrors useAISStream):
- *   • Module-level singleton — one HTTP request in flight at a time,
- *     no matter how many React components subscribe.
+ *   • Module-level singleton — one set of HTTP requests in flight at a
+ *     time no matter how many React components subscribe.
  *   • Page Visibility API — the poll interval is suspended entirely
  *     when the tab is hidden (no background network traffic).
  *   • 300 ms grace period before actually cancelling on disable —
@@ -16,24 +15,10 @@
  *   • localStorage cache (60 s TTL) — if the user re-enables within
  *     60 s the map is populated instantly from cache while the next
  *     fetch is in flight.
- *   • Exponential backoff (60 s → 120 s → 240 s … cap 5 min) on errors.
- *
- * OpenSky anonymous credit budget (per documentation):
- *   400 credits / day.  A global /states/all call (no bounding box,
- *   area > 400 sq°) costs 4 credits — NOT 1.  Budget: 400 ÷ 4 = 100
- *   calls/day.  At 60 s polling that covers ~100 minutes of active use,
- *   which is the right balance for an optional overlay the user explicitly
- *   enables.  Using a bounding box (≤ 25 sq°) drops cost to 1 credit and
- *   would allow 15 s polling again — future optimisation.
- *
- * Authentication (optional, 10× more credits):
- *   Set VITE_OPENSKY_CLIENT_ID and VITE_OPENSKY_CLIENT_SECRET in .env.local.
- *   The singleton will obtain a Bearer token via the OpenID Connect token
- *   endpoint and auto-refresh it before the 30-minute expiry.
- *   With auth: 4,000 credits/day → 1,000 calls → ~16 hours at 60 s.
+ *   • Exponential backoff on total failure (30 s → 60 s … cap 5 min).
  *
  * API reference:
- *   https://openskynetwork.github.io/opensky-api/rest.html
+ *   https://airplanes.live/rest-api-adsb-data-field-descriptions/
  */
 
 export interface Flight {
@@ -60,63 +45,75 @@ export type FlightStatus =
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 /**
- * Call OpenSky directly from the browser.
+ * Why airplanes.live (not OpenSky):
+ *   OpenSky cannot be used from this app:
+ *     • Browser-direct fetch is blocked by CORS — they restrict
+ *       Access-Control-Allow-Origin to opensky-network.org itself.
+ *     • Server-side proxy is blocked at the network level — OpenSky
+ *       blocks all datacenter IPs (AWS, Cloudflare, Supabase Edge, etc.)
+ *       so neither Vercel nor Supabase Edge Functions can reach them.
  *
- * The proxy approach (Vercel → OpenSky, Supabase → OpenSky) fails because
- * OpenSky blocks all datacenter/cloud-provider IPs at the network level.
- * The user's browser runs on a residential/ISP address which is NOT blocked.
+ *   airplanes.live is a community-run ADS-B aggregator that:
+ *     • Returns Access-Control-Allow-Origin: * (works from any browser).
+ *     • Has no IP filtering.
+ *     • Requires no auth, has no documented daily limit.
  *
- * CORS: OpenSky includes Access-Control-Allow-Origin: * on /api/states/all
- * for anonymous GET requests in practice, even though their docs don't
- * guarantee it.  If a CORS preflight fails, the fetch error handler will
- * trigger the exponential backoff as normal.
+ * Endpoint:
+ *   GET https://api.airplanes.live/v2/point/{lat}/{lon}/{radius_nm}
+ *   Max radius is 250 nautical miles (~463 km).  To approximate a global
+ *   view we poll several major air-traffic centres in parallel and dedupe
+ *   by hex (ICAO24).  This gives a representative global picture without
+ *   exhaustive coverage — the goal is "lots of dots in major regions",
+ *   not every aircraft on earth.
  */
-const OPENSKY_BASE_URL   = 'https://opensky-network.org/api/states/all';
-/**
- * 60 s polling — conservative but correct for anonymous users.
- * Global fetch costs 4 credits; budget is 400/day → 100 calls/day.
- * 100 × 60 s = 100 minutes of active use per day, which matches
- * realistic usage of an opt-in overlay.
- */
-const POLL_INTERVAL_MS    = 60_000;
-/**
- * Keep aircraft for 2× the poll interval so a single delayed response
- * does not cause dots to blink out and back.
- */
-const STALE_FLIGHT_MS     = 120_000;
-const CACHE_KEY           = 'opensky-flights-cache-v1';
-const CACHE_TTL_MS        = 60_000;   // match poll interval
+const AIRPLANES_LIVE_BASE = 'https://api.airplanes.live/v2/point';
+
+/** Major air-traffic centres — ~250 nm radius each, queried in parallel. */
+const REGIONS: ReadonlyArray<readonly [lat: number, lon: number, label: string]> = [
+  [40.6, -74.0,  'NYC / NE-US'],
+  [34.0, -118.2, 'LAX / SW-US'],
+  [41.9,  -87.6, 'ORD / Mid-US'],
+  [29.6,  -95.3, 'IAH / S-US'],
+  [51.5,   -0.1, 'London'],
+  [50.1,    8.7, 'Frankfurt'],
+  [41.0,   28.9, 'Istanbul'],
+  [25.3,   55.4, 'Dubai'],
+  [22.3,  114.2, 'Hong Kong'],
+  [35.7,  139.7, 'Tokyo'],
+  [ 1.4,  103.8, 'Singapore'],
+  [-33.9, 151.2, 'Sydney'],
+  [19.4,  -99.1, 'Mexico City'],
+  [-23.5, -46.6, 'São Paulo'],
+];
+const REGION_RADIUS_NM = 250;
+
+const POLL_INTERVAL_MS    = 30_000;          // airplanes.live has no documented limit
+const STALE_FLIGHT_MS     = 90_000;          // 3× poll interval
+const CACHE_KEY           = 'airplanes-live-flights-cache-v1';
+const CACHE_TTL_MS        = 60_000;
 const DISCONNECT_GRACE_MS = 300;
-const BACKOFF_BASE_MS     = 60_000;   // same as poll interval
+const BACKOFF_BASE_MS     = 30_000;
 const BACKOFF_MAX_MS      = 5 * 60_000;
 
-// Auth is handled server-side in api/opensky.ts (Vercel env vars).
-// Set OPENSKY_CLIENT_ID + OPENSKY_CLIENT_SECRET in Vercel project settings
-// for 4,000 credits/day.  No client-side secrets needed.
+// ─── Raw airplanes.live aircraft record ──────────────────────────────────────
+// Subset of the readsb/tar1090 schema; we only consume the fields we need.
+interface RawAircraft {
+  hex:        string;            // 24-bit ICAO address (lowercase hex)
+  flight?:    string;            // callsign, right-padded with spaces
+  lat?:       number;            // decimal degrees
+  lon?:       number;            // decimal degrees
+  alt_baro?:  number | 'ground'; // barometric altitude in feet, or 'ground'
+  gs?:        number;            // ground speed in knots
+  track?:     number;            // true track in degrees
+  seen?:      number;            // seconds since last seen
+  r?:         string;            // registration (tail number)
+}
 
-// ─── Raw OpenSky state-vector tuple ──────────────────────────────────────────
-// Indices match the documented array order exactly (rest.html §"State Vectors").
-// Index 17 (category) only present when the request includes extended=1.
-type RawState = [
-  string,              // 0  icao24
-  string | null,       // 1  callsign (8 chars, right-padded; nullable)
-  string,              // 2  origin_country (inferred from ICAO24)
-  number | null,       // 3  time_position (Unix s; last position update)
-  number,              // 4  last_contact  (Unix s; last valid message)
-  number | null,       // 5  longitude  (WGS-84 decimal °; nullable)
-  number | null,       // 6  latitude   (WGS-84 decimal °; nullable)
-  number | null,       // 7  baro_altitude (metres; nullable)
-  boolean,             // 8  on_ground
-  number | null,       // 9  velocity     (m/s; nullable)
-  number | null,       // 10 true_track   (° clockwise from north; nullable)
-  number | null,       // 11 vertical_rate (m/s; positive = climbing; nullable)
-  number[] | null,     // 12 sensors      (receiver IDs; null for anonymous)
-  number | null,       // 13 geo_altitude (metres; nullable)
-  string | null,       // 14 squawk       (Mode-C transponder code; nullable)
-  boolean,             // 15 spi          (special purpose indicator)
-  number,              // 16 position_source (0=ADS-B 1=ASTERIX 2=MLAT 3=FLARM)
-  // 17 category — only present when extended=1 is sent in the request
-];
+interface RegionResponse {
+  ac?: RawAircraft[];
+  now?: number;
+  msg?: string;
+}
 
 // ─── Module-level singleton ───────────────────────────────────────────────────
 
@@ -133,7 +130,7 @@ const singleton = (() => {
   let backoffDelay     = BACKOFF_BASE_MS;
   let fetchInFlight    = false;
 
-  // Auth is handled by api/opensky.ts on the server — no client-side headers needed.
+  // No auth needed — airplanes.live is fully open.
 
   // ── Cache helpers ────────────────────────────────────────────────────
   function saveCache(): void {
@@ -174,62 +171,82 @@ const singleton = (() => {
     }
   }
 
-  // ── Parse a raw OpenSky state vector ─────────────────────────────────
-  function parseState(s: RawState): Flight | null {
-    const lng = s[5];
-    const lat = s[6];
-    if (lng == null || lat == null) return null;
-    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
-    if (s[8]) return null; // on_ground — skip
+  // ── Parse one airplanes.live aircraft record ─────────────────────────
+  // Convert imperial → metric to match the existing Flight contract.
+  const FT_TO_M  = 0.3048;
+  const KT_TO_MS = 0.5144444;
+  function parseAircraft(a: RawAircraft): Flight | null {
+    if (typeof a.lat !== 'number' || typeof a.lon !== 'number') return null;
+    if (Math.abs(a.lat) > 90 || Math.abs(a.lon) > 180) return null;
+    if (a.alt_baro === 'ground') return null;
 
     return {
-      icao24:     s[0],
-      callsign:   s[1]?.trim() || undefined,
-      country:    s[2] || undefined,
-      lat,
-      lng,
-      altitudeM:  typeof s[7]  === 'number' ? s[7]  : undefined,
-      velocityMs: typeof s[9]  === 'number' ? s[9]  : undefined,
-      track:      typeof s[10] === 'number' ? s[10] : undefined,
+      icao24:     a.hex,
+      callsign:   a.flight?.trim() || undefined,
+      country:    undefined, // airplanes.live doesn't surface country
+      lat:        a.lat,
+      lng:        a.lon,
+      altitudeM:  typeof a.alt_baro === 'number' ? a.alt_baro * FT_TO_M : undefined,
+      velocityMs: typeof a.gs       === 'number' ? a.gs * KT_TO_MS      : undefined,
+      track:      typeof a.track    === 'number' ? a.track              : undefined,
       lastSeen:   Date.now(),
     };
   }
 
-  // ── Single poll ───────────────────────────────────────────────────────
+  // ── Single poll — fan out to all regions in parallel, dedupe by hex ──
   async function poll(): Promise<void> {
     if (fetchInFlight || document.visibilityState === 'hidden') return;
     fetchInFlight = true;
 
     try {
-      const res = await fetch(OPENSKY_BASE_URL);
-      if (!res.ok) {
-        const body = await res.text().catch(() => '');
-        throw new Error(`OpenSky proxy ${res.status}${body ? ': ' + body.slice(0, 120) : ''}`);
+      const results = await Promise.allSettled(
+        REGIONS.map(([lat, lon]) =>
+          fetch(`${AIRPLANES_LIVE_BASE}/${lat}/${lon}/${REGION_RADIUS_NM}`)
+            .then(r => r.ok ? r.json() as Promise<RegionResponse>
+                            : Promise.reject(new Error(`HTTP ${r.status}`)))
+        ),
+      );
+
+      let okCount = 0;
+      let added   = 0;
+      for (const result of results) {
+        if (result.status !== 'fulfilled') continue;
+        okCount += 1;
+        const ac = result.value.ac;
+        if (!Array.isArray(ac)) continue;
+        for (const raw of ac) {
+          const flight = parseAircraft(raw);
+          if (flight) {
+            flightMap.set(flight.icao24, flight);
+            added += 1;
+          }
+        }
       }
 
-      const json = await res.json() as { states: RawState[] | null };
-
-      if (Array.isArray(json.states)) {
-        for (const raw of json.states) {
-          const flight = parseState(raw);
-          if (flight) flightMap.set(flight.icao24, flight);
-        }
+      // If every region failed, treat the whole poll as a failure.
+      if (okCount === 0) {
+        const firstErr = results.find(r => r.status === 'rejected');
+        throw new Error(
+          firstErr && firstErr.status === 'rejected'
+            ? `All ${REGIONS.length} regions failed: ${(firstErr.reason as Error)?.message ?? 'unknown'}`
+            : `All ${REGIONS.length} regions failed`,
+        );
       }
 
       prune();
       saveCache();
-      backoffDelay = BACKOFF_BASE_MS; // reset on success
+      backoffDelay = BACKOFF_BASE_MS;
 
       const n = flightMap.size;
       if (status !== 'live') {
-        console.info(`[OpenSky] first data — ${n.toLocaleString()} airborne aircraft`);
+        console.info(`[airplanes.live] first data — ${n.toLocaleString()} airborne aircraft (${okCount}/${REGIONS.length} regions, ${added} updates)`);
         setStatus('live');
       } else {
-        console.debug(`[OpenSky] updated — ${n.toLocaleString()} aircraft`);
+        console.debug(`[airplanes.live] updated — ${n.toLocaleString()} aircraft (${okCount}/${REGIONS.length} regions)`);
         notify();
       }
     } catch (err) {
-      console.warn('[OpenSky] fetch error:', err);
+      console.warn('[airplanes.live] fetch error:', err);
       setStatus('error');
       // Backoff — stop regular interval and reschedule
       clearInterval(pollTimer);
