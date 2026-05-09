@@ -1,5 +1,5 @@
 import { Scale, ArrowUpRight, ArrowDownRight, Cpu, Globe2 } from 'lucide-react';
-import { useEodhdTrade } from '@/hooks/useEodhdTrade';
+import { useWorldBankTrade } from '@/hooks/useWorldBankTrade';
 import { cn } from '@/lib/utils';
 
 interface MetricCardProps {
@@ -74,7 +74,7 @@ interface TradeSnapshotProps {
  * Bank, or pre-fetch state).
  */
 export function TradeSnapshot({ iso2 }: TradeSnapshotProps) {
-  const { data, isLoading } = useEodhdTrade(iso2);
+  const { data, isLoading } = useWorldBankTrade(iso2);
 
   if (isLoading) {
     return (
@@ -140,7 +140,7 @@ function SectionHeader() {
     <div className="flex items-center gap-1.5 text-muted-foreground">
       <Globe2 className="w-3.5 h-3.5 shrink-0" />
       <span className="text-[10px] font-semibold uppercase tracking-wide">
-        Trade &amp; External Sector · EODHD
+        Trade &amp; External Sector · World Bank
       </span>
     </div>
   );
