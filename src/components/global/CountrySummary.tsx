@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useIndices, useNews } from "@/hooks/useSupabaseData";
 import { useCountryIndices } from "@/hooks/useCountryIndices";
+import { useEodhdExchangeStocks } from "@/hooks/useEodhdExchangeStocks";
 import { COUNTRY_META } from "@/data/countryMeta";
 import { Flag } from "@/components/ui/Flag";
 import { cn } from "@/lib/utils";
@@ -47,6 +48,14 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
   // True only when we have ticker symbols but no live price data — happens
   // for non-US countries where Supabase has tickers but no price feeds yet.
   const hasNoLiveData = stocks.length > 0 && gainers.length === 0 && losers.length === 0;
+
+  // EODHD screener fallback — used when useCountryStocks has no live data.
+  // Limit matches CountryScreener (15) so both tabs share the same React Query
+  // cache key → first warm-up is free for the second tab.
+  const { data: eodhdStocks = [] } = useEodhdExchangeStocks(
+    stocks.length === 0 || hasNoLiveData ? iso2 : null,
+    15,
+  );
 
   // Fetch news for this country.
   // IMPORTANT: do NOT pass symbols here. The api-news edge function's 6h DB
@@ -229,29 +238,84 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
           {hasNoLiveData && (
             <div>
               <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-                Major Companies
+                {eodhdStocks.length > 0 ? "Top Companies · EODHD" : "Major Companies"}
               </h3>
-              <div className="space-y-1">
-                {stocks.slice(0, 10).map((s) => (
-                  <div
-                    key={s.symbol}
-                    className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <span className="font-medium text-sm">{s.symbol}</span>
-                      <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
+              {eodhdStocks.length > 0 ? (
+                <div className="space-y-1">
+                  {eodhdStocks.slice(0, 10).map((s) => {
+                    const positive = (s.change ?? 0) >= 0;
+                    return (
+                      <div
+                        key={s.code}
+                        className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-medium text-sm">{s.code.split(".")[0]}</span>
+                          <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
+                        </div>
+                        {s.change != null && (
+                          <span className={cn("text-sm font-mono shrink-0", positive ? "text-success" : "text-danger")}>
+                            {positive ? "+" : ""}{s.change.toFixed(2)}%
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="space-y-1">
+                  {stocks.slice(0, 10).map((s) => (
+                    <div
+                      key={s.symbol}
+                      className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <span className="font-medium text-sm">{s.symbol}</span>
+                        <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-2 italic">
-                Live price data unavailable for {meta.name}.
-              </p>
+                  ))}
+                </div>
+              )}
+              {eodhdStocks.length === 0 && (
+                <p className="text-xs text-muted-foreground mt-2 italic">
+                  Live price data unavailable for {meta.name}.
+                </p>
+              )}
             </div>
           )}
 
           {stocks.length === 0 && (
-            <p className="text-sm text-muted-foreground">No stock data available for {meta.name}.</p>
+            eodhdStocks.length > 0 ? (
+              <div>
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Top Companies · EODHD
+                </h3>
+                <div className="space-y-1">
+                  {eodhdStocks.slice(0, 10).map((s) => {
+                    const positive = (s.change ?? 0) >= 0;
+                    return (
+                      <div
+                        key={s.code}
+                        className="flex items-center justify-between py-1.5 px-2 rounded hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="min-w-0">
+                          <span className="font-medium text-sm">{s.code.split(".")[0]}</span>
+                          <span className="text-xs text-muted-foreground ml-2 truncate">{s.name}</span>
+                        </div>
+                        {s.change != null && (
+                          <span className={cn("text-sm font-mono shrink-0", positive ? "text-success" : "text-danger")}>
+                            {positive ? "+" : ""}{s.change.toFixed(2)}%
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">No stock data available for {meta.name}.</p>
+            )
           )}
         </>
       )}

@@ -1,10 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 import { getCountryIndices, type CountryIndex } from "@/data/countryIndices";
-import { fetchEodHistorical } from "@/services/eodhdApi";
+
+const YAHOO_FN_BASE = `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/api-yahoo`;
+const YAHOO_HEADERS = {
+  apikey:        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
+  Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string}`,
+};
 
 /**
  * Live quote data for a country index.
- * Uses EODHD EOD bars via the api-eodhd edge function.
+ * Uses the api-yahoo edge function (Yahoo Finance v7/quote) which natively
+ * accepts Yahoo Finance symbols like ^GSPC, ^FTSE, ^GDAXI, etc.
  */
 export interface CountryIndexQuote extends CountryIndex {
   price: number | null;
@@ -12,65 +18,58 @@ export interface CountryIndexQuote extends CountryIndex {
   change: number | null;
   changePercent: number | null;
   currency: string | null;
-  /** True if the EODHD data couldn't be fetched (fallback display state) */
+  /** True if Yahoo Finance data couldn't be fetched */
   unavailable: boolean;
 }
 
 /**
- * Fetch live (end-of-day) quotes for a country's major stock indices via EODHD.
- * Returns the last two daily bars to compute price change.
+ * Fetch live quotes for a country's major stock indices via Yahoo Finance.
  *
- * ⚠️  Cost notes:
- *   - 1 EODHD credit per index (cheap individually, but multiplied by N indices)
- *   - **NO refetchInterval**: EOD bars only update once per trading day, so
- *     polling every 5 min was burning ~290 credits/tab/day for zero benefit.
- *   - **Tight `from` window**: only fetch 7 days of history (need last 2 bars
- *     to compute change %). Was previously fetching ~30 years per call.
- *   - 30-min staleTime: a user re-opening the same panel within 30 min hits
- *     cache instead of EODHD.
+ * Symbols in countryIndices.ts are Yahoo Finance format (^GSPC, ^FTSE, etc.)
+ * so this is a direct match — no symbol conversion needed.
+ *
+ * Fetches all indices in parallel (N concurrent edge-fn calls, each cheap).
+ * 30-min staleTime: index prices are end-of-day anyway, no value in refetching.
  */
 export function useCountryIndices(iso2: string | null) {
   return useQuery({
     queryKey: ["country-indices", iso2],
     enabled: !!iso2,
-    staleTime: 30 * 60_000,           // 30 min — EOD bars don't change intraday
+    staleTime: 30 * 60_000,           // 30 min — EOD data doesn't change intraday
     gcTime: 60 * 60_000,
-    refetchOnWindowFocus: false,      // never refetch on tab switch — cached EOD is fine
+    refetchOnWindowFocus: false,
     queryFn: async (): Promise<CountryIndexQuote[]> => {
       if (!iso2) return [];
       const indices = getCountryIndices(iso2);
       if (indices.length === 0) return [];
 
-      // Tight 7-day window to ensure we always get at least 2 bars even across
-      // long weekends, while sending a tiny payload (vs 30 years of daily bars).
-      const today = new Date();
-      const weekAgo = new Date(today.getTime() - 7 * 86_400_000);
-      const fmt = (d: Date) => d.toISOString().split("T")[0];
-      const from = fmt(weekAgo);
-      const to   = fmt(today);
-
       const quotes = await Promise.all(
         indices.map(async (idx): Promise<CountryIndexQuote> => {
           try {
-            // Only fetch last week of bars — we just need the last 2 to compute change
-            const bars = await fetchEodHistorical(idx.symbol, from, to);
-            if (!bars || bars.length === 0) throw new Error("no bars");
+            const params = new URLSearchParams({ endpoint: "quote", symbol: idx.symbol });
+            const res = await fetch(`${YAHOO_FN_BASE}?${params}`, { headers: YAHOO_HEADERS });
 
-            const last = bars[bars.length - 1];
-            const prev = bars.length >= 2 ? bars[bars.length - 2] : null;
+            if (!res.ok) throw new Error(`api-yahoo quote ${res.status}`);
 
-            const price         = last.adjusted_close ?? last.close ?? null;
-            const previousClose = prev ? (prev.adjusted_close ?? prev.close) : null;
-            const change        = price != null && previousClose != null ? price - previousClose : null;
-            const changePercent = change != null && previousClose ? (change / previousClose) * 100 : null;
+            // api-yahoo returns the raw Yahoo quote object or null
+            const q = await res.json();
+            if (!q) throw new Error("no quote data");
+
+            const price         = q.regularMarketPrice          ?? null;
+            const previousClose = q.regularMarketPreviousClose  ?? null;
+            const change        = q.regularMarketChange         ?? null;
+            const changePercent = q.regularMarketChangePercent  ?? null;
+            const currency      = q.currency                    ?? null;
 
             return {
               ...idx,
+              // Prefer Yahoo's display name if available
+              name: q.shortName ?? q.longName ?? idx.name,
               price,
               previousClose,
               change,
               changePercent,
-              currency: null, // EODHD EOD bars don't include currency — use symbol's known currency
+              currency,
               unavailable: price === null,
             };
           } catch {
