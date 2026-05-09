@@ -1,0 +1,23 @@
+import type { Chokepoint } from './types';
+
+/**
+ * Strategic global trade chokepoints — physical bottlenecks where a
+ * disproportionate share of global trade flows through narrow geography.
+ * Disruption here moves freight markets globally.
+ *
+ * Importance scores reflect approximate global-trade share moved
+ * through each (curated; later replaceable with UNCTAD / EIA stats).
+ */
+export const CHOKEPOINTS: Chokepoint[] = [
+  { id: 'cp.malacca', kind: 'chokepoint', name: 'Strait of Malacca', region: 'Southeast Asia', lat: 2.5000, lng: 101.5000, importance: 100, modes: ['maritime'], description: 'World\'s busiest strategic strait. ~25% of global maritime trade and ~80% of China\'s oil imports transit here.', strategicRole: 'Asia–Europe / Asia–Middle East master corridor.', tags: ['oil', 'container', 'asia-anchor'] },
+  { id: 'cp.hormuz', kind: 'chokepoint', name: 'Strait of Hormuz', region: 'Middle East', lat: 26.5667, lng: 56.2500, importance: 96, modes: ['maritime'], description: '~20% of global oil & ~30% of LNG transit here. Connects Persian Gulf to open ocean.', strategicRole: 'Energy chokepoint; recurrent geopolitical risk premium.', tags: ['energy', 'crude', 'lng', 'risk'] },
+  { id: 'cp.suez', kind: 'chokepoint', name: 'Suez Canal', countryISO2: 'EG', region: 'Africa', lat: 30.5852, lng: 32.2654, importance: 95, modes: ['maritime'], description: '~12% of global trade transits Suez. Asia–Europe shortcut vs Cape route saves ~8000 km.', strategicRole: 'Asia–Europe maritime artery; closure forces Cape diversion.', tags: ['container', 'asia-europe-anchor'] },
+  { id: 'cp.bab-el-mandeb', kind: 'chokepoint', name: 'Bab el-Mandeb', region: 'Middle East / Africa', lat: 12.5833, lng: 43.3333, importance: 88, modes: ['maritime'], description: 'Southern entrance to the Red Sea; gateway to/from Suez Canal.', strategicRole: 'Suez approach — Houthi attacks 2023+ rerouted ~30% of container traffic round Africa.', tags: ['risk', 'red-sea'] },
+  { id: 'cp.panama', kind: 'chokepoint', name: 'Panama Canal', countryISO2: 'PA', region: 'Central America', lat: 9.0820, lng: -79.6800, importance: 90, modes: ['maritime'], description: '~5% of global maritime trade; major US east-coast ↔ Asia route.', strategicRole: 'Atlantic–Pacific shortcut. 2023 drought drove transit cuts → freight-rate spikes.', tags: ['container', 'lpg', 'risk'] },
+  { id: 'cp.bosphorus', kind: 'chokepoint', name: 'Turkish Straits (Bosphorus + Dardanelles)', countryISO2: 'TR', region: 'Europe / Middle East', lat: 41.1100, lng: 29.0533, importance: 78, modes: ['maritime'], description: 'Black Sea ↔ Mediterranean. Major grain (Ukrainian wheat) and crude flows.', strategicRole: 'Black Sea agricultural exports artery.', tags: ['grain', 'crude'] },
+  { id: 'cp.gibraltar', kind: 'chokepoint', name: 'Strait of Gibraltar', region: 'Europe / Africa', lat: 35.9667, lng: -5.6000, importance: 80, modes: ['maritime'], description: 'Mediterranean ↔ Atlantic gateway; major LNG and container route.', tags: ['container', 'lng'] },
+  { id: 'cp.dover', kind: 'chokepoint', name: 'English Channel / Dover Strait', region: 'Europe', lat: 51.0000, lng: 1.5000, importance: 72, modes: ['maritime'], description: 'World\'s busiest international shipping lane by vessel count. North Sea ↔ Atlantic.', tags: ['container', 'roro'] },
+  { id: 'cp.taiwan', kind: 'chokepoint', name: 'Taiwan Strait', region: 'East Asia', lat: 24.0000, lng: 119.5000, importance: 92, modes: ['maritime'], description: '~20% of global container traffic transits Taiwan Strait at some leg of its journey.', strategicRole: 'Geopolitical hotspot; primary route for NE Asia ↔ Southeast Asia / Europe.', tags: ['container', 'risk', 'asia-anchor'] },
+  { id: 'cp.danish', kind: 'chokepoint', name: 'Danish Straits', region: 'Europe', lat: 55.8000, lng: 12.5500, importance: 65, modes: ['maritime'], description: 'Baltic Sea entrance; Russian oil exports + Northern European feeder routes.', tags: ['crude'] },
+  { id: 'cp.cape', kind: 'chokepoint', name: 'Cape of Good Hope', countryISO2: 'ZA', region: 'Africa', lat: -34.3568, lng: 18.4740, importance: 75, modes: ['maritime'], description: 'Backup for Suez when Bab el-Mandeb / Suez are disrupted. Adds ~10–14 days to Asia–Europe transit.', strategicRole: 'Resilience route — activated during 2023+ Red Sea disruption.', tags: ['container', 'resilience'] },
+];

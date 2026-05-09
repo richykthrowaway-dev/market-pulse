@@ -5,6 +5,7 @@ import * as THREE from "three";
 import geoJsonUrl from "@/data/countries-110m.geojson";
 import { COUNTRY_META, FLAG_COLORS } from "@/data/countryMeta";
 import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeData";
+import { NODE_COLOR, ROUTE_COLOR, type TradeNode, type TradeRoute } from "@/data/tradeInfrastructure";
 
 // ── Earth textures (NASA Blue Marble + topology + clouds) ──────────────
 //
@@ -49,6 +50,15 @@ interface GlobeViewProps {
    * unless the user drags it.
    */
   autoRotate?: boolean;
+
+  // ── Trade infrastructure overlay (optional) ─────────────────────────
+  // When the Trade tab is active, the panel feeds these props down to
+  // render port/airport/chokepoint markers and route arcs on the globe.
+  // All optional — when omitted, the globe behaves identically to before.
+  tradePoints?:           TradeNode[];
+  tradeArcs?:             TradeRoute[];
+  selectedTradeNodeId?:   string | null;
+  onTradeNodeClick?:      (node: TradeNode) => void;
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -189,6 +199,10 @@ export default function GlobeView({
   onExchangeClick,
   selectedExchange,
   autoRotate = true,
+  tradePoints,
+  tradeArcs,
+  selectedTradeNodeId,
+  onTradeNodeClick,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -564,6 +578,19 @@ export default function GlobeView({
     }
   }, [selectedCountry]);
 
+  // Fly to selected trade node — same drag-aware guard pattern.
+  useEffect(() => {
+    if (!globeRef.current || !selectedTradeNodeId || !tradePoints) return;
+    if (draggingRef.current) return;
+    const node = tradePoints.find((n) => n.id === selectedTradeNodeId);
+    if (node) {
+      globeRef.current.pointOfView(
+        { lat: node.lat, lng: node.lng, altitude: 1.6 },
+        800,
+      );
+    }
+  }, [selectedTradeNodeId, tradePoints]);
+
   // Fly to selected exchange (same drag-aware guard as country fly-to).
   useEffect(() => {
     if (!globeRef.current || !selectedExchange) return;
@@ -680,6 +707,66 @@ export default function GlobeView({
     []
   );
 
+  // ── Trade overlay callbacks ─────────────────────────────────────────
+  // Stable point/arc accessors — the Trade tab passes new arrays as it
+  // toggles layers, but the callbacks themselves never change shape, so
+  // react-globe.gl only does a transition when the data identity flips.
+  const tradePointLat   = useCallback((d: object) => (d as TradeNode).lat, []);
+  const tradePointLng   = useCallback((d: object) => (d as TradeNode).lng, []);
+  const tradePointAlt   = useCallback((d: object) => 0.01 + ((d as TradeNode).importance / 100) * 0.04, []);
+  const tradePointRadius = useCallback((d: object) => {
+    const n = d as TradeNode;
+    const isSelected = n.id === selectedTradeNodeId;
+    return (isSelected ? 0.55 : 0.35) + (n.importance / 100) * 0.25;
+  }, [selectedTradeNodeId]);
+  const tradePointColor = useCallback((d: object) => {
+    const n = d as TradeNode;
+    const base = NODE_COLOR[n.kind];
+    if (n.id === selectedTradeNodeId) return '#ffffff';
+    return base;
+  }, [selectedTradeNodeId]);
+  const tradePointLabel = useCallback((d: object) => {
+    const n = d as TradeNode;
+    return `<div style="padding:4px 8px;background:rgba(0,0,0,0.85);border-radius:4px;font-size:12px;color:#fff;border-left:3px solid ${NODE_COLOR[n.kind]}">
+      <div style="font-weight:600">${n.name}</div>
+      <div style="opacity:0.7;font-size:10px;margin-top:2px;text-transform:uppercase;letter-spacing:0.5px">${n.kind} · ${n.region}</div>
+    </div>`;
+  }, []);
+  const tradePointClick = useCallback((d: object) => {
+    onTradeNodeClick?.(d as TradeNode);
+  }, [onTradeNodeClick]);
+
+  // Arcs: color by transport mode, width and opacity scaled by importance.
+  const tradeArcStartLat = useCallback((d: object) => (d as TradeRoute).startLat, []);
+  const tradeArcStartLng = useCallback((d: object) => (d as TradeRoute).startLng, []);
+  const tradeArcEndLat   = useCallback((d: object) => (d as TradeRoute).endLat,   []);
+  const tradeArcEndLng   = useCallback((d: object) => (d as TradeRoute).endLng,   []);
+  const tradeArcColor    = useCallback((d: object) => {
+    const r = d as TradeRoute;
+    const c = ROUTE_COLOR[r.mode];
+    // Two-tone gradient — slightly brighter mid-arc gives the line dimensionality.
+    return [`${c}80`, `${c}ff`];
+  }, []);
+  const tradeArcStroke   = useCallback((d: object) => 0.25 + ((d as TradeRoute).importance / 100) * 0.6, []);
+  const tradeArcAltitude = useCallback((d: object) => {
+    // Scale arc altitude by route length so long routes don't pancake to the surface.
+    const r = d as TradeRoute;
+    const dLat = r.endLat - r.startLat;
+    const dLng = r.endLng - r.startLng;
+    const dist = Math.sqrt(dLat * dLat + dLng * dLng);
+    return Math.min(0.45, 0.08 + dist * 0.003);
+  }, []);
+  const tradeArcLabel = useCallback((d: object) => {
+    const r = d as TradeRoute;
+    return `<div style="padding:4px 8px;background:rgba(0,0,0,0.85);border-radius:4px;font-size:11px;color:#fff;border-left:3px solid ${ROUTE_COLOR[r.mode]}">
+      <div style="font-weight:600">${r.name}</div>
+      <div style="opacity:0.7;font-size:10px;margin-top:2px;text-transform:uppercase">${r.mode} · importance ${r.importance}</div>
+    </div>`;
+  }, []);
+
+  const EMPTY_POINTS: TradeNode[] = [];
+  const EMPTY_ARCS:   TradeRoute[] = [];
+
   const globeSize = Math.min(width, height);
 
   return (
@@ -730,6 +817,31 @@ export default function GlobeView({
         htmlElement={createPinElement}
         htmlElementVisibilityModifier={handlePinVisibility}
         htmlTransitionDuration={300}
+        // ── Trade infrastructure overlay ────────────────────────────────
+        // Three.js-rendered points (ports/airports/chokepoints/hubs) with
+        // arc routes (maritime/air/rail). Disabled when no data is passed,
+        // so the rest of the app pays zero perf cost.
+        pointsData={tradePoints ?? EMPTY_POINTS}
+        pointLat={tradePointLat}
+        pointLng={tradePointLng}
+        pointAltitude={tradePointAlt}
+        pointRadius={tradePointRadius}
+        pointColor={tradePointColor}
+        pointLabel={tradePointLabel}
+        onPointClick={tradePointClick}
+        pointsTransitionDuration={300}
+        arcsData={tradeArcs ?? EMPTY_ARCS}
+        arcStartLat={tradeArcStartLat}
+        arcStartLng={tradeArcStartLng}
+        arcEndLat={tradeArcEndLat}
+        arcEndLng={tradeArcEndLng}
+        arcColor={tradeArcColor}
+        arcStroke={tradeArcStroke}
+        arcAltitude={tradeArcAltitude}
+        arcLabel={tradeArcLabel}
+        arcDashLength={0.4}
+        arcDashGap={0.05}
+        arcDashAnimateTime={6000}
       />
     </div>
   );

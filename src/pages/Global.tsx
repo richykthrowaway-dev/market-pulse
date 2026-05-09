@@ -10,6 +10,10 @@ import CountryPanel from "@/components/global/CountryPanel";
 import GlobalSummary from "@/components/global/GlobalSummary";
 import ExchangeDetailDialog from "@/components/global/ExchangeDetailDialog";
 import type { ExchangeInfo } from "@/data/exchangeData";
+import {
+  getVisibleNodes, getVisibleRoutes,
+  type LayerKey, type TradeNode,
+} from "@/data/tradeInfrastructure";
 
 // ── Realistic space background — NASA Tycho-2 Skymap ────────────────────
 // 4096×2048 photographic-quality star map covering the entire celestial
@@ -93,6 +97,19 @@ const Global = () => {
   const [autoRotate, setAutoRotate] = useState(true);
   const [flatMap, setFlatMap] = useState(false);
 
+  // ── Global Trade Infrastructure state ───────────────────────────────
+  // Lives at the Global-page level so both the GlobeView (left half) and
+  // CountryPanel.TradeInfrastructurePanel (right half) read the same
+  // active layers / selected node / scope. Default to no layers active
+  // — the user enables them when they open the Trade tab.
+  const [tradeActiveLayers, setTradeActiveLayers] = useState<Set<LayerKey>>(new Set());
+  const [tradeSelectedNode, setTradeSelectedNode] = useState<TradeNode | null>(null);
+  const [tradeWorldwide, setTradeWorldwide] = useState(true);
+  // Tracks whether the Trade tab is the currently visible CountryPanel
+  // tab — gates whether we feed overlay data to the globe at all. Avoids
+  // the "ports show on globe even though user is on Economy tab" bug.
+  const [tradeTabActive, setTradeTabActive] = useState(false);
+
   const leftRef = useRef<HTMLDivElement | null>(null);
   const { width: leftW, height: leftH } = useContainerSize(leftRef);
 
@@ -137,6 +154,7 @@ const Global = () => {
 
   const handleTabChange = useCallback((tab: string) => {
     setShowExchangePins(tab === "exchanges");
+    setTradeTabActive(tab === "trade");
   }, []);
 
   const handleExchangeClick = useCallback((ex: ExchangeInfo) => {
@@ -145,6 +163,52 @@ const Global = () => {
 
   const handleExchangeClose = useCallback(() => {
     setSelectedExchange(null);
+  }, []);
+
+  // ── Resolve visible trade nodes/routes from layer toggles + scope ───
+  // When `tradeWorldwide` is false and a country is selected, we filter
+  // to just the infrastructure that has `countryISO2 === selectedCountry`
+  // OR routes whose endpoints touch a node in that country. This keeps
+  // the country-scoped view focused while preserving the option to
+  // expand to global with one click.
+  const allVisibleNodes  = useMemo(
+    () => (tradeTabActive ? getVisibleNodes(tradeActiveLayers)  : []),
+    [tradeActiveLayers, tradeTabActive],
+  );
+  const allVisibleRoutes = useMemo(
+    () => (tradeTabActive ? getVisibleRoutes(tradeActiveLayers) : []),
+    [tradeActiveLayers, tradeTabActive],
+  );
+
+  const tradeVisibleNodes = useMemo(() => {
+    if (tradeWorldwide || !selectedCountry) return allVisibleNodes;
+    return allVisibleNodes.filter((n) => n.countryISO2 === selectedCountry);
+  }, [allVisibleNodes, tradeWorldwide, selectedCountry]);
+
+  const tradeVisibleRoutes = useMemo(() => {
+    if (tradeWorldwide || !selectedCountry) return allVisibleRoutes;
+    // Keep routes only when at least one endpoint coincides with a
+    // visible (country-scoped) node — preserves the "see what touches
+    // this country" intent.
+    const visibleCoords = new Set(
+      tradeVisibleNodes.map((n) => `${n.lat.toFixed(2)},${n.lng.toFixed(2)}`),
+    );
+    return allVisibleRoutes.filter((r) =>
+      visibleCoords.has(`${r.startLat.toFixed(2)},${r.startLng.toFixed(2)}`) ||
+      visibleCoords.has(`${r.endLat.toFixed(2)},${r.endLng.toFixed(2)}`),
+    );
+  }, [allVisibleRoutes, tradeWorldwide, selectedCountry, tradeVisibleNodes]);
+
+  const handleTradeSelectNode = useCallback((n: TradeNode | null) => {
+    setTradeSelectedNode(n);
+  }, []);
+
+  const handleTradeNodeClick = useCallback((n: TradeNode) => {
+    setTradeSelectedNode(n);
+  }, []);
+
+  const handleToggleTradeWorldwide = useCallback(() => {
+    setTradeWorldwide((v) => !v);
   }, []);
 
   return (
@@ -293,6 +357,10 @@ const Global = () => {
                   onExchangeClick={handleExchangeClick}
                   selectedExchange={selectedExchange}
                   autoRotate={autoRotate}
+                  tradePoints={tradeTabActive ? tradeVisibleNodes : undefined}
+                  tradeArcs={tradeTabActive ? tradeVisibleRoutes : undefined}
+                  selectedTradeNodeId={tradeSelectedNode?.id ?? null}
+                  onTradeNodeClick={handleTradeNodeClick}
                 />
               )}
             </Suspense>
@@ -311,6 +379,14 @@ const Global = () => {
               onClose={handleClose}
               onTabChange={handleTabChange}
               onExchangeClick={handleExchangeClick}
+              tradeActiveLayers={tradeActiveLayers}
+              onTradeLayersChange={setTradeActiveLayers}
+              tradeSelectedNode={tradeSelectedNode}
+              onTradeSelectNode={handleTradeSelectNode}
+              tradeVisibleNodes={tradeVisibleNodes}
+              tradeVisibleRoutes={tradeVisibleRoutes}
+              tradeWorldwide={tradeWorldwide}
+              onToggleTradeWorldwide={handleToggleTradeWorldwide}
             />
           ) : (
             <GlobalSummary onCountryClick={handleCountryClick} />
