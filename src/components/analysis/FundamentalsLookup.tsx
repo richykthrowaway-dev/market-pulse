@@ -4,6 +4,9 @@ import { Search, BarChart3, TrendingUp, Users, ExternalLink, Loader2, AlertCircl
 import { fetchEodFundamentals, type EodFundamentals } from '@/services/eodhdApi';
 import { EarningsBeatsChart } from './EarningsBeatsChart';
 import { PeerComparison } from './PeerComparison';
+import { ForwardEstimates } from './ForwardEstimates';
+import { ShortInterestCard } from './ShortInterestCard';
+import { FinancialStatements } from './FinancialStatements';
 import { cn } from '@/lib/utils';
 
 // ── Format helpers ────────────────────────────────────────────────────
@@ -284,11 +287,26 @@ function ResultCard({ data, primaryTicker }: { data: EodFundamentals; primaryTic
         </MetricGroup>
       </div>
 
+      {/* Forward analyst estimates — what consensus expects for this
+          quarter, next quarter, this year, next year. Sourced from
+          Earnings.Trend in the same fundamentals payload (free). */}
+      <ForwardEstimates data={data} />
+
       {/* Earnings beats history — sourced from the same fundamentals
           payload above, so this section adds 0 EODHD credits. Renders
           null automatically if the company has insufficient earnings
           history (e.g. recent IPOs, ETFs). */}
       <EarningsBeatsChart data={data} />
+
+      {/* Short interest tracker — current % of float shorted, days-to-
+          cover, and month-over-month change. Sourced from Technicals
+          in the existing payload (free). */}
+      <ShortInterestCard data={data} />
+
+      {/* Income statement / balance sheet / cash flow viewer with
+          quarterly + annual toggles. Sourced from Financials in the
+          existing payload (free). */}
+      <FinancialStatements data={data} />
 
       {/* Peer comparison — opt-in (user must add tickers). Each peer
           ticker added costs 10 EODHD credits on cold lookup; cached
