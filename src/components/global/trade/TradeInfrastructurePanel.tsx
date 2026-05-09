@@ -57,7 +57,7 @@ const LAYERS: LayerOption[] = [
   { key: 'connectivity',   label: 'Connectivity',     icon: Network, color: '#94a3b8', group: 'overlays', future: true, hint: 'UNCTAD LSCI / port-importance overlay (coming soon)' },
   { key: 'risk',           label: 'Risk / Disruption', icon: ShieldAlert, color: '#ef4444', group: 'overlays', future: true, hint: 'Live disruption + chokepoint risk score (coming soon)' },
   { key: 'liveVessels',    label: 'Live Vessels',     icon: Radio,  color: '#67e8f9', group: 'overlays', hint: 'Real-time AIS feed (aisstream.io) — every cargo / tanker reporting position right now.' },
-  { key: 'liveFlights',    label: 'Live Flights',     icon: Plane,  color: '#a855f7', group: 'overlays', hint: 'Live aircraft positions via airplanes.live ADS-B feed — major air-traffic centres globally.' },
+  { key: 'liveFlights',    label: 'Live Flights',     icon: Plane,  color: '#a855f7', group: 'overlays', hint: 'Live aircraft via airplanes.live community ADS-B — coverage reflects volunteer receiver density (dense in N. America/Europe/Japan, sparse elsewhere).' },
 ];
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -522,9 +522,14 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
       dotColor = '#a855f7';
       label    = `Live · tracking ${count.toLocaleString()} aircraft`;
       detail   = (
-        <p className="text-[10px] text-muted-foreground mt-1">
-          Positions refresh every 30 s · airplanes.live community ADS-B feed · 14 regional snapshots covering major air-traffic centres.
-        </p>
+        <div className="mt-1 space-y-0.5">
+          <p className="text-[10px] text-muted-foreground">
+            Refreshes every 30 s · airplanes.live community ADS-B feed.
+          </p>
+          <p className="text-[10px] text-muted-foreground/70">
+            Coverage reflects volunteer receiver density — strong in N. America, Europe, Japan, Australia; sparse over oceans, Africa, central Asia.
+          </p>
+        </div>
       );
       break;
     case 'error':

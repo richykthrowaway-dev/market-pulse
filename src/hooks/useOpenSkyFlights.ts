@@ -68,22 +68,59 @@ export type FlightStatus =
  */
 const AIRPLANES_LIVE_BASE = 'https://api.airplanes.live/v2/point';
 
-/** Major air-traffic centres — ~250 nm radius each, queried in parallel. */
+/**
+ * airplanes.live regional poll points.
+ *
+ * Each query covers a 250-nm radius (~463 km / ~54 sq°), the API's hard cap.
+ * Stations placed only where the community ADS-B network has dense receiver
+ * coverage — broadly: Continental US/Canada, Western Europe, Australia, Japan,
+ * select Asian hubs.  Africa, central Russia, and most of Latin America / mid-
+ * ocean intentionally NOT polled — the API returns zero aircraft for those
+ * regions because there are no ground receivers, so polling wastes requests.
+ *
+ * Adjacent stations are spaced ~400 nm apart to give ~100 nm of overlap and
+ * eliminate the visible "circle gaps" that a sparse station list produces.
+ */
 const REGIONS: ReadonlyArray<readonly [lat: number, lon: number, label: string]> = [
-  [40.6, -74.0,  'NYC / NE-US'],
-  [34.0, -118.2, 'LAX / SW-US'],
-  [41.9,  -87.6, 'ORD / Mid-US'],
-  [29.6,  -95.3, 'IAH / S-US'],
-  [51.5,   -0.1, 'London'],
-  [50.1,    8.7, 'Frankfurt'],
-  [41.0,   28.9, 'Istanbul'],
-  [25.3,   55.4, 'Dubai'],
-  [22.3,  114.2, 'Hong Kong'],
-  [35.7,  139.7, 'Tokyo'],
-  [ 1.4,  103.8, 'Singapore'],
+  // ── Continental US (dense ADS-B coverage) ─────────────────────────────
+  [42.5, -71.0,  'Boston'],
+  [40.6, -74.0,  'NYC'],
+  [38.9, -77.0,  'DC'],
+  [33.7, -84.4,  'Atlanta'],
+  [25.8, -80.3,  'Miami'],
+  [29.7, -95.3,  'Houston'],
+  [32.9, -97.0,  'Dallas'],
+  [41.9, -87.6,  'Chicago'],
+  [44.9, -93.2,  'Minneapolis'],
+  [39.7, -104.9, 'Denver'],
+  [33.4, -112.0, 'Phoenix'],
+  [34.0, -118.2, 'Los Angeles'],
+  [37.6, -122.4, 'San Francisco'],
+  [47.4, -122.3, 'Seattle'],
+  // ── Canada ───────────────────────────────────────────────────────────
+  [43.7, -79.4,  'Toronto'],
+  [49.2, -123.1, 'Vancouver'],
+  // ── Western Europe (dense) ───────────────────────────────────────────
+  [51.5,  -0.5,  'London'],
+  [49.0,   2.5,  'Paris'],
+  [50.0,   8.6,  'Frankfurt'],
+  [52.3,   4.9,  'Amsterdam'],
+  [40.5,  -3.6,  'Madrid'],
+  [41.9,  12.5,  'Rome'],
+  [59.4,  17.9,  'Stockholm'],
+  [55.6,  12.6,  'Copenhagen'],
+  // ── Eastern Europe / Middle East (sparser but useful) ────────────────
+  [41.0,  28.9,  'Istanbul'],
+  [25.3,  55.4,  'Dubai'],
+  // ── Asia / Oceania (selective — receivers exist around hubs) ─────────
+  [22.3, 114.2,  'Hong Kong'],
+  [35.7, 139.7,  'Tokyo'],
+  [37.5, 127.0,  'Seoul'],
+  [ 1.4, 103.8,  'Singapore'],
+  [13.7, 100.5,  'Bangkok'],
   [-33.9, 151.2, 'Sydney'],
-  [19.4,  -99.1, 'Mexico City'],
-  [-23.5, -46.6, 'São Paulo'],
+  [-37.8, 144.9, 'Melbourne'],
+  [-37.0, 174.8, 'Auckland'],
 ];
 const REGION_RADIUS_NM = 250;
 
