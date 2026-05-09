@@ -1,0 +1,12 @@
+name         = "market-pulse-opensky"
+main         = "src/index.ts"
+compatibility_date = "2024-12-01"
+
+# Free plan: 100,000 requests/day. Live-flights polling at 10 s = ~8,640 req/day
+# per active browser, but the edge cache (s-maxage=10) means most requests are
+# served from cache without reaching the Worker → effectively unlimited users.
+
+# Optional secrets — set with:
+#   wrangler secret put OPENSKY_CLIENT_ID
+#   wrangler secret put OPENSKY_CLIENT_SECRET
+# (Anonymous works fine for personal use; auth gives 10× the daily credit budget.)

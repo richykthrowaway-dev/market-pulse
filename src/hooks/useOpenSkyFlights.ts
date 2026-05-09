@@ -124,12 +124,38 @@ const REGIONS: ReadonlyArray<readonly [lat: number, lon: number, label: string]>
 ];
 const REGION_RADIUS_NM = 250;
 
-const POLL_INTERVAL_MS    = 30_000;          // airplanes.live has no documented limit
-const STALE_FLIGHT_MS     = 90_000;          // 3× poll interval
-const CACHE_KEY           = 'airplanes-live-flights-cache-v1';
+/**
+ * OpenSky Cloudflare-Worker proxy URL — when set, the hook switches from
+ * airplanes.live regional polling to a single global OpenSky call.
+ * See cloudflare-worker/README.md for one-time deploy instructions.
+ *
+ * URL shape: https://market-pulse-opensky.<your-subdomain>.workers.dev
+ *
+ * When undefined (env var not set or empty), we fall back to the
+ * airplanes.live regional fan-out below — coverage is sparser but no
+ * deploy step is required.
+ */
+const OPENSKY_PROXY_URL =
+  (import.meta.env.VITE_OPENSKY_PROXY_URL as string | undefined)?.trim() || undefined;
+
+/** Active data source — exported so UI can label the live banner. */
+export type FlightDataSource = 'opensky' | 'airplanes-live';
+export const FLIGHT_DATA_SOURCE: FlightDataSource =
+  OPENSKY_PROXY_URL ? 'opensky' : 'airplanes-live';
+const DATA_SOURCE = FLIGHT_DATA_SOURCE;
+
+// Poll cadence chosen per source:
+//  • OpenSky via CF Worker — 10 s matches the Worker's edge cache TTL
+//    (`s-maxage=10`), so every browser everywhere shares the same upstream
+//    call per 10-second window — credit-efficient at any user count.
+//  • airplanes.live — 30 s; 33 parallel requests per poll, no documented
+//    daily limit but be a good citizen.
+const POLL_INTERVAL_MS    = DATA_SOURCE === 'opensky' ? 10_000 : 30_000;
+const STALE_FLIGHT_MS     = DATA_SOURCE === 'opensky' ? 30_000 : 90_000; // 3× poll
+const CACHE_KEY           = `flights-cache-${DATA_SOURCE}-v1`;
 const CACHE_TTL_MS        = 60_000;
 const DISCONNECT_GRACE_MS = 300;
-const BACKOFF_BASE_MS     = 30_000;
+const BACKOFF_BASE_MS     = DATA_SOURCE === 'opensky' ? 10_000 : 30_000;
 const BACKOFF_MAX_MS      = 5 * 60_000;
 
 // ─── Raw airplanes.live aircraft record ──────────────────────────────────────
@@ -151,6 +177,28 @@ interface RegionResponse {
   now?: number;
   msg?: string;
 }
+
+// ─── Raw OpenSky state-vector tuple ──────────────────────────────────────────
+// Index order from https://openskynetwork.github.io/opensky-api/rest.html
+type RawState = [
+  string,              // 0  icao24
+  string | null,       // 1  callsign
+  string,              // 2  origin_country
+  number | null,       // 3  time_position
+  number,              // 4  last_contact
+  number | null,       // 5  longitude
+  number | null,       // 6  latitude
+  number | null,       // 7  baro_altitude (metres)
+  boolean,             // 8  on_ground
+  number | null,       // 9  velocity (m/s)
+  number | null,       // 10 true_track
+  number | null,       // 11 vertical_rate
+  number[] | null,     // 12 sensors
+  number | null,       // 13 geo_altitude
+  string | null,       // 14 squawk
+  boolean,             // 15 spi
+  number,              // 16 position_source
+];
 
 // ─── Module-level singleton ───────────────────────────────────────────────────
 
@@ -230,60 +278,111 @@ const singleton = (() => {
     };
   }
 
-  // ── Single poll — fan out to all regions in parallel, dedupe by hex ──
+  // ── Parse one OpenSky state-vector ───────────────────────────────────
+  // OpenSky already returns metric units (metres, m/s) so no conversion.
+  function parseState(s: RawState): Flight | null {
+    const lng = s[5];
+    const lat = s[6];
+    if (lng == null || lat == null) return null;
+    if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return null;
+    if (s[8]) return null; // on_ground
+
+    return {
+      icao24:     s[0],
+      callsign:   s[1]?.trim() || undefined,
+      country:    s[2] || undefined,
+      lat,
+      lng,
+      altitudeM:  typeof s[7]  === 'number' ? s[7]  : undefined,
+      velocityMs: typeof s[9]  === 'number' ? s[9]  : undefined,
+      track:      typeof s[10] === 'number' ? s[10] : undefined,
+      lastSeen:   Date.now(),
+    };
+  }
+
+  // ── Single poll — branches on DATA_SOURCE ────────────────────────────
+  // OpenSky:        one global call via the CF Worker; ~12k aircraft.
+  // airplanes.live: 33 regional calls fanned out in parallel; ~3-5k aircraft.
+  // Both paths populate the same flightMap keyed by ICAO24, so consumers
+  // (MapView/GlobeView) need no awareness of which source is active.
   async function poll(): Promise<void> {
     if (fetchInFlight || document.visibilityState === 'hidden') return;
     fetchInFlight = true;
 
     try {
-      const results = await Promise.allSettled(
-        REGIONS.map(([lat, lon]) =>
-          fetch(`${AIRPLANES_LIVE_BASE}/${lat}/${lon}/${REGION_RADIUS_NM}`)
-            .then(r => r.ok ? r.json() as Promise<RegionResponse>
-                            : Promise.reject(new Error(`HTTP ${r.status}`)))
-        ),
-      );
-
       let okCount = 0;
       let added   = 0;
-      for (const result of results) {
-        if (result.status !== 'fulfilled') continue;
-        okCount += 1;
-        const ac = result.value.ac;
-        if (!Array.isArray(ac)) continue;
-        for (const raw of ac) {
-          const flight = parseAircraft(raw);
-          if (flight) {
-            flightMap.set(flight.icao24, flight);
-            added += 1;
+
+      if (DATA_SOURCE === 'opensky') {
+        // ── OpenSky path: one global call via CF Worker ─────────────────
+        const r = await fetch(OPENSKY_PROXY_URL!);
+        if (!r.ok) {
+          const body = await r.text().catch(() => '');
+          throw new Error(`OpenSky proxy ${r.status}${body ? ': ' + body.slice(0, 120) : ''}`);
+        }
+        const json = await r.json() as { states: RawState[] | null };
+        if (Array.isArray(json.states)) {
+          for (const raw of json.states) {
+            const flight = parseState(raw);
+            if (flight) {
+              flightMap.set(flight.icao24, flight);
+              added += 1;
+            }
           }
+        }
+        okCount = 1;
+      } else {
+        // ── airplanes.live path: 33 regional calls in parallel ──────────
+        const results = await Promise.allSettled(
+          REGIONS.map(([lat, lon]) =>
+            fetch(`${AIRPLANES_LIVE_BASE}/${lat}/${lon}/${REGION_RADIUS_NM}`)
+              .then(r => r.ok ? r.json() as Promise<RegionResponse>
+                              : Promise.reject(new Error(`HTTP ${r.status}`))),
+          ),
+        );
+
+        for (const result of results) {
+          if (result.status !== 'fulfilled') continue;
+          okCount += 1;
+          const ac = result.value.ac;
+          if (!Array.isArray(ac)) continue;
+          for (const raw of ac) {
+            const flight = parseAircraft(raw);
+            if (flight) {
+              flightMap.set(flight.icao24, flight);
+              added += 1;
+            }
+          }
+        }
+
+        // If every region failed, treat the whole poll as a failure.
+        if (okCount === 0) {
+          const firstErr = results.find(r => r.status === 'rejected');
+          throw new Error(
+            firstErr && firstErr.status === 'rejected'
+              ? `All ${REGIONS.length} regions failed: ${(firstErr.reason as Error)?.message ?? 'unknown'}`
+              : `All ${REGIONS.length} regions failed`,
+          );
         }
       }
 
-      // If every region failed, treat the whole poll as a failure.
-      if (okCount === 0) {
-        const firstErr = results.find(r => r.status === 'rejected');
-        throw new Error(
-          firstErr && firstErr.status === 'rejected'
-            ? `All ${REGIONS.length} regions failed: ${(firstErr.reason as Error)?.message ?? 'unknown'}`
-            : `All ${REGIONS.length} regions failed`,
-        );
-      }
-
+      // ── Shared post-fetch logic (both data sources) ─────────────────
       prune();
       saveCache();
       backoffDelay = BACKOFF_BASE_MS;
 
-      const n = flightMap.size;
+      const n   = flightMap.size;
+      const src = DATA_SOURCE === 'opensky' ? 'OpenSky' : 'airplanes.live';
       if (status !== 'live') {
-        console.info(`[airplanes.live] first data — ${n.toLocaleString()} airborne aircraft (${okCount}/${REGIONS.length} regions, ${added} updates)`);
+        console.info(`[${src}] first data — ${n.toLocaleString()} airborne aircraft (${added} updates)`);
         setStatus('live');
       } else {
-        console.debug(`[airplanes.live] updated — ${n.toLocaleString()} aircraft (${okCount}/${REGIONS.length} regions)`);
+        console.debug(`[${src}] updated — ${n.toLocaleString()} aircraft`);
         notify();
       }
     } catch (err) {
-      console.warn('[airplanes.live] fetch error:', err);
+      const src = DATA_SOURCE === 'opensky' ? 'OpenSky' : 'airplanes.live';
+      console.warn(`[${src}] fetch error:`, err);
       setStatus('error');
       // Backoff — stop regular interval and reschedule
       clearInterval(pollTimer);

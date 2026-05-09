@@ -10,7 +10,7 @@ import {
   type LayerKey, type TradeNode, type TradeRoute, type StoryMode,
 } from '@/data/tradeInfrastructure';
 import type { AISStatus } from '@/hooks/useAISStream';
-import type { FlightStatus } from '@/hooks/useOpenSkyFlights';
+import { FLIGHT_DATA_SOURCE, type FlightStatus } from '@/hooks/useOpenSkyFlights';
 import { useAirportDetail } from '@/hooks/useAirportDetail';
 
 /**
@@ -516,12 +516,20 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
     case 'loading':
       dotColor = '#f59e0b';
       label    = 'Fetching live flights…';
-      detail   = <p className="text-[10px] text-muted-foreground mt-1">Polling airplanes.live for airborne aircraft…</p>;
+      detail   = (
+        <p className="text-[10px] text-muted-foreground mt-1">
+          Polling {FLIGHT_DATA_SOURCE === 'opensky' ? 'OpenSky Network' : 'airplanes.live'} for airborne aircraft…
+        </p>
+      );
       break;
     case 'live':
       dotColor = '#a855f7';
       label    = `Live · tracking ${count.toLocaleString()} aircraft`;
-      detail   = (
+      detail   = FLIGHT_DATA_SOURCE === 'opensky' ? (
+        <p className="text-[10px] text-muted-foreground mt-1">
+          Refreshes every 10 s · OpenSky Network global feed via Cloudflare Worker — ~12 k aircraft worldwide.
+        </p>
+      ) : (
         <div className="mt-1 space-y-0.5">
           <p className="text-[10px] text-muted-foreground">
             Refreshes every 30 s · airplanes.live community ADS-B feed.
@@ -537,7 +545,7 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
       label    = 'Fetch error';
       detail   = (
         <p className="text-[10px] text-muted-foreground mt-1">
-          Could not reach airplanes.live — retrying with backoff.
+          Could not reach {FLIGHT_DATA_SOURCE === 'opensky' ? 'OpenSky Network' : 'airplanes.live'} — retrying with backoff.
         </p>
       );
       break;
@@ -558,7 +566,9 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
           }}
         />
         <span className="text-xs font-medium">{label}</span>
-        <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">airplanes.live</span>
+        <span className="ml-auto text-[10px] uppercase tracking-wide text-muted-foreground">
+          {FLIGHT_DATA_SOURCE === 'opensky' ? 'OpenSky' : 'airplanes.live'}
+        </span>
       </div>
       {detail}
     </div>
