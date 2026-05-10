@@ -90,26 +90,78 @@ async function fetchGdeltEvents(): Promise<ConflictEvent[]> {
     });
 }
 
-// ── ACLED API ─────────────────────────────────────────────────────────────
-async function fetchAcledEvents(): Promise<ConflictEvent[]> {
-  const key   = Deno.env.get("ACLED_API_KEY");
-  const email = Deno.env.get("ACLED_EMAIL");
-  if (!key || !email) return [];  // graceful no-op if not configured
+// ── ACLED API (new OAuth system, 2024+) ──────────────────────────────────
+// Token cached at module scope — survives across requests served by the
+// same isolate.  Tokens are valid 24h, so this is plenty.
+let acledToken:        string | null = null;
+let acledTokenExpiry:  number        = 0;
 
-  // Last 14 days, fatalities >= 1
+async function getAcledToken(username: string, password: string): Promise<string | null> {
+  if (acledToken && Date.now() < acledTokenExpiry) return acledToken;
+
+  const body = new URLSearchParams({
+    username,
+    password,
+    grant_type: "password",
+    client_id:  "acled",
+    scope:      "authenticated",
+  });
+
+  const res = await fetch("https://acleddata.com/oauth/token", {
+    method:  "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body:    body.toString(),
+    signal:  AbortSignal.timeout(15_000),
+  });
+
+  if (!res.ok) {
+    console.error(`[acled] oauth token failed: ${res.status} ${await res.text().catch(() => '')}`);
+    return null;
+  }
+
+  const j = await res.json() as { access_token?: string; expires_in?: number };
+  if (!j.access_token) return null;
+
+  acledToken       = j.access_token;
+  // Refresh 5 minutes before actual expiry to be safe.
+  acledTokenExpiry = Date.now() + ((j.expires_in ?? 86400) - 300) * 1000;
+  return acledToken;
+}
+
+async function fetchAcledEvents(): Promise<ConflictEvent[]> {
+  // New auth: ACLED_USERNAME (email) + ACLED_PASSWORD (myACLED password)
+  // Backwards-compat: still accept ACLED_EMAIL as alias for ACLED_USERNAME.
+  const username =
+    Deno.env.get("ACLED_USERNAME") ?? Deno.env.get("ACLED_EMAIL") ?? "";
+  const password = Deno.env.get("ACLED_PASSWORD") ?? "";
+  if (!username || !password) return [];  // graceful no-op if not configured
+
+  const token = await getAcledToken(username, password);
+  if (!token) return [];
+
+  // Last 14 days, fatalities >= 1.  New API uses the same /api/acled/read
+  // endpoint but authenticated via Bearer token instead of query params.
   const fromDate = new Date(Date.now() - 14 * 86400_000).toISOString().slice(0, 10);
   const url =
-    `https://api.acleddata.com/acled/read` +
-    `?key=${encodeURIComponent(key)}` +
-    `&email=${encodeURIComponent(email)}` +
-    `&event_date=${fromDate}` +
+    `https://acleddata.com/api/acled/read` +
+    `?event_date=${fromDate}` +
     `&event_date_where=>=` +
     `&fatalities=1` +
     `&fatalities_where=>=` +
     `&limit=300`;
 
-  const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
-  if (!res.ok) throw new Error(`ACLED ${res.status}`);
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+    signal:  AbortSignal.timeout(20_000),
+  });
+  if (!res.ok) {
+    // If token rejected, invalidate the cache so the next call retries.
+    if (res.status === 401 || res.status === 403) {
+      acledToken = null;
+      acledTokenExpiry = 0;
+    }
+    throw new Error(`ACLED ${res.status}`);
+  }
 
   const data = await res.json();
   const rows = (data.data ?? []) as Array<{
