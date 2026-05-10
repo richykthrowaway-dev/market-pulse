@@ -204,7 +204,9 @@ type RingDatum =
 
 const RING_LAT = (d: object) => (d as RingDatum).lat;
 const RING_LNG = (d: object) => (d as RingDatum).lng;
-const RING_ALT = () => 0.012;
+// Rings sit clearly above ALL polygon layers (default 0.005, selected
+// country 0.03) — kept at 0.05 so they're never occluded by country fills.
+const RING_ALT = () => 0.05;
 const EMPTY_RINGS: RingDatum[] = [];
 
 /** Color callback — orange/red for conflicts, teal/cyan for earthquakes. */
@@ -216,7 +218,9 @@ function ringColor(d: object) {
     const r = 249;
     const g = Math.round(115 - (f / 50) * 47);
     const b = Math.round(22  + (f / 50) * 46);
-    return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t).toFixed(2)})`;
+    // Boost alpha so rings are clearly visible against bright country fills.
+    // Floor at 0.4 means even the trailing edge of the pulse stays readable.
+    return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t * 0.6).toFixed(2)})`;
   } else {
     const e = rd.event as EarthquakeEvent;
     const intensity = Math.min(1, (e.magnitude - 2.5) / 5);
