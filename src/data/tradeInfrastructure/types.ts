@@ -22,6 +22,8 @@ export type LayerKey =
   | 'liveFlights'        // future
   | 'conflictEvents'     // ACLED + GDELT geocoded events
   | 'earthquakes'        // USGS M2.5+ seismic events
+  | 'economicEvents'     // EODHD macro calendar (CPI, NFP, GDP, rate decisions)
+  | 'macroHeatmap'       // EODHD GDP growth — country polygon shading
   | 'connectivity'       // future overlay
   | 'risk';              // future overlay
 

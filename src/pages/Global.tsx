@@ -20,6 +20,9 @@ import { useAISStream } from "@/hooks/useAISStream";
 import { useOpenSkyFlights } from "@/hooks/useOpenSkyFlights";
 import { useConflictEvents, type ConflictEvent } from "@/hooks/useConflictEvents";
 import { useEarthquakes, type EarthquakeEvent } from "@/hooks/useEarthquakes";
+import { useEconomicEvents, type EconomicEvent } from "@/hooks/useEconomicEvents";
+import { useMacroHeatmap } from "@/hooks/useMacroHeatmap";
+import { EconomicEventDialog } from "@/components/global/trade/EconomicEventDialog";
 
 // ── Realistic space background — NASA Tycho-2 Skymap ────────────────────
 // 4096×2048 photographic-quality star map covering the entire celestial
@@ -270,6 +273,27 @@ const Global = () => {
     setSelectedEarthquake(e);
   }, []);
 
+  // ── EODHD economic events calendar (gated on layer toggle) ──────────
+  const economicEventsEnabled =
+    tradeTabActive && tradeActiveLayers.has('economicEvents');
+  const economicEventsQuery = useEconomicEvents(economicEventsEnabled);
+  const economicEvents = economicEventsEnabled
+    ? economicEventsQuery.data?.events
+    : undefined;
+  const [selectedEconEvent, setSelectedEconEvent] = useState<EconomicEvent | null>(null);
+  const onEconomicEventClick = useCallback((e: EconomicEvent) => {
+    setSelectedEconEvent(e);
+  }, []);
+
+  // ── EODHD macro heatmap (gated on layer toggle) ──────────────────────
+  const macroHeatmapEnabled =
+    tradeTabActive && tradeActiveLayers.has('macroHeatmap');
+  const macroHeatmapQuery = useMacroHeatmap(macroHeatmapEnabled);
+  // Pass null when disabled so GlobeView reverts to its normal color mode
+  const macroHeatmap = macroHeatmapEnabled
+    ? macroHeatmapQuery.data?.data
+    : undefined;
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Header Bar */}
@@ -432,6 +456,9 @@ const Global = () => {
                   onConflictEventClick={onConflictEventClick}
                   earthquakeEvents={earthquakeEvents}
                   onEarthquakeEventClick={onEarthquakeEventClick}
+                  economicEvents={economicEvents}
+                  onEconomicEventClick={onEconomicEventClick}
+                  macroHeatmap={macroHeatmap}
                 />
               )}
             </Suspense>
@@ -456,6 +483,12 @@ const Global = () => {
             onSetAlert={(commodityId) => {
               console.log('[alerts] User wants alerts for commodity:', commodityId);
             }}
+          />
+
+          {/* Economic event detail — actual vs estimate, surprise direction */}
+          <EconomicEventDialog
+            event={selectedEconEvent}
+            onClose={() => setSelectedEconEvent(null)}
           />
         </div>
 

@@ -3,7 +3,9 @@ import {
   Anchor, Plane, Train, MapPin, AlertTriangle,
   Layers, Compass, Search, Sparkles,
   Network, ShieldAlert, Globe2, Radio, Loader2,
+  CalendarDays, BarChart3, TrendingUp, TrendingDown,
 } from 'lucide-react';
+import { useCommodityPrices } from '@/hooks/useCommodityPrices';
 import { cn } from '@/lib/utils';
 import {
   STORY_MODES, NODE_COLOR, ROUTE_COLOR,
@@ -59,8 +61,10 @@ const LAYERS: LayerOption[] = [
   { key: 'risk',           label: 'Risk / Disruption', icon: ShieldAlert, color: '#ef4444', group: 'overlays', future: true, hint: 'Live disruption + chokepoint risk score (coming soon)' },
   { key: 'liveVessels',    label: 'Live Vessels',     icon: Radio,  color: '#67e8f9', group: 'overlays', hint: 'Real-time AIS feed (aisstream.io) — every cargo / tanker reporting position right now.' },
   { key: 'liveFlights',    label: 'Live Flights',     icon: Plane,  color: '#a855f7', group: 'overlays', hint: 'Live aircraft via airplanes.live community ADS-B — coverage reflects volunteer receiver density (dense in N. America/Europe/Japan, sparse elsewhere).' },
-  { key: 'conflictEvents', label: 'Conflict Events',  icon: AlertTriangle, color: '#f97316', group: 'overlays', hint: 'Geocoded events from ACLED (last 14d, fatalities ≥ 1) + GDELT (last 24h, armed-conflict theme). Click an event for affected commodities.' },
-  { key: 'earthquakes',    label: 'Earthquakes',      icon: ShieldAlert,  color: '#38bdf8', group: 'overlays', hint: 'USGS M2.5+ seismic events, past 7 days. Ring size scales with magnitude. Click for affected commodity supply chains.' },
+  { key: 'conflictEvents',  label: 'Conflict Events',  icon: AlertTriangle,  color: '#f97316', group: 'overlays', hint: 'Geocoded events from ACLED (last 14d, fatalities ≥ 1) + GDELT (last 24h, armed-conflict theme). Click an event for affected commodities.' },
+  { key: 'earthquakes',     label: 'Earthquakes',      icon: ShieldAlert,   color: '#38bdf8', group: 'overlays', hint: 'USGS M2.5+ seismic events, past 7 days. Ring size scales with magnitude. Click for affected commodity supply chains.' },
+  { key: 'economicEvents',  label: 'Economic Events',  icon: CalendarDays,  color: '#60a5fa', group: 'overlays', hint: 'Upcoming macro releases: CPI, NFP, GDP, PMIs, rate decisions. Source: EODHD economic calendar. Click an event for actual vs estimate.' },
+  { key: 'macroHeatmap',    label: 'GDP Growth Map',   icon: BarChart3,     color: '#34d399', group: 'overlays', hint: 'Countries shaded by latest annual GDP growth rate. Green = strong growth, red = contraction. Source: EODHD / World Bank.' },
 ];
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -194,6 +198,9 @@ export function TradeInfrastructurePanel({
 
       {/* ── Commodity producers lookup ─────────────────────────────────── */}
       <CommodityProducersCard />
+
+      {/* ── Commodity prices strip (always shown) ─────────────────────── */}
+      <CommodityPriceStrip />
 
       {/* ── AIS Live Vessels banner (only when that layer is on) ───────── */}
       {activeLayers.has('liveVessels') && (
@@ -577,6 +584,52 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
         </span>
       </div>
       {detail}
+    </div>
+  );
+}
+
+// ── Commodity price strip ────────────────────────────────────────────────────
+function CommodityPriceStrip() {
+  const { data, isLoading } = useCommodityPrices();
+  const prices = data?.prices ?? [];
+
+  return (
+    <div className="px-4 py-3 border-t border-border">
+      <h3 className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+        <BarChart3 className="w-3 h-3" />
+        Commodity Prices
+        <span className="ml-auto text-[9px] font-normal normal-case tracking-normal text-muted-foreground/60">
+          ETF proxies · EOD
+        </span>
+      </h3>
+      {isLoading ? (
+        <div className="grid grid-cols-3 gap-1.5">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="h-10 rounded bg-muted/30 animate-pulse" />
+          ))}
+        </div>
+      ) : prices.length === 0 ? (
+        <p className="text-xs text-muted-foreground italic">Loading commodity data…</p>
+      ) : (
+        <div className="grid grid-cols-3 gap-1.5">
+          {prices.map((p) => {
+            const up = p.changeP > 0;
+            const dn = p.changeP < 0;
+            return (
+              <div key={p.id} className="bg-muted/30 rounded px-2 py-1.5 border border-border/40">
+                <p className="text-[9px] uppercase tracking-wide text-muted-foreground truncate">{p.label}</p>
+                <p className="text-xs font-semibold font-mono tabular-nums mt-0.5">
+                  ${p.price.toFixed(2)}
+                </p>
+                <p className={`text-[9px] flex items-center gap-0.5 font-medium tabular-nums ${up ? 'text-emerald-400' : dn ? 'text-red-400' : 'text-muted-foreground'}`}>
+                  {up ? <TrendingUp className="w-2.5 h-2.5" /> : dn ? <TrendingDown className="w-2.5 h-2.5" /> : null}
+                  {up ? '+' : ''}{p.changeP.toFixed(2)}%
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

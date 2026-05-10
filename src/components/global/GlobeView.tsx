@@ -11,6 +11,8 @@ import type { Vessel } from "@/hooks/useAISStream";
 import type { ConflictEvent } from "@/hooks/useConflictEvents";
 import type { EarthquakeEvent } from "@/hooks/useEarthquakes";
 import type { Flight } from "@/hooks/useOpenSkyFlights";
+import type { EconomicEvent } from "@/hooks/useEconomicEvents";
+import type { MacroCountry } from "@/hooks/useMacroHeatmap";
 
 // ── Earth textures (NASA Blue Marble + topology + clouds) ──────────────
 //
@@ -90,6 +92,11 @@ interface GlobeViewProps {
    */
   earthquakeEvents?:        EarthquakeEvent[];
   onEarthquakeEventClick?:  (e: EarthquakeEvent) => void;
+  /** Upcoming macro economic calendar events (EODHD) */
+  economicEvents?:          EconomicEvent[];
+  onEconomicEventClick?:    (e: EconomicEvent) => void;
+  /** GDP growth per country — drives polygon cap color when macroHeatmap layer active */
+  macroHeatmap?:            MacroCountry[];
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -200,7 +207,8 @@ function perfColor(changePct: number): string {
 
 type RingDatum =
   | { kind: 'conflict';   lat: number; lng: number; event: ConflictEvent }
-  | { kind: 'earthquake'; lat: number; lng: number; event: EarthquakeEvent };
+  | { kind: 'earthquake'; lat: number; lng: number; event: EarthquakeEvent }
+  | { kind: 'economic';   lat: number; lng: number; event: EconomicEvent };
 
 const RING_LAT = (d: object) => (d as RingDatum).lat;
 const RING_LNG = (d: object) => (d as RingDatum).lng;
@@ -209,7 +217,7 @@ const RING_LNG = (d: object) => (d as RingDatum).lng;
 const RING_ALT = () => 0.05;
 const EMPTY_RINGS: RingDatum[] = [];
 
-/** Color callback — orange/red for conflicts, teal/cyan for earthquakes. */
+/** Color callback — orange/red for conflicts, teal for earthquakes, blue for economic events. */
 function ringColor(d: object) {
   const rd = d as RingDatum;
   if (rd.kind === 'conflict') {
@@ -218,16 +226,19 @@ function ringColor(d: object) {
     const r = 249;
     const g = Math.round(115 - (f / 50) * 47);
     const b = Math.round(22  + (f / 50) * 46);
-    // Boost alpha so rings are clearly visible against bright country fills.
-    // Floor at 0.4 means even the trailing edge of the pulse stays readable.
     return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t * 0.6).toFixed(2)})`;
-  } else {
+  } else if (rd.kind === 'earthquake') {
     const e = rd.event as EarthquakeEvent;
     const intensity = Math.min(1, (e.magnitude - 2.5) / 5);
     const r = Math.round(56  - intensity * 20);
     const g = Math.round(189 - intensity * 40);
     const b = Math.round(248 - intensity * 10);
     return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t).toFixed(2)})`;
+  } else {
+    // Economic event — blue, high-importance pulses brighter
+    const e = rd.event as EconomicEvent;
+    const bright = e.importance === 'high' ? 255 : e.importance === 'medium' ? 200 : 160;
+    return (t: number) => `rgba(96, ${bright}, 250, ${(1 - t * 0.65).toFixed(2)})`;
   }
 }
 
@@ -235,12 +246,14 @@ function ringMaxRadius(d: object) {
   const rd = d as RingDatum;
   if (rd.kind === 'conflict') {
     const e = rd.event as ConflictEvent;
-    // Baseline (0 fatalities) → 2.5; high-fatality ACLED grows to 4.
     return Math.min(4, 2.5 + Math.log10(1 + e.fatalities) * 0.5);
-  } else {
+  } else if (rd.kind === 'earthquake') {
     const e = rd.event as EarthquakeEvent;
-    // M2.5 → 0.7; M5 → 1.6; M7 → 2.7; M8+ → ~4 (capped)
     return Math.min(4, 0.4 * Math.pow(10, (e.magnitude - 2.5) * 0.28));
+  } else {
+    // Economic: high = 2.5, medium = 1.8
+    const e = rd.event as EconomicEvent;
+    return e.importance === 'high' ? 2.5 : 1.8;
   }
 }
 
@@ -256,43 +269,29 @@ const OBJ_ALT = () => 0.05;
 
 function makeEventMarker(d: object): THREE.Object3D {
   const rd = d as RingDatum;
-  const isConflict = rd.kind === 'conflict';
 
-  // ── Invisible hit-area sphere ────────────────────────────────────────
-  // THREE.js raycasts against all meshes where visible===true regardless of
-  // material opacity — so opacity:0 is a fully-transparent click target.
-  // Radius 4.0 means the user can click anywhere within roughly 4 globe
-  // units of the marker centre, not just on the tiny visible dot.
-  const hitGeom = new THREE.SphereGeometry(4.0, 8, 6);
-  const hitMat  = new THREE.MeshBasicMaterial({
-    transparent: true,
-    opacity:     0,
-    depthWrite:  false,
-  });
+  // Per-kind color palette
+  const coreColor = rd.kind === 'conflict'   ? 0xff8838
+                  : rd.kind === 'earthquake' ? 0x60d4ff
+                  :                            0x60a5fa; // economic = blue
+  const haloColor = rd.kind === 'conflict'   ? 0xf97316
+                  : rd.kind === 'earthquake' ? 0x38bdf8
+                  :                            0x3b82f6;
+
+  const hitGeom  = new THREE.SphereGeometry(4.0, 8, 6);
+  const hitMat   = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
   const hitSphere = new THREE.Mesh(hitGeom, hitMat);
 
-  // Inner solid sphere — bright, fully opaque core
   const innerGeom = new THREE.SphereGeometry(0.9, 16, 12);
-  const innerMat  = new THREE.MeshBasicMaterial({
-    color:       isConflict ? 0xff8838 : 0x60d4ff,
-    transparent: true,
-    opacity:     0.95,
-    depthWrite:  false,
-  });
+  const innerMat  = new THREE.MeshBasicMaterial({ color: coreColor, transparent: true, opacity: 0.95, depthWrite: false });
   const inner = new THREE.Mesh(innerGeom, innerMat);
 
-  // Outer halo — semi-transparent glow ring
   const haloGeom = new THREE.SphereGeometry(1.8, 16, 12);
-  const haloMat  = new THREE.MeshBasicMaterial({
-    color:       isConflict ? 0xf97316 : 0x38bdf8,
-    transparent: true,
-    opacity:     0.30,
-    depthWrite:  false,
-  });
+  const haloMat  = new THREE.MeshBasicMaterial({ color: haloColor, transparent: true, opacity: 0.30, depthWrite: false });
   const halo = new THREE.Mesh(haloGeom, haloMat);
 
   const group = new THREE.Group();
-  group.add(hitSphere); // outermost — intercepts rays first
+  group.add(hitSphere);
   group.add(halo);
   group.add(inner);
   return group;
@@ -344,6 +343,9 @@ export default function GlobeView({
   onConflictEventClick,
   earthquakeEvents,
   onEarthquakeEventClick,
+  economicEvents,
+  onEconomicEventClick,
+  macroHeatmap,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -956,6 +958,20 @@ export default function GlobeView({
       if (iso === selectedCountry) return "rgba(255, 255, 255, 0.35)";
       if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.22)";
 
+      // Macro heatmap mode — shade by GDP growth annual %
+      // Green: strong growth (≥5%), yellow: moderate (2–5%), orange: slow (0–2%),
+      // red: contraction (<0%).  Unmapped countries stay neutral.
+      if (macroMap) {
+        const gdp = macroMap.get(iso);
+        if (gdp === undefined) return "rgba(60, 60, 70, 0.25)";
+        if (gdp >= 6)  return "rgba(16, 185, 129, 0.65)";   // emerald — strong
+        if (gdp >= 4)  return "rgba(52, 211, 153, 0.55)";   // green
+        if (gdp >= 2)  return "rgba(167, 243, 208, 0.45)";  // light green
+        if (gdp >= 0)  return "rgba(251, 191, 36, 0.45)";   // amber — slow
+        if (gdp >= -2) return "rgba(249, 115, 22, 0.55)";   // orange — weak
+        return "rgba(239, 68, 68, 0.65)";                   // red — contraction
+      }
+
       if (mode === "flags") {
         return FLAG_COLORS[iso]
           ? `${FLAG_COLORS[iso]}72`
@@ -965,7 +981,7 @@ export default function GlobeView({
       if (change === undefined) return "rgba(80, 80, 80, 0.13)";
       return perfColor(change);
     },
-    [mode, performanceMap, selectedCountry, showExchangePins]
+    [mode, performanceMap, selectedCountry, showExchangePins, macroMap]
   );
 
   // ── Altitude: only elevate selected country ──
@@ -1107,7 +1123,15 @@ export default function GlobeView({
 
   const globeSize = Math.min(width, height);
 
-  // ── Merged ring data: conflicts (orange/red) + earthquakes (teal) ──────
+  // ── Macro heatmap: build ISO2 → GDP growth lookup ───────────────────────
+  const macroMap = useMemo(() => {
+    if (!macroHeatmap?.length) return null;
+    const m = new Map<string, number>();
+    for (const c of macroHeatmap) m.set(c.countryIso2, c.value);
+    return m;
+  }, [macroHeatmap]);
+
+  // ── Merged ring data: conflicts + earthquakes + economic events ───────────
   const mergedRings = useMemo<RingDatum[]>(() => {
     const out: RingDatum[] = [];
     if (conflictEvents) {
@@ -1118,8 +1142,12 @@ export default function GlobeView({
       for (const e of earthquakeEvents)
         out.push({ kind: 'earthquake', lat: e.lat, lng: e.lng, event: e });
     }
+    if (economicEvents) {
+      for (const e of economicEvents)
+        out.push({ kind: 'economic', lat: e.lat, lng: e.lng, event: e });
+    }
     return out;
-  }, [conflictEvents, earthquakeEvents]);
+  }, [conflictEvents, earthquakeEvents, economicEvents]);
 
   return (
     <div
@@ -1210,6 +1238,8 @@ export default function GlobeView({
             onConflictEventClick(rd.event as ConflictEvent);
           } else if (rd.kind === 'earthquake' && onEarthquakeEventClick) {
             onEarthquakeEventClick(rd.event as EarthquakeEvent);
+          } else if (rd.kind === 'economic' && onEconomicEventClick) {
+            onEconomicEventClick(rd.event as EconomicEvent);
           }
         }}
         // ── Solid clickable markers (objectsData) ────────────────────────
@@ -1227,6 +1257,8 @@ export default function GlobeView({
             onConflictEventClick(rd.event as ConflictEvent);
           } else if (rd.kind === 'earthquake' && onEarthquakeEventClick) {
             onEarthquakeEventClick(rd.event as EarthquakeEvent);
+          } else if (rd.kind === 'economic' && onEconomicEventClick) {
+            onEconomicEventClick(rd.event as EconomicEvent);
           }
         }}
       />
