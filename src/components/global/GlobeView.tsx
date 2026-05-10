@@ -939,6 +939,18 @@ export default function GlobeView({
     );
   }, [selectedExchange]);
 
+  // ── Macro heatmap: build ISO2 → GDP growth lookup ───────────────────────
+  // IMPORTANT: must be declared BEFORE getCapColor because macroMap appears
+  // in getCapColor's dependency array, which is evaluated immediately when
+  // useCallback runs. Accessing a const in the temporal dead zone would throw
+  // a ReferenceError that blanks the entire page.
+  const macroMap = useMemo(() => {
+    if (!macroHeatmap?.length) return null;
+    const m = new Map<string, number>();
+    for (const c of macroHeatmap) m.set(c.countryIso2, c.value);
+    return m;
+  }, [macroHeatmap]);
+
   // ── Color callback ──
   // Reads hoverIsoRef (a ref, not state) so the callback reference only
   // changes when mode/performanceMap/selectedCountry change — NOT on hover.
@@ -1122,14 +1134,6 @@ export default function GlobeView({
   const EMPTY_ARCS:    TradeRoute[] = [];
 
   const globeSize = Math.min(width, height);
-
-  // ── Macro heatmap: build ISO2 → GDP growth lookup ───────────────────────
-  const macroMap = useMemo(() => {
-    if (!macroHeatmap?.length) return null;
-    const m = new Map<string, number>();
-    for (const c of macroHeatmap) m.set(c.countryIso2, c.value);
-    return m;
-  }, [macroHeatmap]);
 
   // ── Merged ring data: conflicts + earthquakes + economic events ───────────
   const mergedRings = useMemo<RingDatum[]>(() => {
