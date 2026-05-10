@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import Globe from "react-globe.gl";
 import type { GlobeMethods } from "react-globe.gl";
 import * as THREE from "three";
-import geoJsonUrl from "@/data/countries-110m.geojson";
+import geoJsonUrl from "@/data/countries-50m.geojson";
 import { COUNTRY_META, FLAG_COLORS } from "@/data/countryMeta";
 import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeData";
 import { NODE_COLOR, ROUTE_COLOR, type TradeNode, type TradeRoute } from "@/data/tradeInfrastructure";
@@ -76,7 +76,7 @@ interface GlobeViewProps {
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
-const SIDE_COLOR = () => "rgba(0, 0, 0, 0.15)";
+const SIDE_COLOR = () => "rgba(0, 0, 0, 0.10)";
 const STROKE_COLOR = () => "rgba(255, 255, 255, 0.08)";
 
 // ── Exchange HTML pin layer (module-level, stable) ──────────────────────
@@ -174,7 +174,7 @@ function perfColor(changePct: number): string {
   const t = (clamped + 5) / 10;
   const r = Math.round(220 - t * 180);
   const g = Math.round(40 + t * 180);
-  return `rgba(${r}, ${g}, 60, 0.7)`;
+  return `rgba(${r}, ${g}, 60, 0.45)`;
 }
 
 // Module-level GeoJSON cache — survives component remounts / HMR
@@ -823,21 +823,21 @@ export default function GlobeView({
 
       // Exchange mode: clear all fills so only pins + borders are visible
       if (showExchangePins) {
-        if (iso === selectedCountry) return "rgba(255, 255, 255, 0.12)";
-        if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.08)";
+        if (iso === selectedCountry) return "rgba(255, 255, 255, 0.08)";
+        if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.05)";
         return "rgba(0, 0, 0, 0)";
       }
 
-      if (iso === selectedCountry) return "rgba(255, 255, 255, 0.55)";
-      if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.35)";
+      if (iso === selectedCountry) return "rgba(255, 255, 255, 0.35)";
+      if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.22)";
 
       if (mode === "flags") {
         return FLAG_COLORS[iso]
-          ? `${FLAG_COLORS[iso]}b3`
-          : "rgba(80, 80, 80, 0.3)";
+          ? `${FLAG_COLORS[iso]}72`
+          : "rgba(80, 80, 80, 0.19)";
       }
       const change = performanceMap[iso];
-      if (change === undefined) return "rgba(80, 80, 80, 0.2)";
+      if (change === undefined) return "rgba(80, 80, 80, 0.13)";
       return perfColor(change);
     },
     [mode, performanceMap, selectedCountry, showExchangePins]

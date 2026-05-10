@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import geoJsonUrl from "@/data/countries-110m.geojson";
+import geoJsonUrl from "@/data/countries-50m.geojson";
 import { COUNTRY_META, FLAG_COLORS } from "@/data/countryMeta";
 import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeData";
 import { NODE_COLOR, ROUTE_COLOR, type TradeNode, type TradeRoute } from "@/data/tradeInfrastructure";
@@ -43,7 +43,7 @@ function perfColor(changePct: number): string {
   const t = (clamped + 5) / 10;
   const r = Math.round(220 - t * 180);
   const g = Math.round(40 + t * 180);
-  return `rgba(${r}, ${g}, 60, 0.75)`;
+  return `rgba(${r}, ${g}, 60, 0.48)`;
 }
 
 // ── Module-level GeoJSON cache (same pattern as GlobeView) ──────────────────
@@ -336,17 +336,17 @@ export default function MapView({
   // ── Country fill color ───────────────────────────────────────────────────
   const getCountryFill = useCallback((iso: string): string => {
     if (showExchangePins) {
-      if (iso === selectedCountry) return "rgba(255,255,255,0.12)";
-      if (iso === hoverIso)        return "rgba(255,255,255,0.08)";
+      if (iso === selectedCountry) return "rgba(255,255,255,0.08)";
+      if (iso === hoverIso)        return "rgba(255,255,255,0.05)";
       return "rgba(0,0,0,0)";
     }
-    if (iso === selectedCountry) return "rgba(255,255,255,0.55)";
-    if (iso === hoverIso)        return "rgba(255,255,255,0.22)";
+    if (iso === selectedCountry) return "rgba(255,255,255,0.35)";
+    if (iso === hoverIso)        return "rgba(255,255,255,0.14)";
     if (mode === "flags") {
-      return FLAG_COLORS[iso] ? `${FLAG_COLORS[iso]}b3` : "rgba(80,80,80,0.3)";
+      return FLAG_COLORS[iso] ? `${FLAG_COLORS[iso]}72` : "rgba(80,80,80,0.19)";
     }
     const change = performanceMap[iso];
-    if (change === undefined) return "rgba(80,80,80,0.2)";
+    if (change === undefined) return "rgba(80,80,80,0.13)";
     return perfColor(change);
   }, [mode, performanceMap, selectedCountry, hoverIso, showExchangePins]);
 
