@@ -258,8 +258,21 @@ function makeEventMarker(d: object): THREE.Object3D {
   const rd = d as RingDatum;
   const isConflict = rd.kind === 'conflict';
 
+  // ── Invisible hit-area sphere ────────────────────────────────────────
+  // THREE.js raycasts against all meshes where visible===true regardless of
+  // material opacity — so opacity:0 is a fully-transparent click target.
+  // Radius 4.0 means the user can click anywhere within roughly 4 globe
+  // units of the marker centre, not just on the tiny visible dot.
+  const hitGeom = new THREE.SphereGeometry(4.0, 8, 6);
+  const hitMat  = new THREE.MeshBasicMaterial({
+    transparent: true,
+    opacity:     0,
+    depthWrite:  false,
+  });
+  const hitSphere = new THREE.Mesh(hitGeom, hitMat);
+
   // Inner solid sphere — bright, fully opaque core
-  const innerGeom = new THREE.SphereGeometry(0.6, 16, 12);
+  const innerGeom = new THREE.SphereGeometry(0.9, 16, 12);
   const innerMat  = new THREE.MeshBasicMaterial({
     color:       isConflict ? 0xff8838 : 0x60d4ff,
     transparent: true,
@@ -268,17 +281,18 @@ function makeEventMarker(d: object): THREE.Object3D {
   });
   const inner = new THREE.Mesh(innerGeom, innerMat);
 
-  // Outer halo — larger semi-transparent sphere for glow + bigger hit area
-  const haloGeom = new THREE.SphereGeometry(1.2, 16, 12);
+  // Outer halo — semi-transparent glow ring
+  const haloGeom = new THREE.SphereGeometry(1.8, 16, 12);
   const haloMat  = new THREE.MeshBasicMaterial({
     color:       isConflict ? 0xf97316 : 0x38bdf8,
     transparent: true,
-    opacity:     0.35,
+    opacity:     0.30,
     depthWrite:  false,
   });
   const halo = new THREE.Mesh(haloGeom, haloMat);
 
   const group = new THREE.Group();
+  group.add(hitSphere); // outermost — intercepts rays first
   group.add(halo);
   group.add(inner);
   return group;
