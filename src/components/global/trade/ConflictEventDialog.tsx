@@ -18,13 +18,6 @@ function fmtPubDate(pubDate: string): string {
   } catch { return ''; }
 }
 
-function naturalList(items: string[]): string {
-  if (items.length === 0) return '';
-  if (items.length === 1) return items[0];
-  if (items.length === 2) return `${items[0]} and ${items[1]}`;
-  return `${items.slice(0, -1).join(', ')}, and ${items[items.length - 1]}`;
-}
-
 export function ConflictEventDialog({ event, onClose, onSetAlert }: Props) {
   const affected = useMemo(
     () => event ? getMaterialAffectedCommodities(event.countryIso2, { minShare: 3, maxRank: 5 }) : [],
@@ -65,10 +58,6 @@ export function ConflictEventDialog({ event, onClose, onSetAlert }: Props) {
 
   const countryName = COUNTRY_META[event.countryIso2]?.name ?? event.countryIso2 ?? 'Unknown location';
   const dateLabel = new Date(event.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-
-  const contextSentence = affected.length > 0
-    ? `As a significant producer of ${naturalList(affected.slice(0, 3).map(a => a.commodity.label))}, ongoing conflict in ${countryName} may tighten global supply and contribute to price volatility in these markets.`
-    : null;
 
   return (
     <div
@@ -168,12 +157,6 @@ export function ConflictEventDialog({ event, onClose, onSetAlert }: Props) {
         )}
       </div>
 
-      {/* ── Market context sentence ─────────────────────────────────────── */}
-      {contextSentence && (
-        <p className="mx-3 mt-2 px-2.5 py-1.5 rounded bg-purple-500/8 border border-purple-500/15 text-[11px] leading-relaxed text-foreground/65 italic">
-          {contextSentence}
-        </p>
-      )}
 
       {/* ── Recent news ─────────────────────────────────────────────────── */}
       <div className="px-3 pt-3 pb-1">
