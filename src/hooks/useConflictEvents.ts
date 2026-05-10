@@ -43,17 +43,26 @@ export function useConflictEvents() {
       const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID    as string)?.trim();
       const anonKey   = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string)?.trim();
       if (!projectId || !anonKey) {
+        // eslint-disable-next-line no-console
+        console.warn('[useConflictEvents] missing env vars', { hasProjectId: !!projectId, hasAnonKey: !!anonKey });
         return { events: [], sources: [], timestamp: Date.now() };
       }
 
       const url = `https://${projectId}.supabase.co/functions/v1/api-conflicts`;
+      // eslint-disable-next-line no-console
+      console.log('[useConflictEvents] fetching', url);
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${anonKey}`, apikey: anonKey },
       });
       if (!res.ok) {
+        // eslint-disable-next-line no-console
+        console.error('[useConflictEvents] fetch failed', res.status, res.statusText);
         return { events: [], sources: [], timestamp: Date.now() };
       }
-      return (await res.json()) as ConflictEventsResponse;
+      const json = (await res.json()) as ConflictEventsResponse;
+      // eslint-disable-next-line no-console
+      console.log('[useConflictEvents] received', { eventCount: json.events.length, sources: json.sources });
+      return json;
     },
   });
 }

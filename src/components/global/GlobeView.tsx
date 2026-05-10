@@ -231,7 +231,10 @@ function ringMaxRadius(d: object) {
   const rd = d as RingDatum;
   if (rd.kind === 'conflict') {
     const e = rd.event as ConflictEvent;
-    return Math.min(3, 0.7 + Math.log10(1 + e.fatalities) * 0.7);
+    // Baseline events (fatalities=0) should still be clearly visible —
+    // bumped minimum from 0.7 to 1.8.  Live ACLED data with fatalities
+    // grows from there to a max of 4.
+    return Math.min(4, 1.8 + Math.log10(1 + e.fatalities) * 0.7);
   } else {
     const e = rd.event as EarthquakeEvent;
     // M2.5 → 0.5; M5 → 1.4; M7 → 2.5; M8+ → ~4 (capped)
@@ -1059,6 +1062,13 @@ export default function GlobeView({
       for (const e of earthquakeEvents)
         out.push({ kind: 'earthquake', lat: e.lat, lng: e.lng, event: e });
     }
+    // eslint-disable-next-line no-console
+    console.log('[GlobeView] mergedRings:', {
+      conflictCount:   conflictEvents?.length ?? 'undef',
+      earthquakeCount: earthquakeEvents?.length ?? 'undef',
+      total:           out.length,
+      sample:          out[0],
+    });
     return out;
   }, [conflictEvents, earthquakeEvents]);
 
