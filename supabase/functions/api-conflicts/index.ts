@@ -33,8 +33,60 @@ interface ConflictEvent {
   notes:       string;
   /** URL to the source article or report, if available. */
   sourceUrl:   string;
-  /** "acled" | "gdelt" — which feed it came from. */
-  source:      "acled" | "gdelt";
+  /** "acled" | "gdelt" | "baseline" — which feed it came from. */
+  source:      "acled" | "gdelt" | "baseline";
+}
+
+// ── Curated baseline of ongoing major conflict zones ──────────────────────
+// Hand-picked, well-known coordinates of active conflict hotspots. Always
+// returned regardless of upstream API status, so the layer is never empty.
+// These are NOT meant to be high-frequency live data — they're a "show
+// something useful" floor. ACLED + GDELT augment them with real-time events.
+const BASELINE_CONFLICTS: ConflictEvent[] = [
+  // Ukraine — multiple front-line points
+  { id: "base-ua-bakhmut",   date: new Date().toISOString().slice(0,10), lat: 48.5944, lng: 38.0000, countryIso2: "UA", eventType: "Active conflict zone", fatalities: 0, notes: "Eastern Ukraine front line — Donetsk Oblast (Bakhmut/Avdiivka axis). Ongoing artillery and infantry engagements.", sourceUrl: "", source: "baseline" },
+  { id: "base-ua-kherson",   date: new Date().toISOString().slice(0,10), lat: 46.6354, lng: 32.6169, countryIso2: "UA", eventType: "Active conflict zone", fatalities: 0, notes: "Kherson region — Dnipro river front, contested left-bank operations.", sourceUrl: "", source: "baseline" },
+  { id: "base-ua-zaporizhzhia", date: new Date().toISOString().slice(0,10), lat: 47.5036, lng: 36.0456, countryIso2: "UA", eventType: "Active conflict zone", fatalities: 0, notes: "Zaporizhzhia southern front — heavily fortified Russian defensive lines.", sourceUrl: "", source: "baseline" },
+
+  // Gaza / Israel-Palestine
+  { id: "base-ps-gaza",      date: new Date().toISOString().slice(0,10), lat: 31.5,    lng: 34.47,   countryIso2: "PS", eventType: "Active conflict zone", fatalities: 0, notes: "Gaza Strip — ongoing IDF operations and humanitarian crisis.", sourceUrl: "", source: "baseline" },
+  { id: "base-il-north",     date: new Date().toISOString().slice(0,10), lat: 33.207,  lng: 35.572,  countryIso2: "IL", eventType: "Cross-border exchanges", fatalities: 0, notes: "Northern Israel / southern Lebanon border — Hezbollah-IDF exchanges.", sourceUrl: "", source: "baseline" },
+  { id: "base-lb-south",     date: new Date().toISOString().slice(0,10), lat: 33.27,   lng: 35.20,   countryIso2: "LB", eventType: "Cross-border exchanges", fatalities: 0, notes: "Southern Lebanon — Hezbollah positions, Israeli airstrikes.", sourceUrl: "", source: "baseline" },
+
+  // Sudan — civil war
+  { id: "base-sd-khartoum",  date: new Date().toISOString().slice(0,10), lat: 15.5007, lng: 32.5599, countryIso2: "SD", eventType: "Civil war", fatalities: 0, notes: "Khartoum — RSF / SAF urban combat, displacement crisis.", sourceUrl: "", source: "baseline" },
+  { id: "base-sd-darfur",    date: new Date().toISOString().slice(0,10), lat: 13.45,   lng: 25.34,   countryIso2: "SD", eventType: "Civil war", fatalities: 0, notes: "Darfur — RSF advance, ethnic violence reports.", sourceUrl: "", source: "baseline" },
+
+  // Yemen — Houthi conflict
+  { id: "base-ye-sanaa",     date: new Date().toISOString().slice(0,10), lat: 15.3694, lng: 44.1910, countryIso2: "YE", eventType: "Civil war",        fatalities: 0, notes: "Yemen — Houthi-controlled Sanaa, ongoing war with Saudi-backed forces.", sourceUrl: "", source: "baseline" },
+  { id: "base-ye-redsea",    date: new Date().toISOString().slice(0,10), lat: 13.50,   lng: 43.00,   countryIso2: "YE", eventType: "Maritime attacks", fatalities: 0, notes: "Red Sea / Bab-el-Mandeb — Houthi missile and drone attacks on commercial shipping.", sourceUrl: "", source: "baseline" },
+
+  // Myanmar — civil war
+  { id: "base-mm-rakhine",   date: new Date().toISOString().slice(0,10), lat: 20.20,   lng: 93.10,   countryIso2: "MM", eventType: "Civil war", fatalities: 0, notes: "Rakhine state — Arakan Army vs junta, growing rebel control.", sourceUrl: "", source: "baseline" },
+  { id: "base-mm-shan",      date: new Date().toISOString().slice(0,10), lat: 22.00,   lng: 98.00,   countryIso2: "MM", eventType: "Civil war", fatalities: 0, notes: "Shan state — Operation 1027 multi-ethnic offensive against military junta.", sourceUrl: "", source: "baseline" },
+
+  // DRC eastern conflict
+  { id: "base-cd-goma",      date: new Date().toISOString().slice(0,10), lat: -1.6800, lng: 29.2200, countryIso2: "CD", eventType: "Insurgency", fatalities: 0, notes: "North Kivu — M23 rebel offensive, Goma area instability.", sourceUrl: "", source: "baseline" },
+
+  // Sahel — Mali / Burkina Faso / Niger
+  { id: "base-ml-mopti",     date: new Date().toISOString().slice(0,10), lat: 14.5,    lng: -4.2,    countryIso2: "ML", eventType: "Insurgency", fatalities: 0, notes: "Central Mali — JNIM and ISGS jihadist activity.", sourceUrl: "", source: "baseline" },
+  { id: "base-bf-east",      date: new Date().toISOString().slice(0,10), lat: 12.07,   lng: 0.36,    countryIso2: "BF", eventType: "Insurgency", fatalities: 0, notes: "Eastern Burkina Faso — armed group attacks on civilians and military.", sourceUrl: "", source: "baseline" },
+
+  // Haiti — gang violence
+  { id: "base-ht-pap",       date: new Date().toISOString().slice(0,10), lat: 18.5944, lng: -72.3074, countryIso2: "HT", eventType: "Gang violence", fatalities: 0, notes: "Port-au-Prince — coalition of gangs controls majority of capital.", sourceUrl: "", source: "baseline" },
+
+  // Syria — residual conflict
+  { id: "base-sy-idlib",     date: new Date().toISOString().slice(0,10), lat: 35.93,   lng: 36.63,   countryIso2: "SY", eventType: "Active conflict zone", fatalities: 0, notes: "Idlib — last major rebel-held enclave, regular airstrikes.", sourceUrl: "", source: "baseline" },
+
+  // Somalia — Al-Shabaab
+  { id: "base-so-mogadishu", date: new Date().toISOString().slice(0,10), lat: 2.0469,  lng: 45.3182, countryIso2: "SO", eventType: "Insurgency", fatalities: 0, notes: "Somalia — Al-Shabaab insurgency, ATMIS transition.", sourceUrl: "", source: "baseline" },
+
+  // Mexico — cartel violence hotspot
+  { id: "base-mx-sinaloa",   date: new Date().toISOString().slice(0,10), lat: 25.0,    lng: -107.3,  countryIso2: "MX", eventType: "Cartel violence", fatalities: 0, notes: "Sinaloa — Sinaloa Cartel internal split, escalating violence.", sourceUrl: "", source: "baseline" },
+];
+
+function fetchBaselineConflicts(): ConflictEvent[] {
+  return BASELINE_CONFLICTS;
 }
 
 // Translate ACLED 2-letter country code → standard ISO-2 (mostly identical)
@@ -42,53 +94,114 @@ const ACLED_COUNTRY_FIX: Record<string, string> = {
   // ACLED uses some non-standard codes — patch as needed
 };
 
-// ── GDELT 2.1 GeoJSON live feed ───────────────────────────────────────────
-// Returns the last 24 hours of geocoded events worldwide.
+// ── GDELT 2.1 DOC API (article list with sourcecountry) ───────────────────
+// The legacy GEO 2.0 endpoint (`/api/v2/geo/geo`) was deprecated and now
+// returns 404. The DOC API (`/api/v2/doc/doc`) still serves armed-conflict
+// articles with `sourcecountry` field — we map sourcecountry → ISO2 and
+// place each article at the country centroid (close enough for a "show
+// recent news mentions" overlay; ACLED has the precise lat/lng anyway).
 async function fetchGdeltEvents(): Promise<ConflictEvent[]> {
   const url =
-    "https://api.gdeltproject.org/api/v2/geo/geo" +
-    "?query=sourcelang:eng%20theme:ARMEDCONFLICT" +
-    "&format=geojson" +
-    "&mode=PointData" +
-    "&maxrows=200" +
-    "&timespan=24H";
+    "https://api.gdeltproject.org/api/v2/doc/doc" +
+    "?query=" + encodeURIComponent("theme:ARMEDCONFLICT sourcelang:eng") +
+    "&format=json" +
+    "&mode=ArtList" +
+    "&maxrecords=75" +
+    "&sort=DateDesc" +
+    "&timespan=1d";
 
   const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
-  if (!res.ok) throw new Error(`GDELT ${res.status}`);
+  if (!res.ok) {
+    console.warn(`[gdelt] doc api ${res.status}`);
+    return [];
+  }
 
-  const data = await res.json();
-  const features = (data.features ?? []) as Array<{
-    geometry?: { coordinates?: [number, number] };
-    properties?: {
-      name?:     string;
-      html?:     string;
-      url?:      string;
-      shareimage?: string;
-      count?:    number;
-    };
-  }>;
+  let data: { articles?: Array<{
+    url?:           string;
+    title?:         string;
+    seendate?:      string;
+    sourcecountry?: string;
+  }> };
+  try {
+    data = await res.json();
+  } catch {
+    return [];
+  }
 
-  return features
-    .filter((f) => f.geometry?.coordinates)
-    .map((f, i): ConflictEvent => {
-      const [lng, lat] = f.geometry!.coordinates!;
-      // GDELT GeoJSON doesn't include country code directly — derive from name
-      // by using a coarse lat/lng → country lookup in the client.  For now,
-      // pass empty string and let the client compute it.
-      return {
-        id:          `gdelt-${Date.now()}-${i}`,
-        date:        new Date().toISOString().slice(0, 10),
-        lat,
-        lng,
-        countryIso2: "",  // filled by client via reverse geocoding cache
-        eventType:   "News mention",
-        fatalities:  0,
-        notes:       (f.properties?.name ?? "").slice(0, 200),
-        sourceUrl:   f.properties?.url ?? "",
-        source:      "gdelt",
-      };
+  const articles = data.articles ?? [];
+  const out: ConflictEvent[] = [];
+  for (let i = 0; i < articles.length; i++) {
+    const a = articles[i];
+    const iso2 = COUNTRY_NAME_TO_ISO2[(a.sourcecountry ?? "").toLowerCase()] ?? "";
+    if (!iso2) continue;
+    const centroid = COUNTRY_CENTROID[iso2];
+    if (!centroid) continue;
+    // Jitter slightly so multiple events from the same country don't
+    // stack invisibly on top of each other.
+    const jitter = () => (Math.random() - 0.5) * 1.4;
+    out.push({
+      id:          `gdelt-${a.seendate ?? Date.now()}-${i}`,
+      date:        (a.seendate ?? "").slice(0, 8).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") || new Date().toISOString().slice(0, 10),
+      lat:         centroid[0] + jitter(),
+      lng:         centroid[1] + jitter(),
+      countryIso2: iso2,
+      eventType:   "News mention",
+      fatalities:  0,
+      notes:       (a.title ?? "").slice(0, 200),
+      sourceUrl:   a.url ?? "",
+      source:      "gdelt",
     });
+  }
+  return out;
 }
+
+// ── Country-name → ISO2 (for GDELT sourcecountry mapping) ─────────────────
+const COUNTRY_NAME_TO_ISO2: Record<string, string> = {
+  "ukraine": "UA", "russia": "RU", "united states": "US", "israel": "IL",
+  "palestinian territory": "PS", "lebanon": "LB", "syria": "SY", "iraq": "IQ",
+  "iran": "IR", "yemen": "YE", "afghanistan": "AF", "pakistan": "PK",
+  "india": "IN", "myanmar": "MM", "burma": "MM", "sudan": "SD", "south sudan": "SS",
+  "ethiopia": "ET", "somalia": "SO", "nigeria": "NG", "democratic republic of congo": "CD",
+  "cameroon": "CM", "mali": "ML", "burkina faso": "BF", "niger": "NE",
+  "libya": "LY", "egypt": "EG", "tunisia": "TN", "algeria": "DZ", "morocco": "MA",
+  "turkey": "TR", "venezuela": "VE", "colombia": "CO", "mexico": "MX",
+  "haiti": "HT", "china": "CN", "taiwan": "TW", "korea, north": "KP",
+  "korea, south": "KR", "japan": "JP", "indonesia": "ID", "philippines": "PH",
+  "thailand": "TH", "vietnam": "VN", "saudi arabia": "SA", "united arab emirates": "AE",
+  "qatar": "QA", "azerbaijan": "AZ", "armenia": "AM", "georgia": "GE",
+  "belarus": "BY", "moldova": "MD", "kazakhstan": "KZ", "kenya": "KE",
+  "uganda": "UG", "tanzania": "TZ", "rwanda": "RW", "burundi": "BI",
+  "angola": "AO", "mozambique": "MZ", "zimbabwe": "ZW", "south africa": "ZA",
+  "france": "FR", "germany": "DE", "united kingdom": "GB", "spain": "ES",
+  "italy": "IT", "poland": "PL", "greece": "GR", "romania": "RO",
+  "ivory coast": "CI", "ghana": "GH", "senegal": "SN", "guinea": "GN",
+  "liberia": "LR", "sierra leone": "SL", "central african republic": "CF",
+  "chad": "TD", "mauritania": "MR",
+};
+
+// Approximate country centroids for GDELT-style events that only carry a country.
+const COUNTRY_CENTROID: Record<string, [number, number]> = {
+  UA: [49.0, 32.0], RU: [61.5, 105.3], US: [39.5, -98.4], IL: [31.5, 34.9],
+  PS: [31.9, 35.2], LB: [33.9, 35.9], SY: [35.0, 38.5], IQ: [33.2, 43.7],
+  IR: [32.4, 53.7], YE: [15.6, 47.6], AF: [33.9, 67.7], PK: [30.4, 69.3],
+  IN: [21.0, 78.9], MM: [21.9, 95.9], SD: [12.9, 30.2], SS: [7.3, 31.3],
+  ET: [9.1, 40.5], SO: [5.2, 46.2], NG: [9.1, 8.7], CD: [-4.0, 21.8],
+  CM: [7.4, 12.4], ML: [17.6, -4.0], BF: [12.2, -1.6], NE: [17.6, 8.1],
+  LY: [26.3, 17.2], EG: [26.8, 30.8], TN: [33.9, 9.5], DZ: [28.0, 1.7],
+  MA: [31.8, -7.1], TR: [38.9, 35.2], VE: [6.4, -66.6], CO: [4.6, -74.3],
+  MX: [23.6, -102.5], HT: [18.9, -72.3], CN: [35.9, 104.2], TW: [23.7, 121.0],
+  KP: [40.3, 127.5], KR: [35.9, 127.8], JP: [36.2, 138.3], ID: [-0.8, 113.9],
+  PH: [12.9, 121.8], TH: [15.9, 100.9], VN: [14.1, 108.3], SA: [23.9, 45.1],
+  AE: [23.4, 53.8], QA: [25.4, 51.2], AZ: [40.1, 47.6], AM: [40.1, 45.0],
+  GE: [42.3, 43.4], BY: [53.7, 27.9], MD: [47.4, 28.4], KZ: [48.0, 66.9],
+  KE: [-0.0, 37.9], UG: [1.4, 32.3], TZ: [-6.4, 34.9], RW: [-1.9, 29.9],
+  BI: [-3.4, 29.9], AO: [-11.2, 17.9], MZ: [-18.7, 35.5], ZW: [-19.0, 29.2],
+  ZA: [-30.6, 22.9], FR: [46.2, 2.2], DE: [51.2, 10.4], GB: [55.4, -3.4],
+  ES: [40.5, -3.7], IT: [41.9, 12.6], PL: [51.9, 19.1], GR: [39.1, 21.8],
+  RO: [45.9, 24.9], CI: [7.5, -5.5], GH: [7.9, -1.0], SN: [14.5, -14.5],
+  GN: [9.9, -9.7], LR: [6.4, -9.4], SL: [8.5, -11.8], CF: [6.6, 20.9],
+  TD: [15.5, 18.7], MR: [21.0, -10.9],
+};
 
 // ── ACLED API (new OAuth system, 2024+) ──────────────────────────────────
 // Token cached at module scope — survives across requests served by the
@@ -227,15 +340,23 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    // Run both fetches in parallel; tolerate partial failure
+    // Run both live fetches in parallel; tolerate partial failure.
+    // Baseline always included so the layer is never empty.
     const results = await Promise.allSettled([fetchAcledEvents(), fetchGdeltEvents()]);
     const events: ConflictEvent[] = [];
     const sources: string[] = [];
+
+    // Always seed with curated baseline of ongoing major conflict zones.
+    const baseline = fetchBaselineConflicts();
+    events.push(...baseline);
+    sources.push("baseline");
 
     for (const [name, r] of [["acled", results[0]], ["gdelt", results[1]]] as const) {
       if (r.status === "fulfilled" && r.value.length > 0) {
         events.push(...r.value);
         sources.push(name);
+      } else if (r.status === "rejected") {
+        console.warn(`[${name}] fetch rejected:`, r.reason);
       }
     }
 

@@ -23,7 +23,7 @@ export interface ConflictEvent {
   fatalities:  number;
   notes:       string;
   sourceUrl:   string;
-  source:      'acled' | 'gdelt';
+  source:      'acled' | 'gdelt' | 'baseline';
 }
 
 export interface ConflictEventsResponse {
