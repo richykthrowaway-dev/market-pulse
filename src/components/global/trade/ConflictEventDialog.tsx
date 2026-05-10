@@ -27,14 +27,11 @@ interface Props {
   onSetAlert?: (commodityId: string) => void;
 }
 
-/** Parse GDELT compact timestamp "20241215T120000Z" → friendly "Dec 15" */
-function fmtGdelt(seendate: string): string {
-  const iso = seendate.replace(
-    /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/,
-    '$1-$2-$3T$4:$5:$6Z',
-  );
+/** Parse RFC 822 pubDate "Sun, 10 May 2026 02:19:14 GMT" → "May 10" */
+function fmtPubDate(pubDate: string): string {
+  if (!pubDate) return '';
   try {
-    return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return new Date(pubDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
   } catch {
     return '';
   }
@@ -236,9 +233,9 @@ export function ConflictEventDialog({ event, onClose, onSetAlert }: Props) {
                       {article.title}
                     </div>
                     <div className="text-muted-foreground mt-0.5 flex items-center gap-1.5 text-[10px]">
-                      <span className="truncate max-w-[140px]">{article.domain}</span>
+                      <span className="truncate max-w-[140px]">{article.source}</span>
                       <span>·</span>
-                      <span className="shrink-0">{fmtGdelt(article.seendate)}</span>
+                      <span className="shrink-0">{fmtPubDate(article.pubDate)}</span>
                     </div>
                   </div>
                   <ExternalLink className="w-3 h-3 shrink-0 text-muted-foreground/50 group-hover:text-orange-400 transition-colors mt-0.5" />

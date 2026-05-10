@@ -3,25 +3,30 @@ import type { ConflictEvent } from './useConflictEvents';
 import { COUNTRY_META } from '@/data/countryMeta';
 
 /**
- * useConflictNews — fetches recent English-language news articles about
- * a conflict event's country via the `api-conflict-news` Supabase edge fn.
+ * useConflictNews — fetches recent news articles about a conflict event's
+ * country via the `api-conflict-news` Supabase edge function.
  *
- * Cached for 30 minutes per country — news doesn't change that fast and
- * we don't want to hammer GDELT on every card open.
+ * The edge function queries Google News RSS, which aggregates Reuters, AP,
+ * BBC, Bloomberg, The Guardian, and hundreds of other outlets for free.
+ *
+ * Cached 30 min per country — news doesn't change that fast, and we
+ * don't want to hammer the RSS feed on every card open.
  */
 
 export interface ConflictNewsArticle {
-  url:          string;
-  title:        string;
-  /** GDELT compact timestamp: "20241215T120000Z" */
-  seendate:     string;
-  domain:       string;
-  socialimage?: string | null;
+  url:     string;
+  title:   string;
+  /** Source outlet name: "Reuters", "The Guardian", "BBC News", … */
+  source:  string;
+  /** RFC 822: "Sun, 10 May 2026 02:19:14 GMT" */
+  pubDate: string;
 }
 
 export function useConflictNews(event: ConflictEvent | null) {
   const countryName =
-    (event?.countryIso2 ? COUNTRY_META[event.countryIso2]?.name ?? event.countryIso2 : null) ?? '';
+    (event?.countryIso2
+      ? COUNTRY_META[event.countryIso2]?.name ?? event.countryIso2
+      : null) ?? '';
 
   return useQuery<ConflictNewsArticle[]>({
     queryKey:             ['conflict-news', event?.countryIso2],
@@ -34,8 +39,10 @@ export function useConflictNews(event: ConflictEvent | null) {
       const anonKey   = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string)?.trim();
       if (!projectId || !anonKey) return [];
 
-      const url = `https://${projectId}.supabase.co/functions/v1/api-conflict-news` +
-                  `?country=${encodeURIComponent(countryName)}`;
+      const url =
+        `https://${projectId}.supabase.co/functions/v1/api-conflict-news` +
+        `?country=${encodeURIComponent(countryName)}`;
+
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${anonKey}`, apikey: anonKey },
       });
