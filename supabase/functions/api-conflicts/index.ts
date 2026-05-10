@@ -44,45 +44,140 @@ interface ConflictEvent {
 // something useful" floor. ACLED + GDELT augment them with real-time events.
 const BASELINE_CONFLICTS: ConflictEvent[] = [
   // Ukraine — multiple front-line points
-  { id: "base-ua-bakhmut",   date: new Date().toISOString().slice(0,10), lat: 48.5944, lng: 38.0000, countryIso2: "UA", eventType: "Active conflict zone", fatalities: 0, notes: "Eastern Ukraine front line — Donetsk Oblast (Bakhmut/Avdiivka axis). Ongoing artillery and infantry engagements.", sourceUrl: "", source: "baseline" },
-  { id: "base-ua-kherson",   date: new Date().toISOString().slice(0,10), lat: 46.6354, lng: 32.6169, countryIso2: "UA", eventType: "Active conflict zone", fatalities: 0, notes: "Kherson region — Dnipro river front, contested left-bank operations.", sourceUrl: "", source: "baseline" },
-  { id: "base-ua-zaporizhzhia", date: new Date().toISOString().slice(0,10), lat: 47.5036, lng: 36.0456, countryIso2: "UA", eventType: "Active conflict zone", fatalities: 0, notes: "Zaporizhzhia southern front — heavily fortified Russian defensive lines.", sourceUrl: "", source: "baseline" },
+  {
+    id: "base-ua-bakhmut", date: new Date().toISOString().slice(0,10),
+    lat: 48.5944, lng: 38.0000, countryIso2: "UA", eventType: "Active conflict zone", fatalities: 0,
+    notes: "Eastern Ukraine front line — Donetsk Oblast (Bakhmut/Avdiivka axis). Russian forces have made incremental gains along this sector following the fall of Avdiivka in early 2024, with both sides suffering heavy losses in attritional trench warfare. Persistent artillery exchanges and drone strikes on logistics routes are ongoing.",
+    sourceUrl: "", source: "baseline",
+  },
+  {
+    id: "base-ua-kherson", date: new Date().toISOString().slice(0,10),
+    lat: 46.6354, lng: 32.6169, countryIso2: "UA", eventType: "Active conflict zone", fatalities: 0,
+    notes: "Kherson region — Dnipro river front with contested left-bank operations since Ukraine's liberation of the city in November 2022. Ukrainian forces maintain footholds on the eastern bank while Russian forces hold occupied territory across the river. Cross-river raids, artillery duels, and drone strikes on grain storage facilities are frequent.",
+    sourceUrl: "", source: "baseline",
+  },
+  {
+    id: "base-ua-zaporizhzhia", date: new Date().toISOString().slice(0,10),
+    lat: 47.5036, lng: 36.0456, countryIso2: "UA", eventType: "Active conflict zone", fatalities: 0,
+    notes: "Zaporizhzhia southern front — heavily fortified Russian multi-layered defensive lines stretching toward Tokmak limited Ukraine's 2023 counteroffensive gains to a narrow salient. Europe's largest nuclear power plant (ZNPP) remains under Russian occupation, with repeated safety alerts raising concerns over reactor integrity. The front line here has been largely static since mid-2023.",
+    sourceUrl: "", source: "baseline",
+  },
 
   // Gaza / Israel-Palestine
-  { id: "base-ps-gaza",      date: new Date().toISOString().slice(0,10), lat: 31.5,    lng: 34.47,   countryIso2: "PS", eventType: "Active conflict zone", fatalities: 0, notes: "Gaza Strip — ongoing IDF operations and humanitarian crisis.", sourceUrl: "", source: "baseline" },
-  { id: "base-il-north",     date: new Date().toISOString().slice(0,10), lat: 33.207,  lng: 35.572,  countryIso2: "IL", eventType: "Cross-border exchanges", fatalities: 0, notes: "Northern Israel / southern Lebanon border — Hezbollah-IDF exchanges.", sourceUrl: "", source: "baseline" },
-  { id: "base-lb-south",     date: new Date().toISOString().slice(0,10), lat: 33.27,   lng: 35.20,   countryIso2: "LB", eventType: "Cross-border exchanges", fatalities: 0, notes: "Southern Lebanon — Hezbollah positions, Israeli airstrikes.", sourceUrl: "", source: "baseline" },
+  {
+    id: "base-ps-gaza", date: new Date().toISOString().slice(0,10),
+    lat: 31.5, lng: 34.47, countryIso2: "PS", eventType: "Active conflict zone", fatalities: 0,
+    notes: "Gaza Strip — sustained IDF military campaign launched in response to the Hamas-led October 7, 2023 attacks that killed approximately 1,200 Israelis and took 250 hostages. The operation has caused severe destruction across northern and southern Gaza, with Palestinian authorities reporting over 35,000 fatalities. A full-scale humanitarian crisis persists, with widespread shortages of food, medicine, and fuel, drawing intense international pressure for a ceasefire.",
+    sourceUrl: "", source: "baseline",
+  },
+  {
+    id: "base-il-north", date: new Date().toISOString().slice(0,10),
+    lat: 33.207, lng: 35.572, countryIso2: "IL", eventType: "Cross-border exchanges", fatalities: 0,
+    notes: "Northern Israel / southern Lebanon border — near-daily Hezbollah-IDF exchanges of rockets, anti-tank missiles, and airstrikes have been ongoing since October 2023. Israel launched a major ground operation in southern Lebanon in late 2024, significantly degrading Hezbollah's military infrastructure and leadership. A US-brokered ceasefire took hold in late November 2024, though sporadic violations continue to be reported.",
+    sourceUrl: "", source: "baseline",
+  },
+  {
+    id: "base-lb-south", date: new Date().toISOString().slice(0,10),
+    lat: 33.27, lng: 35.20, countryIso2: "LB", eventType: "Cross-border exchanges", fatalities: 0,
+    notes: "Southern Lebanon — Hezbollah's military infrastructure suffered severe damage from Israeli precision strikes and a ground incursion in late 2024, including the killing of its secretary-general Hassan Nasrallah. The November 2024 ceasefire agreement requires Hezbollah to withdraw north of the Litani River and the Lebanese Armed Forces to deploy south. Reconstruction is ongoing, but tensions remain elevated along the Blue Line.",
+    sourceUrl: "", source: "baseline",
+  },
 
   // Sudan — civil war
-  { id: "base-sd-khartoum",  date: new Date().toISOString().slice(0,10), lat: 15.5007, lng: 32.5599, countryIso2: "SD", eventType: "Civil war", fatalities: 0, notes: "Khartoum — RSF / SAF urban combat, displacement crisis.", sourceUrl: "", source: "baseline" },
-  { id: "base-sd-darfur",    date: new Date().toISOString().slice(0,10), lat: 13.45,   lng: 25.34,   countryIso2: "SD", eventType: "Civil war", fatalities: 0, notes: "Darfur — RSF advance, ethnic violence reports.", sourceUrl: "", source: "baseline" },
+  {
+    id: "base-sd-khartoum", date: new Date().toISOString().slice(0,10),
+    lat: 15.5007, lng: 32.5599, countryIso2: "SD", eventType: "Civil war", fatalities: 0,
+    notes: "Khartoum — Sudan's capital has been a major battleground since civil war erupted between the Sudanese Armed Forces (SAF) and the Rapid Support Forces (RSF) paramilitary in April 2023. Much of the city's infrastructure, including hospitals and water systems, has been destroyed, forcing millions to flee. The conflict has triggered one of the world's worst humanitarian crises, with over 8 million people displaced.",
+    sourceUrl: "", source: "baseline",
+  },
+  {
+    id: "base-sd-darfur", date: new Date().toISOString().slice(0,10),
+    lat: 13.45, lng: 25.34, countryIso2: "SD", eventType: "Civil war", fatalities: 0,
+    notes: "Darfur — the RSF has captured most of West, Central, and South Darfur, with El Fasher remaining the last SAF-held major city under siege. Reports of ethnically targeted massacres against the Masalit and other communities have drawn international condemnation and ICC scrutiny. Gold mining revenues from Darfur's artisanal fields have been a key RSF funding source.",
+    sourceUrl: "", source: "baseline",
+  },
 
   // Yemen — Houthi conflict
-  { id: "base-ye-sanaa",     date: new Date().toISOString().slice(0,10), lat: 15.3694, lng: 44.1910, countryIso2: "YE", eventType: "Civil war",        fatalities: 0, notes: "Yemen — Houthi-controlled Sanaa, ongoing war with Saudi-backed forces.", sourceUrl: "", source: "baseline" },
-  { id: "base-ye-redsea",    date: new Date().toISOString().slice(0,10), lat: 13.50,   lng: 43.00,   countryIso2: "YE", eventType: "Maritime attacks", fatalities: 0, notes: "Red Sea / Bab-el-Mandeb — Houthi missile and drone attacks on commercial shipping.", sourceUrl: "", source: "baseline" },
+  {
+    id: "base-ye-sanaa", date: new Date().toISOString().slice(0,10),
+    lat: 15.3694, lng: 44.1910, countryIso2: "YE", eventType: "Civil war", fatalities: 0,
+    notes: "Yemen — Houthi (Ansarallah) forces have controlled Sanaa and most of northern Yemen since 2014, fighting a Saudi-led coalition and the internationally recognised government. A UN-brokered truce largely held through 2022–23, but a comprehensive peace deal has not been reached. Yemen's oil export infrastructure in the south remains functional but fragile, with production a fraction of pre-war levels.",
+    sourceUrl: "", source: "baseline",
+  },
+  {
+    id: "base-ye-redsea", date: new Date().toISOString().slice(0,10),
+    lat: 13.50, lng: 43.00, countryIso2: "YE", eventType: "Maritime attacks", fatalities: 0,
+    notes: "Red Sea / Bab-el-Mandeb — Houthi forces have been launching missile, drone, and naval attacks on commercial shipping since November 2023, declaring solidarity with Gaza. Over 100 vessels have been struck or targeted, forcing major container and tanker operators to reroute around the Cape of Good Hope — adding 10–14 days and significant fuel costs per voyage. US, UK, and coalition forces have conducted hundreds of retaliatory strikes on Houthi launch sites with limited lasting effect.",
+    sourceUrl: "", source: "baseline",
+  },
 
   // Myanmar — civil war
-  { id: "base-mm-rakhine",   date: new Date().toISOString().slice(0,10), lat: 20.20,   lng: 93.10,   countryIso2: "MM", eventType: "Civil war", fatalities: 0, notes: "Rakhine state — Arakan Army vs junta, growing rebel control.", sourceUrl: "", source: "baseline" },
-  { id: "base-mm-shan",      date: new Date().toISOString().slice(0,10), lat: 22.00,   lng: 98.00,   countryIso2: "MM", eventType: "Civil war", fatalities: 0, notes: "Shan state — Operation 1027 multi-ethnic offensive against military junta.", sourceUrl: "", source: "baseline" },
+  {
+    id: "base-mm-rakhine", date: new Date().toISOString().slice(0,10),
+    lat: 20.20, lng: 93.10, countryIso2: "MM", eventType: "Civil war", fatalities: 0,
+    notes: "Rakhine state — the Arakan Army (AA) has seized most of the state from the military junta since its major offensive in late 2023, including the strategic Sittwe port and Ann township. The junta's loss of Rakhine threatens Chinese-backed infrastructure projects including the Kyaukphyu deep-sea port and the China-Myanmar oil and gas pipelines. Hundreds of thousands of civilians have been displaced.",
+    sourceUrl: "", source: "baseline",
+  },
+  {
+    id: "base-mm-shan", date: new Date().toISOString().slice(0,10),
+    lat: 22.00, lng: 98.00, countryIso2: "MM", eventType: "Civil war", fatalities: 0,
+    notes: "Shan state — Operation 1027, launched by the Three Brotherhood Alliance in October 2023, captured significant territory from the military junta along the Chinese border, including Laukkaing and key towns on the China-Myanmar Economic Corridor (CMEC). China brokered a ceasefire in January 2024, but fighting has resumed periodically. Disruption to border trade and Chinese investment projects worth billions of dollars annually has been significant.",
+    sourceUrl: "", source: "baseline",
+  },
 
   // DRC eastern conflict
-  { id: "base-cd-goma",      date: new Date().toISOString().slice(0,10), lat: -1.6800, lng: 29.2200, countryIso2: "CD", eventType: "Insurgency", fatalities: 0, notes: "North Kivu — M23 rebel offensive, Goma area instability.", sourceUrl: "", source: "baseline" },
+  {
+    id: "base-cd-goma", date: new Date().toISOString().slice(0,10),
+    lat: -1.6800, lng: 29.2200, countryIso2: "CD", eventType: "Insurgency", fatalities: 0,
+    notes: "North Kivu — the M23 rebel group, backed by Rwanda according to UN Group of Experts reports, seized the major city of Goma in early 2025 after years of advance in eastern DRC. Goma is a critical hub for the export of coltan, gold, cassiterite, and wolframite — minerals essential for electronics and EV batteries. The broader eastern DRC conflict has displaced over 7 million people, making it one of the world's largest displacement crises.",
+    sourceUrl: "", source: "baseline",
+  },
 
-  // Sahel — Mali / Burkina Faso / Niger
-  { id: "base-ml-mopti",     date: new Date().toISOString().slice(0,10), lat: 14.5,    lng: -4.2,    countryIso2: "ML", eventType: "Insurgency", fatalities: 0, notes: "Central Mali — JNIM and ISGS jihadist activity.", sourceUrl: "", source: "baseline" },
-  { id: "base-bf-east",      date: new Date().toISOString().slice(0,10), lat: 12.07,   lng: 0.36,    countryIso2: "BF", eventType: "Insurgency", fatalities: 0, notes: "Eastern Burkina Faso — armed group attacks on civilians and military.", sourceUrl: "", source: "baseline" },
+  // Sahel — Mali / Burkina Faso
+  {
+    id: "base-ml-mopti", date: new Date().toISOString().slice(0,10),
+    lat: 14.5, lng: -4.2, countryIso2: "ML", eventType: "Insurgency", fatalities: 0,
+    notes: "Central Mali — JNIM (al-Qaeda affiliate) and ISGS (Islamic State) jihadist groups control extensive rural territory following the withdrawal of French Barkhane forces in 2022. Mali's military junta invited Russian Africa Corps (formerly Wagner) as a replacement, but violence has escalated. Gold mining operations, which represent roughly 75% of Mali's export revenues, have been repeatedly disrupted by attacks on transport corridors.",
+    sourceUrl: "", source: "baseline",
+  },
+  {
+    id: "base-bf-east", date: new Date().toISOString().slice(0,10),
+    lat: 12.07, lng: 0.36, countryIso2: "BF", eventType: "Insurgency", fatalities: 0,
+    notes: "Eastern Burkina Faso — armed jihadist groups affiliated with JNIM and ISGS control an estimated 40% of national territory as of 2024, cutting off major towns including Djibo from the capital. Over 2 million people have been internally displaced, with famine conditions emerging in besieged areas. The military junta has expelled French forces and Western NGOs while relying on Russian Africa Corps, limiting independent humanitarian access.",
+    sourceUrl: "", source: "baseline",
+  },
 
   // Haiti — gang violence
-  { id: "base-ht-pap",       date: new Date().toISOString().slice(0,10), lat: 18.5944, lng: -72.3074, countryIso2: "HT", eventType: "Gang violence", fatalities: 0, notes: "Port-au-Prince — coalition of gangs controls majority of capital.", sourceUrl: "", source: "baseline" },
+  {
+    id: "base-ht-pap", date: new Date().toISOString().slice(0,10),
+    lat: 18.5944, lng: -72.3074, countryIso2: "HT", eventType: "Gang violence", fatalities: 0,
+    notes: "Port-au-Prince — the Viv Ansanm gang coalition controls approximately 80% of the capital, having seized the main port, fuel depots, and government buildings in a major offensive in early 2024 that forced Prime Minister Ariel Henry to resign. A Kenya-led Multinational Security Support (MSS) mission deployed in 2024 but faces severe resource constraints. The near-total collapse of state authority has devastated Haiti's agricultural and manufacturing export sectors.",
+    sourceUrl: "", source: "baseline",
+  },
 
-  // Syria — residual conflict
-  { id: "base-sy-idlib",     date: new Date().toISOString().slice(0,10), lat: 35.93,   lng: 36.63,   countryIso2: "SY", eventType: "Active conflict zone", fatalities: 0, notes: "Idlib — last major rebel-held enclave, regular airstrikes.", sourceUrl: "", source: "baseline" },
+  // Syria — post-Assad instability
+  {
+    id: "base-sy-idlib", date: new Date().toISOString().slice(0,10),
+    lat: 35.93, lng: 36.63, countryIso2: "SY", eventType: "Active conflict zone", fatalities: 0,
+    notes: "Syria — the Assad regime collapsed in December 2024 following a rapid HTS-led offensive that swept from Aleppo to Damascus in under two weeks. Hayat Tahrir al-Sham (HTS) and allied factions now govern most of the country, though rival armed groups contest northeastern and southeastern areas. Syria's oil and gas infrastructure, largely in Kurdish-held territory, remains a source of tensions between the new government and the SDF.",
+    sourceUrl: "", source: "baseline",
+  },
 
   // Somalia — Al-Shabaab
-  { id: "base-so-mogadishu", date: new Date().toISOString().slice(0,10), lat: 2.0469,  lng: 45.3182, countryIso2: "SO", eventType: "Insurgency", fatalities: 0, notes: "Somalia — Al-Shabaab insurgency, ATMIS transition.", sourceUrl: "", source: "baseline" },
+  {
+    id: "base-so-mogadishu", date: new Date().toISOString().slice(0,10),
+    lat: 2.0469, lng: 45.3182, countryIso2: "SO", eventType: "Insurgency", fatalities: 0,
+    notes: "Somalia — Al-Shabaab controls significant rural territory in south-central Somalia and continues to conduct large-scale attacks on government, AU mission forces, and civilian infrastructure in Mogadishu and beyond. The African Union Transition Mission (ATMIS) has been gradually handing security responsibilities to Somali National Forces ahead of its 2024 drawdown, a transition that Al-Shabaab is actively trying to exploit. The group's control over key road networks and agricultural regions disrupts food security and trade.",
+    sourceUrl: "", source: "baseline",
+  },
 
   // Mexico — cartel violence hotspot
-  { id: "base-mx-sinaloa",   date: new Date().toISOString().slice(0,10), lat: 25.0,    lng: -107.3,  countryIso2: "MX", eventType: "Cartel violence", fatalities: 0, notes: "Sinaloa — Sinaloa Cartel internal split, escalating violence.", sourceUrl: "", source: "baseline" },
+  {
+    id: "base-mx-sinaloa", date: new Date().toISOString().slice(0,10),
+    lat: 25.0, lng: -107.3, countryIso2: "MX", eventType: "Cartel violence", fatalities: 0,
+    notes: "Sinaloa — a violent internal war erupted within the Sinaloa Cartel in 2024 following the arrest of co-founder Ismael 'El Mayo' Zambada in the US, splitting the organisation between factions loyal to Zambada and those backing the sons of Joaquín 'El Chapo' Guzmán. Hundreds have been killed in fighting concentrated around Culiacán, Badiraguato, and border crossings. The violence has disrupted agricultural exports and logistics in a region that accounts for roughly 23% of global silver production.",
+    sourceUrl: "", source: "baseline",
+  },
 ];
 
 function fetchBaselineConflicts(): ConflictEvent[] {
