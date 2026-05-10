@@ -75,13 +75,15 @@ function extractCountry(place: string): string {
   return USGS_PLACE_SUFFIX_MAP[afterComma] ?? '';
 }
 
+const EQ_STALE = import.meta.env.DEV ? 10_000 : 10 * 60_000;
+
 export function useEarthquakes(enabled: boolean) {
   return useQuery<EarthquakeEvent[]>({
     queryKey:             ['usgs-earthquakes'],
     enabled,
-    staleTime:            10 * 60_000,
-    gcTime:               20 * 60_000,
-    refetchInterval:      enabled ? 10 * 60_000 : false,
+    staleTime:            EQ_STALE,
+    gcTime:               EQ_STALE * 2,
+    refetchInterval:      enabled ? EQ_STALE : false,
     refetchOnWindowFocus: false,
     queryFn: async () => {
       const url =

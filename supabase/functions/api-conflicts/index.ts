@@ -477,7 +477,7 @@ serve(async (req) => {
         sources,
         timestamp: Date.now(),
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } },
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
     return new Response(

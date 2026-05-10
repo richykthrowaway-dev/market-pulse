@@ -32,12 +32,17 @@ export interface ConflictEventsResponse {
   timestamp: number;
 }
 
+// In dev, expire the cache after 10 seconds so edge-function changes are
+// visible immediately on the next render without a hard refresh.
+// In production, 15 minutes matches GDELT's update cadence.
+const STALE = import.meta.env.DEV ? 10_000 : 15 * 60_000;
+
 export function useConflictEvents() {
   return useQuery<ConflictEventsResponse>({
     queryKey:             ['conflict-events'],
-    staleTime:            15 * 60_000,
-    gcTime:               30 * 60_000,
-    refetchInterval:      15 * 60_000,
+    staleTime:            STALE,
+    gcTime:               STALE * 2,
+    refetchInterval:      STALE,
     refetchOnWindowFocus: false,
     queryFn: async () => {
       const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID    as string)?.trim();

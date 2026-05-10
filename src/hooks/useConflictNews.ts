@@ -28,11 +28,13 @@ export function useConflictNews(event: ConflictEvent | null) {
       ? COUNTRY_META[event.countryIso2]?.name ?? event.countryIso2
       : null) ?? '';
 
+  const newsStale = import.meta.env.DEV ? 10_000 : 30 * 60_000;
+
   return useQuery<ConflictNewsArticle[]>({
     queryKey:             ['conflict-news', event?.countryIso2],
     enabled:              !!event && !!countryName,
-    staleTime:            30 * 60_000,
-    gcTime:               60 * 60_000,
+    staleTime:            newsStale,
+    gcTime:               newsStale * 2,
     refetchOnWindowFocus: false,
     queryFn: async () => {
       const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID    as string)?.trim();
