@@ -8,6 +8,7 @@ import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeD
 import { NODE_COLOR, ROUTE_COLOR, type TradeNode, type TradeRoute } from "@/data/tradeInfrastructure";
 import { smoothRouteCoords } from "@/data/tradeInfrastructure/smoothing";
 import type { Vessel } from "@/hooks/useAISStream";
+import type { ConflictEvent } from "@/hooks/useConflictEvents";
 import type { Flight } from "@/hooks/useOpenSkyFlights";
 
 // ── Earth textures (NASA Blue Marble + topology + clouds) ──────────────
@@ -73,6 +74,14 @@ interface GlobeViewProps {
    * vessels — altitude 1.010 keeps flights visually above ship layer (1.008).
    */
   liveFlights?:           Flight[];
+  /**
+   * Geocoded conflict / unrest events (ACLED + GDELT).  Rendered as pulsing
+   * rings on the globe via react-globe.gl's `ringsData` slot.  Color & size
+   * scale with fatalities so high-casualty events stand out.
+   */
+  conflictEvents?:        ConflictEvent[];
+  /** Click handler for a conflict event marker — receives the event. */
+  onConflictEventClick?:  (e: ConflictEvent) => void;
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -177,6 +186,36 @@ function perfColor(changePct: number): string {
   return `rgba(${r}, ${g}, 60, 0.45)`;
 }
 
+// ── Conflict-event ring accessors ────────────────────────────────────────
+// Animated ring markers for ACLED/GDELT events.  Color saturation + ring
+// max radius both scale with fatalities so deadlier events draw the eye.
+const RING_LAT  = (d: object) => (d as ConflictEvent).lat;
+const RING_LNG  = (d: object) => (d as ConflictEvent).lng;
+const RING_ALT  = () => 0.012;
+const EMPTY_RINGS: ConflictEvent[] = [];
+
+/** Color callback — orange→red gradient by fatality count. */
+function ringColor(d: object) {
+  const e = d as ConflictEvent;
+  // Two-tone pulse: outer ring fades out, inner ring stays bright.
+  // react-globe.gl calls this with `t` in [0,1] for animation.
+  return (t: number) => {
+    const alpha = 1 - t;          // ring fades as it propagates outward
+    const f = Math.min(50, e.fatalities);
+    // 0 fatalities → orange (#f97316); 50+ → bright red (#ef4444)
+    const r = 249;
+    const g = Math.round(115 - (f / 50) * 47);   // 115 → 68
+    const b = Math.round(22  + (f / 50) * 46);   // 22  → 68
+    return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
+  };
+}
+
+function ringMaxRadius(d: object) {
+  const e = d as ConflictEvent;
+  // Bigger pulse for higher-casualty events.
+  return Math.min(3, 0.7 + Math.log10(1 + e.fatalities) * 0.7);
+}
+
 // Module-level GeoJSON cache — survives component remounts / HMR
 let geoJsonCache: Feature[] | null = null;
 let geoJsonPromise: Promise<Feature[]> | null = null;
@@ -219,6 +258,8 @@ export default function GlobeView({
   onTradeNodeClick,
   liveVessels,
   liveFlights,
+  conflictEvents,
+  onConflictEventClick,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -1053,6 +1094,19 @@ export default function GlobeView({
         pathDashGap={0}
         pathDashAnimateTime={0}
         pathTransitionDuration={300}
+        // ── Conflict-event ring layer ────────────────────────────────────
+        // Pulsing rings via react-globe.gl's `ringsData` slot.  Color +
+        // size scale with fatalities; click handler passes the event up so
+        // the parent can show affected commodities.
+        ringsData={conflictEvents ?? EMPTY_RINGS}
+        ringLat={RING_LAT}
+        ringLng={RING_LNG}
+        ringAltitude={RING_ALT}
+        ringColor={ringColor}
+        ringMaxRadius={ringMaxRadius}
+        ringPropagationSpeed={1.2}
+        ringRepeatPeriod={1800}
+        onRingClick={onConflictEventClick ? (d: object) => onConflictEventClick(d as ConflictEvent) : undefined}
       />
     </div>
   );

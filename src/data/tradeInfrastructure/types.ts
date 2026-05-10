@@ -20,6 +20,7 @@ export type LayerKey =
   | 'inlandHubs'
   | 'liveVessels'        // future
   | 'liveFlights'        // future
+  | 'conflictEvents'     // ACLED + GDELT geocoded events
   | 'connectivity'       // future overlay
   | 'risk';              // future overlay
 

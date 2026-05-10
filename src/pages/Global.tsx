@@ -9,6 +9,7 @@ const MapView  = lazy(() => import("@/components/global/MapView"));
 import CountryPanel from "@/components/global/CountryPanel";
 import GlobalSummary from "@/components/global/GlobalSummary";
 import ExchangeDetailDialog from "@/components/global/ExchangeDetailDialog";
+import { ConflictEventDialog } from "@/components/global/trade/ConflictEventDialog";
 import type { ExchangeInfo } from "@/data/exchangeData";
 import {
   getVisibleNodes, getVisibleRoutes,
@@ -16,6 +17,7 @@ import {
 } from "@/data/tradeInfrastructure";
 import { useAISStream } from "@/hooks/useAISStream";
 import { useOpenSkyFlights } from "@/hooks/useOpenSkyFlights";
+import { useConflictEvents, type ConflictEvent } from "@/hooks/useConflictEvents";
 
 // ── Realistic space background — NASA Tycho-2 Skymap ────────────────────
 // 4096×2048 photographic-quality star map covering the entire celestial
@@ -239,6 +241,21 @@ const Global = () => {
     flightCount,
   } = useOpenSkyFlights(liveFlightsEnabled);
 
+  // ── Conflict events feed (ACLED + GDELT, gated on layer toggle) ─────
+  // Same gating pattern as the AIS/flight feeds: only fetch when the
+  // user has actively turned the layer on, so we don't burn the edge
+  // function or external API quotas in the background.
+  const conflictEventsEnabled =
+    tradeTabActive && tradeActiveLayers.has('conflictEvents');
+  const conflictEventsQuery = useConflictEvents();
+  const conflictEvents = conflictEventsEnabled
+    ? conflictEventsQuery.data?.events
+    : undefined;
+  const [selectedEvent, setSelectedEvent] = useState<ConflictEvent | null>(null);
+  const onConflictEventClick = useCallback((e: ConflictEvent) => {
+    setSelectedEvent(e);
+  }, []);
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Header Bar */}
@@ -397,6 +414,8 @@ const Global = () => {
                   onTradeNodeClick={handleTradeNodeClick}
                   liveVessels={liveVesselsEnabled ? liveVessels : undefined}
                   liveFlights={liveFlightsEnabled ? liveFlights : undefined}
+                  conflictEvents={conflictEvents}
+                  onConflictEventClick={onConflictEventClick}
                 />
               )}
             </Suspense>
@@ -404,6 +423,17 @@ const Global = () => {
 
           {/* Exchange detail card — anchored to bottom-center of globe area */}
           <ExchangeDetailDialog exchange={selectedExchange} onClose={handleExchangeClose} />
+
+          {/* Conflict event detail — shows affected commodities + alert seed */}
+          <ConflictEventDialog
+            event={selectedEvent}
+            onClose={() => setSelectedEvent(null)}
+            onSetAlert={(commodityId) => {
+              // Placeholder — alerts subscription system will hook in here.
+              // For now just log so we have visibility into the user intent.
+              console.log('[alerts] User wants alerts for commodity:', commodityId);
+            }}
+          />
         </div>
 
         {/* Right — Panel */}
