@@ -32,10 +32,10 @@ export interface ConflictEventsResponse {
   timestamp: number;
 }
 
-// In dev, expire the cache after 10 seconds so edge-function changes are
-// visible immediately on the next render without a hard refresh.
-// In production, 15 minutes matches GDELT's update cadence.
-const STALE = import.meta.env.DEV ? 10_000 : 15 * 60_000;
+// staleTime matches the server-side module cache TTL in api-conflicts (5 min).
+// The edge function serves all users from a single in-process cache per
+// Deno isolate, so the client only re-fetches when the server data is fresh.
+const STALE = 5 * 60_000; // 5 min — matches CONFLICTS_TTL in api-conflicts
 
 export function useConflictEvents() {
   return useQuery<ConflictEventsResponse>({

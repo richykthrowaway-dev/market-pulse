@@ -28,7 +28,10 @@ export function useConflictNews(event: ConflictEvent | null) {
       ? COUNTRY_META[event.countryIso2]?.name ?? event.countryIso2
       : null) ?? '';
 
-  const newsStale = import.meta.env.DEV ? 10_000 : 30 * 60_000;
+  // staleTime matches the server-side module cache TTL in api-conflict-news.
+  // The edge function caches per-country for 30 min — no point refetching
+  // the client more often than the server will serve fresh data.
+  const newsStale = 30 * 60_000; // 30 min — matches NEWS_TTL in api-conflict-news
 
   return useQuery<ConflictNewsArticle[]>({
     queryKey:             ['conflict-news', event?.countryIso2],

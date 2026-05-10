@@ -75,7 +75,11 @@ function extractCountry(place: string): string {
   return USGS_PLACE_SUFFIX_MAP[afterComma] ?? '';
 }
 
-const EQ_STALE = import.meta.env.DEV ? 10_000 : 10 * 60_000;
+// USGS updates their feed every 5 minutes; 10 min staleTime gives a
+// comfortable buffer without hammering the public government endpoint.
+// No server-side cache here — USGS is fetched directly from the client,
+// and at ~300–800 events/response it's a single public CDN-backed request.
+const EQ_STALE = 10 * 60_000; // 10 min
 
 export function useEarthquakes(enabled: boolean) {
   return useQuery<EarthquakeEvent[]>({

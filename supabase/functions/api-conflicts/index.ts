@@ -430,9 +430,26 @@ function iso3ToIso2(iso3: string): string | null {
   return m[iso3] ?? null;
 }
 
+// ── Module-level server cache ─────────────────────────────────────────────
+// Deno isolates are warm across requests; this cache persists in-process.
+// A new deploy spins up a fresh isolate → automatic cache invalidation.
+// TTL: 5 minutes — matches GDELT's ~15-min update cadence, fast enough for
+// near-real-time conflict data without hammering upstream APIs on every user.
+const CONFLICTS_TTL = 5 * 60_000; // 5 min in ms
+let conflictsCache: { payload: string; expires: number } | null = null;
+
 // ── Main handler ──────────────────────────────────────────────────────────
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  // Serve from server-side cache if still fresh.
+  // This means 1000 simultaneous users → 1 upstream call per 5 minutes,
+  // not 1000.  Critical for rate-limited APIs like ACLED.
+  if (conflictsCache && Date.now() < conflictsCache.expires) {
+    return new Response(conflictsCache.payload, {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     // Run both live fetches in parallel; tolerate partial failure.
@@ -471,15 +488,20 @@ serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        events: dedup,
-        sources,
-        timestamp: Date.now(),
-      }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    const payload = JSON.stringify({
+      events: dedup,
+      sources,
+      timestamp: Date.now(),
+    });
+
+    // Populate server cache so subsequent requests within TTL skip upstream.
+    conflictsCache = { payload, expires: Date.now() + CONFLICTS_TTL };
+
+    return new Response(payload, {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (err) {
+    // On error, do NOT cache — next request should retry upstream.
     return new Response(
       JSON.stringify({
         events: [],

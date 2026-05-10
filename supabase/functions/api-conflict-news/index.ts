@@ -20,6 +20,14 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// ── Module-level per-country cache ────────────────────────────────────────
+// Key = lowercase country name.  TTL: 30 minutes — news doesn't change that
+// fast, and Google News RSS has no published rate limit but aggressive polling
+// risks soft-blocking.  Same isolate-lifetime guarantee as api-conflicts:
+// a new Supabase deploy = new isolate = all cache entries automatically evict.
+const NEWS_TTL = 30 * 60_000; // 30 min in ms
+const newsCache = new Map<string, { payload: string; expires: number }>();
+
 function jsonResp(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -82,6 +90,18 @@ serve(async (req: Request) => {
 
   if (!country) return jsonResp({ articles: [] });
 
+  const cacheKey = country.toLowerCase();
+
+  // Serve from server-side cache if this country was recently fetched.
+  // Up to N users opening cards for the same conflict region all share one
+  // upstream RSS call — news doesn't change faster than our 30-min TTL.
+  const cached = newsCache.get(cacheKey);
+  if (cached && Date.now() < cached.expires) {
+    return new Response(cached.payload, {
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
+  }
+
   try {
     // Google News RSS — English, US edition
     const q = encodeURIComponent(`${country} conflict`);
@@ -101,8 +121,17 @@ serve(async (req: Request) => {
     const xml      = await res.text();
     const articles = parseRss(xml);
 
-    return jsonResp({ articles });
+    const payload = JSON.stringify({ articles });
+
+    // Cache the result — subsequent requests for the same country within TTL
+    // skip the upstream RSS fetch entirely.
+    newsCache.set(cacheKey, { payload, expires: Date.now() + NEWS_TTL });
+
+    return new Response(payload, {
+      headers: { ...CORS, "Content-Type": "application/json" },
+    });
   } catch (err) {
+    // Do NOT cache errors — let next request retry upstream.
     console.error("api-conflict-news error:", err);
     return jsonResp({ articles: [] });
   }
