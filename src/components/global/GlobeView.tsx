@@ -235,15 +235,53 @@ function ringMaxRadius(d: object) {
   const rd = d as RingDatum;
   if (rd.kind === 'conflict') {
     const e = rd.event as ConflictEvent;
-    // Baseline events (fatalities=0) should still be clearly visible —
-    // bumped minimum from 0.7 to 1.8.  Live ACLED data with fatalities
-    // grows from there to a max of 4.
-    return Math.min(4, 1.8 + Math.log10(1 + e.fatalities) * 0.7);
+    // Baseline (0 fatalities) → 2.5; high-fatality ACLED grows to 4.
+    return Math.min(4, 2.5 + Math.log10(1 + e.fatalities) * 0.5);
   } else {
     const e = rd.event as EarthquakeEvent;
-    // M2.5 → 0.5; M5 → 1.4; M7 → 2.5; M8+ → ~4 (capped)
-    return Math.min(4, 0.3 * Math.pow(10, (e.magnitude - 2.5) * 0.28));
+    // M2.5 → 0.7; M5 → 1.6; M7 → 2.7; M8+ → ~4 (capped)
+    return Math.min(4, 0.4 * Math.pow(10, (e.magnitude - 2.5) * 0.28));
   }
+}
+
+// ── Solid clickable marker (objectsData layer) ───────────────────────────
+// Rings alone have a tiny hit area (only the animated outline is click-
+// testable).  We pair each ring with a solid sphere mesh at the same
+// coordinates.  The sphere is the actual click target — generous radius,
+// always visible, with a glow material so it pops against country fills.
+
+const OBJ_LAT = (d: object) => (d as RingDatum).lat;
+const OBJ_LNG = (d: object) => (d as RingDatum).lng;
+const OBJ_ALT = () => 0.05;
+
+function makeEventMarker(d: object): THREE.Object3D {
+  const rd = d as RingDatum;
+  const isConflict = rd.kind === 'conflict';
+
+  // Inner solid sphere — bright, fully opaque core
+  const innerGeom = new THREE.SphereGeometry(0.6, 16, 12);
+  const innerMat  = new THREE.MeshBasicMaterial({
+    color:       isConflict ? 0xff8838 : 0x60d4ff,
+    transparent: true,
+    opacity:     0.95,
+    depthWrite:  false,
+  });
+  const inner = new THREE.Mesh(innerGeom, innerMat);
+
+  // Outer halo — larger semi-transparent sphere for glow + bigger hit area
+  const haloGeom = new THREE.SphereGeometry(1.2, 16, 12);
+  const haloMat  = new THREE.MeshBasicMaterial({
+    color:       isConflict ? 0xf97316 : 0x38bdf8,
+    transparent: true,
+    opacity:     0.35,
+    depthWrite:  false,
+  });
+  const halo = new THREE.Mesh(haloGeom, haloMat);
+
+  const group = new THREE.Group();
+  group.add(halo);
+  group.add(inner);
+  return group;
 }
 
 // Module-level GeoJSON cache — survives component remounts / HMR
@@ -1066,13 +1104,6 @@ export default function GlobeView({
       for (const e of earthquakeEvents)
         out.push({ kind: 'earthquake', lat: e.lat, lng: e.lng, event: e });
     }
-    // eslint-disable-next-line no-console
-    console.log('[GlobeView] mergedRings:', {
-      conflictCount:   conflictEvents?.length ?? 'undef',
-      earthquakeCount: earthquakeEvents?.length ?? 'undef',
-      total:           out.length,
-      sample:          out[0],
-    });
     return out;
   }, [conflictEvents, earthquakeEvents]);
 
@@ -1160,6 +1191,23 @@ export default function GlobeView({
         ringPropagationSpeed={1.2}
         ringRepeatPeriod={1800}
         onRingClick={(d: object) => {
+          const rd = d as RingDatum;
+          if (rd.kind === 'conflict' && onConflictEventClick) {
+            onConflictEventClick(rd.event as ConflictEvent);
+          } else if (rd.kind === 'earthquake' && onEarthquakeEventClick) {
+            onEarthquakeEventClick(rd.event as EarthquakeEvent);
+          }
+        }}
+        // ── Solid clickable markers (objectsData) ────────────────────────
+        // Pairs each ring with a 3D sphere at the same coordinates — gives
+        // a generous click hit area and ensures markers stay visible even
+        // when a ring is mid-fade in its animation cycle.
+        objectsData={mergedRings.length > 0 ? mergedRings : EMPTY_RINGS}
+        objectLat={OBJ_LAT}
+        objectLng={OBJ_LNG}
+        objectAltitude={OBJ_ALT}
+        objectThreeObject={makeEventMarker}
+        onObjectClick={(d: object) => {
           const rd = d as RingDatum;
           if (rd.kind === 'conflict' && onConflictEventClick) {
             onConflictEventClick(rd.event as ConflictEvent);
