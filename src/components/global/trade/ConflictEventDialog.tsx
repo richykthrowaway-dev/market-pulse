@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { AlertTriangle, ExternalLink, X, Bell, Skull } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { AlertTriangle, ExternalLink, X, Bell, Skull, GripHorizontal } from 'lucide-react';
 import type { ConflictEvent } from '@/hooks/useConflictEvents';
 import { getMaterialAffectedCommodities } from '@/lib/conflicts/affectedCommodities';
 import { COUNTRY_META } from '@/data/countryMeta';
@@ -11,6 +11,9 @@ import { COUNTRY_META } from '@/data/countryMeta';
  * could plausibly impact, derived from the event's country vs. each
  * commodity's top producers list.  Each row has a placeholder "Set Alert"
  * button — the seed UI for the alerts/notifications system.
+ *
+ * The card is draggable: grab the grip bar at the top to reposition.
+ * Position resets to the default bottom-left anchor when a new event opens.
  */
 
 interface Props {
@@ -20,13 +23,49 @@ interface Props {
 }
 
 export function ConflictEventDialog({ event, onClose, onSetAlert }: Props) {
-  const affected = useMemo(
-    () =>
-      event
-        ? getMaterialAffectedCommodities(event.countryIso2, { minShare: 3, maxRank: 5 })
-        : [],
-    [event],
-  );
+  const affected = useRef<ReturnType<typeof getMaterialAffectedCommodities>>([]);
+  affected.current = event
+    ? getMaterialAffectedCommodities(event.countryIso2, { minShare: 3, maxRank: 5 })
+    : [];
+
+  // pos === null  →  CSS anchor (bottom-6 left-6)
+  // pos !== null  →  dragged, inline style takes over
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const cardRef  = useRef<HTMLDivElement>(null);
+  const dragRef  = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+
+  // Reset position whenever a new event is opened
+  useEffect(() => { setPos(null); }, [event]);
+
+  function onDragHandlePointerDown(e: React.PointerEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      origX:  rect.left,
+      origY:  rect.top,
+    };
+    // Snap from CSS-anchor to absolute coords so inline style works immediately
+    setPos({ x: rect.left, y: rect.top });
+
+    function onMove(ev: PointerEvent) {
+      if (!dragRef.current) return;
+      setPos({
+        x: dragRef.current.origX + (ev.clientX - dragRef.current.startX),
+        y: dragRef.current.origY + (ev.clientY - dragRef.current.startY),
+      });
+    }
+    function onUp() {
+      dragRef.current = null;
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup',   onUp);
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup',   onUp);
+  }
 
   if (!event) return null;
 
@@ -35,18 +74,24 @@ export function ConflictEventDialog({ event, onClose, onSetAlert }: Props) {
     year: 'numeric', month: 'short', day: 'numeric',
   });
 
-  // Non-modal floating card: anchored to the bottom-left of the globe area,
-  // no backdrop, no blur — user can still drag/zoom the globe while it's open.
   return (
     <div
-      className="fixed bottom-6 left-6 z-[400] w-[400px] max-h-[78vh] overflow-y-auto bg-card/95 backdrop-blur-md border border-border rounded-lg shadow-2xl pointer-events-auto"
-      // Stop pointer events on the card itself from propagating up to the
-      // globe's drag/wheel handlers, but the rest of the screen remains free.
+      ref={cardRef}
+      className={`fixed z-[400] w-[400px] max-h-[78vh] overflow-y-auto bg-card/95 backdrop-blur-md border border-border rounded-lg shadow-2xl pointer-events-auto select-none${pos ? '' : ' bottom-6 left-6'}`}
+      style={pos ? { left: pos.x, top: pos.y } : undefined}
       onPointerDown={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
+        {/* ── Drag handle ────────────────────────────────────── */}
+        <div
+          className="flex items-center justify-center h-5 cursor-grab active:cursor-grabbing rounded-t-lg hover:bg-accent/40 transition-colors"
+          onPointerDown={onDragHandlePointerDown}
+        >
+          <GripHorizontal className="w-4 h-4 text-muted-foreground/40" />
+        </div>
+
         {/* ── Header ─────────────────────────────────────────────── */}
-        <div className="flex items-start gap-3 p-4 border-b border-border">
+        <div className="flex items-start gap-3 px-4 pb-4 border-b border-border">
           <div className="shrink-0 w-9 h-9 rounded-full bg-orange-500/15 flex items-center justify-center">
             <AlertTriangle className="w-5 h-5 text-orange-400" />
           </div>
@@ -91,7 +136,7 @@ export function ConflictEventDialog({ event, onClose, onSetAlert }: Props) {
             Could affect supply of
           </div>
 
-          {affected.length === 0 ? (
+          {affected.current.length === 0 ? (
             <div className="text-xs italic text-muted-foreground">
               {event.countryIso2
                 ? `${countryName} is not a top-5 producer of any tracked commodity.`
@@ -99,7 +144,7 @@ export function ConflictEventDialog({ event, onClose, onSetAlert }: Props) {
             </div>
           ) : (
             <ul className="space-y-1.5">
-              {affected.map(({ commodity, share, rank }) => (
+              {affected.current.map(({ commodity, share, rank }) => (
                 <li
                   key={commodity.id}
                   className="flex items-center gap-2 text-xs py-1 px-2 rounded-md hover:bg-accent/50 transition-colors group"

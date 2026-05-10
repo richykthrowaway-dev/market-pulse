@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { ExternalLink, X, Bell, Waves, AlertTriangle } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import { ExternalLink, X, Bell, Waves, AlertTriangle, GripHorizontal } from 'lucide-react';
 import type { EarthquakeEvent } from '@/hooks/useEarthquakes';
 import { getMaterialAffectedCommodities } from '@/lib/conflicts/affectedCommodities';
 import { COUNTRY_META } from '@/data/countryMeta';
@@ -10,6 +10,9 @@ import { COUNTRY_META } from '@/data/countryMeta';
  * Shows magnitude, depth, place description, tsunami flag, and the same
  * "Could affect supply of" panel used by ConflictEventDialog — derived
  * from the event's country vs. each commodity's top-producer list.
+ *
+ * The card is draggable: grab the grip bar at the top to reposition.
+ * Position resets to the default bottom-left anchor when a new event opens.
  */
 
 interface Props {
@@ -28,13 +31,49 @@ function magMeta(mag: number): { label: string; color: string; bg: string } {
 }
 
 export function EarthquakeDialog({ event, onClose, onSetAlert }: Props) {
-  const affected = useMemo(
-    () =>
-      event?.countryIso2
-        ? getMaterialAffectedCommodities(event.countryIso2, { minShare: 3, maxRank: 5 })
-        : [],
-    [event],
-  );
+  const affectedRef = useRef<ReturnType<typeof getMaterialAffectedCommodities>>([]);
+  affectedRef.current = event?.countryIso2
+    ? getMaterialAffectedCommodities(event.countryIso2, { minShare: 3, maxRank: 5 })
+    : [];
+
+  // pos === null  →  CSS anchor (bottom-6 left-6)
+  // pos !== null  →  dragged, inline style takes over
+  const [pos, setPos] = useState<{ x: number; y: number } | null>(null);
+  const cardRef  = useRef<HTMLDivElement>(null);
+  const dragRef  = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+
+  // Reset position whenever a new event is opened
+  useEffect(() => { setPos(null); }, [event]);
+
+  function onDragHandlePointerDown(e: React.PointerEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    dragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      origX:  rect.left,
+      origY:  rect.top,
+    };
+    // Snap from CSS-anchor to absolute coords so inline style works immediately
+    setPos({ x: rect.left, y: rect.top });
+
+    function onMove(ev: PointerEvent) {
+      if (!dragRef.current) return;
+      setPos({
+        x: dragRef.current.origX + (ev.clientX - dragRef.current.startX),
+        y: dragRef.current.origY + (ev.clientY - dragRef.current.startY),
+      });
+    }
+    function onUp() {
+      dragRef.current = null;
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup',   onUp);
+    }
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup',   onUp);
+  }
 
   if (!event) return null;
 
@@ -47,16 +86,26 @@ export function EarthquakeDialog({ event, onClose, onSetAlert }: Props) {
     hour: '2-digit', minute: '2-digit', timeZoneName: 'short',
   });
 
-  // Non-modal floating card: anchored to the bottom-left of the globe area,
-  // no backdrop, no blur — user can still drag/zoom the globe while it's open.
+  const affected = affectedRef.current;
+
   return (
     <div
-      className="fixed bottom-6 left-6 z-[400] w-[400px] max-h-[78vh] overflow-y-auto bg-card/95 backdrop-blur-md border border-border rounded-lg shadow-2xl pointer-events-auto"
+      ref={cardRef}
+      className={`fixed z-[400] w-[400px] max-h-[78vh] overflow-y-auto bg-card/95 backdrop-blur-md border border-border rounded-lg shadow-2xl pointer-events-auto select-none${pos ? '' : ' bottom-6 left-6'}`}
+      style={pos ? { left: pos.x, top: pos.y } : undefined}
       onPointerDown={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
     >
+        {/* ── Drag handle ────────────────────────────────────── */}
+        <div
+          className="flex items-center justify-center h-5 cursor-grab active:cursor-grabbing rounded-t-lg hover:bg-accent/40 transition-colors"
+          onPointerDown={onDragHandlePointerDown}
+        >
+          <GripHorizontal className="w-4 h-4 text-muted-foreground/40" />
+        </div>
+
         {/* ── Header ─────────────────────────────────────────────── */}
-        <div className="flex items-start gap-3 p-4 border-b border-border">
+        <div className="flex items-start gap-3 px-4 pb-4 border-b border-border">
           <div className={`shrink-0 w-9 h-9 rounded-full ${magBg} flex items-center justify-center`}>
             {/* Magnitude badge */}
             <span className={`text-xs font-bold tabular-nums ${magColor}`}>
