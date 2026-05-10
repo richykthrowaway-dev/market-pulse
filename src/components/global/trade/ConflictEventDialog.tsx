@@ -35,15 +35,16 @@ export function ConflictEventDialog({ event, onClose, onSetAlert }: Props) {
     year: 'numeric', month: 'short', day: 'numeric',
   });
 
+  // Non-modal floating card: anchored to the bottom-left of the globe area,
+  // no backdrop, no blur — user can still drag/zoom the globe while it's open.
   return (
     <div
-      className="fixed inset-0 z-[400] flex items-center justify-center bg-black/60 backdrop-blur-sm"
-      onClick={onClose}
+      className="fixed bottom-6 left-6 z-[400] w-[400px] max-h-[78vh] overflow-y-auto bg-card/95 backdrop-blur-md border border-border rounded-lg shadow-2xl pointer-events-auto"
+      // Stop pointer events on the card itself from propagating up to the
+      // globe's drag/wheel handlers, but the rest of the screen remains free.
+      onPointerDown={(e) => e.stopPropagation()}
+      onWheel={(e) => e.stopPropagation()}
     >
-      <div
-        className="w-[420px] max-h-[80vh] overflow-y-auto bg-card border border-border rounded-lg shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
         {/* ── Header ─────────────────────────────────────────────── */}
         <div className="flex items-start gap-3 p-4 border-b border-border">
           <div className="shrink-0 w-9 h-9 rounded-full bg-orange-500/15 flex items-center justify-center">
@@ -144,6 +145,5 @@ export function ConflictEventDialog({ event, onClose, onSetAlert }: Props) {
           )}
         </div>
       </div>
-    </div>
   );
 }
