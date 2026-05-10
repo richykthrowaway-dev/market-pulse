@@ -10,6 +10,7 @@ import CountryPanel from "@/components/global/CountryPanel";
 import GlobalSummary from "@/components/global/GlobalSummary";
 import ExchangeDetailDialog from "@/components/global/ExchangeDetailDialog";
 import { ConflictEventDialog } from "@/components/global/trade/ConflictEventDialog";
+import { EarthquakeDialog } from "@/components/global/trade/EarthquakeDialog";
 import type { ExchangeInfo } from "@/data/exchangeData";
 import {
   getVisibleNodes, getVisibleRoutes,
@@ -18,6 +19,7 @@ import {
 import { useAISStream } from "@/hooks/useAISStream";
 import { useOpenSkyFlights } from "@/hooks/useOpenSkyFlights";
 import { useConflictEvents, type ConflictEvent } from "@/hooks/useConflictEvents";
+import { useEarthquakes, type EarthquakeEvent } from "@/hooks/useEarthquakes";
 
 // ── Realistic space background — NASA Tycho-2 Skymap ────────────────────
 // 4096×2048 photographic-quality star map covering the entire celestial
@@ -256,6 +258,18 @@ const Global = () => {
     setSelectedEvent(e);
   }, []);
 
+  // ── USGS earthquake feed (gated on layer toggle) ─────────────────────
+  const earthquakesEnabled =
+    tradeTabActive && tradeActiveLayers.has('earthquakes');
+  const earthquakesQuery = useEarthquakes(earthquakesEnabled);
+  const earthquakeEvents = earthquakesEnabled
+    ? earthquakesQuery.data
+    : undefined;
+  const [selectedEarthquake, setSelectedEarthquake] = useState<EarthquakeEvent | null>(null);
+  const onEarthquakeEventClick = useCallback((e: EarthquakeEvent) => {
+    setSelectedEarthquake(e);
+  }, []);
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Header Bar */}
@@ -416,6 +430,8 @@ const Global = () => {
                   liveFlights={liveFlightsEnabled ? liveFlights : undefined}
                   conflictEvents={conflictEvents}
                   onConflictEventClick={onConflictEventClick}
+                  earthquakeEvents={earthquakeEvents}
+                  onEarthquakeEventClick={onEarthquakeEventClick}
                 />
               )}
             </Suspense>
@@ -429,8 +445,15 @@ const Global = () => {
             event={selectedEvent}
             onClose={() => setSelectedEvent(null)}
             onSetAlert={(commodityId) => {
-              // Placeholder — alerts subscription system will hook in here.
-              // For now just log so we have visibility into the user intent.
+              console.log('[alerts] User wants alerts for commodity:', commodityId);
+            }}
+          />
+
+          {/* Earthquake detail — magnitude, depth, tsunami flag, affected supply chains */}
+          <EarthquakeDialog
+            event={selectedEarthquake}
+            onClose={() => setSelectedEarthquake(null)}
+            onSetAlert={(commodityId) => {
               console.log('[alerts] User wants alerts for commodity:', commodityId);
             }}
           />

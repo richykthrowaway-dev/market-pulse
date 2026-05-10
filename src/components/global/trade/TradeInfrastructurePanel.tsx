@@ -60,6 +60,7 @@ const LAYERS: LayerOption[] = [
   { key: 'liveVessels',    label: 'Live Vessels',     icon: Radio,  color: '#67e8f9', group: 'overlays', hint: 'Real-time AIS feed (aisstream.io) — every cargo / tanker reporting position right now.' },
   { key: 'liveFlights',    label: 'Live Flights',     icon: Plane,  color: '#a855f7', group: 'overlays', hint: 'Live aircraft via airplanes.live community ADS-B — coverage reflects volunteer receiver density (dense in N. America/Europe/Japan, sparse elsewhere).' },
   { key: 'conflictEvents', label: 'Conflict Events',  icon: AlertTriangle, color: '#f97316', group: 'overlays', hint: 'Geocoded events from ACLED (last 14d, fatalities ≥ 1) + GDELT (last 24h, armed-conflict theme). Click an event for affected commodities.' },
+  { key: 'earthquakes',    label: 'Earthquakes',      icon: ShieldAlert,  color: '#38bdf8', group: 'overlays', hint: 'USGS M2.5+ seismic events, past 7 days. Ring size scales with magnitude. Click for affected commodity supply chains.' },
 ];
 
 // ── Component ───────────────────────────────────────────────────────────────

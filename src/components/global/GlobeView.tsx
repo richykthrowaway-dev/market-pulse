@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Globe from "react-globe.gl";
 import type { GlobeMethods } from "react-globe.gl";
 import * as THREE from "three";
@@ -9,6 +9,7 @@ import { NODE_COLOR, ROUTE_COLOR, type TradeNode, type TradeRoute } from "@/data
 import { smoothRouteCoords } from "@/data/tradeInfrastructure/smoothing";
 import type { Vessel } from "@/hooks/useAISStream";
 import type { ConflictEvent } from "@/hooks/useConflictEvents";
+import type { EarthquakeEvent } from "@/hooks/useEarthquakes";
 import type { Flight } from "@/hooks/useOpenSkyFlights";
 
 // ── Earth textures (NASA Blue Marble + topology + clouds) ──────────────
@@ -82,6 +83,13 @@ interface GlobeViewProps {
   conflictEvents?:        ConflictEvent[];
   /** Click handler for a conflict event marker — receives the event. */
   onConflictEventClick?:  (e: ConflictEvent) => void;
+  /**
+   * USGS M2.5+ seismic events.  Rendered as teal pulsing rings — visually
+   * distinct from the orange/red conflict rings.  Ring size scales with
+   * magnitude (M2.5 → tiny, M7+ → large).
+   */
+  earthquakeEvents?:        EarthquakeEvent[];
+  onEarthquakeEventClick?:  (e: EarthquakeEvent) => void;
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -186,34 +194,49 @@ function perfColor(changePct: number): string {
   return `rgba(${r}, ${g}, 60, 0.45)`;
 }
 
-// ── Conflict-event ring accessors ────────────────────────────────────────
-// Animated ring markers for ACLED/GDELT events.  Color saturation + ring
-// max radius both scale with fatalities so deadlier events draw the eye.
-const RING_LAT  = (d: object) => (d as ConflictEvent).lat;
-const RING_LNG  = (d: object) => (d as ConflictEvent).lng;
-const RING_ALT  = () => 0.012;
-const EMPTY_RINGS: ConflictEvent[] = [];
+// ── Unified ring layer — conflicts (orange/red) + earthquakes (teal) ────
+// react-globe.gl has a single `ringsData` slot, so we merge both event
+// types into a discriminated union and dispatch in each callback.
 
-/** Color callback — orange→red gradient by fatality count. */
+type RingDatum =
+  | { kind: 'conflict';   lat: number; lng: number; event: ConflictEvent }
+  | { kind: 'earthquake'; lat: number; lng: number; event: EarthquakeEvent };
+
+const RING_LAT = (d: object) => (d as RingDatum).lat;
+const RING_LNG = (d: object) => (d as RingDatum).lng;
+const RING_ALT = () => 0.012;
+const EMPTY_RINGS: RingDatum[] = [];
+
+/** Color callback — orange/red for conflicts, teal/cyan for earthquakes. */
 function ringColor(d: object) {
-  const e = d as ConflictEvent;
-  // Two-tone pulse: outer ring fades out, inner ring stays bright.
-  // react-globe.gl calls this with `t` in [0,1] for animation.
-  return (t: number) => {
-    const alpha = 1 - t;          // ring fades as it propagates outward
+  const rd = d as RingDatum;
+  if (rd.kind === 'conflict') {
+    const e = rd.event as ConflictEvent;
     const f = Math.min(50, e.fatalities);
-    // 0 fatalities → orange (#f97316); 50+ → bright red (#ef4444)
     const r = 249;
-    const g = Math.round(115 - (f / 50) * 47);   // 115 → 68
-    const b = Math.round(22  + (f / 50) * 46);   // 22  → 68
-    return `rgba(${r}, ${g}, ${b}, ${alpha.toFixed(2)})`;
-  };
+    const g = Math.round(115 - (f / 50) * 47);
+    const b = Math.round(22  + (f / 50) * 46);
+    return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t).toFixed(2)})`;
+  } else {
+    const e = rd.event as EarthquakeEvent;
+    const intensity = Math.min(1, (e.magnitude - 2.5) / 5);
+    const r = Math.round(56  - intensity * 20);
+    const g = Math.round(189 - intensity * 40);
+    const b = Math.round(248 - intensity * 10);
+    return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t).toFixed(2)})`;
+  }
 }
 
 function ringMaxRadius(d: object) {
-  const e = d as ConflictEvent;
-  // Bigger pulse for higher-casualty events.
-  return Math.min(3, 0.7 + Math.log10(1 + e.fatalities) * 0.7);
+  const rd = d as RingDatum;
+  if (rd.kind === 'conflict') {
+    const e = rd.event as ConflictEvent;
+    return Math.min(3, 0.7 + Math.log10(1 + e.fatalities) * 0.7);
+  } else {
+    const e = rd.event as EarthquakeEvent;
+    // M2.5 → 0.5; M5 → 1.4; M7 → 2.5; M8+ → ~4 (capped)
+    return Math.min(4, 0.3 * Math.pow(10, (e.magnitude - 2.5) * 0.28));
+  }
 }
 
 // Module-level GeoJSON cache — survives component remounts / HMR
@@ -260,6 +283,8 @@ export default function GlobeView({
   liveFlights,
   conflictEvents,
   onConflictEventClick,
+  earthquakeEvents,
+  onEarthquakeEventClick,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -1023,6 +1048,20 @@ export default function GlobeView({
 
   const globeSize = Math.min(width, height);
 
+  // ── Merged ring data: conflicts (orange/red) + earthquakes (teal) ──────
+  const mergedRings = useMemo<RingDatum[]>(() => {
+    const out: RingDatum[] = [];
+    if (conflictEvents) {
+      for (const e of conflictEvents)
+        out.push({ kind: 'conflict', lat: e.lat, lng: e.lng, event: e });
+    }
+    if (earthquakeEvents) {
+      for (const e of earthquakeEvents)
+        out.push({ kind: 'earthquake', lat: e.lat, lng: e.lng, event: e });
+    }
+    return out;
+  }, [conflictEvents, earthquakeEvents]);
+
   return (
     <div
       className="flex items-center justify-center overflow-hidden"
@@ -1094,11 +1133,11 @@ export default function GlobeView({
         pathDashGap={0}
         pathDashAnimateTime={0}
         pathTransitionDuration={300}
-        // ── Conflict-event ring layer ────────────────────────────────────
-        // Pulsing rings via react-globe.gl's `ringsData` slot.  Color +
-        // size scale with fatalities; click handler passes the event up so
-        // the parent can show affected commodities.
-        ringsData={conflictEvents ?? EMPTY_RINGS}
+        // ── Event ring layer (conflicts + earthquakes merged) ────────────
+        // Conflicts → orange/red rings scaled by fatalities.
+        // Earthquakes → teal rings scaled by magnitude.
+        // Both use the same ringsData slot via a discriminated union.
+        ringsData={mergedRings.length > 0 ? mergedRings : EMPTY_RINGS}
         ringLat={RING_LAT}
         ringLng={RING_LNG}
         ringAltitude={RING_ALT}
@@ -1106,7 +1145,14 @@ export default function GlobeView({
         ringMaxRadius={ringMaxRadius}
         ringPropagationSpeed={1.2}
         ringRepeatPeriod={1800}
-        onRingClick={onConflictEventClick ? (d: object) => onConflictEventClick(d as ConflictEvent) : undefined}
+        onRingClick={(d: object) => {
+          const rd = d as RingDatum;
+          if (rd.kind === 'conflict' && onConflictEventClick) {
+            onConflictEventClick(rd.event as ConflictEvent);
+          } else if (rd.kind === 'earthquake' && onEarthquakeEventClick) {
+            onEarthquakeEventClick(rd.event as EarthquakeEvent);
+          }
+        }}
       />
     </div>
   );

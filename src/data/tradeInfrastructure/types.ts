@@ -21,6 +21,7 @@ export type LayerKey =
   | 'liveVessels'        // future
   | 'liveFlights'        // future
   | 'conflictEvents'     // ACLED + GDELT geocoded events
+  | 'earthquakes'        // USGS M2.5+ seismic events
   | 'connectivity'       // future overlay
   | 'risk';              // future overlay
 
