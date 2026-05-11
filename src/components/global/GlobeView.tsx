@@ -276,6 +276,30 @@ function navStatusColorHex(navStatus: number | undefined): number {
   }
 }
 
+/**
+ * Map a target distance in km to a "nice" round number with a printable
+ * label (1, 2, 5, ×10 sequence).  Used by the scale-bar overlay to pick a
+ * round value close to "the bar would be 100 px wide at this zoom."
+ *
+ * Returns the largest entry whose km ≤ target; falls back to 100 m for
+ * extreme close-ups.
+ */
+function pickNiceScale(targetKm: number): { km: number; label: string } {
+  // [km, displayLabel]. Sub-km entries handle very-close zoom on the globe.
+  const values: ReadonlyArray<readonly [number, string]> = [
+    [0.1, '100 m'], [0.2, '200 m'], [0.5, '500 m'],
+    [1, '1 km'],   [2, '2 km'],   [5, '5 km'],
+    [10, '10 km'], [20, '20 km'], [50, '50 km'],
+    [100, '100 km'], [200, '200 km'], [500, '500 km'],
+    [1000, '1,000 km'], [2000, '2,000 km'], [5000, '5,000 km'],
+    [10000, '10,000 km'],
+  ];
+  for (let i = values.length - 1; i >= 0; i--) {
+    if (values[i][0] <= targetKm) return { km: values[i][0], label: values[i][1] };
+  }
+  return { km: values[0][0], label: values[0][1] };
+}
+
 /** Format an ISO ETA string to a compact "Jun 15, 18:30 UTC" form. */
 function fmtEta(iso: string | undefined): string | undefined {
   if (!iso) return undefined;
@@ -576,6 +600,12 @@ export default function GlobeView({
     if (riversCache) { setRivers(riversCache); return; }
     loadRivers().then(setRivers).catch(() => { /* warning logged in loader */ });
   }, []);
+
+  // Reference to the rivers material so the altitude poll can adjust
+  // linewidth and keep `resolution` in sync with the renderer's pixel size.
+  // (LineMaterial in screen-pixel mode requires `resolution` to convert
+  // its `linewidth` px value to NDC offsets in the vertex shader.)
+  const riversMatRef = useRef<LineMaterial | null>(null);
 
   // ── Progressive polygon upgrade: 50m → 10m ───────────────────────────────
   // Same playbook as the 16K earth texture: after the 50m polygons are
@@ -948,30 +978,28 @@ export default function GlobeView({
     geometry.setPositions(positions);
 
     // Sky-blue, semi-transparent so country shading still reads through.
-    // worldUnits: true → linewidth is in 3D world units (globe radius ≈ 100
-    // in three-globe's coordinate system), so the river renders at a fixed
-    // physical thickness on the sphere and automatically appears larger on
-    // screen as the camera approaches.  0.5 → roughly 1 px at default zoom,
-    // ~4 px at close zoom, ~8 px at maximum dive.
+    // worldUnits: false → linewidth interpreted in *screen pixels*.  This
+    // gives us a constant-on-screen thickness at any zoom by default; the
+    // altitude poll (below) bumps the linewidth in discrete buckets only
+    // when the user zooms in close, so the rivers stay subtle most of the
+    // time and thicken visibly when inspecting a region.  resolution must
+    // be kept in sync with the renderer's pixel size for this mode to
+    // measure pixels correctly.
     const material = new LineMaterial({
       color:       0x60a5fa, // blue-400
-      linewidth:   0.5,      // world units (because worldUnits: true)
-      worldUnits:  true,
+      linewidth:   1.2,      // screen px — default thin look
+      worldUnits:  false,
       transparent: true,
       opacity:     0.55,
       depthWrite:  false,
     });
-    // LineMaterial's shader always reads the `resolution` uniform even in
-    // worldUnits mode; seed it with the renderer's current size so the
-    // first frame doesn't draw with a default (1, 1) value.  Resize is
-    // handled by react-globe.gl on width/height prop changes and three-
-    // globe pushes the new size through; for our purposes a stale value
-    // here would only matter in screen-pixel mode, which we don't use.
     try {
       const size = new THREE.Vector2();
       globe.renderer().getSize(size);
       material.resolution.copy(size);
-    } catch { /* renderer not ready yet — material still works */ }
+    } catch { /* renderer not ready yet — refreshed by altitude poll */ }
+
+    riversMatRef.current = material; // expose to altitude-poll for width/resize updates
 
     const lines = new LineSegments2(geometry, material);
     lines.renderOrder = 1; // above polygon caps (default 0), below vessels (2)
@@ -981,6 +1009,7 @@ export default function GlobeView({
       try { globe.scene().remove(lines); } catch { /* scene already gone */ }
       geometry.dispose();
       material.dispose();
+      riversMatRef.current = null;
     };
   }, [rivers, countries.length]);
 
@@ -1250,11 +1279,67 @@ export default function GlobeView({
   // the OrbitControls spherical position; no GPU work involved.
   const [cityLabelsVisible, setCityLabelsVisible] = useState(false);
 
+  // Scale bar overlay state: width in screen pixels and the printable label.
+  // Updated from the altitude poll using the camera's actual FOV + the
+  // renderer's pixel size, so it stays accurate across window resizes.
+  const [scaleBar, setScaleBar] = useState<{ widthPx: number; label: string }>(
+    { widthPx: 100, label: '5,000 km' },
+  );
+
   useEffect(() => {
     const id = setInterval(() => {
-      const alt = (globeRef.current as any)?.pointOfView()?.altitude;
-      if (alt == null) return;
+      const globe = globeRef.current;
+      if (!globe) return;
+      const alt = (globe as any)?.pointOfView()?.altitude;
+      if (alt == null || alt <= 0) return;
+
       setCityLabelsVisible(alt < 1.2);
+
+      // ── River line thickness (bucketed) ─────────────────────────────────
+      // Stay at the default "thin" width until the user has zoomed in
+      // moderately, then step up in 3 visible levels.  Discrete buckets
+      // avoid a continuous-scaling appearance that the user said felt
+      // wrong; thresholds chosen so the line stays subtle at full-country
+      // view (alt ~1) and only thickens for close inspection.
+      const mat = riversMatRef.current;
+      if (mat) {
+        const lw = alt >= 0.5 ? 1.2
+                 : alt >= 0.2 ? 2.5
+                 :              4;
+        if (mat.linewidth !== lw) mat.linewidth = lw;
+        // Keep resolution in sync with the canvas — handles window resizes
+        // without needing a separate ResizeObserver.
+        const size = new THREE.Vector2();
+        globe.renderer().getSize(size);
+        if (mat.resolution.x !== size.x || mat.resolution.y !== size.y) {
+          mat.resolution.copy(size);
+        }
+      }
+
+      // ── Scale bar ───────────────────────────────────────────────────────
+      // Convert "1 pixel" to km at the centre of the visible globe surface,
+      // then pick the largest nice round km value that fits in ~100 px.
+      const camera = (globe as any).camera?.() as THREE.PerspectiveCamera | undefined;
+      if (!camera) return;
+      const size = new THREE.Vector2();
+      globe.renderer().getSize(size);
+      // Globe radius is 100 world units in three-globe; camera-to-surface
+      // distance is therefore 100 * altitude.  px-per-globe-unit at that
+      // distance follows directly from the perspective formula.
+      const cotHalfFov = 1 / Math.tan((camera.fov * Math.PI) / 360);
+      const cameraToSurface = 100 * alt;
+      const pxPerGlobeUnit = (cotHalfFov * size.y) / 2 / cameraToSurface;
+      // Earth radius (6371 km) over globe radius (100) ⇒ 63.71 km per unit.
+      const kmPerPx = 63.71 / pxPerGlobeUnit;
+      const targetKm = 100 * kmPerPx; // we aim for ≈100-px-wide bar
+      const nice     = pickNiceScale(targetKm);
+      const widthPx  = nice.km / kmPerPx;
+
+      setScaleBar((prev) =>
+        prev.label === nice.label && Math.abs(prev.widthPx - widthPx) < 1
+          ? prev
+          : { widthPx, label: nice.label },
+      );
     }, 300);
     return () => clearInterval(id);
   }, []);
@@ -1885,6 +1970,26 @@ export default function GlobeView({
         labelDotRadius={LABEL_DOT_RADIUS}
         labelDotOrientation={LABEL_DOT_ORIENT}
       />
+
+      {/* ── Scale bar (map-style distance indicator) ─────────────────────── */}
+      {/* Positioned absolute bottom-left, inside the globe's container.    */}
+      {/* The bar width and label are recomputed in the altitude poll, so   */}
+      {/* the displayed value is always accurate for the current zoom level.*/}
+      <div className="absolute bottom-3 left-3 z-10 pointer-events-none select-none">
+        <div className="bg-black/55 backdrop-blur-sm px-2 py-1.5 rounded border border-white/10 shadow-lg">
+          <div className="text-[10px] text-white/95 font-mono leading-none mb-1 text-center tabular-nums">
+            {scaleBar.label}
+          </div>
+          <div className="relative h-2" style={{ width: Math.max(40, Math.round(scaleBar.widthPx)) }}>
+            {/* Horizontal centre line */}
+            <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-white/90" />
+            {/* Left tick */}
+            <div className="absolute left-0 top-0 bottom-0 w-px bg-white/90" />
+            {/* Right tick */}
+            <div className="absolute right-0 top-0 bottom-0 w-px bg-white/90" />
+          </div>
+        </div>
+      </div>
 
       {/* ── Vessel / flight hover tooltip ────────────────────────────────── */}
       {/* position:fixed escapes the parent overflow:hidden and isolation layer */}
