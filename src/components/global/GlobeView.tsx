@@ -124,6 +124,13 @@ interface GlobeViewProps {
    * regions are in daylight at the present moment.
    */
   dayNightCycle?:           boolean;
+  /**
+   * Country polygon fills.  When false, polygon caps return mostly
+   * transparent so the bare globe texture is visible.  Hover and
+   * selected-country highlights remain (subtler).  Pairs with
+   * dayNightCycle so the terminator becomes fully visible.
+   */
+  showCountryColors?:       boolean;
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -283,6 +290,28 @@ function navStatusColorHex(navStatus: number | undefined): number {
     case 0:
     default: return 0x67e8f9; // under way / unknown — cyan baseline
   }
+}
+
+/**
+ * Multiply the alpha channel of an rgba(...) or #RRGGBBAA colour string by
+ * a scalar.  Used by getCapColor when day/night cycle is active: each
+ * country's cap gets dimmed by how much its centroid is in shadow, so the
+ * night-side polygon overlay fades and the dark texture beneath it becomes
+ * visible.  Identity-returns the input when factor ≈ 1 to avoid string
+ * parsing in the common case.
+ */
+function multiplyAlpha(color: string, factor: number): string {
+  if (factor >= 0.999) return color;
+  if (color.startsWith('rgba(')) {
+    return color.replace(/,\s*([0-9.]+)\s*\)$/, (_, a) =>
+      `, ${(parseFloat(a) * factor).toFixed(3)})`);
+  }
+  if (color.startsWith('#') && color.length === 9) {
+    const aHex   = parseInt(color.slice(7), 16);
+    const newA   = Math.max(0, Math.min(255, Math.round(aHex * factor)));
+    return color.slice(0, 7) + newA.toString(16).padStart(2, '0');
+  }
+  return color;
 }
 
 /**
@@ -610,9 +639,10 @@ export default function GlobeView({
   economicEvents,
   onEconomicEventClick,
   macroHeatmap,
-  showCityLabels = false,
-  showWaterways  = false,
-  dayNightCycle  = false,
+  showCityLabels    = false,
+  showWaterways     = false,
+  dayNightCycle     = false,
+  showCountryColors = true,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -1025,41 +1055,59 @@ export default function GlobeView({
 
   // ── Day/night cycle driver ───────────────────────────────────────────────
   // When `dayNightCycle` is true, refresh the sun direction every 30 s from
-  // the current UTC time + axial-tilt approximation, and flip the shader's
-  // uDayNightOn uniform on.  When false, just clear the uniform.  Mutating
+  // the current UTC time + axial-tilt approximation, flip the shader's
+  // uDayNightOn uniform on, AND bump `sunTick` so getCapColor recomputes
+  // each country's cap-alpha based on its centroid sun-dot.  Mutating
   // uniforms is free — three.js pushes the new values to the GPU on the
   // next draw without a recompile.
+  //
+  // `sunDir` (the cached Vector3 used in getCapColor for per-country
+  // darkening) is recomputed from a useMemo below, keyed on (dayNightCycle,
+  // sunTick), so a single state bump refreshes both the shader and the
+  // polygon-cap colours.
+  const [sunTick, setSunTick] = useState(0);
+
   useEffect(() => {
     const shader = globeShaderRef.current;
 
-    // If the shader isn't compiled yet (the patch effect above hasn't fired
-    // its onBeforeCompile yet), retry shortly.
+    const writeUniform = (s: typeof shader) => {
+      if (!s?.uniforms?.uDayNightOn) return;
+      s.uniforms.uDayNightOn.value = dayNightCycle ? 1 : 0;
+      if (dayNightCycle) computeSunDirection(s.uniforms.uSunDirection.value);
+    };
+
+    // If the shader isn't compiled yet, retry once shortly.  The next time
+    // `dayNightCycle` changes we'll succeed on the first attempt.
     if (!shader?.uniforms?.uDayNightOn) {
-      const retry = setTimeout(() => {
-        // Force the effect to re-run by toggling a state value?  Simpler:
-        // just check again here.  If still null, the patch hasn't completed.
-        // The next time `dayNightCycle` changes we'll succeed.
-        const s = globeShaderRef.current;
-        if (s?.uniforms?.uDayNightOn) {
-          s.uniforms.uDayNightOn.value = dayNightCycle ? 1 : 0;
-          if (dayNightCycle) computeSunDirection(s.uniforms.uSunDirection.value);
-        }
-      }, 400);
+      const retry = setTimeout(() => writeUniform(globeShaderRef.current), 400);
       return () => clearTimeout(retry);
     }
 
-    shader.uniforms.uDayNightOn.value = dayNightCycle ? 1 : 0;
+    writeUniform(shader);
+    // Force a polygon-cap colour pass so per-country dimming applies
+    // immediately on toggle (whether on or off).
+    setSunTick((t) => t + 1);
     if (!dayNightCycle) return;
 
-    // Initial sun position + recurring refresh every 30 s (sun moves
-    // 15°/hour = 0.125°/30 s — well below the terminator's smooth band).
-    computeSunDirection(shader.uniforms.uSunDirection.value);
+    // Recurring refresh every 30 s (sun moves 15 °/hour = 0.125 °/30 s —
+    // well below the shader terminator's smooth band).
     const id = setInterval(() => {
-      const s = globeShaderRef.current;
-      if (s?.uniforms?.uSunDirection) computeSunDirection(s.uniforms.uSunDirection.value);
+      writeUniform(globeShaderRef.current);
+      setSunTick((t) => t + 1);
     }, 30_000);
     return () => clearInterval(id);
   }, [dayNightCycle]);
+
+  // Cached sun direction for the JS-side polygon-cap dimming pass.  Kept
+  // separate from the shader uniform because getCapColor is a useCallback
+  // that needs a stable React dependency to know when to rebuild.
+  const sunDirCached = useMemo(() => {
+    if (!dayNightCycle) return null;
+    const v = new THREE.Vector3();
+    computeSunDirection(v);
+    return v;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dayNightCycle, sunTick]);
 
   // ── Progressive 16K texture upgrade ──────────────────────────────────────
   // The 8K diffuse map loads fast and gives a good initial look.  Once the
@@ -1933,40 +1981,80 @@ export default function GlobeView({
       const feat = d as Feature;
       const iso = feat.properties.ISO_A2;
 
-      // Exchange mode: clear all fills so only pins + borders are visible
-      if (showExchangePins) {
-        if (iso === selectedCountry) return "rgba(255, 255, 255, 0.08)";
-        if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.05)";
+      // ── Country-colours OFF ──────────────────────────────────────────────
+      // Polygon caps go fully transparent so the bare globe texture is
+      // visible.  Hover and selected highlights are kept subtle so the user
+      // still has visual feedback for navigation.
+      if (!showCountryColors) {
+        if (iso === selectedCountry)        return "rgba(255, 255, 255, 0.20)";
+        if (iso === hoverIsoRef.current)    return "rgba(255, 255, 255, 0.08)";
         return "rgba(0, 0, 0, 0)";
       }
 
-      if (iso === selectedCountry) return "rgba(255, 255, 255, 0.35)";
-      if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.22)";
-
-      // Macro heatmap mode — shade by GDP growth annual %
-      // Green: strong growth (≥5%), yellow: moderate (2–5%), orange: slow (0–2%),
-      // red: contraction (<0%).  Unmapped countries stay neutral.
-      if (macroMap) {
+      // Exchange mode: clear all fills so only pins + borders are visible.
+      // Special-cased even when showCountryColors=true because the Exchanges
+      // mode has its own design intent (pins-only).
+      let raw: string;
+      if (showExchangePins) {
+        raw = iso === selectedCountry        ? "rgba(255, 255, 255, 0.08)"
+            : iso === hoverIsoRef.current    ? "rgba(255, 255, 255, 0.05)"
+            :                                  "rgba(0, 0, 0, 0)";
+      } else if (iso === selectedCountry) {
+        raw = "rgba(255, 255, 255, 0.35)";
+      } else if (iso === hoverIsoRef.current) {
+        raw = "rgba(255, 255, 255, 0.22)";
+      } else if (macroMap) {
+        // Macro heatmap mode — shade by GDP growth annual %.
         const gdp = macroMap.get(iso);
-        if (gdp === undefined) return "rgba(60, 60, 70, 0.25)";
-        if (gdp >= 6)  return "rgba(16, 185, 129, 0.65)";   // emerald — strong
-        if (gdp >= 4)  return "rgba(52, 211, 153, 0.55)";   // green
-        if (gdp >= 2)  return "rgba(167, 243, 208, 0.45)";  // light green
-        if (gdp >= 0)  return "rgba(251, 191, 36, 0.45)";   // amber — slow
-        if (gdp >= -2) return "rgba(249, 115, 22, 0.55)";   // orange — weak
-        return "rgba(239, 68, 68, 0.65)";                   // red — contraction
+        raw = gdp === undefined ? "rgba(60, 60, 70, 0.25)"
+            : gdp >= 6          ? "rgba(16, 185, 129, 0.65)"   // strong growth
+            : gdp >= 4          ? "rgba(52, 211, 153, 0.55)"
+            : gdp >= 2          ? "rgba(167, 243, 208, 0.45)"
+            : gdp >= 0          ? "rgba(251, 191, 36, 0.45)"
+            : gdp >= -2         ? "rgba(249, 115, 22, 0.55)"
+            :                     "rgba(239, 68, 68, 0.65)";   // contraction
+      } else if (mode === "flags") {
+        raw = FLAG_COLORS[iso] ? `${FLAG_COLORS[iso]}72`
+                               : "rgba(80, 80, 80, 0.19)";
+      } else {
+        const change = performanceMap[iso];
+        raw = change === undefined ? "rgba(80, 80, 80, 0.13)" : perfColor(change);
       }
 
-      if (mode === "flags") {
-        return FLAG_COLORS[iso]
-          ? `${FLAG_COLORS[iso]}72`
-          : "rgba(80, 80, 80, 0.19)";
+      // ── Per-country day/night darkening ──────────────────────────────────
+      // When the day/night cycle is on, dim each country's cap by how much
+      // its centroid is in shadow.  Use the same coordinate-space convention
+      // as computeSunDirection: lat→Y, lng→X/Z.  Dot the centroid unit
+      // vector with the cached sun direction:
+      //   dot ≈ +1 → noon (full alpha)
+      //   dot ≈  0 → terminator (≈30% alpha)
+      //   dot ≈ -1 → midnight   (≈15% alpha)
+      // Night-side polygons fade out and the darkened texture beneath them
+      // becomes visible — the terminator is legible through the country
+      // overlay.  Selected/hover highlights are exempt (already special-
+      // cased above, return early).
+      if (sunDirCached && iso !== selectedCountry && iso !== hoverIsoRef.current) {
+        const meta = COUNTRY_META[iso];
+        if (meta) {
+          const latR    = (meta.lat * Math.PI) / 180;
+          const lngR    = (meta.lng * Math.PI) / 180;
+          const cosLat  = Math.cos(latR);
+          // Centroid unit vector in three-globe coords (matches computeSunDirection):
+          const cx = cosLat * Math.sin(lngR);
+          const cy = Math.sin(latR);
+          const cz = cosLat * Math.cos(lngR);
+          const dot = cx * sunDirCached.x + cy * sunDirCached.y + cz * sunDirCached.z;
+          // Smooth ramp: dot >= 0.2 → full (1.0), dot <= -0.2 → 0.15.
+          const dayMix  = Math.max(0, Math.min(1, (dot + 0.2) / 0.4));
+          const dimMul  = 0.15 + 0.85 * dayMix;
+          raw = multiplyAlpha(raw, dimMul);
+        }
       }
-      const change = performanceMap[iso];
-      if (change === undefined) return "rgba(80, 80, 80, 0.13)";
-      return perfColor(change);
+
+      return raw;
     },
-    [mode, performanceMap, selectedCountry, showExchangePins, macroMap]
+    [mode, performanceMap, selectedCountry, showExchangePins, macroMap,
+     showCountryColors, sunDirCached]
   );
 
   // ── Altitude: only elevate selected country ──

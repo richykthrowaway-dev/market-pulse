@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } fro
 import { useIndices } from "@/hooks/useSupabaseData";
 import { REGION_TO_ISO } from "@/data/countryMeta";
 import { cn } from "@/lib/utils";
-import { Globe as GlobeIcon, ArrowLeft, Loader2, RotateCw, Pause, Map, Sun, Moon } from "lucide-react";
+import { Globe as GlobeIcon, ArrowLeft, Loader2, RotateCw, Pause, Map, Sun, Moon, Palette, PaintBucket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const GlobeView = lazy(() => import("@/components/global/GlobeView"));
 const MapView  = lazy(() => import("@/components/global/MapView"));
@@ -108,6 +108,10 @@ const Global = () => {
   // Real day/night cycle: when on, sun position is computed from current UTC
   // time + axial tilt, and the side facing away from the sun is darkened.
   const [dayNightCycle, setDayNightCycle] = useState(false);
+  // Country polygon fills — toggle off to see the bare globe texture (most
+  // useful in combination with the day/night cycle so the terminator is fully
+  // visible without the opaque country layer above it).
+  const [showCountryColors, setShowCountryColors] = useState(true);
   const [flatMap, setFlatMap] = useState(false);
 
   // ── Global Trade Infrastructure state ───────────────────────────────
@@ -367,6 +371,23 @@ const Global = () => {
             </button>
           )}
 
+          {/* Country colours toggle — clears the polygon-cap fills so the bare
+              globe texture is visible.  Especially useful when day/night is on. */}
+          {!flatMap && (
+            <button
+              onClick={() => setShowCountryColors(v => !v)}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border text-xs transition-colors",
+                showCountryColors ? "bg-primary/10 text-primary hover:bg-primary/15" : "hover:bg-muted text-muted-foreground"
+              )}
+              title={showCountryColors ? "Hide country colour overlay (shows bare globe texture)" : "Show country colour overlay"}
+              aria-pressed={showCountryColors}
+            >
+              {showCountryColors ? <Palette className="h-3 w-3" /> : <PaintBucket className="h-3 w-3" />}
+              <span>Country Colours</span>
+            </button>
+          )}
+
           {/* Mode Toggle */}
           <div className="flex rounded-md border border-border overflow-hidden text-xs">
             <button
@@ -490,6 +511,7 @@ const Global = () => {
                   showCityLabels={cityLabelsEnabled}
                   showWaterways={waterwaysEnabled}
                   dayNightCycle={dayNightCycle}
+                  showCountryColors={showCountryColors}
                 />
               )}
             </Suspense>
