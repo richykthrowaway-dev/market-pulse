@@ -1362,6 +1362,34 @@ export default function GlobeView({
       //   Z 15 ≈ neighborhood       ( kmPerPx ≈ 0.0048)
       const zoomLevel = Math.log2(40075 / (256 * kmPerPx));
       setZoom((prev) => Math.abs(prev - zoomLevel) < 0.05 ? prev : zoomLevel);
+
+      // ── Live-flights size gradient ──────────────────────────────────────
+      // Live flight dots are 2.5 px by default — barely visible at city
+      // / regional zoom, where the user actually wants to read individual
+      // aircraft.  Linearly grow the PointsMaterial.size from the baseline
+      // up to ~6 px as the user zooms in across Z 6 → 10.  Below Z 6 the
+      // size stays at baseline (don't bloat the dots at world view), and
+      // above Z 10 it caps so very-close zooms don't get giant blobs.
+      //
+      // PointsMaterial.size is a uniform; mutating it propagates to the
+      // shader on the next frame with zero CPU work per-point.
+      const flightMat = flightMatRef.current;
+      if (flightMat) {
+        const BASE_SIZE  = 2.5;   // matches the material's original screen-px size
+        const MAX_SIZE   = 6.0;   // cap at close zoom
+        const ZOOM_START = 6.0;   // size begins to grow at this zoom level
+        const ZOOM_FULL  = 10.0;  // and reaches MAX_SIZE here
+
+        const t = Math.max(
+          0,
+          Math.min(1, (zoomLevel - ZOOM_START) / (ZOOM_FULL - ZOOM_START)),
+        );
+        const size = BASE_SIZE + (MAX_SIZE - BASE_SIZE) * t;
+
+        if (Math.abs(flightMat.size - size) > 0.02) {
+          flightMat.size = size;
+        }
+      }
     }, 300);
     return () => clearInterval(id);
   }, []);
