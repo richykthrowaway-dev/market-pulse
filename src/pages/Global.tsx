@@ -298,6 +298,10 @@ const Global = () => {
   const cityLabelsEnabled =
     tradeTabActive && tradeActiveLayers.has('cityLabels');
 
+  // ── Waterways toggle ─────────────────────────────────────────────────
+  const waterwaysEnabled =
+    tradeTabActive && tradeActiveLayers.has('waterways');
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Header Bar */}
@@ -464,6 +468,7 @@ const Global = () => {
                   onEconomicEventClick={onEconomicEventClick}
                   macroHeatmap={macroHeatmap}
                   showCityLabels={cityLabelsEnabled}
+                  showWaterways={waterwaysEnabled}
                 />
               )}
             </Suspense>

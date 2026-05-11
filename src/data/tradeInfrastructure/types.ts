@@ -25,6 +25,7 @@ export type LayerKey =
   | 'economicEvents'     // EODHD macro calendar (CPI, NFP, GDP, rate decisions)
   | 'macroHeatmap'       // EODHD GDP growth — country polygon shading
   | 'cityLabels'         // city / capital name labels at close zoom
+  | 'waterways'          // Natural Earth 10m rivers + lake centerlines
   | 'connectivity'       // future overlay
   | 'risk';              // future overlay
 

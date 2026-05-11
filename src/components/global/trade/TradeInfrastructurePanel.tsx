@@ -3,7 +3,7 @@ import {
   Anchor, Plane, Train, MapPin, AlertTriangle,
   Layers, Compass, Search, Sparkles,
   Network, ShieldAlert, Globe2, Radio, Loader2,
-  CalendarDays, BarChart3, TrendingUp, TrendingDown, Type,
+  CalendarDays, BarChart3, TrendingUp, TrendingDown, Type, Waves,
 } from 'lucide-react';
 import { useCommodityPrices } from '@/hooks/useCommodityPrices';
 import { cn } from '@/lib/utils';
@@ -66,6 +66,7 @@ const LAYERS: LayerOption[] = [
   { key: 'economicEvents',  label: 'Economic Events',  icon: CalendarDays,  color: '#60a5fa', group: 'overlays', hint: 'Upcoming macro releases: CPI, NFP, GDP, PMIs, rate decisions. Source: EODHD economic calendar. Click an event for actual vs estimate.' },
   { key: 'macroHeatmap',    label: 'GDP Growth Map',   icon: BarChart3,     color: '#34d399', group: 'overlays', hint: 'Countries shaded by latest annual GDP growth rate. Green = strong growth, red = contraction. Source: EODHD / World Bank.' },
   { key: 'cityLabels',      label: 'City Names',       icon: Type,          color: '#e2e8f0', group: 'overlays', hint: '~220 world capitals and major financial/trade cities. Labels appear when zoomed in (altitude < 1.2). Capitals are shown slightly larger.' },
+  { key: 'waterways',       label: 'Waterways',        icon: Waves,         color: '#60a5fa', group: 'overlays', hint: 'Major rivers, canals, and lake centerlines (Natural Earth 10m). Lines stay subtle at default zoom and thicken when you zoom in close.' },
 ];
 
 // ── Component ───────────────────────────────────────────────────────────────

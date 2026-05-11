@@ -115,6 +115,8 @@ interface GlobeViewProps {
   macroHeatmap?:            MacroCountry[];
   /** When true, city/capital name labels are shown at close zoom (altitude < 1.2). */
   showCityLabels?:          boolean;
+  /** When true, Natural Earth river/lake centerlines are rendered as a blue line layer. */
+  showWaterways?:           boolean;
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -564,6 +566,7 @@ export default function GlobeView({
   onEconomicEventClick,
   macroHeatmap,
   showCityLabels = false,
+  showWaterways  = false,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -592,14 +595,17 @@ export default function GlobeView({
   }, []);
 
   // ── Rivers / lake centerlines (~2 MB, jsDelivr CDN) ─────────────────────
-  // Fetched once per page load.  Drives the imperative LineSegments effect
-  // below — when `rivers` populates, that effect rebuilds the mesh.  Failure
-  // is silent (no rivers drawn, everything else still works).
+  // Lazily fetched on first enable of the Waterways layer toggle.  After the
+  // initial download, the data is cached at module scope so subsequent
+  // toggles (or remounts) reuse it instantly — no re-fetch, no flicker.
+  // When the toggle is off and the cache is empty, we skip the request
+  // entirely so users who never enable the layer pay zero network cost.
   const [rivers, setRivers] = useState<Feature[]>(riversCache ?? []);
   useEffect(() => {
+    if (!showWaterways) return;          // wait until the user enables the layer
     if (riversCache) { setRivers(riversCache); return; }
     loadRivers().then(setRivers).catch(() => { /* warning logged in loader */ });
-  }, []);
+  }, [showWaterways]);
 
   // Reference to the rivers material so the altitude poll can adjust
   // linewidth and keep `resolution` in sync with the renderer's pixel size.
@@ -924,6 +930,7 @@ export default function GlobeView({
   // just below vessels (1.0055), so ships render on top of the rivers
   // they're navigating.
   useEffect(() => {
+    if (!showWaterways) return;          // gated by panel toggle
     if (!countries.length || !rivers.length) return;
     const globe = globeRef.current;
     if (!globe) return;
@@ -1011,7 +1018,7 @@ export default function GlobeView({
       material.dispose();
       riversMatRef.current = null;
     };
-  }, [rivers, countries.length]);
+  }, [rivers, countries.length, showWaterways]);
 
   // ── Cloud layer ─────────────────────────────────────────────────────
   // Renders a slightly-larger transparent sphere over the Blue Marble globe
