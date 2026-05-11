@@ -131,6 +131,29 @@ interface GlobeViewProps {
    * dayNightCycle so the terminator becomes fully visible.
    */
   showCountryColors?:       boolean;
+
+  /**
+   * Trade partner arcs — animated great-circle arcs from a selected country
+   * to its top export destinations (green) and import sources (amber).
+   * Populated by Global.tsx from WITS partner data when the Trade tab is
+   * active and a country is selected.  Rendered on a separate arcsData slot
+   * so they never interfere with the existing pathsData trade routes.
+   */
+  partnerArcs?:             PartnerArc[];
+}
+
+// ── Partner arc type ─────────────────────────────────────────────────────────
+export interface PartnerArc {
+  startLat: number;
+  startLng: number;
+  endLat:   number;
+  endLng:   number;
+  /** Hex color — emerald for exports, amber for imports. */
+  color:    string;
+  /** Tooltip label. */
+  label:    string;
+  /** 0–1 trade share — drives arc stroke width. */
+  share:    number;
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -643,6 +666,7 @@ export default function GlobeView({
   showWaterways     = false,
   dayNightCycle     = false,
   showCountryColors = true,
+  partnerArcs,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -2342,6 +2366,7 @@ export default function GlobeView({
 
   const EMPTY_POINTS:  TradeNode[]  = [];
   const EMPTY_ARCS:    TradeRoute[] = [];
+  const EMPTY_PARTNER_ARCS: PartnerArc[] = [];
 
   const globeSize = Math.min(width, height);
 
@@ -2434,6 +2459,26 @@ export default function GlobeView({
         pathDashGap={0}
         pathDashAnimateTime={0}
         pathTransitionDuration={300}
+        // ── Trade partner arcs (selected country ↔ top trade partners) ──────
+        // Separate arcsData slot — distinct from pathsData (trade routes).
+        // Export arcs: emerald (#22c55e) animated from selected → partner.
+        // Import arcs: amber (#f59e0b) animated from partner → selected.
+        // Stroke width scales with trade share so top partners stand out.
+        // Dashed animation (dashLength 0.5 / dashGap 0.5 / animateTime 2s)
+        // gives the "flow of goods" feel without being distracting.
+        arcsData={partnerArcs ?? EMPTY_PARTNER_ARCS}
+        arcStartLat={(d: object) => (d as PartnerArc).startLat}
+        arcStartLng={(d: object) => (d as PartnerArc).startLng}
+        arcEndLat={(d: object) =>   (d as PartnerArc).endLat}
+        arcEndLng={(d: object) =>   (d as PartnerArc).endLng}
+        arcColor={(d: object) =>    (d as PartnerArc).color}
+        arcStroke={(d: object) =>   Math.max(0.4, (d as PartnerArc).share * 6)}
+        arcAltitude={0.25}
+        arcLabel={(d: object) =>    (d as PartnerArc).label}
+        arcDashLength={0.5}
+        arcDashGap={0.5}
+        arcDashAnimateTime={2000}
+        arcsTransitionDuration={400}
         // ── Event ring layer (conflicts + earthquakes merged) ────────────
         // Conflicts → orange/red rings scaled by fatalities.
         // Earthquakes → teal rings scaled by magnitude.

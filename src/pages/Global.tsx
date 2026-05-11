@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { useIndices } from "@/hooks/useSupabaseData";
-import { REGION_TO_ISO } from "@/data/countryMeta";
+import { REGION_TO_ISO, COUNTRY_META } from "@/data/countryMeta";
 import { cn } from "@/lib/utils";
+import { useTradeBreakdown } from "@/hooks/useTradeBreakdown";
+import type { PartnerArc } from "@/components/global/GlobeView";
 import { Globe as GlobeIcon, ArrowLeft, Loader2, RotateCw, Pause, Map, Sun, Moon, Palette, PaintBucket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const GlobeView = lazy(() => import("@/components/global/GlobeView"));
@@ -11,6 +13,7 @@ import GlobalSummary from "@/components/global/GlobalSummary";
 import ExchangeDetailDialog from "@/components/global/ExchangeDetailDialog";
 import { ConflictEventDialog } from "@/components/global/trade/ConflictEventDialog";
 import { EarthquakeDialog } from "@/components/global/trade/EarthquakeDialog";
+import { TradePartnersDialog } from "@/components/global/trade/TradePartnersDialog";
 import type { ExchangeInfo } from "@/data/exchangeData";
 import {
   getVisibleNodes, getVisibleRoutes,
@@ -310,6 +313,71 @@ const Global = () => {
   const waterwaysEnabled =
     tradeTabActive && tradeActiveLayers.has('waterways');
 
+  // ── Trade partner arcs ───────────────────────────────────────────────
+  // Fetch WITS top-partner data for the selected country when the Trade
+  // tab is open.  Converts partner rows (ISO2 + share) to PartnerArc
+  // objects by looking up country centroids from COUNTRY_META.
+  // Export arcs: emerald, flow outward from selected country.
+  // Import arcs: amber, flow inward toward selected country.
+  const partnerArcsEnabled =
+    tradeTabActive
+    && !!selectedCountry
+    && tradeActiveLayers.has('tradePartnerArcs');
+  const exportPartnersQuery = useTradeBreakdown(
+    partnerArcsEnabled ? selectedCountry : null,
+    'exports',
+    'partners',
+  );
+  const importPartnersQuery = useTradeBreakdown(
+    partnerArcsEnabled ? selectedCountry : null,
+    'imports',
+    'partners',
+  );
+  const partnerArcs = useMemo((): PartnerArc[] | undefined => {
+    if (!partnerArcsEnabled || !selectedCountry) return undefined;
+    const src = COUNTRY_META[selectedCountry];
+    if (!src) return undefined;
+
+    const arcs: PartnerArc[] = [];
+
+    // Export destinations — emerald green arcs flowing outward
+    for (const p of (exportPartnersQuery.data?.products ?? []).slice(0, 8)) {
+      const dest = COUNTRY_META[p.code];
+      if (!dest) continue;
+      arcs.push({
+        startLat: src.lat,
+        startLng: src.lng,
+        endLat:   dest.lat,
+        endLng:   dest.lng,
+        color:    '#22c55e',
+        label:    `Export → ${p.name}: ${(p.share * 100).toFixed(1)}%`,
+        share:    p.share,
+      });
+    }
+
+    // Import sources — amber arcs flowing inward
+    for (const p of (importPartnersQuery.data?.products ?? []).slice(0, 8)) {
+      const src2 = COUNTRY_META[p.code];
+      if (!src2) continue;
+      arcs.push({
+        startLat: src2.lat,
+        startLng: src2.lng,
+        endLat:   src.lat,
+        endLng:   src.lng,
+        color:    '#f59e0b',
+        label:    `Import ← ${p.name}: ${(p.share * 100).toFixed(1)}%`,
+        share:    p.share,
+      });
+    }
+
+    return arcs.length > 0 ? arcs : undefined;
+  }, [
+    partnerArcsEnabled,
+    selectedCountry,
+    exportPartnersQuery.data,
+    importPartnersQuery.data,
+  ]);
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Header Bar */}
@@ -512,6 +580,7 @@ const Global = () => {
                   showWaterways={waterwaysEnabled}
                   dayNightCycle={dayNightCycle}
                   showCountryColors={showCountryColors}
+                  partnerArcs={partnerArcs}
                 />
               )}
             </Suspense>
@@ -542,6 +611,23 @@ const Global = () => {
           <EconomicEventDialog
             event={selectedEconEvent}
             onClose={() => setSelectedEconEvent(null)}
+          />
+
+          {/* Trade Partners — compact draggable card with top exports/imports.
+              Visibility is tied to the Trade Partners layer toggle; closing
+              the X turns the layer off (and therefore hides the arcs too). */}
+          <TradePartnersDialog
+            open={partnerArcsEnabled}
+            selectedCountry={selectedCountry}
+            exportPartners={exportPartnersQuery.data?.products ?? []}
+            importPartners={importPartnersQuery.data?.products ?? []}
+            year={exportPartnersQuery.data?.year ?? importPartnersQuery.data?.year ?? null}
+            isLoading={exportPartnersQuery.isLoading || importPartnersQuery.isLoading}
+            onClose={() => {
+              const next = new Set(tradeActiveLayers);
+              next.delete('tradePartnerArcs');
+              setTradeActiveLayers(next);
+            }}
           />
         </div>
 

@@ -26,6 +26,7 @@ export type LayerKey =
   | 'macroHeatmap'       // EODHD GDP growth — country polygon shading
   | 'cityLabels'         // city / capital name labels at close zoom
   | 'waterways'          // Natural Earth 10m rivers + lake centerlines
+  | 'tradePartnerArcs'   // animated arcs to top trade partners (WITS / Comtrade)
   | 'connectivity'       // future overlay
   | 'risk';              // future overlay
 

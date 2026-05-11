@@ -3,9 +3,8 @@ import {
   Anchor, Plane, Train, MapPin, AlertTriangle,
   Layers, Compass, Search, Sparkles,
   Network, ShieldAlert, Globe2, Radio, Loader2,
-  CalendarDays, BarChart3, TrendingUp, TrendingDown, Type, Waves,
+  CalendarDays, BarChart3, Type, Waves, ArrowLeftRight,
 } from 'lucide-react';
-import { useCommodityPrices } from '@/hooks/useCommodityPrices';
 import { cn } from '@/lib/utils';
 import {
   STORY_MODES, NODE_COLOR, ROUTE_COLOR,
@@ -13,7 +12,6 @@ import {
 } from '@/data/tradeInfrastructure';
 import type { AISStatus } from '@/hooks/useAISStream';
 import { FLIGHT_DATA_SOURCE, type FlightStatus } from '@/hooks/useOpenSkyFlights';
-import { CommodityProducersCard } from './CommodityProducersCard';
 import { useAirportDetail } from '@/hooks/useAirportDetail';
 
 /**
@@ -67,6 +65,7 @@ const LAYERS: LayerOption[] = [
   { key: 'macroHeatmap',    label: 'GDP Growth Map',   icon: BarChart3,     color: '#34d399', group: 'overlays', hint: 'Countries shaded by latest annual GDP growth rate. Green = strong growth, red = contraction. Source: EODHD / World Bank.' },
   { key: 'cityLabels',      label: 'City Names',       icon: Type,          color: '#e2e8f0', group: 'overlays', hint: '~220 world capitals and major financial/trade cities. Labels appear when zoomed in (altitude < 1.2). Capitals are shown slightly larger.' },
   { key: 'waterways',       label: 'Waterways',        icon: Waves,         color: '#60a5fa', group: 'overlays', hint: 'Major rivers, canals, and lake centerlines (Natural Earth 10m). Lines stay subtle at default zoom and thicken when you zoom in close.' },
+  { key: 'tradePartnerArcs', label: 'Trade Partners',  icon: ArrowLeftRight, color: '#22c55e', group: 'overlays', hint: 'Animated arcs from the selected country to its top trade partners. Green = exports flowing out, amber = imports flowing in. Click any country first, then enable this layer. Source: UN Comtrade.' },
 ];
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -197,12 +196,6 @@ export function TradeInfrastructurePanel({
           toggleLayer={toggleLayer}
         />
       </Section>
-
-      {/* ── Commodity producers lookup ─────────────────────────────────── */}
-      <CommodityProducersCard />
-
-      {/* ── Commodity prices strip (always shown) ─────────────────────── */}
-      <CommodityPriceStrip />
 
       {/* ── AIS Live Vessels banner (only when that layer is on) ───────── */}
       {activeLayers.has('liveVessels') && (
@@ -586,52 +579,6 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
         </span>
       </div>
       {detail}
-    </div>
-  );
-}
-
-// ── Commodity price strip ────────────────────────────────────────────────────
-function CommodityPriceStrip() {
-  const { data, isLoading } = useCommodityPrices();
-  const prices = data?.prices ?? [];
-
-  return (
-    <div className="px-4 py-3 border-t border-border">
-      <h3 className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-        <BarChart3 className="w-3 h-3" />
-        Commodity Prices
-        <span className="ml-auto text-[9px] font-normal normal-case tracking-normal text-muted-foreground/60">
-          ETF proxies · EOD
-        </span>
-      </h3>
-      {isLoading ? (
-        <div className="grid grid-cols-3 gap-1.5">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="h-10 rounded bg-muted/30 animate-pulse" />
-          ))}
-        </div>
-      ) : prices.length === 0 ? (
-        <p className="text-xs text-muted-foreground italic">Loading commodity data…</p>
-      ) : (
-        <div className="grid grid-cols-3 gap-1.5">
-          {prices.map((p) => {
-            const up = p.changeP > 0;
-            const dn = p.changeP < 0;
-            return (
-              <div key={p.id} className="bg-muted/30 rounded px-2 py-1.5 border border-border/40">
-                <p className="text-[9px] uppercase tracking-wide text-muted-foreground truncate">{p.label}</p>
-                <p className="text-xs font-semibold font-mono tabular-nums mt-0.5">
-                  ${p.price.toFixed(2)}
-                </p>
-                <p className={`text-[9px] flex items-center gap-0.5 font-medium tabular-nums ${up ? 'text-emerald-400' : dn ? 'text-red-400' : 'text-muted-foreground'}`}>
-                  {up ? <TrendingUp className="w-2.5 h-2.5" /> : dn ? <TrendingDown className="w-2.5 h-2.5" /> : null}
-                  {up ? '+' : ''}{p.changeP.toFixed(2)}%
-                </p>
-              </div>
-            );
-          })}
-        </div>
-      )}
     </div>
   );
 }

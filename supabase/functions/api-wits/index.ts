@@ -611,13 +611,100 @@ async function fetchAndParse(
   return rows;
 }
 
+// ── ISO2 → M49 reverse lookup (derived from M49_TO_INFO at module load) ──
+// Used by the bilateral mode below to convert the `partner` ISO2 query
+// param into the M49 numeric code Comtrade expects.
+const ISO2_TO_M49: Record<string, string> = {};
+for (const [m49, info] of Object.entries(M49_TO_INFO)) {
+  if (info.iso2) ISO2_TO_M49[info.iso2] = m49;
+}
+
+/**
+ * Fetch a TRUE BILATERAL product breakdown — exactly what `reporter`
+ * traded with `partner` in `direction`, broken down by HS Chapter (2-digit).
+ *
+ * Sets both `reporterCode` AND `partnerCode` on the Comtrade preview
+ * endpoint.  Uses cmdCode=AG2 (HS 2-digit Chapter, ~99 codes) since the
+ * popover UI is compact and chapter granularity is the sweet spot for
+ * quick scanning ("Mineral fuels 32%", "Vehicles 19%", etc.).
+ *
+ * Same motCode=0 + customsCode=C00 filters as the other Comtrade calls
+ * to dedup the multi-transport / multi-customs rows that would otherwise
+ * inflate the totals.  partner2Code dedup is unnecessary here because the
+ * partner is constrained to a single country — no aggregation collisions.
+ *
+ * Example query:
+ *   reporterCode=842 (USA) & partnerCode=124 (Canada)
+ *   & cmdCode=AG2 & flowCode=X (exports)
+ *   → returns the chapters US exported to Canada that year.
+ */
+async function fetchComtradeBilateral(
+  reporter: string,       // ISO3
+  partnerIso2: string,    // ISO2
+  year: number,
+  direction: "exports" | "imports",
+): Promise<ProductRow[] | null> {
+  const reporterM49 = ISO3_TO_M49[reporter];
+  const partnerM49  = ISO2_TO_M49[partnerIso2];
+  if (!reporterM49 || !partnerM49) return null;
+
+  const flowCode = direction === "exports" ? "X" : "M";
+  const url =
+    `${COMTRADE_BASE}?reporterCode=${reporterM49}` +
+    `&period=${year}` +
+    `&partnerCode=${partnerM49}` +
+    `&cmdCode=AG2` +
+    `&flowCode=${flowCode}` +
+    `&motCode=0` +
+    `&customsCode=C00`;
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+  } catch {
+    return null;
+  }
+  if (!upstream.ok) return null;
+
+  let json: any;
+  try { json = await upstream.json(); } catch { return null; }
+  const data: any[] = Array.isArray(json?.data) ? json.data : [];
+  if (data.length === 0) return null;
+
+  // Even after motCode=0 + customsCode=C00, Comtrade returns 2 rows per
+  // chapter (varying only by partner2Code 0 vs 899) with IDENTICAL values.
+  // First-write-wins per chapter collapses them.
+  const seen = new Set<string>();
+  const rows: ProductRow[] = [];
+  for (const r of data) {
+    const code = String(r.cmdCode ?? "");
+    if (!code || code === "TOTAL" || code === "ALL") continue;
+    if (seen.has(code)) continue;
+    seen.add(code);
+    const value = typeof r.primaryValue === "number" ? r.primaryValue : 0;
+    if (value <= 0) continue;
+    rows.push({
+      code,                              // HS 2-digit chapter, e.g. "27"
+      name: `HS ${code.padStart(2, "0")}`,
+      valueUsd: Math.round(value),
+      share: 0,
+    });
+  }
+  if (rows.length === 0) return null;
+
+  const total = rows.reduce((s, r) => s + r.valueUsd, 0);
+  for (const r of rows) r.share = total > 0 ? r.valueUsd / total : 0;
+  rows.sort((a, b) => b.valueUsd - a.valueUsd);
+  return rows;
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   const url       = new URL(req.url);
   const reporter  = (url.searchParams.get("reporter") ?? "").toUpperCase().trim();
   const direction = (url.searchParams.get("direction") ?? "exports") as "exports" | "imports";
-  const level     = (url.searchParams.get("level") ?? "section") as "section" | "chapter" | "partners" | "trend";
+  const level     = (url.searchParams.get("level") ?? "section") as "section" | "chapter" | "partners" | "trend" | "bilateral";
   const explicitYear = url.searchParams.get("year");
 
   if (!reporter || !/^[A-Z]{3}$/.test(reporter)) {
@@ -645,6 +732,27 @@ serve(async (req) => {
   const yearsToTry = explicitYear
     ? [parseInt(explicitYear, 10)]
     : [new Date().getFullYear() - 3, new Date().getFullYear() - 4, new Date().getFullYear() - 5];
+
+  // Bilateral mode takes an extra `partner` ISO2 query param and has a
+  // different fetcher signature, so it's dispatched separately.
+  if (level === "bilateral") {
+    const partner = (url.searchParams.get("partner") ?? "").toUpperCase().trim();
+    if (!partner || !/^[A-Z]{2}$/.test(partner)) {
+      return json(
+        { error: "partner param required as ISO 3166-1 alpha-2 for bilateral mode (e.g. CA, CN, DE)" },
+        400,
+      );
+    }
+    for (const year of yearsToTry) {
+      if (!Number.isFinite(year)) continue;
+      const products = await fetchComtradeBilateral(reporter, partner, year, direction);
+      if (products && products.length > 0) {
+        const totalUsd = products.reduce((s, r) => s + r.valueUsd, 0);
+        return json({ reporter, partner, direction, level, year, totalUsd, products });
+      }
+    }
+    return json({ reporter, partner, direction, level, products: [] });
+  }
 
   const fetcher =
     level === "chapter"  ? fetchComtradeChapters :

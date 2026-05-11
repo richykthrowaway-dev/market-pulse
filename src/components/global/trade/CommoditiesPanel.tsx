@@ -1,0 +1,367 @@
+import { useState, useMemo } from 'react';
+import {
+  BarChart3, TrendingUp, TrendingDown, Layers,
+  Newspaper, LineChart as LineChartIcon, Loader2,
+  ExternalLink,
+} from 'lucide-react';
+import {
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+} from 'recharts';
+import { subDays, format, parseISO } from 'date-fns';
+import { useCommodityPrices, type CommodityPrice } from '@/hooks/useCommodityPrices';
+import { useEodhdBarsForChart } from '@/hooks/useEodhdBarsForChart';
+import { useEodhdNews } from '@/hooks/useEodhdNews';
+import { CommodityProducersCard } from './CommodityProducersCard';
+import { cn } from '@/lib/utils';
+
+// ── Chart range ──────────────────────────────────────────────────────────────
+type Range = '1M' | '3M' | '1Y';
+const RANGE_DAYS: Record<Range, number> = { '1M': 30, '3M': 90, '1Y': 365 };
+
+/**
+ * CommoditiesPanel — dedicated "Commodities" tab on the Global page.
+ *
+ * Sections:
+ *   1. Commodity price tiles — 9 ETF-proxy prices in a 3-col grid.
+ *      Clicking any tile selects it and expands the chart + news below.
+ *   2. Price chart — 1Y OHLC area chart for the selected commodity.
+ *      Range toggle: 1M / 3M / 1Y.  Uses EODHD daily bars (same hook
+ *      as the Stock Analysis page).
+ *   3. News feed — latest 15 EODHD articles tagged to the ETF ticker,
+ *      with AI-generated sentiment badge.
+ *   4. Top Producers — existing card showing production share by country.
+ */
+export function CommoditiesPanel() {
+  const [selectedPrice, setSelectedPrice] = useState<CommodityPrice | null>(null);
+
+  const handleTileClick = (p: CommodityPrice) => {
+    setSelectedPrice(prev => (prev?.id === p.id ? null : p));
+  };
+
+  return (
+    <div className="h-full flex flex-col overflow-y-auto">
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <div className="px-4 pt-4 pb-3 border-b border-border shrink-0">
+        <div className="flex items-baseline justify-between gap-2 mb-2">
+          <h2 className="text-base font-semibold flex items-center gap-2">
+            <Layers className="w-4 h-4 text-primary" />
+            Commodities
+          </h2>
+        </div>
+        <p className="text-[11px] text-muted-foreground leading-snug">
+          Prices via ETF proxies · click any tile for chart &amp; news · top producers below.
+        </p>
+      </div>
+
+      {/* ── Price strip ─────────────────────────────────────────────────── */}
+      <CommodityPriceStrip
+        selectedId={selectedPrice?.id ?? null}
+        onSelect={handleTileClick}
+      />
+
+      {/* ── Expandable chart + news for selected commodity ──────────────── */}
+      {selectedPrice && (
+        <>
+          <CommodityPriceChart price={selectedPrice} />
+          <CommodityNewsFeed price={selectedPrice} />
+        </>
+      )}
+
+      {/* ── Top producers lookup ─────────────────────────────────────────── */}
+      <div className="border-t border-border">
+        <CommodityProducersCard />
+      </div>
+    </div>
+  );
+}
+
+// ── Price strip ──────────────────────────────────────────────────────────────
+
+function CommodityPriceStrip({
+  selectedId,
+  onSelect,
+}: {
+  selectedId: string | null;
+  onSelect: (p: CommodityPrice) => void;
+}) {
+  const { data, isLoading } = useCommodityPrices();
+  const prices = data?.prices ?? [];
+
+  return (
+    <div className="px-4 py-3">
+      <h3 className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
+        <BarChart3 className="w-3 h-3" />
+        Commodity Prices
+        <span className="ml-auto text-[9px] font-normal normal-case tracking-normal text-muted-foreground/60">
+          ETF proxies · EOD · click for chart
+        </span>
+      </h3>
+      {isLoading ? (
+        <div className="grid grid-cols-3 gap-1.5">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="h-14 rounded bg-muted/30 animate-pulse" />
+          ))}
+        </div>
+      ) : prices.length === 0 ? (
+        <p className="text-xs text-muted-foreground italic">Loading commodity data…</p>
+      ) : (
+        <div className="grid grid-cols-3 gap-1.5">
+          {prices.map((p) => {
+            const up       = p.changeP > 0;
+            const dn       = p.changeP < 0;
+            const selected = p.id === selectedId;
+            return (
+              <button
+                key={p.id}
+                onClick={() => onSelect(p)}
+                className={cn(
+                  'text-left bg-muted/30 rounded px-2 py-1.5 border transition-colors duration-100',
+                  selected
+                    ? 'border-primary/60 bg-primary/8 ring-1 ring-primary/30'
+                    : 'border-border/40 hover:border-primary/30 hover:bg-muted/50',
+                )}
+              >
+                <p className="text-[9px] uppercase tracking-wide text-muted-foreground truncate">
+                  {p.label}
+                </p>
+                <p className="text-xs font-semibold font-mono tabular-nums mt-0.5">
+                  ${p.price.toFixed(2)}
+                </p>
+                <p
+                  className={cn(
+                    'text-[9px] flex items-center gap-0.5 font-medium tabular-nums',
+                    up ? 'text-emerald-400' : dn ? 'text-red-400' : 'text-muted-foreground',
+                  )}
+                >
+                  {up ? <TrendingUp className="w-2.5 h-2.5" /> : dn ? <TrendingDown className="w-2.5 h-2.5" /> : null}
+                  {up ? '+' : ''}{p.changeP.toFixed(2)}%
+                </p>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Price chart ──────────────────────────────────────────────────────────────
+
+function CommodityPriceChart({ price }: { price: CommodityPrice }) {
+  const [range, setRange] = useState<Range>('1Y');
+
+  // Ticker is EODHD format e.g. "GLD.US" — split into symbol + exchange.
+  const [symbol, exchange] = useMemo(() => {
+    const parts = price.ticker.split('.');
+    return [parts[0] ?? price.ticker, parts[1] ?? 'US'];
+  }, [price.ticker]);
+
+  const { data: bars = [], isLoading } = useEodhdBarsForChart(symbol, exchange);
+
+  // Slice client-side to the selected range — hook caches 5Y of bars once.
+  const chartData = useMemo(() => {
+    const cutoff = subDays(new Date(), RANGE_DAYS[range]).getTime();
+    return bars
+      .filter(b => parseISO(b.date).getTime() >= cutoff)
+      .map(b => ({ date: b.date, close: b.close }));
+  }, [bars, range]);
+
+  const isUp = chartData.length >= 2
+    ? chartData[chartData.length - 1].close >= chartData[0].close
+    : true;
+
+  const gradientId = `comm-grad-${symbol}`;
+  const lineColor  = isUp ? '#34d399' : '#f87171'; // emerald vs red-400
+
+  // Y-axis domain with 2% padding
+  const [yMin, yMax] = useMemo(() => {
+    if (!chartData.length) return [0, 1];
+    const vals = chartData.map(d => d.close);
+    const lo = Math.min(...vals);
+    const hi = Math.max(...vals);
+    const pad = (hi - lo) * 0.05 || hi * 0.02;
+    return [lo - pad, hi + pad];
+  }, [chartData]);
+
+  const fmtTick = (d: string) => {
+    try { return format(parseISO(d), range === '1M' ? 'MMM d' : 'MMM yy'); } catch { return d; }
+  };
+
+  return (
+    <div className="px-4 pb-3 border-t border-border">
+      {/* Sub-header */}
+      <div className="flex items-center justify-between mt-3 mb-2">
+        <div className="flex items-center gap-1.5">
+          <LineChartIcon className="w-3.5 h-3.5 text-primary" />
+          <span className="text-xs font-semibold">{price.label}</span>
+          <span className="text-[10px] text-muted-foreground/60 font-mono">{price.ticker}</span>
+        </div>
+        {/* Range toggle */}
+        <div className="flex rounded border border-border overflow-hidden text-[10px]">
+          {(['1M', '3M', '1Y'] as Range[]).map(r => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={cn(
+                'px-2 py-0.5 transition-colors',
+                range === r
+                  ? 'bg-primary text-primary-foreground'
+                  : 'hover:bg-muted text-muted-foreground',
+              )}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="flex items-center justify-center h-36 gap-2 text-xs text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Loading chart…
+        </div>
+      ) : chartData.length === 0 ? (
+        <p className="text-xs text-muted-foreground italic py-6 text-center">
+          No price data available.
+        </p>
+      ) : (
+        <ResponsiveContainer width="100%" height={140}>
+          <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: -16 }}>
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%"  stopColor={lineColor} stopOpacity={0.25} />
+                <stop offset="95%" stopColor={lineColor} stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
+            <XAxis
+              dataKey="date"
+              tickFormatter={fmtTick}
+              tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }}
+              tickLine={false}
+              axisLine={false}
+              minTickGap={36}
+            />
+            <YAxis
+              domain={[yMin, yMax]}
+              tick={{ fontSize: 9, fill: 'var(--muted-foreground)' }}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(v: number) => `$${v.toFixed(0)}`}
+              width={44}
+            />
+            <Tooltip
+              contentStyle={{
+                background: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: 6,
+                fontSize: 11,
+                padding: '4px 8px',
+              }}
+              labelStyle={{ color: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+              formatter={(v: number) => [`$${v.toFixed(2)}`, 'Close']}
+              labelFormatter={(d: string) => {
+                try { return format(parseISO(d), 'MMM d, yyyy'); } catch { return d; }
+              }}
+            />
+            <Area
+              type="monotone"
+              dataKey="close"
+              stroke={lineColor}
+              strokeWidth={1.5}
+              fill={`url(#${gradientId})`}
+              dot={false}
+              isAnimationActive={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      )}
+    </div>
+  );
+}
+
+// ── News feed ────────────────────────────────────────────────────────────────
+
+const SENTIMENT_STYLE = {
+  Positive: 'text-emerald-400 bg-emerald-500/10',
+  Negative: 'text-red-400 bg-red-500/10',
+  Neutral:  'text-muted-foreground bg-muted/40',
+} as const;
+
+function CommodityNewsFeed({ price }: { price: CommodityPrice }) {
+  // Use the full EODHD ticker (e.g. "GLD.US") as the symbol filter.
+  const { data: articles = [], isLoading } = useEodhdNews({
+    symbol: price.ticker,
+    limit: 15,
+  });
+
+  const fmtDate = (iso: string) => {
+    try {
+      const d = new Date(iso);
+      return format(d, 'MMM d');
+    } catch {
+      return iso.slice(0, 10);
+    }
+  };
+
+  return (
+    <div className="px-4 pb-3 border-t border-border">
+      <div className="flex items-center gap-1.5 mt-3 mb-2">
+        <Newspaper className="w-3.5 h-3.5 text-primary" />
+        <span className="text-xs font-semibold">{price.label} News</span>
+        <span className="ml-auto text-[9px] text-muted-foreground/60 uppercase tracking-wide">
+          EODHD · AI sentiment
+        </span>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-8 rounded bg-muted/30 animate-pulse" />
+          ))}
+        </div>
+      ) : articles.length === 0 ? (
+        <p className="text-xs text-muted-foreground italic py-2">
+          No recent news found for {price.label}.
+        </p>
+      ) : (
+        <ul className="space-y-1">
+          {articles.map((a, i) => {
+            const pol = a.sentiment?.polarity ?? 'Neutral';
+            const sentStyle = SENTIMENT_STYLE[pol];
+            return (
+              <li key={i} className="group">
+                <a
+                  href={a.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-start gap-2 py-1.5 rounded-md hover:bg-muted/30 transition-colors -mx-1 px-1"
+                >
+                  {/* Sentiment dot */}
+                  <span className={cn(
+                    'mt-0.5 shrink-0 text-[9px] font-medium px-1 py-0.5 rounded uppercase tracking-wide',
+                    sentStyle,
+                  )}>
+                    {pol === 'Positive' ? '▲' : pol === 'Negative' ? '▼' : '—'}
+                  </span>
+
+                  {/* Title */}
+                  <span className="flex-1 text-xs leading-snug text-foreground/85 line-clamp-2 group-hover:text-foreground transition-colors">
+                    {a.title}
+                  </span>
+
+                  {/* Date + external link */}
+                  <span className="shrink-0 flex flex-col items-end gap-0.5">
+                    <span className="text-[9px] text-muted-foreground tabular-nums">
+                      {fmtDate(a.date)}
+                    </span>
+                    <ExternalLink className="w-2.5 h-2.5 text-muted-foreground/40 group-hover:text-primary/60" />
+                  </span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+}

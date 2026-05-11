@@ -9,6 +9,7 @@ import CountryExchanges from "./CountryExchanges";
 import CountryNews from "./CountryNews";
 import CountryEconomy from "./CountryEconomy";
 import { TradeInfrastructurePanel } from "./trade/TradeInfrastructurePanel";
+import { CommoditiesPanel } from "./trade/CommoditiesPanel";
 import type { LayerKey, TradeNode, TradeRoute } from "@/data/tradeInfrastructure";
 import type { AISStatus } from "@/hooks/useAISStream";
 import type { FlightStatus } from "@/hooks/useOpenSkyFlights";
@@ -80,6 +81,7 @@ export default function CountryPanel({
           <TabsTrigger value="exchanges">Exchanges</TabsTrigger>
           <TabsTrigger value="economy">Economy</TabsTrigger>
           <TabsTrigger value="trade">Trade</TabsTrigger>
+          <TabsTrigger value="commodities">Commodities</TabsTrigger>
         </TabsList>
         <TabsContent value="summary" className="flex-1 overflow-y-auto px-4 pb-4">
           <CountrySummary iso2={iso2} stocks={stocks} isLoading={isLoading} />
@@ -117,6 +119,9 @@ export default function CountryPanel({
           ) : (
             <p className="text-xs text-muted-foreground p-4">Trade overlay not initialised.</p>
           )}
+        </TabsContent>
+        <TabsContent value="commodities" className="flex-1 overflow-hidden">
+          <CommoditiesPanel />
         </TabsContent>
       </Tabs>
     </div>

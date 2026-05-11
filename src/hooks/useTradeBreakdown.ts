@@ -45,13 +45,23 @@ export interface TradeBreakdown {
 export function useTradeBreakdown(
   iso2: string | null,
   direction: TradeDirection,
-  level: 'section' | 'chapter' | 'partners' | 'trend' = 'section',
+  level: 'section' | 'chapter' | 'partners' | 'trend' | 'bilateral' = 'section',
+  /**
+   * Required when `level === 'bilateral'`.  ISO 3166-1 alpha-2 code of the
+   * trade partner.  The edge function converts this to Comtrade's M49
+   * numeric code and sets it as `partnerCode` so the returned product
+   * breakdown reflects ONLY trade between the two countries (not vs world).
+   */
+  partner?: string | null,
 ) {
   const iso3 = toIso3(iso2);
+  // Bilateral queries require BOTH reporter and partner — disable the query
+  // until we have both.  Other levels only need the reporter.
+  const ready = !!iso3 && (level !== 'bilateral' || !!partner);
 
   return useQuery<TradeBreakdown>({
-    queryKey: ['trade-breakdown', iso3, direction, level],
-    enabled: !!iso3,
+    queryKey: ['trade-breakdown', iso3, direction, level, partner ?? null],
+    enabled: ready,
     staleTime:            24 * 60 * 60_000,
     gcTime:               48 * 60 * 60_000,
     refetchOnWindowFocus: false,
@@ -62,6 +72,7 @@ export function useTradeBreakdown(
       if (!iso3) return empty;
 
       const params = new URLSearchParams({ reporter: iso3, direction, level });
+      if (partner) params.set('partner', partner);
       const url = `${ENDPOINT}?${params}`;
 
       try {
