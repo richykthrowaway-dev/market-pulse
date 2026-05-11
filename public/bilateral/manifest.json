@@ -1,12 +1,22 @@
 {
   "version": "v2022",
   "year": 2022,
-  "generated": "2026-05-11T05:05:33.467Z",
+  "generated": "2026-05-11T05:37:58.540Z",
   "reporters": [
+    "AE",
+    "BE",
+    "CA",
     "CN",
     "DE",
+    "ES",
+    "FR",
     "GB",
+    "IN",
+    "IT",
     "JP",
+    "KR",
+    "MX",
+    "NL",
     "US"
   ]
 }
