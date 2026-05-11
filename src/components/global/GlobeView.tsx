@@ -31,6 +31,10 @@ import { WORLD_CITIES, type WorldCity } from "@/data/worldCities";
 const EARTH_TEXTURE_URL    = "https://cdn.jsdelivr.net/gh/vasturiano/three-globe/example/img/earth-blue-marble.jpg";
 const EARTH_BUMP_URL       = "https://cdn.jsdelivr.net/gh/vasturiano/three-globe/example/img/earth-topology.png";
 const CLOUDS_TEXTURE_URL   = "https://cdn.jsdelivr.net/gh/turban/webgl-earth@master/images/fair_clouds_4k.png";
+// Same NASA Blue Marble imagery at 16 384 × 8 192 — 4× the pixel count of the
+// default 8K version.  Loaded progressively in the background and hot-swapped
+// into the globe material once decoded so close-up views stay sharp.
+const EARTH_TEXTURE_16K_URL = "https://cdn.jsdelivr.net/gh/turban/webgl-earth@master/images/2_no_clouds_16k.jpg";
 
 type GlobeMode = "flags" | "performance";
 type Feature = { properties: Record<string, any>; geometry: any };
@@ -629,6 +633,67 @@ export default function GlobeView({
       if (timeoutId) clearTimeout(timeoutId);
     };
   }, [countries]);
+
+  // ── Progressive 16K texture upgrade ──────────────────────────────────────
+  // The 8K diffuse map loads fast and gives a good initial look.  Once the
+  // globe is on screen we fetch the 16K version (~8 MB) in the background.
+  // When it arrives we apply the same anisotropic + trilinear filtering and
+  // swap material.map in one frame — no flicker.  The superseded 8K texture
+  // is disposed to free ~8 MB of GPU VRAM.
+  //
+  // Retry loop: we need the 8K map to already be decoded (mat.map.image set)
+  // before swapping, otherwise three-globe might overwrite us.  Poll until
+  // both are ready, then perform the single swap.
+  useEffect(() => {
+    if (!countries.length) return;
+    let cancelled  = false;
+    let retryId:    ReturnType<typeof setTimeout>;
+    let pendingTex: THREE.Texture | null = null;
+    let applied     = false;
+
+    const trySwap = (tex: THREE.Texture) => {
+      if (cancelled) { if (!applied) tex.dispose(); return; }
+
+      const globe = globeRef.current;
+      if (!globe) { retryId = setTimeout(() => trySwap(tex), 400); return; }
+
+      let mat: THREE.MeshPhongMaterial | undefined;
+      try { mat = globe.globeMaterial() as THREE.MeshPhongMaterial; } catch {
+        retryId = setTimeout(() => trySwap(tex), 400);
+        return;
+      }
+
+      // Wait until react-globe.gl has decoded and applied the 8K base map.
+      // Checking `.image` confirms the texture is fully resident on the GPU.
+      if (!mat?.map?.image) { retryId = setTimeout(() => trySwap(tex), 400); return; }
+
+      const renderer = globe.renderer();
+      tex.anisotropy      = renderer.capabilities.getMaxAnisotropy();
+      tex.minFilter       = THREE.LinearMipmapLinearFilter;
+      tex.magFilter       = THREE.LinearFilter;
+      tex.generateMipmaps = true;
+      tex.needsUpdate     = true;
+
+      const old = mat.map;
+      mat.map = tex;
+      mat.needsUpdate = true;
+      applied = true;
+      old?.dispose(); // reclaim 8K VRAM — material now owns the 16K texture
+    };
+
+    new THREE.TextureLoader().load(
+      EARTH_TEXTURE_16K_URL,
+      (tex) => { pendingTex = tex; trySwap(tex); },
+      undefined,
+      () => console.warn('[GlobeView] 16K texture failed to load — keeping 8K'),
+    );
+
+    return () => {
+      cancelled = true;
+      clearTimeout(retryId);
+      if (pendingTex && !applied) pendingTex.dispose();
+    };
+  }, [countries.length]);
 
   // ── Cloud layer ─────────────────────────────────────────────────────
   // Renders a slightly-larger transparent sphere over the Blue Marble globe
