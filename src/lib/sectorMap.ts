@@ -585,8 +585,8 @@ export const STATIC_SUBINDUSTRY_MAP: Record<string, string> = {
   PAYX: 'Data Processing & Outsourced Services', PAYC:'Data Processing & Outsourced Services',
   ADP:  'Data Processing & Outsourced Services',
   RHI:  'Human Resource & Employment Services', MAN:'Human Resource & Employment Services',
-  VRSK: 'Research & Consulting Services', BAH:'Research & Consulting Services',
-  CACI: 'Research & Consulting Services', FCN:'Research & Consulting Services',
+  VRSK: 'Research & Consulting Services', 
+   FCN:'Research & Consulting Services',
 
   // ── Energy ───────────────────────────────────────────────────────────
   XOM:  'Integrated Oil & Gas', CVX:'Integrated Oil & Gas',
@@ -679,12 +679,12 @@ export const STATIC_SUBINDUSTRY_MAP: Record<string, string> = {
   // ═══════════════════════════════════════════════════════════════════════
 
   // ── More IT (mid/small caps) ─────────────────────────────────────────
-  WIX:  'Application Software', HUBS:'Application Software',
-  TENB: 'Systems Software', SPLK:'Systems Software', NLOK:'Systems Software',
+  WIX:  'Application Software', 
+   SPLK:'Systems Software', 
   DOX:  'IT Consulting & Other Services', WK:'Application Software',
   DOCN: 'Internet Services & Infrastructure',
-  AKAM: 'Internet Services & Infrastructure', VRSN:'Internet Services & Infrastructure',
-  GDDY: 'Internet Services & Infrastructure', SQSP:'Internet Services & Infrastructure',
+   
+   SQSP:'Internet Services & Infrastructure',
   CIEN: 'Communications Equipment', NTGR:'Communications Equipment',
   COMM: 'Communications Equipment', UI:'Communications Equipment',
   ZBRA: 'Electronic Equipment & Instruments', VPG:'Electronic Equipment & Instruments',
@@ -713,7 +713,7 @@ export const STATIC_SUBINDUSTRY_MAP: Record<string, string> = {
   TEF:  'Integrated Telecommunication Services', VOD:'Integrated Telecommunication Services',
   AMX:  'Wireless Telecommunication Services',
   // Gaming
-  RBLX: 'Interactive Home Entertainment',
+  
 
   // ── More Consumer Discretionary ──────────────────────────────────────
   // E-commerce / broadline
@@ -784,9 +784,9 @@ export const STATIC_SUBINDUSTRY_MAP: Record<string, string> = {
   FRPT: 'Packaged Foods & Meats', SMPL:'Packaged Foods & Meats',
   PPC:  'Packaged Foods & Meats', BRBR:'Packaged Foods & Meats',
   // Personal/household
-  CHWY: 'Broadline Retail', SPB:'Personal Care Products',
+   SPB:'Personal Care Products',
   ENR:  'Personal Care Products', HNST:'Personal Care Products',
-  EPC:  'Household Products', CHD:'Household Products',
+  EPC:  'Household Products', 
   CENT: 'Household Products', CENTA:'Household Products',
   CASY: 'Food Retail', GO:'Food Retail',
 
@@ -813,9 +813,9 @@ export const STATIC_SUBINDUSTRY_MAP: Record<string, string> = {
   IDXX: 'Health Care Equipment', RMD:'Health Care Equipment',
   ALGN: 'Health Care Equipment', TFX:'Health Care Equipment',
   HOLX: 'Health Care Equipment', STE:'Health Care Equipment',
-  MTSI: 'Semiconductors', WAB:'Construction Machinery & Heavy Transportation Equipment',
+   WAB:'Construction Machinery & Heavy Transportation Equipment',
   ABMD: 'Health Care Equipment', NVCR:'Health Care Equipment',
-  PEN:  'Casinos & Gaming', INSP:'Health Care Equipment',
+   INSP:'Health Care Equipment',
   ITGR: 'Health Care Equipment', ICUI:'Health Care Equipment',
   TNDM: 'Health Care Equipment', LIVN:'Health Care Equipment',
   CSII: 'Health Care Equipment', AXNX:'Health Care Equipment',
@@ -823,7 +823,7 @@ export const STATIC_SUBINDUSTRY_MAP: Record<string, string> = {
   HAE:  'Health Care Equipment',
   // Health Care Services / Providers
   EHC:  'Health Care Facilities', ENSG:'Health Care Facilities',
-  AMED: 'Health Care Services', CHE:'Health Care Services',
+  AMED: 'Health Care Services', 
   ADUS: 'Health Care Services', LHCG:'Health Care Services',
   AGL:  'Managed Health Care', OSCR:'Managed Health Care',
   CLOV: 'Managed Health Care', PRIV:'Managed Health Care',
@@ -833,7 +833,7 @@ export const STATIC_SUBINDUSTRY_MAP: Record<string, string> = {
   REPL: 'Life Sciences Tools & Services', QGEN:'Life Sciences Tools & Services',
   PKI:  'Life Sciences Tools & Services',
   // Health Care Tech
-  VEEV: 'Application Software', HCAT:'Health Care Technology',
+   HCAT:'Health Care Technology',
   TDOC: 'Health Care Technology', OMCL:'Health Care Technology',
   PINC: 'Health Care Technology', DOCS:'Health Care Technology',
   HQY:  'Health Care Technology', HIMS:'Health Care Technology',
@@ -904,7 +904,7 @@ export const STATIC_SUBINDUSTRY_MAP: Record<string, string> = {
   ALSN: 'Construction Machinery & Heavy Transportation Equipment',
   TEX:  'Construction Machinery & Heavy Transportation Equipment',
   OSK:  'Construction Machinery & Heavy Transportation Equipment',
-  WAB:  'Construction Machinery & Heavy Transportation Equipment',
+  
   MTW:  'Construction Machinery & Heavy Transportation Equipment',
   CMCO: 'Industrial Machinery & Supplies & Components',
   GGG:  'Industrial Machinery & Supplies & Components',
@@ -923,7 +923,7 @@ export const STATIC_SUBINDUSTRY_MAP: Record<string, string> = {
   // Trucking / shipping
   HUBG: 'Cargo Ground Transportation', WERN:'Cargo Ground Transportation',
   HTLD: 'Cargo Ground Transportation', SNDR:'Cargo Ground Transportation',
-  USFD: 'Food Distributors', YELL:'Cargo Ground Transportation',
+   YELL:'Cargo Ground Transportation',
   ARCB: 'Cargo Ground Transportation', GBX:'Construction Machinery & Heavy Transportation Equipment',
   KEX:  'Marine Transportation', MATX:'Marine Transportation',
   ZIM:  'Marine Transportation', SBLK:'Marine Transportation',
@@ -1091,7 +1091,7 @@ export const STATIC_SUBINDUSTRY_MAP: Record<string, string> = {
   'MRU.TO': 'Food Retail', 'EMP.A.TO':'Food Retail',
   'ATD.TO': 'Food Retail', 'DOL.TO':'Consumer Staples Merchandise Retail',
   'QSR.TO': 'Restaurants', 'MFI.TO':'Packaged Foods & Meats',
-  'TIH.TO': 'Trading Companies & Distributors', 'FNV.TO':'Gold',
+  'TIH.TO': 'Trading Companies & Distributors', 
   'RBA.TO': 'Trading Companies & Distributors',
   'BCE.TO': 'Integrated Telecommunication Services',
   'T.TO':   'Integrated Telecommunication Services',

@@ -198,7 +198,7 @@ function TickerTooltip({
           posClass,
           'invisible opacity-0',
           'group-hover/tip:visible group-hover/tip:opacity-100',
-          'transition-[opacity,visibility] duration-150 delay-[350ms]',
+          'transition-[opacity,visibility] duration-150 [transition-delay:350ms]',
           'bg-popover border border-border rounded-lg shadow-lg',
           'px-2.5 py-1.5 text-left',
         )}
@@ -696,7 +696,7 @@ export function CorrelationMatrix({ holdings }: Props) {
                       'pointer-events-none absolute z-50 bottom-full left-0 mb-2 min-w-max',
                       'invisible opacity-0',
                       'group-hover/pairA:visible group-hover/pairA:opacity-100',
-                      'transition-[opacity,visibility] duration-150 delay-[350ms]',
+                      'transition-[opacity,visibility] duration-150 [transition-delay:350ms]',
                       'bg-popover border border-border rounded-lg shadow-lg px-2.5 py-1.5 text-left',
                     )}>
                       <p className="text-[12px] font-semibold text-foreground leading-tight">
@@ -725,7 +725,7 @@ export function CorrelationMatrix({ holdings }: Props) {
                       'pointer-events-none absolute z-50 bottom-full left-0 mb-2 min-w-max',
                       'invisible opacity-0',
                       'group-hover/pairB:visible group-hover/pairB:opacity-100',
-                      'transition-[opacity,visibility] duration-150 delay-[350ms]',
+                      'transition-[opacity,visibility] duration-150 [transition-delay:350ms]',
                       'bg-popover border border-border rounded-lg shadow-lg px-2.5 py-1.5 text-left',
                     )}>
                       <p className="text-[12px] font-semibold text-foreground leading-tight">

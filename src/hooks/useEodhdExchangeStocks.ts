@@ -27,7 +27,8 @@ export const ISO2_TO_EODHD_EXCHANGE: Record<string, string> = {
   PT: 'LB',    IE: 'IR',    GR: 'AT',    FI: 'HE',    TW: 'TWO',
   TH: 'BKK',   MY: 'KLSE',  PH: 'PSE',  ID: 'JKT',   VN: 'HOSE',
   IL: 'TASE',  SA: 'SR',    QA: 'QATAR', AE: 'DFM',   EG: 'EGPT',
-  NG: 'LAGOS', KE: 'NSE',   GH: 'GSE',  ZA: 'JSE',
+  NG: 'LAGOS', KE: 'NSE',   GH: 'GSE',
+  // ZA already mapped to 'JSE' on line 25 — duplicate removed.
 };
 
 /**

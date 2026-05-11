@@ -832,7 +832,7 @@ export function normalizeSector(raw: string): string {
     'forest products': 'Materials',
     // Utilities
     'electric utilities': 'Utilities',
-    'gas utilities': 'Utilities',
+    // 'gas utilities' — already mapped earlier; duplicate removed.
     'multi-utilities': 'Utilities',
     'water utilities': 'Utilities',
     'renewable electricity': 'Utilities',
@@ -865,28 +865,27 @@ export function normalizeSector(raw: string): string {
     'independent power and renewable electricity producers': 'Utilities',
     // IT restructuring
     'it services': 'Information Technology',
-    'software': 'Information Technology',
+    // 'software' — already mapped earlier; duplicate removed.
     // Consumer Discretionary restructuring
-    'automobiles': 'Consumer Discretionary',
+    // 'automobiles' — already mapped earlier; duplicate removed.
     'motorcycle manufacturers': 'Consumer Discretionary',
     'textiles': 'Consumer Discretionary',
     'homefurnishing retail': 'Consumer Discretionary',
-    'home improvement retail': 'Consumer Discretionary',
+    // 'home improvement retail' — already mapped earlier; duplicate removed.
     // Consumer Staples restructuring
-    'beverages': 'Consumer Staples',
+    // 'beverages' — already mapped earlier; duplicate removed.
     'food products': 'Consumer Staples',
-    'food retail': 'Consumer Staples',
+    // 'food retail' — already mapped earlier; duplicate removed.
     'consumer staples merchandise retail': 'Consumer Staples',
-    'hypermarkets & super centers': 'Consumer Staples',
+    // 'hypermarkets & super centers' — already mapped earlier; duplicate removed.
     // New Materials sub-industries
     'construction machinery & heavy transportation equipment': 'Industrials',
     // New Real Estate sub-industries
     'multi-family residential reits': 'Real Estate',
     'single-family residential reits': 'Real Estate',
     'timber reits': 'Real Estate',
-    'data center reits': 'Real Estate',
-    'telecom tower reits': 'Real Estate',
-    'self-storage reits': 'Real Estate',
+    // 'data center reits', 'telecom tower reits', 'self-storage reits'
+    //   — already mapped earlier; duplicates removed.
     'other specialized reits': 'Real Estate',
     // Financial restructuring
     'commercial mortgage reits': 'Financials',
