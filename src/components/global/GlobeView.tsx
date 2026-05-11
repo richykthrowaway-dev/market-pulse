@@ -201,6 +201,19 @@ function perfColor(changePct: number): string {
   return `rgba(${r}, ${g}, 60, 0.45)`;
 }
 
+/** Map AIS numeric ship-type codes to human-readable labels. */
+function fmtShipType(code: number | undefined): string {
+  if (code === undefined) return 'Unknown';
+  if (code >= 70 && code <= 79) return 'Cargo';
+  if (code >= 80 && code <= 89) return 'Tanker';
+  if (code >= 60 && code <= 69) return 'Passenger';
+  if (code === 30) return 'Fishing';
+  if (code === 31 || code === 32) return 'Tug';
+  if (code === 36 || code === 37) return 'Pleasure craft';
+  if (code >= 33 && code <= 35) return 'Other (engaged)';
+  return `Type ${code}`;
+}
+
 // ── Unified ring layer — conflicts (orange/red) + earthquakes (teal) ────
 // react-globe.gl has a single `ringsData` slot, so we merge both event
 // types into a discriminated union and dispatch in each callback.
@@ -784,6 +797,25 @@ export default function GlobeView({
   const flightMeshRef = useRef<THREE.Points | null>(null);
   const flightMatRef  = useRef<THREE.PointsMaterial | null>(null);
 
+  // ── Stable data refs for the hover raycaster ────────────────────────────
+  // Plain refs, never cause re-renders. Written every render so the raycaster
+  // always reads the latest vessel/flight arrays without needing them in
+  // a useEffect dependency array (which would recreate the listener too often).
+  const liveVesselsRef = useRef<Vessel[] | undefined>(undefined);
+  liveVesselsRef.current = liveVessels;
+  const liveFlightsRef  = useRef<Flight[] | undefined>(undefined);
+  liveFlightsRef.current = liveFlights;
+
+  // Tooltip shown when the cursor is over a vessel or flight dot.
+  // Uses position:fixed so it escapes the parent's overflow:hidden.
+  const [hoverTip, setHoverTip] = useState<{
+    clientX: number;
+    clientY: number;
+    kind:    'vessel' | 'flight';
+    vessel?: Vessel;
+    flight?: Flight;
+  } | null>(null);
+
   useEffect(() => {
     if (!countries.length) return;
     const mat = new THREE.PointsMaterial({
@@ -884,6 +916,98 @@ export default function GlobeView({
       }
     };
   }, [liveFlights, countries.length]);
+
+  // ── Hover raycaster for live vessels & flights ──────────────────────────
+  // THREE.Raycaster natively supports Points objects. intersectObject()
+  // returns the hit point's index in the Float32Array, which maps 1:1 to
+  // liveVessels[] / liveFlights[] (both are built in the same iteration order).
+  // We coalesce to one raycast per animation frame — identical pattern to the
+  // country polygon hover — and suppress output during drag/coast.
+  // Uses position:fixed for the tooltip div so it escapes overflow:hidden.
+  useEffect(() => {
+    if (!countries.length) return;
+    const globe = globeRef.current;
+    if (!globe) return;
+
+    let el: HTMLElement;
+    let camera: THREE.Camera;
+    try {
+      el     = globe.renderer().domElement;
+      camera = (globe as any).camera();
+    } catch { return; }
+
+    const raycaster = new THREE.Raycaster();
+    // threshold is in world-space units; three-globe uses radius ≈ 100 units.
+    // 1.5 gives a comfortable ~1.5% of globe radius hit zone around each dot
+    // without false-positives when dots are packed (e.g. major shipping lanes).
+    raycaster.params.Points = { threshold: 1.5 };
+
+    let rafId  = 0;
+    let lastEv: PointerEvent | null = null;
+
+    const onMove = (e: PointerEvent) => {
+      lastEv = e;
+      if (rafId) return; // coalesce — one raycast per frame max
+      rafId = requestAnimationFrame(() => {
+        rafId = 0;
+        if (!lastEv) return;
+        if (draggingRef.current) { setHoverTip(null); return; }
+
+        // Neither vessel nor flight layer active — skip raycasting entirely.
+        const hasVessels = !!(vesselMeshRef.current && liveVesselsRef.current?.length);
+        const hasFlights = !!(flightMeshRef.current && liveFlightsRef.current?.length);
+        if (!hasVessels && !hasFlights) { setHoverTip(null); return; }
+
+        const rect  = el.getBoundingClientRect();
+        const mouse = new THREE.Vector2(
+          ((lastEv.clientX - rect.left) / rect.width)  *  2 - 1,
+          ((lastEv.clientY - rect.top)  / rect.height) * -2 + 1,
+        );
+        raycaster.setFromCamera(mouse, camera);
+
+        // Vessels (cyan layer, rendered below flights)
+        if (hasVessels) {
+          const hits = raycaster.intersectObject(vesselMeshRef.current!);
+          if (hits.length > 0 && hits[0].index != null) {
+            const v = liveVesselsRef.current![hits[0].index];
+            if (v) {
+              setHoverTip({ clientX: lastEv.clientX, clientY: lastEv.clientY, kind: 'vessel', vessel: v });
+              return;
+            }
+          }
+        }
+
+        // Flights (purple layer, rendered above vessels)
+        if (hasFlights) {
+          const hits = raycaster.intersectObject(flightMeshRef.current!);
+          if (hits.length > 0 && hits[0].index != null) {
+            const f = liveFlightsRef.current![hits[0].index];
+            if (f) {
+              setHoverTip({ clientX: lastEv.clientX, clientY: lastEv.clientY, kind: 'flight', flight: f });
+              return;
+            }
+          }
+        }
+
+        setHoverTip(null);
+      });
+    };
+
+    const clearTip = () => {
+      cancelAnimationFrame(rafId);
+      rafId = 0;
+      setHoverTip(null);
+    };
+
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerleave', clearTip);
+
+    return () => {
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerleave', clearTip);
+      cancelAnimationFrame(rafId);
+    };
+  }, [countries.length]);
 
   // Live-respond to autoRotate prop changes WITHOUT waiting for the next
   // idle cycle. Flipping the toggle off mid-spin should stop instantly;
@@ -1156,7 +1280,7 @@ export default function GlobeView({
   return (
     <div
       className="flex items-center justify-center overflow-hidden"
-      style={{ width, height, touchAction: 'none', isolation: 'isolate' }}
+      style={{ width, height, touchAction: 'none', isolation: 'isolate', position: 'relative' }}
     >
       <Globe
         ref={globeRef as React.MutableRefObject<GlobeMethods | undefined>}
@@ -1266,6 +1390,83 @@ export default function GlobeView({
           }
         }}
       />
+
+      {/* ── Vessel / flight hover tooltip ────────────────────────────────── */}
+      {/* position:fixed escapes the parent overflow:hidden and isolation layer */}
+      {hoverTip && (
+        <div
+          className="pointer-events-none z-[500]"
+          style={{ position: 'fixed', left: hoverTip.clientX + 14, top: hoverTip.clientY - 8 }}
+        >
+          <div className="bg-black/90 border border-white/10 rounded-md px-2.5 py-2 text-xs shadow-xl backdrop-blur-sm min-w-[148px]">
+            {hoverTip.kind === 'vessel' && hoverTip.vessel ? (
+              <>
+                <p className="text-cyan-300 font-semibold leading-tight mb-1.5">
+                  {hoverTip.vessel.name?.trim() || `MMSI ${hoverTip.vessel.mmsi}`}
+                </p>
+                <div className="space-y-0.5 text-[10px] text-muted-foreground">
+                  <div className="flex justify-between gap-3">
+                    <span>MMSI</span>
+                    <span className="text-foreground font-mono">{hoverTip.vessel.mmsi}</span>
+                  </div>
+                  {hoverTip.vessel.sog != null && (
+                    <div className="flex justify-between gap-3">
+                      <span>Speed</span>
+                      <span className="text-foreground">{hoverTip.vessel.sog.toFixed(1)} kn</span>
+                    </div>
+                  )}
+                  {hoverTip.vessel.cog != null && (
+                    <div className="flex justify-between gap-3">
+                      <span>Course</span>
+                      <span className="text-foreground">{Math.round(hoverTip.vessel.cog)}°</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between gap-3">
+                    <span>Type</span>
+                    <span className="text-foreground">{fmtShipType(hoverTip.vessel.shipType)}</span>
+                  </div>
+                </div>
+              </>
+            ) : hoverTip.kind === 'flight' && hoverTip.flight ? (
+              <>
+                <p className="text-purple-300 font-semibold leading-tight mb-1.5">
+                  {hoverTip.flight.callsign?.trim() || hoverTip.flight.icao24.toUpperCase()}
+                </p>
+                <div className="space-y-0.5 text-[10px] text-muted-foreground">
+                  {hoverTip.flight.country && (
+                    <div className="flex justify-between gap-3">
+                      <span>Origin</span>
+                      <span className="text-foreground">{hoverTip.flight.country}</span>
+                    </div>
+                  )}
+                  {hoverTip.flight.altitudeM != null && (
+                    <div className="flex justify-between gap-3">
+                      <span>Altitude</span>
+                      <span className="text-foreground">
+                        {Math.round(hoverTip.flight.altitudeM / 0.3048).toLocaleString()} ft
+                      </span>
+                    </div>
+                  )}
+                  {hoverTip.flight.velocityMs != null && (
+                    <div className="flex justify-between gap-3">
+                      <span>Speed</span>
+                      <span className="text-foreground">
+                        {Math.round(hoverTip.flight.velocityMs * 1.944)} kn
+                      </span>
+                    </div>
+                  )}
+                  {hoverTip.flight.track != null && (
+                    <div className="flex justify-between gap-3">
+                      <span>Track</span>
+                      <span className="text-foreground">{Math.round(hoverTip.flight.track)}°</span>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : null}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
