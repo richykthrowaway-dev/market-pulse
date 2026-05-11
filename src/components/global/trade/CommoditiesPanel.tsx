@@ -14,6 +14,7 @@ import { useEodhdNews } from '@/hooks/useEodhdNews';
 import { useEodhdTechnicals } from '@/hooks/useEodhdTechnicals';
 import { CommodityProducersCard } from './CommodityProducersCard';
 import { CommodityCatalystStrip } from './CommodityCatalystStrip';
+import { CommodityDriverBlock }   from './CommodityDriverBlock';
 import { cn } from '@/lib/utils';
 
 // ── Chart range ──────────────────────────────────────────────────────────────
@@ -66,6 +67,7 @@ export function CommoditiesPanel() {
         <>
           <CommodityCatalystStrip price={selectedPrice} />
           <CommodityPriceChart price={selectedPrice} />
+          <CommodityDriverBlock price={selectedPrice} />
           <CommodityNewsFeed price={selectedPrice} />
         </>
       )}
