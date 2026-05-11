@@ -22,6 +22,10 @@ export type LayerKey =
   | 'liveFlights'        // future
   | 'conflictEvents'     // ACLED + GDELT geocoded events
   | 'earthquakes'        // USGS M2.5+ seismic events
+  | 'wildfires'          // NASA EONET — active wildfires (NASA FIRMS satellite source)
+  | 'severeStorms'       // NASA EONET — tropical cyclones, hurricanes, typhoons (NHC source)
+  | 'volcanoes'          // NASA EONET — active volcanic eruptions (Smithsonian GVP source)
+  | 'floods'             // NASA EONET — flood events
   | 'economicEvents'     // EODHD macro calendar (CPI, NFP, GDP, rate decisions)
   | 'macroHeatmap'       // EODHD GDP growth — country polygon shading
   | 'cityLabels'         // city / capital name labels at close zoom

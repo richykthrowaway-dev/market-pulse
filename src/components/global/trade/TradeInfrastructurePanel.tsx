@@ -4,7 +4,7 @@ import {
   Layers, Compass, Search, Sparkles,
   Network, ShieldAlert, Globe2, Radio, Loader2,
   CalendarDays, BarChart3, Type, Waves, ArrowLeftRight,
-  Activity,
+  Activity, Flame, Wind, Mountain, Droplets,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -71,6 +71,10 @@ const LAYERS: LayerOption[] = [
   { key: 'liveFlights',    label: 'Live Flights',     icon: Plane,  color: '#a855f7', group: 'overlays', hint: 'Live aircraft via airplanes.live community ADS-B — coverage reflects volunteer receiver density (dense in N. America/Europe/Japan, sparse elsewhere).' },
   { key: 'conflictEvents',  label: 'Conflict Events',  icon: AlertTriangle,  color: '#f97316', group: 'overlays', hint: 'Geocoded events from ACLED (last 14d, fatalities ≥ 1) + GDELT (last 24h, armed-conflict theme). Click an event for affected commodities.' },
   { key: 'earthquakes',     label: 'Earthquakes',      icon: ShieldAlert,   color: '#38bdf8', group: 'overlays', hint: 'USGS M2.5+ seismic events, past 7 days. Ring size scales with magnitude. Click for affected commodity supply chains.' },
+  { key: 'wildfires',       label: 'Wildfires',        icon: Flame,         color: '#f97316', group: 'overlays', hint: 'Active wildfires from NASA EONET (FIRMS satellite source). Past 30 days, click an event for description + affected commodities.' },
+  { key: 'severeStorms',    label: 'Severe Storms',    icon: Wind,          color: '#06b6d4', group: 'overlays', hint: 'Tropical cyclones, hurricanes, typhoons from NASA EONET (NHC source). Each storm shows its most recent track position.' },
+  { key: 'volcanoes',       label: 'Volcanoes',        icon: Mountain,      color: '#dc2626', group: 'overlays', hint: 'Active volcanic eruptions from NASA EONET (Smithsonian GVP source). Critical for aviation and regional mining supply.' },
+  { key: 'floods',          label: 'Floods',           icon: Droplets,      color: '#3b82f6', group: 'overlays', hint: 'Significant flood events from NASA EONET. Disrupts agriculture, mining, and inland transport.' },
   { key: 'economicEvents',  label: 'Economic Events',  icon: CalendarDays,  color: '#60a5fa', group: 'overlays', hint: 'Upcoming macro releases: CPI, NFP, GDP, PMIs, rate decisions. Source: EODHD economic calendar. Click an event for actual vs estimate.' },
   { key: 'macroHeatmap',    label: 'GDP Growth Map',   icon: BarChart3,     color: '#34d399', group: 'overlays', hint: 'Countries shaded by latest annual GDP growth rate. Green = strong growth, red = contraction. Source: EODHD / World Bank.' },
   { key: 'cityLabels',      label: 'City Names',       icon: Type,          color: '#e2e8f0', group: 'overlays', hint: '~220 world capitals and major financial/trade cities. Labels appear when zoomed in (altitude < 1.2). Capitals are shown slightly larger.' },

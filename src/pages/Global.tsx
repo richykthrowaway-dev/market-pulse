@@ -13,6 +13,7 @@ import GlobalSummary from "@/components/global/GlobalSummary";
 import ExchangeDetailDialog from "@/components/global/ExchangeDetailDialog";
 import { ConflictEventDialog } from "@/components/global/trade/ConflictEventDialog";
 import { EarthquakeDialog } from "@/components/global/trade/EarthquakeDialog";
+import { NaturalEventDialog } from "@/components/global/trade/NaturalEventDialog";
 import { TradePartnersDialog } from "@/components/global/trade/TradePartnersDialog";
 import type { ExchangeInfo } from "@/data/exchangeData";
 import {
@@ -23,6 +24,7 @@ import { useAISStream } from "@/hooks/useAISStream";
 import { useOpenSkyFlights } from "@/hooks/useOpenSkyFlights";
 import { useConflictEvents, type ConflictEvent } from "@/hooks/useConflictEvents";
 import { useEarthquakes, type EarthquakeEvent } from "@/hooks/useEarthquakes";
+import { useNaturalEvents, type NaturalEvent } from "@/hooks/useNaturalEvents";
 import { useEconomicEvents, type EconomicEvent } from "@/hooks/useEconomicEvents";
 import { useMacroHeatmap } from "@/hooks/useMacroHeatmap";
 import { EconomicEventDialog } from "@/components/global/trade/EconomicEventDialog";
@@ -307,6 +309,27 @@ const Global = () => {
   const [selectedEarthquake, setSelectedEarthquake] = useState<EarthquakeEvent | null>(null);
   const onEarthquakeEventClick = useCallback((e: EarthquakeEvent) => {
     setSelectedEarthquake(e);
+  }, []);
+
+  // ── NASA EONET natural events (gated on any of 4 layer toggles) ──────
+  // One HTTP call returns all four categories; we filter client-side based
+  // on which sub-layers are active.  Cheap to fetch once, expensive to call
+  // multiple times — so we lean into the "one fetch, four layers" pattern.
+  const naturalEventsEnabled =
+    tradeTabActive && (
+      tradeActiveLayers.has('wildfires')    ||
+      tradeActiveLayers.has('severeStorms') ||
+      tradeActiveLayers.has('volcanoes')    ||
+      tradeActiveLayers.has('floods')
+    );
+  const naturalEventsQuery = useNaturalEvents(naturalEventsEnabled);
+  const naturalEvents = useMemo<NaturalEvent[] | undefined>(() => {
+    if (!naturalEventsEnabled || !naturalEventsQuery.data) return undefined;
+    return naturalEventsQuery.data.filter(e => tradeActiveLayers.has(e.category));
+  }, [naturalEventsEnabled, naturalEventsQuery.data, tradeActiveLayers]);
+  const [selectedNaturalEvent, setSelectedNaturalEvent] = useState<NaturalEvent | null>(null);
+  const onNaturalEventClick = useCallback((e: NaturalEvent) => {
+    setSelectedNaturalEvent(e);
   }, []);
 
   // ── EODHD economic events calendar (gated on layer toggle) ──────────
@@ -599,6 +622,8 @@ const Global = () => {
                   onConflictEventClick={onConflictEventClick}
                   earthquakeEvents={earthquakeEvents}
                   onEarthquakeEventClick={onEarthquakeEventClick}
+                  naturalEvents={naturalEvents}
+                  onNaturalEventClick={onNaturalEventClick}
                   economicEvents={economicEvents}
                   onEconomicEventClick={onEconomicEventClick}
                   macroHeatmap={macroHeatmap}
@@ -628,6 +653,15 @@ const Global = () => {
           <EarthquakeDialog
             event={selectedEarthquake}
             onClose={() => setSelectedEarthquake(null)}
+            onSetAlert={(commodityId) => {
+              console.log('[alerts] User wants alerts for commodity:', commodityId);
+            }}
+          />
+
+          {/* Natural event detail — wildfire/storm/volcano/flood with affected supply */}
+          <NaturalEventDialog
+            event={selectedNaturalEvent}
+            onClose={() => setSelectedNaturalEvent(null)}
             onSetAlert={(commodityId) => {
               console.log('[alerts] User wants alerts for commodity:', commodityId);
             }}

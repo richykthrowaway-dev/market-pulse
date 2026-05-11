@@ -17,6 +17,7 @@ import { smoothRouteCoords } from "@/data/tradeInfrastructure/smoothing";
 import type { Vessel } from "@/hooks/useAISStream";
 import type { ConflictEvent } from "@/hooks/useConflictEvents";
 import type { EarthquakeEvent } from "@/hooks/useEarthquakes";
+import type { NaturalEvent, NaturalEventCategory } from "@/hooks/useNaturalEvents";
 import type { Flight } from "@/hooks/useOpenSkyFlights";
 import type { EconomicEvent } from "@/hooks/useEconomicEvents";
 import type { MacroCountry } from "@/hooks/useMacroHeatmap";
@@ -108,6 +109,12 @@ interface GlobeViewProps {
    */
   earthquakeEvents?:        EarthquakeEvent[];
   onEarthquakeEventClick?:  (e: EarthquakeEvent) => void;
+  /**
+   * NASA EONET natural events — wildfires, severe storms, volcanoes, floods.
+   * Each event has a category; the renderer color-codes per category.
+   */
+  naturalEvents?:           NaturalEvent[];
+  onNaturalEventClick?:     (e: NaturalEvent) => void;
   /** Upcoming macro economic calendar events (EODHD) */
   economicEvents?:          EconomicEvent[];
   onEconomicEventClick?:    (e: EconomicEvent) => void;
@@ -419,7 +426,24 @@ function fmtEta(iso: string | undefined): string | undefined {
 type RingDatum =
   | { kind: 'conflict';   lat: number; lng: number; event: ConflictEvent }
   | { kind: 'earthquake'; lat: number; lng: number; event: EarthquakeEvent }
-  | { kind: 'economic';   lat: number; lng: number; event: EconomicEvent };
+  | { kind: 'economic';   lat: number; lng: number; event: EconomicEvent }
+  | { kind: 'natural';    lat: number; lng: number; event: NaturalEvent };
+
+// ── Per-category palette for natural events (EONET) ────────────────────────
+// Color values picked to be visually distinct from conflict (orange/red) and
+// earthquake (teal/blue) rings while still feeling intuitive per category.
+const NATURAL_RING_RGB: Record<NaturalEventCategory, [number, number, number]> = {
+  wildfires:    [249, 115, 22],   // orange-500
+  severeStorms: [6, 182, 212],    // cyan-500
+  volcanoes:    [220, 38, 38],    // red-600
+  floods:       [59, 130, 246],   // blue-500
+};
+const NATURAL_HEX: Record<NaturalEventCategory, { core: number; halo: number }> = {
+  wildfires:    { core: 0xfb923c, halo: 0xf97316 },
+  severeStorms: { core: 0x67e8f9, halo: 0x06b6d4 },
+  volcanoes:    { core: 0xf87171, halo: 0xdc2626 },
+  floods:       { core: 0x93c5fd, halo: 0x3b82f6 },
+};
 
 const RING_LAT = (d: object) => (d as RingDatum).lat;
 const RING_LNG = (d: object) => (d as RingDatum).lng;
@@ -458,6 +482,10 @@ function ringColor(d: object) {
     const g = Math.round(189 - intensity * 40);
     const b = Math.round(248 - intensity * 10);
     return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t).toFixed(2)})`;
+  } else if (rd.kind === 'natural') {
+    const e = rd.event as NaturalEvent;
+    const [r, g, b] = NATURAL_RING_RGB[e.category];
+    return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t * 0.6).toFixed(2)})`;
   } else {
     // Economic event — blue, high-importance pulses brighter
     const e = rd.event as EconomicEvent;
@@ -474,6 +502,10 @@ function ringMaxRadius(d: object) {
   } else if (rd.kind === 'earthquake') {
     const e = rd.event as EarthquakeEvent;
     return Math.min(4, 0.4 * Math.pow(10, (e.magnitude - 2.5) * 0.28));
+  } else if (rd.kind === 'natural') {
+    // Constant ring size — EONET doesn't expose severity uniformly across
+    // categories, so we let color carry the category meaning instead.
+    return 2.0;
   } else {
     // Economic: high = 2.5, medium = 1.8
     const e = rd.event as EconomicEvent;
@@ -495,11 +527,17 @@ function makeEventMarker(d: object): THREE.Object3D {
   const rd = d as RingDatum;
 
   // Per-kind color palette
+  const naturalCat = rd.kind === 'natural'
+    ? NATURAL_HEX[(rd.event as NaturalEvent).category]
+    : null;
+
   const coreColor = rd.kind === 'conflict'   ? 0xff8838
                   : rd.kind === 'earthquake' ? 0x60d4ff
+                  : rd.kind === 'natural'    ? naturalCat!.core
                   :                            0x60a5fa; // economic = blue
   const haloColor = rd.kind === 'conflict'   ? 0xf97316
                   : rd.kind === 'earthquake' ? 0x38bdf8
+                  : rd.kind === 'natural'    ? naturalCat!.halo
                   :                            0x3b82f6;
 
   const hitGeom  = new THREE.SphereGeometry(4.0, 8, 6);
@@ -659,6 +697,8 @@ export default function GlobeView({
   onConflictEventClick,
   earthquakeEvents,
   onEarthquakeEventClick,
+  naturalEvents,
+  onNaturalEventClick,
   economicEvents,
   onEconomicEventClick,
   macroHeatmap,
@@ -2433,7 +2473,7 @@ export default function GlobeView({
 
   const globeSize = Math.min(width, height);
 
-  // ── Merged ring data: conflicts + earthquakes + economic events ───────────
+  // ── Merged ring data: conflicts + earthquakes + naturals + economic events ─
   const mergedRings = useMemo<RingDatum[]>(() => {
     const out: RingDatum[] = [];
     if (conflictEvents) {
@@ -2444,12 +2484,16 @@ export default function GlobeView({
       for (const e of earthquakeEvents)
         out.push({ kind: 'earthquake', lat: e.lat, lng: e.lng, event: e });
     }
+    if (naturalEvents) {
+      for (const e of naturalEvents)
+        out.push({ kind: 'natural', lat: e.lat, lng: e.lng, event: e });
+    }
     if (economicEvents) {
       for (const e of economicEvents)
         out.push({ kind: 'economic', lat: e.lat, lng: e.lng, event: e });
     }
     return out;
-  }, [conflictEvents, earthquakeEvents, economicEvents]);
+  }, [conflictEvents, earthquakeEvents, naturalEvents, economicEvents]);
 
   return (
     <div
@@ -2564,6 +2608,8 @@ export default function GlobeView({
             onConflictEventClick(rd.event as ConflictEvent);
           } else if (rd.kind === 'earthquake' && onEarthquakeEventClick) {
             onEarthquakeEventClick(rd.event as EarthquakeEvent);
+          } else if (rd.kind === 'natural' && onNaturalEventClick) {
+            onNaturalEventClick(rd.event as NaturalEvent);
           } else if (rd.kind === 'economic' && onEconomicEventClick) {
             onEconomicEventClick(rd.event as EconomicEvent);
           }
@@ -2583,6 +2629,8 @@ export default function GlobeView({
             onConflictEventClick(rd.event as ConflictEvent);
           } else if (rd.kind === 'earthquake' && onEarthquakeEventClick) {
             onEarthquakeEventClick(rd.event as EarthquakeEvent);
+          } else if (rd.kind === 'natural' && onNaturalEventClick) {
+            onNaturalEventClick(rd.event as NaturalEvent);
           } else if (rd.kind === 'economic' && onEconomicEventClick) {
             onEconomicEventClick(rd.event as EconomicEvent);
           }
