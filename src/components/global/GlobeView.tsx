@@ -30,7 +30,11 @@ import { WORLD_CITIES, type WorldCity } from "@/data/worldCities";
 //                         independent slow rotation to suggest weather.
 const EARTH_TEXTURE_URL    = "https://cdn.jsdelivr.net/gh/vasturiano/three-globe/example/img/earth-blue-marble.jpg";
 const EARTH_BUMP_URL       = "https://cdn.jsdelivr.net/gh/vasturiano/three-globe/example/img/earth-topology.png";
-const CLOUDS_TEXTURE_URL   = "https://cdn.jsdelivr.net/gh/turban/webgl-earth@master/images/fair_clouds_4k.png";
+const CLOUDS_TEXTURE_URL    = "https://cdn.jsdelivr.net/gh/turban/webgl-earth@master/images/fair_clouds_4k.png";
+// Higher-quality cloud texture from the three-globe npm package (jsDelivr CDN).
+// Loaded progressively after the 4K cloud mesh is already rendering — same
+// hot-swap pattern as the 16K earth upgrade.
+const CLOUDS_TEXTURE_HQ_URL = "https://cdn.jsdelivr.net/npm/three-globe/example/img/earth-clouds.png";
 // Same NASA Blue Marble imagery at 16 384 × 8 192 — 4× the pixel count of the
 // default 8K version.  Loaded progressively in the background and hot-swapped
 // into the globe material once decoded so close-up views stay sharp.
@@ -768,6 +772,32 @@ export default function GlobeView({
           rafId = requestAnimationFrame(tick);
         };
         rafId = requestAnimationFrame(tick);
+
+        // ── Progressive cloud upgrade ──────────────────────────────────────
+        // Mirror the earth 16K upgrade: once the 4K mesh is rendering, fetch a
+        // higher-quality cloud texture in the background.  On arrival we apply
+        // the same anisotropic + trilinear settings and hot-swap material.map.
+        // The old 4K texture is disposed; cloudsTexture is updated so the outer
+        // cleanup correctly disposes the HQ version on unmount.
+        new THREE.TextureLoader().load(
+          CLOUDS_TEXTURE_HQ_URL,
+          (texHQ) => {
+            if (cancelled || !cloudsMesh) { texHQ.dispose(); return; }
+            texHQ.anisotropy      = renderer.capabilities.getMaxAnisotropy();
+            texHQ.minFilter       = THREE.LinearMipmapLinearFilter;
+            texHQ.magFilter       = THREE.LinearFilter;
+            texHQ.generateMipmaps = true;
+            texHQ.needsUpdate     = true;
+            const mat = cloudsMesh.material as THREE.MeshPhongMaterial;
+            const old = mat.map;
+            mat.map   = texHQ;
+            mat.needsUpdate = true;
+            cloudsTexture = texHQ; // cleanup ref → now points at the HQ texture
+            old?.dispose();        // reclaim 4K VRAM
+          },
+          undefined,
+          () => console.warn('[GlobeView] HQ cloud texture failed — keeping 4K'),
+        );
       },
       undefined,
       (err) => console.warn("Failed to load cloud texture:", err),
