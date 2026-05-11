@@ -1286,6 +1286,11 @@ export default function GlobeView({
     { widthPx: 100, label: '5,000 km' },
   );
 
+  // Web-map convention zoom level (Z 0 = whole world in 256 px; each
+  // integer doubles resolution).  Derived from the same kmPerPx value as
+  // the scale bar, so the two displays are always coherent.
+  const [zoom, setZoom] = useState<number>(3);
+
   useEffect(() => {
     const id = setInterval(() => {
       const globe = globeRef.current;
@@ -1340,6 +1345,16 @@ export default function GlobeView({
           ? prev
           : { widthPx, label: nice.label },
       );
+
+      // ── Zoom level (web-map convention) ─────────────────────────────────
+      // Z = log2(EarthCircumference / (256 × kmPerPx)).  Same kmPerPx as
+      // the scale bar — guaranteed coherent.  Reference values:
+      //   Z 0 ≈ whole earth in a 256-px ribbon (kmPerPx ≈ 156.5)
+      //   Z 5 ≈ continent           ( kmPerPx ≈ 4.9 )
+      //   Z 10 ≈ large city         ( kmPerPx ≈ 0.15 )
+      //   Z 15 ≈ neighborhood       ( kmPerPx ≈ 0.0048)
+      const zoomLevel = Math.log2(40075 / (256 * kmPerPx));
+      setZoom((prev) => Math.abs(prev - zoomLevel) < 0.05 ? prev : zoomLevel);
     }, 300);
     return () => clearInterval(id);
   }, []);
@@ -1971,12 +1986,15 @@ export default function GlobeView({
         labelDotOrientation={LABEL_DOT_ORIENT}
       />
 
-      {/* ── Scale bar (map-style distance indicator) ─────────────────────── */}
-      {/* Positioned absolute bottom-left, inside the globe's container.    */}
-      {/* The bar width and label are recomputed in the altitude poll, so   */}
-      {/* the displayed value is always accurate for the current zoom level.*/}
-      <div className="absolute bottom-3 left-3 z-10 pointer-events-none select-none">
-        <div className="bg-black/55 backdrop-blur-sm px-2 py-1.5 rounded border border-white/10 shadow-lg">
+      {/* ── Scale bar + zoom indicator (bottom-left overlay) ─────────────── */}
+      {/* Two adjacent pills:                                                */}
+      {/*   • Scale bar: nice round km value matching the current km/px      */}
+      {/*   • Zoom level: web-map convention (Z 0 = world, Z ~15 = street)  */}
+      {/* Both update from the same 300ms altitude poll, so the bar's       */}
+      {/* labelled distance and the zoom number stay in lockstep.            */}
+      <div className="absolute bottom-3 left-3 z-10 pointer-events-none select-none flex items-stretch gap-1.5">
+        {/* Scale bar */}
+        <div className="bg-black/55 backdrop-blur-sm px-2 py-1.5 rounded border border-white/10 shadow-lg flex flex-col justify-center">
           <div className="text-[10px] text-white/95 font-mono leading-none mb-1 text-center tabular-nums">
             {scaleBar.label}
           </div>
@@ -1987,6 +2005,16 @@ export default function GlobeView({
             <div className="absolute left-0 top-0 bottom-0 w-px bg-white/90" />
             {/* Right tick */}
             <div className="absolute right-0 top-0 bottom-0 w-px bg-white/90" />
+          </div>
+        </div>
+
+        {/* Zoom level */}
+        <div className="bg-black/55 backdrop-blur-sm px-2.5 py-1.5 rounded border border-white/10 shadow-lg flex flex-col items-center justify-center min-w-[44px]">
+          <div className="text-[9px] text-white/70 font-mono uppercase tracking-wider leading-none">
+            Zoom
+          </div>
+          <div className="text-[13px] text-white font-mono leading-none tabular-nums mt-1 font-semibold">
+            {zoom.toFixed(1)}
           </div>
         </div>
       </div>
