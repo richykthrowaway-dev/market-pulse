@@ -558,23 +558,54 @@ function makeEventMarker(d: object): THREE.Object3D {
                   : rd.kind === 'natural'    ? naturalCat!.halo
                   :                            0x3b82f6;
 
-  const hitGeom  = new THREE.SphereGeometry(4.0, 8, 6);
+  // Geometry segment counts kept LOW — at globe scale (~3px on screen at
+  // default zoom) higher detail is invisible.  Previously (16,12) = 192
+  // triangles per sphere × 3 spheres × ~800 events = 460k triangles for
+  // the event-marker layer alone.  At (8,6) = 48 triangles per sphere it's
+  // ~115k triangles — same visual result, 4× faster GPU upload + raster.
+  // The hit sphere is fully transparent so its segments matter even less.
+  //
+  // Shared module-level geometries (created lazily once) reduce per-event
+  // geometry allocation to zero; only the per-event MATERIAL is unique
+  // (it carries the color).
   const hitMat   = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
-  const hitSphere = new THREE.Mesh(hitGeom, hitMat);
+  const hitSphere = new THREE.Mesh(getEventHitGeom(), hitMat);
 
-  const innerGeom = new THREE.SphereGeometry(0.9, 16, 12);
-  const innerMat  = new THREE.MeshBasicMaterial({ color: coreColor, transparent: true, opacity: 0.95, depthWrite: false });
-  const inner = new THREE.Mesh(innerGeom, innerMat);
+  const innerMat = new THREE.MeshBasicMaterial({ color: coreColor, transparent: true, opacity: 0.95, depthWrite: false });
+  const inner    = new THREE.Mesh(getEventInnerGeom(), innerMat);
 
-  const haloGeom = new THREE.SphereGeometry(1.8, 16, 12);
   const haloMat  = new THREE.MeshBasicMaterial({ color: haloColor, transparent: true, opacity: 0.30, depthWrite: false });
-  const halo = new THREE.Mesh(haloGeom, haloMat);
+  const halo     = new THREE.Mesh(getEventHaloGeom(), haloMat);
 
   const group = new THREE.Group();
   group.add(hitSphere);
   group.add(halo);
   group.add(inner);
   return group;
+}
+
+// ── Shared event-marker geometries (lazily initialised on first marker) ──
+// Created once per session and reused by every event marker mesh.  Saves
+// hundreds of redundant Three.js geometry allocations per data refresh.
+// (Material can't be shared because each event carries its own color, but
+// geometry has no per-event variation.)
+let _eventHitGeom: THREE.SphereGeometry | null = null;
+let _eventInnerGeom: THREE.SphereGeometry | null = null;
+let _eventHaloGeom: THREE.SphereGeometry | null = null;
+function getEventHitGeom(): THREE.SphereGeometry {
+  // Hit sphere is fully transparent — 6×4 segments are more than enough
+  // for raycast accuracy at the radius we render.
+  if (!_eventHitGeom) _eventHitGeom = new THREE.SphereGeometry(4.0, 6, 4);
+  return _eventHitGeom;
+}
+function getEventInnerGeom(): THREE.SphereGeometry {
+  // Reduced from (16, 12) — invisible diff at globe scale.
+  if (!_eventInnerGeom) _eventInnerGeom = new THREE.SphereGeometry(0.9, 8, 6);
+  return _eventInnerGeom;
+}
+function getEventHaloGeom(): THREE.SphereGeometry {
+  if (!_eventHaloGeom) _eventHaloGeom = new THREE.SphereGeometry(1.8, 8, 6);
+  return _eventHaloGeom;
 }
 
 // ── Waterway data (Natural Earth 10m rivers + lake centerlines) ──────────
@@ -1010,7 +1041,15 @@ export default function GlobeView({
       clearTimeout(idleTimer.current);
       clearTimeout(coastTimerRef.current);
     };
-  }, [countries]);
+    // PERF: depend only on whether the globe HAS countries at all, not on the
+    // array reference.  Previously `[countries]` re-fired this effect when
+    // the 50m → 10m polygon upgrade swapped in a new array, tearing down and
+    // re-adding ALL pointer/wheel listeners + OrbitControls config mid-zoom.
+    // The visible stutter during the polygon upgrade was this teardown.
+    // We use `countries.length > 0` as the gate so the effect runs once when
+    // the first geojson lands, then stays put through the high-res upgrade.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countries.length > 0]);
 
   // ── Earth texture filtering (fixes pole-pinching streaks) ───────────
   // The Blue Marble equirectangular texture has all of its top row of
