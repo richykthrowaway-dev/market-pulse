@@ -394,26 +394,85 @@ function makeEventMarker(d: object): THREE.Object3D {
 // Module-level GeoJSON cache — survives component remounts / HMR
 let geoJsonCache: Feature[] | null = null;
 let geoJsonPromise: Promise<Feature[]> | null = null;
+
+// High-resolution Natural Earth 10 m countries-with-lakes-deducted geojson
+// served by jsDelivr.  Loaded *progressively* after the bundled 50 m file
+// renders, so first paint stays fast and accuracy improves once it arrives.
+//
+// What 10 m gets us:
+//   • Rotterdam's Nieuwe Waterweg + Maasvlakte show as water (not land)
+//   • Amsterdam's North Sea Canal + IJsselmeer correctly cut out
+//   • Schelde estuary up to Antwerp is water
+//   • Wadden Sea, Belt Sea, fjords, etc. — visible
+//   • Most port approaches no longer cover live AIS vessels.
+const GEO_JSON_10M_URL = "https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_10m_admin_0_countries_lakes.geojson";
+
+let geoJsonHighResLoaded  = false;
+let geoJsonHighResPromise: Promise<Feature[]> | null = null;
+
+/**
+ * Normalize Natural Earth properties so downstream lookups always have an
+ * ISO_A2 to key on.  Natural Earth's 10m file uses ISO_A2_EH (the
+ * "with-Hong-Kong/Estonia-edge-cases" variant) in newer releases, so we
+ * promote that when ISO_A2 is missing or the "-99" sovereignty sentinel.
+ */
+function normalizeFeatureProperties(features: Feature[]): Feature[] {
+  return features
+    .map((f) => {
+      const props = f.properties;
+      if (!props.ISO_A2 || props.ISO_A2 === "-99") {
+        const eh = props.ISO_A2_EH;
+        if (eh && eh !== "-99") props.ISO_A2 = eh;
+      }
+      if (props.ISO_A2 === "-99") {
+        const override = ISO_OVERRIDES[props.ADMIN];
+        if (override) props.ISO_A2 = override;
+      }
+      return f;
+    })
+    .filter((f) => f.properties.ISO_A2 !== "AQ");
+}
+
 function loadGeoJson(): Promise<Feature[]> {
   if (geoJsonCache) return Promise.resolve(geoJsonCache);
   if (!geoJsonPromise) {
     geoJsonPromise = fetch(geoJsonUrl)
       .then((r) => r.json())
       .then((data) => {
-        const features = data.features
-          .map((f: Feature) => {
-            if (f.properties.ISO_A2 === "-99") {
-              const override = ISO_OVERRIDES[f.properties.ADMIN];
-              if (override) f.properties.ISO_A2 = override;
-            }
-            return f;
-          })
-          .filter((f: Feature) => f.properties.ISO_A2 !== "AQ");
+        const features = normalizeFeatureProperties(data.features);
         geoJsonCache = features;
         return features;
       });
   }
   return geoJsonPromise;
+}
+
+/**
+ * Progressive upgrade — fetch the 10 m polygon set and replace the cache.
+ * Called after the 50 m render is on screen so first paint is unaffected.
+ * Silently retries on next mount if the fetch fails (no network, etc.).
+ */
+function loadGeoJsonHighRes(): Promise<Feature[]> {
+  if (geoJsonHighResLoaded && geoJsonCache) return Promise.resolve(geoJsonCache);
+  if (!geoJsonHighResPromise) {
+    geoJsonHighResPromise = fetch(GEO_JSON_10M_URL)
+      .then((r) => {
+        if (!r.ok) throw new Error(`10m geojson HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => {
+        const features = normalizeFeatureProperties(data.features);
+        geoJsonCache         = features;  // upgrade cache — next mount uses 10m directly
+        geoJsonHighResLoaded = true;
+        return features;
+      })
+      .catch((err) => {
+        console.warn('[GlobeView] 10m geojson upgrade failed, keeping 50m:', err);
+        geoJsonHighResPromise = null; // allow retry on next mount
+        throw err;
+      });
+  }
+  return geoJsonHighResPromise;
 }
 
 export default function GlobeView({
@@ -467,6 +526,21 @@ export default function GlobeView({
     }
     loadGeoJson().then(setCountries).catch(console.error);
   }, []);
+
+  // ── Progressive polygon upgrade: 50m → 10m ───────────────────────────────
+  // Same playbook as the 16K earth texture: after the 50m polygons are
+  // rendering, fetch the 10m Natural Earth file (~24 MB, jsDelivr CDN) in
+  // the background.  Once it arrives, swap the polygon set so port channels,
+  // estuaries, and inland waterways become accurately drawn — live AIS
+  // vessels stop visually overlapping land in places like Rotterdam,
+  // Antwerp, Amsterdam, Hamburg.  Failure is silent; we just stay on 50m.
+  useEffect(() => {
+    if (!countries.length)     return;     // wait for 50m to land first
+    if (geoJsonHighResLoaded)  return;     // already upgraded
+    loadGeoJsonHighRes()
+      .then(setCountries)
+      .catch(() => { /* keep 50m — warning already logged in loader */ });
+  }, [countries.length]);
 
   // Setup auto-rotation + stop on interaction + resume after idle
   useEffect(() => {
