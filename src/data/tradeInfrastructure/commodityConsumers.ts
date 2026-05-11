@@ -103,13 +103,16 @@ export const COMMODITY_CONSUMERS: Record<string, CommodityConsumer[]> = {
     { iso2: 'NL', share:  4.0 },
   ],
   'aluminum': [
-    { iso2: 'US', share:  9.0 },
-    { iso2: 'DE', share:  8.0 },
-    { iso2: 'JP', share:  7.0 },
-    { iso2: 'KR', share:  6.0 },
+    // CN produces ~61% of global aluminum and is largely self-sufficient; it
+    // does import some specialty grades but is NOT a meaningful net importer.
+    // US is the largest single import market (~16% of global trade).
+    { iso2: 'US', share: 16.0 },
+    { iso2: 'DE', share:  9.0 },
+    { iso2: 'JP', share:  8.0 },
+    { iso2: 'KR', share:  7.0 },
     { iso2: 'IT', share:  5.0 },
     { iso2: 'NL', share:  5.0 },
-    { iso2: 'CN', share:  4.0 },
+    { iso2: 'BE', share:  4.0 },
     { iso2: 'IN', share:  4.0 },
   ],
   'nickel': [
@@ -123,13 +126,15 @@ export const COMMODITY_CONSUMERS: Record<string, CommodityConsumer[]> = {
     { iso2: 'TW', share:  2.0 },
   ],
   'zinc': [
-    { iso2: 'CN', share: 15.0 },
-    { iso2: 'US', share:  8.0 },
-    { iso2: 'KR', share:  7.0 },
+    // CN is a net zinc EXPORTER (world's largest producer at ~34%) — removed.
+    // Remaining list reflects true import demand for galvanising and alloy use.
+    { iso2: 'US', share: 12.0 },
+    { iso2: 'KR', share:  9.0 },
+    { iso2: 'DE', share:  8.0 },
+    { iso2: 'BE', share:  7.0 },
+    { iso2: 'IN', share:  6.0 },
     { iso2: 'JP', share:  6.0 },
-    { iso2: 'DE', share:  6.0 },
-    { iso2: 'IN', share:  5.0 },
-    { iso2: 'IT', share:  4.0 },
+    { iso2: 'IT', share:  5.0 },
     { iso2: 'NL', share:  4.0 },
   ],
   'tin': [
@@ -183,14 +188,17 @@ export const COMMODITY_CONSUMERS: Record<string, CommodityConsumer[]> = {
     { iso2: 'FR', share:  4.0 },
   ],
   'manganese': [
-    { iso2: 'CN', share: 35.0 },
-    { iso2: 'ZA', share: 15.0 },
+    // CN is world's largest manganese ORE importer (~55% of seaborne ore trade,
+    // but smelted domestically).  ZA is the world's largest EXPORTER — removed.
+    // Remaining importers are downstream steel/alloy manufacturers.
+    { iso2: 'CN', share: 12.0 },
     { iso2: 'IN', share: 10.0 },
-    { iso2: 'JP', share:  7.0 },
-    { iso2: 'AU', share:  6.0 },
-    { iso2: 'US', share:  5.0 },
+    { iso2: 'JP', share:  8.0 },
+    { iso2: 'KR', share:  7.0 },
+    { iso2: 'NO', share:  5.0 },
+    { iso2: 'UA', share:  4.0 },
     { iso2: 'DE', share:  4.0 },
-    { iso2: 'KR', share:  4.0 },
+    { iso2: 'US', share:  3.0 },
   ],
   'potash': [
     { iso2: 'CN', share: 17.0 },
@@ -325,8 +333,10 @@ export const COMMODITY_CONSUMERS: Record<string, CommodityConsumer[]> = {
     { iso2: 'TH', share:  3.0 },
   ],
   'barley': [
-    { iso2: 'CN', share: 20.0 },
-    { iso2: 'SA', share: 14.0 },
+    // SA is the world's single largest barley importer (~21%) — primarily for
+    // livestock feed.  CN is a large but secondary importer; ranking corrected.
+    { iso2: 'SA', share: 21.0 },
+    { iso2: 'CN', share: 15.0 },
     { iso2: 'JP', share:  9.0 },
     { iso2: 'TR', share:  8.0 },
     { iso2: 'NL', share:  6.0 },

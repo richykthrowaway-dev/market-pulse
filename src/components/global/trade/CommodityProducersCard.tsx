@@ -41,11 +41,19 @@ function getFlagSrc(iso2: string): string {
 // ── HHI helper ────────────────────────────────────────────────────────────────
 /**
  * Herfindahl-Hirschman Index — standard supply-concentration metric.
- * Computed as Σ(shareᵢ)² on the 0-100 scale, then normalised to 0-10000.
+ * Computed as Σ(shareᵢ²) on the 0-100 scale (result is 0–10000).
  * DOJ thresholds: <1500 competitive, 1500-2500 moderate, >2500 highly concentrated.
+ *
+ * Rest-of-world correction: when listed producers sum to less than 100%, the
+ * remaining share belongs to a diffuse "rest of world" block.  Treating it as
+ * zero would understate concentration, so we add (100 − Σtop8)² as one extra
+ * term.  This keeps the index mathematically consistent even for commodities
+ * where top-8 coverage is only ~60-70%.
  */
 function hhi(producers: readonly { share: number }[]): number {
-  return producers.reduce((sum, p) => sum + p.share * p.share, 0);
+  const top8Sum = producers.reduce((s, p) => s + p.share, 0);
+  const row     = Math.max(0, 100 - top8Sum);        // rest-of-world residual
+  return producers.reduce((sum, p) => sum + p.share * p.share, 0) + row * row;
 }
 
 // ── Commodity dropdown (unchanged) ────────────────────────────────────────────

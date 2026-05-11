@@ -139,7 +139,8 @@ export function CommodityFlowView({ selectedId }: { selectedId: string }) {
       </ul>
 
       <p className="px-4 pb-3 text-[10px] text-muted-foreground/60">
-        Balance = production share − import share · sorted by |balance| · USGS/USDA/UN Comtrade 2022-23
+        Prod% = share of global production · Import% = share of global import volume ·
+        Balance is indicative only — denominators differ · USGS/USDA/UN Comtrade 2022-23
       </p>
     </>
   );

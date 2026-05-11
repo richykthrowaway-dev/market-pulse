@@ -15,26 +15,45 @@ interface MonthStats {
 }
 
 function computeSeasonality(bars: { date: string; close: number }[]): MonthStats[] {
-  // Group into year-month buckets.  Bar order is oldest→newest.
+  // Group into year-month buckets, sorting each bucket by date.
   const byYearMonth = new Map<string, { date: string; close: number }[]>();
   for (const b of bars) {
     const key = b.date.slice(0, 7); // "YYYY-MM"
     if (!byYearMonth.has(key)) byYearMonth.set(key, []);
     byYearMonth.get(key)!.push(b);
   }
+  // Sort every bucket so [0] = first trading day, [last] = last trading day.
+  for (const [key, arr] of byYearMonth)
+    byYearMonth.set(key, arr.sort((a, b) => a.date.localeCompare(b.date)));
 
-  // Compute whole-month return (last close / first close − 1) per bucket.
+  // Keys in calendar order — needed to look up the prior month's last close.
+  const sortedKeys = [...byYearMonth.keys()].sort();
+
+  // Standard calendar-month return: prev month's last close → this month's
+  // last close.  This is the correct base for seasonal analysis because it
+  // captures the full first-day gap-open move that using first-of-month as
+  // the base would drop.  For the first key in the dataset we fall back to
+  // the intra-month return (no prior month available).
   const byMonth: Record<number, { ret: number; win: number }[]> = {};
   for (let m = 1; m <= 12; m++) byMonth[m] = [];
 
-  for (const monthBars of byYearMonth.values()) {
-    if (monthBars.length < 2) continue;
-    const sorted = [...monthBars].sort((a, b) => a.date.localeCompare(b.date));
-    const first  = sorted[0].close;
-    const last   = sorted[sorted.length - 1].close;
-    if (first <= 0) continue;
-    const ret    = (last / first - 1) * 100;
-    const month  = parseInt(sorted[0].date.slice(5, 7), 10);
+  for (let i = 0; i < sortedKeys.length; i++) {
+    const key      = sortedKeys[i];
+    const thisBars = byYearMonth.get(key)!;
+    const last     = thisBars[thisBars.length - 1].close;
+
+    let base: number;
+    if (i === 0) {
+      // No prior-month data — use this month's first bar as fallback.
+      base = thisBars[0].close;
+    } else {
+      const prevBars = byYearMonth.get(sortedKeys[i - 1])!;
+      base = prevBars[prevBars.length - 1].close;
+    }
+
+    if (base <= 0) continue;
+    const ret   = (last / base - 1) * 100;
+    const month = parseInt(key.slice(5, 7), 10); // "YYYY-MM"[5..6] = month
     byMonth[month].push({ ret, win: ret > 0 ? 1 : 0 });
   }
 
