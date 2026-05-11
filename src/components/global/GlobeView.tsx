@@ -718,12 +718,31 @@ export default function GlobeView({
     if (!countries.length) return;
     const mat = new THREE.PointsMaterial({
       color:           0x67e8f9, // sky-300
-      size:            1.6,      // world-space units (globe radius ≈ 100 units)
-      sizeAttenuation: true,     // dots shrink/grow with zoom distance
+      size:            3.5,      // screen px at default zoom (fixed baseline)
+      sizeAttenuation: false,
       transparent:     true,
       opacity:         0.9,
       depthWrite:      false,
     });
+
+    // Gentle zoom-aware size boost via shader patch.
+    // Full sizeAttenuation (linear 1/distance) is too aggressive — dots balloon
+    // when zoomed in. Instead we inject a clamped 0–30% additive boost that
+    // only activates as camDist drops below 300 world-units (≈ full-globe view).
+    // Zoomed out (dist ≥ 300): 0% boost → 3.5 px.
+    // Zoomed in  (dist ≤ ~130): 30% boost → ~4.5 px.
+    mat.onBeforeCompile = (shader) => {
+      shader.vertexShader = shader.vertexShader.replace(
+        'gl_PointSize = size;',
+        `gl_PointSize = size;
+        {
+          vec3  wPos  = (modelMatrix * vec4(position, 1.0)).xyz;
+          float dist  = length(cameraPosition - wPos);
+          float boost = clamp((300.0 - dist) / 300.0, 0.0, 0.3);
+          gl_PointSize *= (1.0 + boost);
+        }`,
+      );
+    };
     vesselMatRef.current = mat;
     return () => {
       mat.dispose();
