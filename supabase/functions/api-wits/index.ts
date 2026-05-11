@@ -651,17 +651,43 @@ for (const [iso3, m49] of Object.entries(ISO3_TO_M49)) {
  * `share` for ranking.  The downstream UI (PartnerRow) only reads `share`,
  * so this is transparent.
  */
+/**
+ * WITS aggregate partner codes that must be filtered out — these are
+ * regional rollups (East Asia, EU, etc.) not actual trading partners.
+ * Keys are uppercase ISO3-style codes as WITS emits them.
+ */
+const WITS_PARTNER_AGGREGATES = new Set([
+  "WLD",  // World total — always 100%
+  "EAS",  // East Asia and Pacific
+  "ECS",  // Europe and Central Asia
+  "LCN",  // Latin America and Caribbean
+  "MEA",  // Middle East and North Africa
+  "NAC",  // North America
+  "SAS",  // South Asia
+  "SSF",  // Sub-Saharan Africa
+  "OAS",  // Other Asia, n.e.s.
+  "SER",  // Serbia, FR (Serbia/Montenegro) historical aggregate
+  "TMP",  // East Timor (legacy code; TLS is modern)
+  "ATF",  // French Southern Antarctic Territories
+  "HMD",  // Heard Island and McDonald Islands
+]);
+
 async function fetchWitsPartners(
   reporter: string, // ISO3 uppercase
   year: number,
   direction: "exports" | "imports",
 ): Promise<ProductRow[] | null> {
   const indicator = direction === "exports" ? "XPRT-PRTNR-SHR" : "MPRT-PRTNR-SHR";
+  // ── CRITICAL: WITS XPRT-PRTNR-SHR / MPRT-PRTNR-SHR are PARTNER-SHARE
+  // indicators with PRODUCTCODE locked to a sentinel "Not Applicable" (999999).
+  // The URL path must use `product/all` (or `product/999999`) — using
+  // `product/Total` returns 404 / NoRecordsFound because no row in the
+  // dataset has that product attribute.
   const url =
     `${WITS_BASE}/reporter/${encodeURIComponent(reporter.toLowerCase())}` +
     `/year/${year}` +
     `/partner/all` +
-    `/product/Total` +
+    `/product/all` +
     `/indicator/${indicator}` +
     `?format=JSON`;
 
@@ -679,7 +705,6 @@ async function fetchWitsPartners(
   const seriesDims: SdmxDimension[] = json?.structure?.dimensions?.series ?? [];
   if (seriesDims.length === 0) return null;
 
-  // PARTNER is the dimension we iterate over; PRODUCTCODE is locked to Total.
   const partnerDimIdx = seriesDims.findIndex(d => d.id === "PARTNER");
   if (partnerDimIdx === -1) return null;
   const partners = seriesDims[partnerDimIdx].values;
@@ -693,25 +718,20 @@ async function fetchWitsPartners(
     const partner    = partners[partnerIdx];
     if (!partner) continue;
 
-    const code3 = partner.id.toLowerCase();
-    // Drop WITS aggregate codes — "wld" world total, "ots" others n.e.s.,
-    // "spe" special category, "all" all countries placeholder.
-    if (code3 === "wld" || code3 === "ots" || code3 === "spe" || code3 === "all") continue;
+    const code3 = partner.id.toUpperCase();
+    if (WITS_PARTNER_AGGREGATES.has(code3)) continue;
 
-    const info = ISO3_TO_INFO[code3.toUpperCase()];
-    if (!info) continue; // unknown / non-country code
+    const info = ISO3_TO_INFO[code3];
+    if (!info) continue; // unmapped country code — skip
 
-    // Observation: { "0": [value, status] } — value is partner share (%, 0-100).
     const value = seriesVal?.observations?.["0"]?.[0];
     if (typeof value !== "number" || value <= 0) continue;
 
     rows.push({
       code:     info.iso2,
       name:     info.name,
-      // No absolute USD available from share indicator; downstream UI only
-      // reads `share`, so 0 is harmless.
-      valueUsd: 0,
-      share:    value / 100, // convert percent → fraction to match Comtrade path
+      valueUsd: 0,            // share-only indicator — no absolute USD
+      share:    value / 100,  // percent → fraction
     });
   }
 
