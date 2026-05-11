@@ -22,6 +22,11 @@ import { cn } from '@/lib/utils';
 type Range = '1M' | '3M' | '1Y';
 const RANGE_DAYS: Record<Range, number> = { '1M': 30, '3M': 90, '1Y': 365 };
 
+// ── Sparkline range (tile minicharts) ────────────────────────────────────────
+type SparkRange = '1W' | '1M' | '3M';
+/** How many trailing closes to slice from the 90-bar sparkline array. */
+const SPARK_BARS: Record<SparkRange, number> = { '1W': 5, '1M': 22, '3M': 90 };
+
 /**
  * CommoditiesPanel — dedicated "Commodities" tab on the Global page.
  *
@@ -93,15 +98,46 @@ function CommodityPriceStrip({
   const { data, isLoading } = useCommodityPrices();
   const prices = data?.prices ?? [];
 
+  // Sparkline timeframe toggle — slices the 90-bar array client-side, no
+  // extra network traffic.  Default 1M matches the previous 30-bar view.
+  const [sparkRange, setSparkRange] = useState<SparkRange>('1M');
+
   return (
     <div className="px-4 py-3">
-      <h3 className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">
-        <BarChart3 className="w-3 h-3" />
-        Commodity Prices
-        <span className="ml-auto text-[9px] font-normal normal-case tracking-normal text-muted-foreground/60">
-          ETF proxies · EOD · click for chart
-        </span>
-      </h3>
+      {/* Header row: label left, sparkline range toggle right */}
+      <div className="flex items-center justify-between mb-2 gap-2">
+        <h3 className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+          <BarChart3 className="w-3 h-3" />
+          Commodity Prices
+          <span className="text-[9px] font-normal normal-case tracking-normal text-muted-foreground/60">
+            ETF proxies · EOD · click for chart
+          </span>
+        </h3>
+
+        {/* Sparkline range toggle */}
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide mr-0.5">
+            Sparkline
+          </span>
+          <div className="flex rounded border border-border overflow-hidden text-[10px]">
+            {(['1W', '1M', '3M'] as SparkRange[]).map(r => (
+              <button
+                key={r}
+                onClick={() => setSparkRange(r)}
+                className={cn(
+                  'px-2 py-0.5 transition-colors',
+                  sparkRange === r
+                    ? 'bg-primary text-primary-foreground'
+                    : 'hover:bg-muted text-muted-foreground',
+                )}
+              >
+                {r}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {isLoading ? (
         <div className="grid grid-cols-3 gap-1.5">
           {Array.from({ length: 9 }).map((_, i) => (
@@ -116,6 +152,14 @@ function CommodityPriceStrip({
             const up       = p.changeP > 0;
             const dn       = p.changeP < 0;
             const selected = p.id === selectedId;
+
+            // Slice the trailing N bars for the selected sparkline timeframe.
+            // The full array is oldest→newest, so .slice(-N) gives the most
+            // recent N closes — exactly what we want.
+            const sparkValues = p.sparkline && p.sparkline.length >= 2
+              ? p.sparkline.slice(-SPARK_BARS[sparkRange])
+              : null;
+
             return (
               <button
                 key={p.id}
@@ -128,21 +172,19 @@ function CommodityPriceStrip({
                     : 'border-border/40 hover:border-primary/30 hover:bg-muted/50',
                 )}
               >
-                {/* 30-day sparkline as background — fills the right side of the
-                    tile, faded so it doesn't fight the text for attention.
-                    Positioned with right/top/bottom so it scales with the tile
-                    and remains visible at any tile width.  pointer-events-none
-                    so clicks pass through to the parent button. */}
-                {p.sparkline && p.sparkline.length >= 2 && (
+                {/* Sparkline as background — fills the right side of the tile.
+                    Sliced to the selected timeframe (1W/1M/3M).
+                    pointer-events-none so clicks pass through to the button. */}
+                {sparkValues && sparkValues.length >= 2 && (
                   <div className="pointer-events-none absolute right-2 top-2 bottom-2 w-[55%] flex items-center justify-end">
                     <Sparkline
-                      values={p.sparkline}
+                      values={sparkValues}
                       width={160}
                       height={40}
                       color={up ? '#34d399' : dn ? '#f87171' : '#94a3b8'}
                       showFill
                       showLastDot
-                      label={`${p.label} · last ${p.sparkline.length} closes`}
+                      label={`${p.label} · ${sparkRange}`}
                       className="opacity-70 group-hover:opacity-90 transition-opacity"
                     />
                   </div>
