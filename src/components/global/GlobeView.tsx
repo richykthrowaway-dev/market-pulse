@@ -1158,9 +1158,32 @@ export default function GlobeView({
 
     const raycaster = new THREE.Raycaster();
     // threshold is in world-space units; three-globe uses radius ≈ 100 units.
-    // 1.5 gives a comfortable ~1.5% of globe radius hit zone around each dot
-    // without false-positives when dots are packed (e.g. major shipping lanes).
-    raycaster.params.Points = { threshold: 1.5 };
+    // Tightened from 1.5 → 0.9 (≈ 0.9 % of globe radius) — visible dot is
+    // 3.5 px which is much smaller than the old hit zone, so 1.5 was giving
+    // false positives in dense areas (Singapore anchorage, Suez approaches).
+    raycaster.params.Points = { threshold: 0.9 };
+
+    /**
+     * Pick the best hit from a raycast result.  three.js returns all points
+     * within `threshold` of the ray, sorted by *camera distance* — i.e. the
+     * front-most along the ray.  For points all sitting on the globe surface
+     * that's the wrong sort: in a cluster the front-most isn't necessarily
+     * the one visually closest to the cursor.  `distanceToRay` is the
+     * perpendicular distance from each point to the ray; sorting by that
+     * gives us the point nearest where the ray pierces the surface — i.e.
+     * the dot the user is actually pointing at.
+     */
+    function pickBestHit(hits: THREE.Intersection[]): THREE.Intersection | null {
+      if (hits.length === 0) return null;
+      if (hits.length === 1) return hits[0];
+      let best = hits[0];
+      let bestDist = (best as any).distanceToRay ?? Infinity;
+      for (let i = 1; i < hits.length; i++) {
+        const d = (hits[i] as any).distanceToRay ?? Infinity;
+        if (d < bestDist) { bestDist = d; best = hits[i]; }
+      }
+      return best;
+    }
 
     let rafId  = 0;
     let lastEv: PointerEvent | null = null;
@@ -1188,8 +1211,9 @@ export default function GlobeView({
         // Vessels (cyan layer, rendered below flights)
         if (hasVessels) {
           const hits = raycaster.intersectObject(vesselMeshRef.current!);
-          if (hits.length > 0 && hits[0].index != null) {
-            const v = liveVesselsRef.current![hits[0].index];
+          const best = pickBestHit(hits);
+          if (best && best.index != null) {
+            const v = liveVesselsRef.current![best.index];
             if (v) {
               setHoverTip({ clientX: lastEv.clientX, clientY: lastEv.clientY, kind: 'vessel', vessel: v });
               return;
@@ -1200,8 +1224,9 @@ export default function GlobeView({
         // Flights (purple layer, rendered above vessels)
         if (hasFlights) {
           const hits = raycaster.intersectObject(flightMeshRef.current!);
-          if (hits.length > 0 && hits[0].index != null) {
-            const f = liveFlightsRef.current![hits[0].index];
+          const best = pickBestHit(hits);
+          if (best && best.index != null) {
+            const f = liveFlightsRef.current![best.index];
             if (f) {
               setHoverTip({ clientX: lastEv.clientX, clientY: lastEv.clientY, kind: 'flight', flight: f });
               return;
@@ -1659,10 +1684,12 @@ export default function GlobeView({
                       <span className="text-foreground font-mono">{hoverTip.vessel.callSign}</span>
                     </div>
                   )}
-                  <div className="flex justify-between gap-3">
-                    <span>Type</span>
-                    <span className="text-foreground">{fmtShipType(hoverTip.vessel.shipType)}</span>
-                  </div>
+                  {hoverTip.vessel.shipType != null && (
+                    <div className="flex justify-between gap-3">
+                      <span>Type</span>
+                      <span className="text-foreground">{fmtShipType(hoverTip.vessel.shipType)}</span>
+                    </div>
+                  )}
                   {fmtNavStatus(hoverTip.vessel.navStatus) && (
                     <div className="flex justify-between gap-3">
                       <span>Status</span>

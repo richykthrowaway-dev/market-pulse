@@ -454,12 +454,28 @@ const singleton = (() => {
         const orphan = staticDataMap.get(mmsi);
         if (orphan) staticDataMap.delete(mmsi);
 
+        // AIS sentinels for "not available":
+        //   Sog = 102.3 kn (raw 1023 × 0.1)  ⇒  drop
+        //   Cog = 360°    (raw 3600 × 0.1)   ⇒  drop
+        // Without these filters, ships missing real speed/course data render
+        // with garbage "102.3 kn" or "360°" in the tooltip.
+        const sogRaw = pos.Sog;
+        const sog = typeof sogRaw === 'number' && sogRaw >= 0 && sogRaw < 102.3
+          ? sogRaw : undefined;
+        const cogRaw = pos.Cog;
+        const cog = typeof cogRaw === 'number' && cogRaw >= 0 && cogRaw < 360
+          ? cogRaw : undefined;
+
         const positionPart = compact({
           name:     typeof meta.ShipName  === 'string' ? meta.ShipName.trim() : undefined,
-          shipType: typeof pos.ShipType   === 'number' ? pos.ShipType
-                  : typeof meta.ShipType  === 'number' ? meta.ShipType : undefined,
-          cog:     typeof pos.Cog === 'number' ? pos.Cog : undefined,
-          sog:     typeof pos.Sog === 'number' ? pos.Sog : undefined,
+          // ShipType is NOT carried in PositionReport per AIS spec — it only
+          // arrives via ShipStaticData / StaticDataReport.  Leave undefined here
+          // so the static-data merge can fill it in later without being
+          // shadowed by a junk value.  meta.ShipType is checked defensively
+          // in case AISStream populates it from cached static data.
+          shipType: typeof meta.ShipType === 'number' ? meta.ShipType : undefined,
+          cog,
+          sog,
           heading,
           navStatus,
         });
