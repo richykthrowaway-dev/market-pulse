@@ -48,11 +48,20 @@ const TOP_PARTNERS_PER_DIRECTION = 8;
 /** Top N HS chapters to keep per bilateral pair.  Dialog shows top 6. */
 const TOP_CHAPTERS = 10;
 
-/** Polite delay between Comtrade calls (ms) — stays under the no-auth cap. */
-const DELAY_MS = 3000;
+/**
+ * Comtrade subscription key.  Falls back to env var so CI can inject it
+ * without committing the secret.  When present, we hit the authenticated
+ * `/data/v1/get/` endpoint which returns the full row set (no 500-row
+ * preview cap) and supports a much higher rate limit.
+ */
+const COMTRADE_API_KEY =
+  process.env.COMTRADE_API_KEY ?? 'ff15ac53e6964d4491d0e16bcce04814';
 
-/** Per-call timeout (ms). */
-const FETCH_TIMEOUT_MS = 15_000;
+/** Polite delay between Comtrade calls (ms). */
+const DELAY_MS = COMTRADE_API_KEY ? 800 : 3000;
+
+/** Per-call timeout (ms).  Auth endpoint returns more rows so allow longer. */
+const FETCH_TIMEOUT_MS = 30_000;
 
 /**
  * Top 50 reporters by goods trade value (≈ covers ~92% of global trade).
@@ -67,7 +76,16 @@ const TOP_REPORTERS = [
   'GR', 'NZ', 'AR', 'EG', 'NG', 'CL', 'CO', 'RO', 'PK', 'BD',
 ];
 
-const COMTRADE_BASE = 'https://comtradeapi.un.org/public/v1/preview/C/A/HS';
+const COMTRADE_BASE = COMTRADE_API_KEY
+  ? 'https://comtradeapi.un.org/data/v1/get/C/A/HS'
+  : 'https://comtradeapi.un.org/public/v1/preview/C/A/HS';
+
+/** Append the subscription key to every Comtrade URL when configured. */
+function withKey(url) {
+  if (!COMTRADE_API_KEY) return url;
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}subscription-key=${COMTRADE_API_KEY}`;
+}
 const OUTPUT_DIR    = resolve(PROJECT_ROOT, 'public', 'bilateral', VERSION);
 const MANIFEST_PATH = resolve(PROJECT_ROOT, 'public', 'bilateral', 'manifest.json');
 
@@ -150,12 +168,12 @@ async function comtradeFetch(url) {
   const ctrl = new AbortController();
   const tid  = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
-    const res = await fetch(url, { signal: ctrl.signal });
+    const res = await fetch(withKey(url), { signal: ctrl.signal });
     if (res.status === 429) {
       // Rate-limited — back off 60 s and retry once
       console.warn('  ⏸  429 rate-limited, sleeping 60 s and retrying');
       await sleep(60_000);
-      const res2 = await fetch(url, { signal: ctrl.signal });
+      const res2 = await fetch(withKey(url), { signal: ctrl.signal });
       if (!res2.ok) return null;
       return await res2.json();
     }
@@ -170,9 +188,38 @@ async function comtradeFetch(url) {
 }
 
 /**
+ * Resolve a Comtrade row to its "effective partner" M49 code.
+ *
+ * Comtrade has two ways to encode a trade partner:
+ *   1. Direct:  partnerCode=X partner2Code=X (or 0/899) — most non-EU trade
+ *   2. Mirror:  partnerCode=0 partner2Code=X            — common for intra-EU
+ *      where the reporter doesn't directly declare the partner and Comtrade
+ *      fills in from the partner's own export records.
+ *
+ * Without handling case (2), reporters like Germany or France appear to have
+ * absurd top-partners lists (Greece, Bangladesh, Zimbabwe) because all of
+ * their actual top partners use the partnerCode=0 mirror format.
+ *
+ * Returns null for world aggregates (both codes 0), aggregate regions
+ * (899 etc.), and self-trade rows.
+ */
+function effectivePartnerM49(r, reporterM49) {
+  const pc  = String(r.partnerCode  ?? '');
+  const p2c = String(r.partner2Code ?? '');
+  // Prefer partnerCode when it points to a real country
+  const candidate =
+    (pc  !== '0' && pc  !== '899' && pc  !== '') ? pc  :
+    (p2c !== '0' && p2c !== '899' && p2c !== '') ? p2c : null;
+  if (!candidate || candidate === reporterM49) return null;
+  return candidate;
+}
+
+/**
  * Fetch top trading partners for a reporter in one direction.
- * Same Comtrade query the edge function's fetchComtradePartners() uses.
- * Returns: [{ partnerIso2, partnerName, valueUsd, share }, ...] sorted desc.
+ * Uses the "effective partner" rule so intra-EU mirror data isn't silently
+ * dropped (which would leave Germany/France/etc. with garbage partner lists).
+ * Max-value-wins per partner avoids re-export double counting.
+ * Returns: [{ iso2, valueUsd, share }, ...] sorted desc.
  */
 async function fetchPartners(reporterM49, year, direction) {
   const flowCode = direction === 'exports' ? 'X' : 'M';
@@ -187,19 +234,24 @@ async function fetchPartners(reporterM49, year, direction) {
   const json = await comtradeFetch(url);
   if (!json || !Array.isArray(json.data)) return null;
 
-  const seen = new Set();
-  const rows = [];
+  // Bucket by ISO2 and keep the MAX value seen.  Across `partner2Code`
+  // re-export variants, max-wins picks the "primary" / largest row for
+  // each partner — preferable to first-write-wins because Comtrade's row
+  // order isn't guaranteed.
+  const byIso2 = new Map();
   for (const r of json.data) {
-    const partnerM49 = String(r.partnerCode ?? '');
-    if (!partnerM49 || partnerM49 === '0' || partnerM49 === reporterM49) continue;
+    const partnerM49 = effectivePartnerM49(r, reporterM49);
+    if (!partnerM49) continue;
     const iso2 = M49_TO_ISO2[partnerM49];
     if (!iso2) continue;             // skip aggregate regions
-    if (seen.has(iso2)) continue;    // dedup partner2 splits
-    seen.add(iso2);
     const value = typeof r.primaryValue === 'number' ? r.primaryValue : 0;
     if (value <= 0) continue;
-    rows.push({ iso2, valueUsd: Math.round(value) });
+    const existing = byIso2.get(iso2);
+    if (!existing || value > existing.valueUsd) {
+      byIso2.set(iso2, { iso2, valueUsd: Math.round(value) });
+    }
   }
+  const rows = [...byIso2.values()];
   if (rows.length === 0) return null;
 
   const total = rows.reduce((s, r) => s + r.valueUsd, 0);

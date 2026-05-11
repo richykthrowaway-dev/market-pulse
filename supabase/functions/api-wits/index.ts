@@ -45,7 +45,28 @@ const corsHeaders = {
 };
 
 const WITS_BASE     = "https://wits.worldbank.org/API/V1/SDMX/V21/datasource/tradestats-trade";
-const COMTRADE_BASE = "https://comtradeapi.un.org/public/v1/preview/C/A/HS";
+
+// Comtrade endpoint selection: when a COMTRADE_API_KEY is configured we use
+// the authenticated `/data/v1/get/` endpoint which returns the full row set
+// (no 500-row preview cap) and supports a higher rate limit.  Without a key
+// we fall back to the public preview endpoint — same query format, just
+// truncated to 500 rows.
+const COMTRADE_API_KEY = Deno.env.get("COMTRADE_API_KEY") ?? "";
+const COMTRADE_BASE    = COMTRADE_API_KEY
+  ? "https://comtradeapi.un.org/data/v1/get/C/A/HS"
+  : "https://comtradeapi.un.org/public/v1/preview/C/A/HS";
+
+/**
+ * Append the Comtrade subscription key to a URL when configured.
+ * Comtrade accepts it as either an `Ocp-Apim-Subscription-Key` header
+ * or `subscription-key` query param — we use the query param to keep
+ * the existing per-call fetch shape unchanged.
+ */
+function comtradeUrl(url: string): string {
+  if (!COMTRADE_API_KEY) return url;
+  const sep = url.includes("?") ? "&" : "?";
+  return `${url}${sep}subscription-key=${COMTRADE_API_KEY}`;
+}
 
 // ── ISO 3166-1 alpha-3 → UN M49 numeric (Comtrade reporter codes) ─────
 // Only countries actually queried in production need entries here. Keep
@@ -332,7 +353,7 @@ async function fetchComtradeChapters(
 
   let upstream: Response;
   try {
-    upstream = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+    upstream = await fetch(comtradeUrl(url), { signal: AbortSignal.timeout(12_000) });
   } catch {
     return null;
   }
@@ -411,7 +432,7 @@ async function fetchComtradePartners(
 
   let upstream: Response;
   try {
-    upstream = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    upstream = await fetch(comtradeUrl(url), { signal: AbortSignal.timeout(15_000) });
   } catch {
     return null;
   }
@@ -422,37 +443,48 @@ async function fetchComtradePartners(
   const data: any[] = Array.isArray(json?.data) ? json.data : [];
   if (data.length === 0) return null;
 
-  // Dedup map: even after motCode=0 + customsCode=C00 server-side
-  // filters, Comtrade still returns 2 rows per partner (one with
-  // partner2Code=0, one with partner2Code=899) with IDENTICAL values.
-  // Map-by-partner with first-write-wins collapses them.
-  const seen = new Set<string>();
-  const rows: ProductRow[] = [];
+  // EU mirror-data fix: Comtrade represents partners in TWO ways
+  //   - Direct:  partnerCode=X partner2Code=X (most non-EU trade)
+  //   - Mirror:  partnerCode=0 partner2Code=X (common for intra-EU,
+  //              when reporter doesn't declare partner directly)
+  // Filtering only on `partnerCode !== '0'` drops all the mirror rows,
+  // which leaves reporters like Germany / France with garbage partner
+  // lists (Greece, Bangladesh, Zimbabwe).  Compute an "effective partner"
+  // M49 from whichever code is real, then dedup by ISO2 with max-wins.
+  const effectivePartner = (r: any): string | null => {
+    const pc  = String(r.partnerCode  ?? "");
+    const p2c = String(r.partner2Code ?? "");
+    const cand =
+      (pc  !== "0" && pc  !== "899" && pc  !== "") ? pc  :
+      (p2c !== "0" && p2c !== "899" && p2c !== "") ? p2c : null;
+    if (!cand || cand === m49) return null;
+    return cand;
+  };
+
+  const byIso2 = new Map<string, ProductRow>();
   for (const r of data) {
-    const partnerM49 = String(r.partnerCode ?? "");
-    // Drop world-total + self-trade + aggregate regions (only keep
-    // codes that map to a real country in our M49 lookup table).
-    if (!partnerM49 || partnerM49 === "0") continue;
-    if (partnerM49 === m49) continue; // self
+    const partnerM49 = effectivePartner(r);
+    if (!partnerM49) continue;
     const info = M49_TO_INFO[partnerM49];
     if (!info) continue;
 
     const value = typeof r.primaryValue === "number" ? r.primaryValue : 0;
     if (value <= 0) continue;
 
-    // First-write-wins per partner — Comtrade returns 2 identical rows
-    // per partner (varying only by partner2Code), and the rows really
-    // ARE identical in our verified probes, so first-wins is fine.
-    if (seen.has(partnerM49)) continue;
-    seen.add(partnerM49);
-
-    rows.push({
-      code:     info.iso2,    // client uses ISO2 to look up Flag + COUNTRY_META
-      name:     info.name,
-      valueUsd: Math.round(value),
-      share:    0,
-    });
+    // Max-wins per partner — across the multiple partner2Code variants
+    // Comtrade returns (direct, via X, via Y, etc.), keep the highest
+    // value as the "authoritative" bilateral total.
+    const existing = byIso2.get(info.iso2);
+    if (!existing || value > existing.valueUsd) {
+      byIso2.set(info.iso2, {
+        code:     info.iso2,
+        name:     info.name,
+        valueUsd: Math.round(value),
+        share:    0,
+      });
+    }
   }
+  const rows: ProductRow[] = [...byIso2.values()];
   if (rows.length === 0) return null;
 
   const total = rows.reduce((s, r) => s + r.valueUsd, 0);
@@ -503,7 +535,7 @@ async function fetchComtradeTrend(
 
   let upstream: Response;
   try {
-    upstream = await fetch(url, { signal: AbortSignal.timeout(15_000) });
+    upstream = await fetch(comtradeUrl(url), { signal: AbortSignal.timeout(15_000) });
   } catch {
     return null;
   }
@@ -660,7 +692,7 @@ async function fetchComtradeBilateral(
 
   let upstream: Response;
   try {
-    upstream = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+    upstream = await fetch(comtradeUrl(url), { signal: AbortSignal.timeout(12_000) });
   } catch {
     return null;
   }
