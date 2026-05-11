@@ -277,6 +277,12 @@ const Global = () => {
   // ship class — e.g. "Tankers only" during a Red Sea oil-tanker
   // diversion event.  State lives here so the same filter is shared
   // between the globe rendering and the Intel-view metrics.
+  //
+  // UX note: AIS *static* data (which carries shipType) broadcasts only
+  // every ~6 minutes, vs position reports every 2-10s.  This means right
+  // after connecting most vessels have shipType=undefined and would be
+  // filtered out by anything but 'all'.  We expose per-class counts so
+  // the user can see exactly how many vessels each filter would keep.
   const [vesselTypeFilter, setVesselTypeFilter] = useState<VesselTypeFilter>('all');
   const liveVessels = useMemo(
     () => vesselTypeFilter === 'all'
@@ -284,6 +290,24 @@ const Global = () => {
       : liveVesselsRaw.filter(v => matchesVesselType(v, vesselTypeFilter)),
     [liveVesselsRaw, vesselTypeFilter],
   );
+
+  /** Per-class vessel counts — drives the filter pill labels. */
+  const vesselTypeCounts = useMemo(() => {
+    let cargo = 0, tanker = 0, fishing = 0, passenger = 0, untyped = 0;
+    for (const v of liveVesselsRaw) {
+      const t = v.shipType;
+      if (t == null)               { untyped++;   continue; }
+      if (t >= 70 && t <= 79)        cargo++;
+      else if (t >= 80 && t <= 89)   tanker++;
+      else if (t === 30)             fishing++;
+      else if (t >= 60 && t <= 69)   passenger++;
+    }
+    return {
+      all:       liveVesselsRaw.length,
+      cargo, tanker, fishing, passenger,
+      untyped,
+    };
+  }, [liveVesselsRaw]);
 
   // ── Live OpenSky flight feed ─────────────────────────────────────────
   // Poll ONLY when the Trade tab is active AND the 'liveFlights' layer
@@ -727,6 +751,7 @@ const Global = () => {
               aisRawMsgCount={aisRawMsgCount}
               vesselTypeFilter={vesselTypeFilter}
               onVesselTypeFilter={setVesselTypeFilter}
+              vesselTypeCounts={vesselTypeCounts}
               flightStatus={flightStatus}
               flightCount={flightCount}
             />

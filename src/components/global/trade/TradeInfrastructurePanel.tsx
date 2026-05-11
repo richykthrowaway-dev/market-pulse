@@ -106,6 +106,10 @@ interface Props {
   /** Active vessel-type filter — narrows the live AIS layer + Intel metrics. */
   vesselTypeFilter?:   VesselTypeFilter;
   onVesselTypeFilter?: (f: VesselTypeFilter) => void;
+  /** Per-class vessel counts — drives the filter pill count badges. */
+  vesselTypeCounts?:   {
+    all: number; cargo: number; tanker: number; fishing: number; passenger: number; untyped: number;
+  };
   /** OpenSky poll status — surfaced in the Live Flights banner when that layer is on. */
   flightStatus?:    FlightStatus;
   /** Number of airborne aircraft currently tracked. */
@@ -116,7 +120,7 @@ export function TradeInfrastructurePanel({
   activeLayers, onLayersChange, selectedNode, onSelectNode,
   visibleNodes, visibleRoutes, worldwide, onToggleWorldwide, countryName,
   aisStatus = 'idle', aisVesselCount = 0, aisRawMsgCount = 0,
-  vesselTypeFilter = 'all', onVesselTypeFilter,
+  vesselTypeFilter = 'all', onVesselTypeFilter, vesselTypeCounts,
   flightStatus = 'idle', flightCount = 0,
 }: Props) {
   const [search, setSearch] = useState('');
@@ -256,7 +260,11 @@ export function TradeInfrastructurePanel({
           {/* Vessel type filter — narrows the live AIS layer on the globe
               AND the Intel-view metrics.  Single-select; 'all' shows everything. */}
           {onVesselTypeFilter && (
-            <VesselTypeFilterBar value={vesselTypeFilter} onChange={onVesselTypeFilter} />
+            <VesselTypeFilterBar
+              value={vesselTypeFilter}
+              onChange={onVesselTypeFilter}
+              counts={vesselTypeCounts}
+            />
           )}
         </>
       )}
@@ -648,6 +656,13 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
  * AIS layer to a specific ship class.  Visible only while liveVessels
  * is toggled on.  Filter is applied upstream (in Global.tsx) so the
  * globe rendering AND the Intel-view metrics both reflect the choice.
+ *
+ * Each pill carries a live count of vessels matching that class — gives
+ * the user immediate feedback on filter selectivity AND surfaces the
+ * "how many vessels have static-data resolved" reality.  Without this,
+ * the filter feels broken because AIS static data (which carries
+ * shipType) only broadcasts every ~6 minutes — most vessels start out
+ * untyped and get classified slowly.
  */
 const VESSEL_FILTER_OPTIONS: Array<{ key: VesselTypeFilter; label: string }> = [
   { key: 'all',       label: 'All'        },
@@ -658,32 +673,68 @@ const VESSEL_FILTER_OPTIONS: Array<{ key: VesselTypeFilter; label: string }> = [
 ];
 
 function VesselTypeFilterBar({
-  value, onChange,
+  value, onChange, counts,
 }: {
   value:    VesselTypeFilter;
   onChange: (f: VesselTypeFilter) => void;
+  counts?:  { all: number; cargo: number; tanker: number; fishing: number; passenger: number; untyped: number };
 }) {
+  const fmt = (n: number | undefined) =>
+    n == null ? '' : n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+
+  // Fraction of fleet that has NO static-data classification yet — when
+  // high, the user should know that the filter looks "broken" because
+  // static data hasn't propagated, not because of a UI bug.
+  const untypedPct = counts && counts.all > 0
+    ? Math.round((counts.untyped / counts.all) * 100)
+    : 0;
+
   return (
     <div className="px-4 pb-2 -mt-1">
       <div className="text-[9px] uppercase tracking-wide text-muted-foreground/60 mb-1">
         Vessel type
       </div>
       <div className="flex flex-wrap gap-1">
-        {VESSEL_FILTER_OPTIONS.map(opt => (
-          <button
-            key={opt.key}
-            onClick={() => onChange(opt.key)}
-            className={cn(
-              'px-2 py-0.5 rounded border text-[10px] font-medium transition-colors',
-              value === opt.key
-                ? 'bg-primary text-primary-foreground border-primary'
-                : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/40',
-            )}
-          >
-            {opt.label}
-          </button>
-        ))}
+        {VESSEL_FILTER_OPTIONS.map(opt => {
+          const c =
+            opt.key === 'all'       ? counts?.all       :
+            opt.key === 'cargo'     ? counts?.cargo     :
+            opt.key === 'tanker'    ? counts?.tanker    :
+            opt.key === 'fishing'   ? counts?.fishing   :
+                                       counts?.passenger;
+          const active = value === opt.key;
+          return (
+            <button
+              key={opt.key}
+              onClick={() => onChange(opt.key)}
+              className={cn(
+                'flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-medium transition-colors',
+                active
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/40',
+              )}
+            >
+              <span>{opt.label}</span>
+              {c != null && (
+                <span className={cn(
+                  'tabular-nums',
+                  active ? 'opacity-90' : 'text-muted-foreground/60',
+                )}>
+                  {fmt(c)}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
+      {/* "Untyped" caveat — AIS static data is slow to arrive.  Surfacing
+          this gives users a way to understand why specific-class filters
+          may look sparse shortly after AIS connects. */}
+      {counts && counts.untyped > 0 && counts.all > 0 && (
+        <div className="mt-1 text-[9px] text-muted-foreground/60 italic">
+          {fmt(counts.untyped)} vessels ({untypedPct}%) still awaiting type data — AIS static broadcasts every ~6 min.
+        </div>
+      )}
     </div>
   );
 }

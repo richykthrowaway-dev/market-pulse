@@ -42,6 +42,10 @@ interface CountryPanelProps {
   // ── Vessel type filter (lifted from Global so globe + Intel agree) ──
   vesselTypeFilter?:   VesselTypeFilter;
   onVesselTypeFilter?: (f: VesselTypeFilter) => void;
+  /** Per-class vessel counts — shown in the filter pill labels. */
+  vesselTypeCounts?:   {
+    all: number; cargo: number; tanker: number; fishing: number; passenger: number; untyped: number;
+  };
 
   // ── Live flights feed status (passed through to TradeInfrastructurePanel) ──
   flightStatus?:    FlightStatus;
@@ -53,7 +57,7 @@ export default function CountryPanel({
   tradeActiveLayers, onTradeLayersChange, tradeSelectedNode, onTradeSelectNode,
   tradeVisibleNodes, tradeVisibleRoutes, tradeWorldwide, onToggleTradeWorldwide,
   aisStatus, aisVesselCount, aisRawMsgCount,
-  vesselTypeFilter, onVesselTypeFilter,
+  vesselTypeFilter, onVesselTypeFilter, vesselTypeCounts,
   flightStatus, flightCount,
 }: CountryPanelProps) {
   const { data: stocks = [], isLoading } = useCountryStocks(iso2);
@@ -120,6 +124,7 @@ export default function CountryPanel({
               aisRawMsgCount={aisRawMsgCount}
               vesselTypeFilter={vesselTypeFilter}
               onVesselTypeFilter={onVesselTypeFilter}
+              vesselTypeCounts={vesselTypeCounts}
               flightStatus={flightStatus}
               flightCount={flightCount}
             />
