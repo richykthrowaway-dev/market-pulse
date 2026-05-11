@@ -5,12 +5,13 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import {
-  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
 import { subDays, format, parseISO } from 'date-fns';
 import { useCommodityPrices, type CommodityPrice } from '@/hooks/useCommodityPrices';
 import { useEodhdBarsForChart } from '@/hooks/useEodhdBarsForChart';
 import { useEodhdNews } from '@/hooks/useEodhdNews';
+import { useEodhdTechnicals } from '@/hooks/useEodhdTechnicals';
 import { CommodityProducersCard } from './CommodityProducersCard';
 import { CommodityCatalystStrip } from './CommodityCatalystStrip';
 import { cn } from '@/lib/utils';
@@ -159,6 +160,7 @@ function CommodityPriceChart({ price }: { price: CommodityPrice }) {
   }, [price.ticker]);
 
   const { data: bars = [], isLoading } = useEodhdBarsForChart(symbol, exchange);
+  const { data: tech } = useEodhdTechnicals(symbol, exchange);
 
   // Slice client-side to the selected range — hook caches 5Y of bars once.
   const chartData = useMemo(() => {
@@ -168,6 +170,31 @@ function CommodityPriceChart({ price }: { price: CommodityPrice }) {
       .map(b => ({ date: b.date, close: b.close }));
   }, [bars, range]);
 
+  // ── Key levels (52w high/low + ATH + recent breakout) ─────────────────────
+  // Computed from the full bars dataset (5Y) so they're stable across range
+  // toggles — switching to 1M doesn't make the 52w high disappear.
+  const levels = useMemo(() => {
+    if (bars.length === 0) return null;
+    const oneYearAgo = subDays(new Date(), 365).getTime();
+    const past52w = bars.filter(b => parseISO(b.date).getTime() >= oneYearAgo);
+    if (past52w.length < 10) return null;
+
+    const high52w = Math.max(...past52w.map(b => b.high ?? b.close));
+    const low52w  = Math.min(...past52w.map(b => b.low  ?? b.close));
+    const allTimeHigh = Math.max(...bars.map(b => b.high ?? b.close));
+
+    // 50-day breakout: was last close > prior 50-day max?  Mark if so.
+    let breakoutDate: string | null = null;
+    if (bars.length > 52) {
+      const last = bars[bars.length - 1];
+      const prior50 = bars.slice(-52, -2);
+      const prior50Max = Math.max(...prior50.map(b => b.high ?? b.close));
+      if (last.close > prior50Max) breakoutDate = last.date;
+    }
+
+    return { high52w, low52w, allTimeHigh, breakoutDate };
+  }, [bars]);
+
   const isUp = chartData.length >= 2
     ? chartData[chartData.length - 1].close >= chartData[0].close
     : true;
@@ -175,15 +202,36 @@ function CommodityPriceChart({ price }: { price: CommodityPrice }) {
   const gradientId = `comm-grad-${symbol}`;
   const lineColor  = isUp ? '#34d399' : '#f87171'; // emerald vs red-400
 
-  // Y-axis domain with 2% padding
+  // Y-axis domain with 2% padding.  Include 52w levels in the domain so the
+  // reference lines are never clipped off the top/bottom of the visible range.
   const [yMin, yMax] = useMemo(() => {
     if (!chartData.length) return [0, 1];
     const vals = chartData.map(d => d.close);
-    const lo = Math.min(...vals);
-    const hi = Math.max(...vals);
+    let lo = Math.min(...vals);
+    let hi = Math.max(...vals);
+    if (levels) {
+      // Only widen the visible window if the level is within ~15% of the
+      // current range — otherwise (e.g. ATH from 5 years ago) keep the
+      // chart focused on the visible-range price action.
+      const range = hi - lo;
+      if (levels.high52w > hi && (levels.high52w - hi) < range * 0.5) hi = levels.high52w;
+      if (levels.low52w  < lo && (lo - levels.low52w)  < range * 0.5) lo = levels.low52w;
+    }
     const pad = (hi - lo) * 0.05 || hi * 0.02;
     return [lo - pad, hi + pad];
-  }, [chartData]);
+  }, [chartData, levels]);
+
+  // ── Technical state derivation for the badges ─────────────────────────────
+  const techBadges = useMemo(() => {
+    const last = chartData[chartData.length - 1]?.close ?? null;
+    const trendAbove50  = tech?.sma50  != null && last != null ? last > tech.sma50  : null;
+    const regimeAbove200 = tech?.sma200 != null && last != null ? last > tech.sma200 : null;
+    return {
+      rsi: tech?.rsi ?? null,
+      trendAbove50,
+      regimeAbove200,
+    };
+  }, [tech, chartData]);
 
   const fmtTick = (d: string) => {
     try { return format(parseISO(d), range === '1M' ? 'MMM d' : 'MMM yy'); } catch { return d; }
@@ -191,13 +239,61 @@ function CommodityPriceChart({ price }: { price: CommodityPrice }) {
 
   return (
     <div className="px-4 pb-3 border-t border-border">
-      {/* Sub-header */}
-      <div className="flex items-center justify-between mt-3 mb-2">
-        <div className="flex items-center gap-1.5">
-          <LineChartIcon className="w-3.5 h-3.5 text-primary" />
-          <span className="text-xs font-semibold">{price.label}</span>
-          <span className="text-[10px] text-muted-foreground/60 font-mono">{price.ticker}</span>
+      {/* Sub-header: label + tech badges + range toggle */}
+      <div className="flex items-center justify-between mt-3 mb-2 gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <LineChartIcon className="w-3.5 h-3.5 text-primary shrink-0" />
+          <span className="text-xs font-semibold truncate">{price.label}</span>
+          <span className="text-[10px] text-muted-foreground/60 font-mono shrink-0">{price.ticker}</span>
         </div>
+
+        {/* Tech state badges */}
+        <div className="flex items-center gap-1 ml-auto">
+          {techBadges.trendAbove50 != null && (
+            <span
+              className={cn(
+                'px-1.5 py-0.5 rounded text-[9px] font-semibold tracking-wide flex items-center gap-0.5',
+                techBadges.trendAbove50
+                  ? 'bg-emerald-500/15 text-emerald-400'
+                  : 'bg-red-500/15 text-red-400',
+              )}
+              title={techBadges.trendAbove50 ? 'Above 50-day SMA — uptrend' : 'Below 50-day SMA — downtrend'}
+            >
+              {techBadges.trendAbove50 ? '▲' : '▼'} TREND
+            </span>
+          )}
+          {techBadges.rsi != null && (
+            <span
+              className={cn(
+                'px-1.5 py-0.5 rounded text-[9px] font-semibold tabular-nums',
+                techBadges.rsi >= 70 ? 'bg-amber-500/15 text-amber-400' :
+                techBadges.rsi <= 30 ? 'bg-red-500/15   text-red-400'   :
+                                       'bg-muted/40    text-muted-foreground',
+              )}
+              title={
+                techBadges.rsi >= 70 ? 'RSI overbought (>70)' :
+                techBadges.rsi <= 30 ? 'RSI oversold (<30)'   :
+                                       'RSI neutral'
+              }
+            >
+              RSI {techBadges.rsi.toFixed(0)}
+            </span>
+          )}
+          {techBadges.regimeAbove200 != null && (
+            <span
+              className={cn(
+                'px-1.5 py-0.5 rounded text-[9px] font-semibold tracking-wide flex items-center gap-0.5',
+                techBadges.regimeAbove200
+                  ? 'bg-emerald-500/15 text-emerald-400'
+                  : 'bg-red-500/15 text-red-400',
+              )}
+              title={techBadges.regimeAbove200 ? 'Above 200-day SMA — bull regime' : 'Below 200-day SMA — bear regime'}
+            >
+              {techBadges.regimeAbove200 ? '▲' : '▼'} 200d
+            </span>
+          )}
+        </div>
+
         {/* Range toggle */}
         <div className="flex rounded border border-border overflow-hidden text-[10px]">
           {(['1M', '3M', '1Y'] as Range[]).map(r => (
@@ -265,6 +361,37 @@ function CommodityPriceChart({ price }: { price: CommodityPrice }) {
                 try { return format(parseISO(d), 'MMM d, yyyy'); } catch { return d; }
               }}
             />
+            {/* 52w high/low reference lines — dotted, only when they sit inside the visible y-domain */}
+            {levels && levels.high52w >= yMin && levels.high52w <= yMax && (
+              <ReferenceLine
+                y={levels.high52w}
+                stroke="#34d399"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                ifOverflow="hidden"
+                label={{
+                  value: `52w hi $${levels.high52w.toFixed(2)}`,
+                  position: 'insideTopRight',
+                  fill: '#34d399',
+                  fontSize: 9,
+                }}
+              />
+            )}
+            {levels && levels.low52w >= yMin && levels.low52w <= yMax && (
+              <ReferenceLine
+                y={levels.low52w}
+                stroke="#f87171"
+                strokeWidth={1}
+                strokeDasharray="3 3"
+                ifOverflow="hidden"
+                label={{
+                  value: `52w lo $${levels.low52w.toFixed(2)}`,
+                  position: 'insideBottomRight',
+                  fill: '#f87171',
+                  fontSize: 9,
+                }}
+              />
+            )}
             <Area
               type="monotone"
               dataKey="close"
