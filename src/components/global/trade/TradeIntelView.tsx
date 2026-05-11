@@ -1,23 +1,32 @@
+import { useMemo } from 'react';
 import { Activity, Loader2 } from 'lucide-react';
-import { useAISStream } from '@/hooks/useAISStream';
+import { useAISStream, matchesVesselType, type VesselTypeFilter } from '@/hooks/useAISStream';
 import { useAisDerivedMetrics } from '@/hooks/useAisDerivedMetrics';
 import { ChokePointStatusBoard } from './ChokePointStatusBoard';
 import { PortStressBoard } from './PortStressBoard';
+import { VesselDestinationsBoard } from './VesselDestinationsBoard';
 import { PolicyCalendarStrip } from './PolicyCalendarStrip';
+import { YieldCurveWidget } from './YieldCurveWidget';
 import type { Chokepoint, Seaport } from '@/data/tradeInfrastructure/types';
 
 /**
  * TradeIntelView — the analytical lens of the Trade tab.
  *
- * Composes three derived-data boards:
- *   1. ChokePointStatusBoard   — live AIS density at the 11 chokepoints
- *   2. PortStressBoard         — top 10 ports by current vessel-nearby count
- *   3. PolicyCalendarStrip     — next 7d of high-impact global macro events
+ * Composes five derived-data sections, top-to-bottom:
+ *   1. US Yield Curve widget   — leading recession indicator (Treasury 2-10 spread)
+ *   2. ChokePointStatusBoard   — live AIS density at the 11 chokepoints
+ *   3. PortStressBoard         — top 10 ports with stationary/moving split
+ *   4. VesselDestinationsBoard — most-broadcast vessel destinations
+ *   5. PolicyCalendarStrip     — next 7d of high-impact global macro events
  *
  * The view auto-subscribes to AIS via `useAISStream(true)`.  The singleton
  * ref-counts shared connections, so if the user already has Live Vessels
- * enabled on the globe, this is a no-op extra subscriber.  If not, the
- * Intel view brings AIS up on its own (≈ one WebSocket).
+ * enabled on the globe, this is a no-op extra subscriber.
+ *
+ * When the user has the vessel-type filter set on the globe ("Tankers
+ * only" etc.), we apply the same filter here so the Intel metrics stay
+ * consistent with what's visible on the map.  Filter state lives in
+ * Global.tsx and is passed in via the `vesselTypeFilter` prop.
  *
  * AIS-derived metrics are throttled to a 10-s recompute cadence so the
  * board doesn't churn on every 2-s flush.
@@ -25,12 +34,24 @@ import type { Chokepoint, Seaport } from '@/data/tradeInfrastructure/types';
 
 interface Props {
   /** Camera fly-to handler — wires board clicks to globe focus. */
-  onCameraFocus?: (lat: number, lng: number, altitude?: number) => void;
+  onCameraFocus?:    (lat: number, lng: number, altitude?: number) => void;
+  /** Filter applied to the vessel snapshot before computing AIS metrics. */
+  vesselTypeFilter?: VesselTypeFilter;
 }
 
-export function TradeIntelView({ onCameraFocus }: Props) {
+export function TradeIntelView({ onCameraFocus, vesselTypeFilter = 'all' }: Props) {
   const { vessels, status, vesselCount } = useAISStream(true);
-  const metrics = useAisDerivedMetrics(vessels);
+
+  // Apply the type filter BEFORE feeding the metrics — so chokepoint counts,
+  // port counts, and destination tallies all reflect the user's lens.
+  const filteredVessels = useMemo(
+    () => vesselTypeFilter === 'all'
+      ? vessels
+      : vessels.filter(v => matchesVesselType(v, vesselTypeFilter)),
+    [vessels, vesselTypeFilter],
+  );
+
+  const metrics = useAisDerivedMetrics(filteredVessels);
 
   const aisLive = status === 'connected';
 
@@ -41,6 +62,9 @@ export function TradeIntelView({ onCameraFocus }: Props) {
   const handlePortClick = (port: Seaport) => {
     onCameraFocus?.(port.lat, port.lng, 1.5);
   };
+
+  // Total visible count = post-filter snapshot size, useful when filter is on.
+  const displayCount = vesselTypeFilter === 'all' ? vesselCount : filteredVessels.length;
 
   return (
     <div className="flex flex-col">
@@ -59,7 +83,10 @@ export function TradeIntelView({ onCameraFocus }: Props) {
             {status === 'connected' && (
               <>
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                {vesselCount.toLocaleString()} vessels
+                {displayCount.toLocaleString()} vessels
+                {vesselTypeFilter !== 'all' && (
+                  <span className="text-muted-foreground/70 lowercase">({vesselTypeFilter})</span>
+                )}
               </>
             )}
             {status === 'idle' && (
@@ -83,12 +110,15 @@ export function TradeIntelView({ onCameraFocus }: Props) {
           </span>
         </div>
         <p className="text-[11px] text-muted-foreground leading-snug mt-1">
-          Real-time chokepoint and port traffic from the live AIS feed, plus the
-          week's high-impact macro calendar.
+          Real-time chokepoint and port traffic, vessel destinations, US yield curve,
+          and the week's high-impact macro calendar.
         </p>
       </div>
 
-      {/* ── The three boards ─────────────────────────────────────────── */}
+      {/* ── US Yield Curve (leading recession indicator) ─────────────── */}
+      <YieldCurveWidget />
+
+      {/* ── AIS-derived boards ───────────────────────────────────────── */}
       <ChokePointStatusBoard
         chokepointCounts={metrics.chokepointCounts}
         aisLive={aisLive}
@@ -96,9 +126,14 @@ export function TradeIntelView({ onCameraFocus }: Props) {
       />
 
       <PortStressBoard
-        portCounts={metrics.portCounts}
+        portMetrics={metrics.portMetrics}
         aisLive={aisLive}
         onSelect={handlePortClick}
+      />
+
+      <VesselDestinationsBoard
+        topDestinations={metrics.topDestinations}
+        aisLive={aisLive}
       />
 
       <PolicyCalendarStrip />

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Anchor } from 'lucide-react';
 import { SEAPORTS } from '@/data/tradeInfrastructure/seaports';
 import type { Seaport } from '@/data/tradeInfrastructure/types';
+import type { PortMetric } from '@/hooks/useAisDerivedMetrics';
 import { cn } from '@/lib/utils';
 
 /**
@@ -20,8 +21,8 @@ import { cn } from '@/lib/utils';
  */
 
 interface Props {
-  /** Map of port id → instantaneous nearby vessel count. */
-  portCounts: Map<string, number>;
+  /** Map of port id → { total, anchored } vessel breakdown. */
+  portMetrics: Map<string, PortMetric>;
   /** Whether AIS is connected and feeding data. */
   aisLive: boolean;
   /** Optional click handler — wires the row to camera-fly on the globe. */
@@ -29,24 +30,28 @@ interface Props {
 }
 
 interface Row {
-  port:  Seaport;
-  count: number;
+  port:     Seaport;
+  total:    number;
+  anchored: number;
 }
 
 function getFlagSrc(iso2: string): string {
   return `https://flagcdn.com/w20/${iso2.toLowerCase()}.png`;
 }
 
-export function PortStressBoard({ portCounts, aisLive, onSelect }: Props) {
+export function PortStressBoard({ portMetrics, aisLive, onSelect }: Props) {
   const rows = useMemo<Row[]>(() => {
     return SEAPORTS
-      .map(port => ({ port, count: portCounts.get(port.id) ?? 0 }))
-      .filter(r => r.count > 0)
-      .sort((a, b) => b.count - a.count)
+      .map(port => {
+        const m = portMetrics.get(port.id);
+        return { port, total: m?.total ?? 0, anchored: m?.anchored ?? 0 };
+      })
+      .filter(r => r.total > 0)
+      .sort((a, b) => b.total - a.total)
       .slice(0, 10);
-  }, [portCounts]);
+  }, [portMetrics]);
 
-  const maxCount = rows[0]?.count ?? 0;
+  const maxCount = rows[0]?.total ?? 0;
 
   return (
     <div className="px-4 py-3 border-t border-border">
@@ -65,8 +70,23 @@ export function PortStressBoard({ portCounts, aisLive, onSelect }: Props) {
         </p>
       ) : (
         <ul className="space-y-1">
-          {rows.map(({ port, count }) => {
-            const widthPct = maxCount > 0 ? Math.round((count / maxCount) * 100) : 0;
+          {rows.map(({ port, total, anchored }) => {
+            // Bar width scales to the BUSIEST port for relative pressure.
+            const widthPct    = maxCount > 0 ? Math.round((total    / maxCount) * 100) : 0;
+            // Inside the bar, the anchored segment is rendered in amber/red
+            // (congestion) — a high anchored:total ratio means many vessels
+            // are sitting still rather than working cargo.
+            const anchoredPct = total > 0 && widthPct > 0
+              ? Math.round((anchored / total) * widthPct)
+              : 0;
+            const anchoredRatio = total > 0 ? anchored / total : 0;
+            // Color tint for the "anchored" caption — > 50% stationary is
+            // worth flagging as a congestion signal.
+            const captionTone =
+              anchoredRatio >= 0.7 ? 'text-red-400'   :
+              anchoredRatio >= 0.4 ? 'text-amber-400' :
+                                     'text-muted-foreground/60';
+
             return (
               <li
                 key={port.id}
@@ -101,17 +121,24 @@ export function PortStressBoard({ portCounts, aisLive, onSelect }: Props) {
                       </span>
                     )}
                   </div>
-                  <div className="mt-0.5 h-1 rounded-full bg-muted/40 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-sky-400/80"
-                      style={{ width: `${widthPct}%` }}
-                    />
+                  {/* Stacked bar: amber = stationary, sky = under way */}
+                  <div className="mt-0.5 h-1 rounded-full bg-muted/40 overflow-hidden flex">
+                    {anchoredPct > 0 && (
+                      <div className="h-full bg-amber-400/80" style={{ width: `${anchoredPct}%` }} />
+                    )}
+                    <div className="h-full bg-sky-400/80" style={{ width: `${Math.max(0, widthPct - anchoredPct)}%` }} />
                   </div>
+                  {/* Anchored caption — only when meaningfully high */}
+                  {anchored > 0 && (
+                    <div className={cn('mt-0.5 text-[9px] tabular-nums', captionTone)}>
+                      {anchored} anchored ({Math.round(anchoredRatio * 100)}%)
+                    </div>
+                  )}
                 </div>
 
-                {/* Count */}
+                {/* Total count */}
                 <span className="text-[11px] tabular-nums font-semibold text-foreground/85 w-8 text-right">
-                  {count}
+                  {total}
                 </span>
               </li>
             );

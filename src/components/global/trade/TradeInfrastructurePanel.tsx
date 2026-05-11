@@ -11,7 +11,7 @@ import {
   STORY_MODES, NODE_COLOR, ROUTE_COLOR,
   type LayerKey, type TradeNode, type TradeRoute, type StoryMode,
 } from '@/data/tradeInfrastructure';
-import type { AISStatus } from '@/hooks/useAISStream';
+import type { AISStatus, VesselTypeFilter } from '@/hooks/useAISStream';
 import { FLIGHT_DATA_SOURCE, type FlightStatus } from '@/hooks/useOpenSkyFlights';
 import { useAirportDetail } from '@/hooks/useAirportDetail';
 import { TradeIntelView } from './TradeIntelView';
@@ -103,6 +103,9 @@ interface Props {
   aisVesselCount?:  number;
   /** Total raw WebSocket messages received — shown for debugging when count is 0. */
   aisRawMsgCount?:  number;
+  /** Active vessel-type filter — narrows the live AIS layer + Intel metrics. */
+  vesselTypeFilter?:   VesselTypeFilter;
+  onVesselTypeFilter?: (f: VesselTypeFilter) => void;
   /** OpenSky poll status — surfaced in the Live Flights banner when that layer is on. */
   flightStatus?:    FlightStatus;
   /** Number of airborne aircraft currently tracked. */
@@ -113,6 +116,7 @@ export function TradeInfrastructurePanel({
   activeLayers, onLayersChange, selectedNode, onSelectNode,
   visibleNodes, visibleRoutes, worldwide, onToggleWorldwide, countryName,
   aisStatus = 'idle', aisVesselCount = 0, aisRawMsgCount = 0,
+  vesselTypeFilter = 'all', onVesselTypeFilter,
   flightStatus = 'idle', flightCount = 0,
 }: Props) {
   const [search, setSearch] = useState('');
@@ -210,7 +214,7 @@ export function TradeInfrastructurePanel({
         </div>
       </div>
 
-      {view === 'intel' && <TradeIntelView />}
+      {view === 'intel' && <TradeIntelView vesselTypeFilter={vesselTypeFilter} />}
 
       {view === 'infrastructure' && (<>
       {/* ── Metrics strip ─────────────────────────────────────────────── */}
@@ -247,7 +251,14 @@ export function TradeInfrastructurePanel({
 
       {/* ── AIS Live Vessels banner (only when that layer is on) ───────── */}
       {activeLayers.has('liveVessels') && (
-        <AISStatusBanner status={aisStatus} count={aisVesselCount} rawMsgCount={aisRawMsgCount} />
+        <>
+          <AISStatusBanner status={aisStatus} count={aisVesselCount} rawMsgCount={aisRawMsgCount} />
+          {/* Vessel type filter — narrows the live AIS layer on the globe
+              AND the Intel-view metrics.  Single-select; 'all' shows everything. */}
+          {onVesselTypeFilter && (
+            <VesselTypeFilterBar value={vesselTypeFilter} onChange={onVesselTypeFilter} />
+          )}
+        </>
       )}
 
       {/* ── OpenSky Live Flights banner (only when that layer is on) ──── */}
@@ -628,6 +639,51 @@ function FlightStatusBanner({ status, count }: { status: FlightStatus; count: nu
         </span>
       </div>
       {detail}
+    </div>
+  );
+}
+
+/**
+ * VesselTypeFilterBar — single-select pill row for narrowing the live
+ * AIS layer to a specific ship class.  Visible only while liveVessels
+ * is toggled on.  Filter is applied upstream (in Global.tsx) so the
+ * globe rendering AND the Intel-view metrics both reflect the choice.
+ */
+const VESSEL_FILTER_OPTIONS: Array<{ key: VesselTypeFilter; label: string }> = [
+  { key: 'all',       label: 'All'        },
+  { key: 'cargo',     label: 'Cargo'      },
+  { key: 'tanker',    label: 'Tankers'    },
+  { key: 'fishing',   label: 'Fishing'    },
+  { key: 'passenger', label: 'Passenger'  },
+];
+
+function VesselTypeFilterBar({
+  value, onChange,
+}: {
+  value:    VesselTypeFilter;
+  onChange: (f: VesselTypeFilter) => void;
+}) {
+  return (
+    <div className="px-4 pb-2 -mt-1">
+      <div className="text-[9px] uppercase tracking-wide text-muted-foreground/60 mb-1">
+        Vessel type
+      </div>
+      <div className="flex flex-wrap gap-1">
+        {VESSEL_FILTER_OPTIONS.map(opt => (
+          <button
+            key={opt.key}
+            onClick={() => onChange(opt.key)}
+            className={cn(
+              'px-2 py-0.5 rounded border text-[10px] font-medium transition-colors',
+              value === opt.key
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/40',
+            )}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

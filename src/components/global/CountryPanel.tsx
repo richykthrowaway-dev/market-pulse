@@ -11,7 +11,7 @@ import CountryEconomy from "./CountryEconomy";
 import { TradeInfrastructurePanel } from "./trade/TradeInfrastructurePanel";
 import { CommoditiesPanel } from "./trade/CommoditiesPanel";
 import type { LayerKey, TradeNode, TradeRoute } from "@/data/tradeInfrastructure";
-import type { AISStatus } from "@/hooks/useAISStream";
+import type { AISStatus, VesselTypeFilter } from "@/hooks/useAISStream";
 import type { FlightStatus } from "@/hooks/useOpenSkyFlights";
 
 interface CountryPanelProps {
@@ -39,6 +39,10 @@ interface CountryPanelProps {
   /** Total raw WebSocket messages received — used to distinguish "connected/no data" from "connected/parsing dropped" */
   aisRawMsgCount?:  number;
 
+  // ── Vessel type filter (lifted from Global so globe + Intel agree) ──
+  vesselTypeFilter?:   VesselTypeFilter;
+  onVesselTypeFilter?: (f: VesselTypeFilter) => void;
+
   // ── Live flights feed status (passed through to TradeInfrastructurePanel) ──
   flightStatus?:    FlightStatus;
   flightCount?:     number;
@@ -49,6 +53,7 @@ export default function CountryPanel({
   tradeActiveLayers, onTradeLayersChange, tradeSelectedNode, onTradeSelectNode,
   tradeVisibleNodes, tradeVisibleRoutes, tradeWorldwide, onToggleTradeWorldwide,
   aisStatus, aisVesselCount, aisRawMsgCount,
+  vesselTypeFilter, onVesselTypeFilter,
   flightStatus, flightCount,
 }: CountryPanelProps) {
   const { data: stocks = [], isLoading } = useCountryStocks(iso2);
@@ -113,6 +118,8 @@ export default function CountryPanel({
               aisStatus={aisStatus}
               aisVesselCount={aisVesselCount}
               aisRawMsgCount={aisRawMsgCount}
+              vesselTypeFilter={vesselTypeFilter}
+              onVesselTypeFilter={onVesselTypeFilter}
               flightStatus={flightStatus}
               flightCount={flightCount}
             />

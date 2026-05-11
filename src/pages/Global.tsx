@@ -20,7 +20,7 @@ import {
   getVisibleNodes, getVisibleRoutes,
   type LayerKey, type TradeNode,
 } from "@/data/tradeInfrastructure";
-import { useAISStream } from "@/hooks/useAISStream";
+import { useAISStream, matchesVesselType, type VesselTypeFilter } from "@/hooks/useAISStream";
 import { useOpenSkyFlights } from "@/hooks/useOpenSkyFlights";
 import { useConflictEvents, type ConflictEvent } from "@/hooks/useConflictEvents";
 import { useEarthquakes, type EarthquakeEvent } from "@/hooks/useEarthquakes";
@@ -266,11 +266,24 @@ const Global = () => {
   const liveVesselsEnabled =
     tradeTabActive && tradeActiveLayers.has('liveVessels');
   const {
-    vessels: liveVessels,
+    vessels: liveVesselsRaw,
     status: aisStatus,
     vesselCount: aisVesselCount,
     rawMsgCount: aisRawMsgCount,
   } = useAISStream(liveVesselsEnabled);
+
+  // ── Vessel type filter ──────────────────────────────────────────────
+  // Lets the user narrow the globe (and Intel metrics) to a single
+  // ship class — e.g. "Tankers only" during a Red Sea oil-tanker
+  // diversion event.  State lives here so the same filter is shared
+  // between the globe rendering and the Intel-view metrics.
+  const [vesselTypeFilter, setVesselTypeFilter] = useState<VesselTypeFilter>('all');
+  const liveVessels = useMemo(
+    () => vesselTypeFilter === 'all'
+      ? liveVesselsRaw
+      : liveVesselsRaw.filter(v => matchesVesselType(v, vesselTypeFilter)),
+    [liveVesselsRaw, vesselTypeFilter],
+  );
 
   // ── Live OpenSky flight feed ─────────────────────────────────────────
   // Poll ONLY when the Trade tab is active AND the 'liveFlights' layer
@@ -712,6 +725,8 @@ const Global = () => {
               aisStatus={aisStatus}
               aisVesselCount={aisVesselCount}
               aisRawMsgCount={aisRawMsgCount}
+              vesselTypeFilter={vesselTypeFilter}
+              onVesselTypeFilter={setVesselTypeFilter}
               flightStatus={flightStatus}
               flightCount={flightCount}
             />

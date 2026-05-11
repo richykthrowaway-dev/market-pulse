@@ -53,23 +53,60 @@ const PORT_TARGETS:  Target[] = SEAPORTS.map(p => ({
   id: p.id, lat: p.lat, lng: p.lng, cosLat: Math.cos(p.lat * Math.PI / 180),
 }));
 
+export interface PortMetric {
+  /** Total vessels within PORT_RADIUS_KM of this port. */
+  total:    number;
+  /** Subset whose AIS navStatus indicates stationary at port (anchored or moored). */
+  anchored: number;
+}
+
+export interface DestinationTally {
+  /** Normalised destination string (uppercase, trimmed). */
+  destination: string;
+  /** Vessel count broadcasting this destination. */
+  count:       number;
+}
+
 export interface AisDerivedMetrics {
   /** Map of chokepoint id → instantaneous nearby vessel count. */
   chokepointCounts: Map<string, number>;
-  /** Map of port id → instantaneous nearby vessel count. */
-  portCounts: Map<string, number>;
+  /** Map of port id → { total, anchored } breakdown. */
+  portMetrics:      Map<string, PortMetric>;
+  /** Top vessel-destination strings ranked by frequency.  Pre-sorted desc. */
+  topDestinations:  DestinationTally[];
   /** Timestamp of the last derivation pass (ms epoch). */
-  computedAt: number;
+  computedAt:       number;
   /** Total vessels in the snapshot the metrics were computed from. */
-  vesselTotal: number;
+  vesselTotal:      number;
 }
 
 const EMPTY: AisDerivedMetrics = {
   chokepointCounts: new Map(),
-  portCounts:       new Map(),
+  portMetrics:      new Map(),
+  topDestinations:  [],
   computedAt:       0,
   vesselTotal:      0,
 };
+
+// AIS navStatus codes that mean "vessel is stationary at a location":
+//   1 = At anchor
+//   5 = Moored
+//   6 = Aground
+// We treat all three as "anchored" for the purposes of the port-congestion
+// indicator since each implies the vessel isn't moving freely.
+const STATIONARY_NAV_STATUS = new Set([1, 5, 6]);
+
+// Destination strings to exclude from the tally — these are AIS noise
+// rather than actual destinations.  Captains frequently type these when
+// they don't have a confirmed destination yet.
+const DESTINATION_NOISE = new Set([
+  'NIL', 'UNKNOWN', 'NONE', 'N/A', 'NA',
+  'FOR ORDERS', 'ORDERS', 'AT ANCHOR', 'AT SEA',
+  'OFFSHORE', 'PILOT STATION', 'FISHING',
+  'CHARTER', 'TRIAL', 'TRIALS',
+]);
+const DESTINATION_MIN_LENGTH = 3;
+const DESTINATION_TOP_N = 12;
 
 /**
  * Compute counts in a single pass over the vessel array.  Each vessel
@@ -79,11 +116,13 @@ const EMPTY: AisDerivedMetrics = {
  */
 function computeMetrics(vessels: Vessel[]): AisDerivedMetrics {
   const chokepointCounts = new Map<string, number>();
-  const portCounts       = new Map<string, number>();
+  const portMetrics      = new Map<string, PortMetric>();
+  const destCounts       = new Map<string, number>();
 
   for (const v of vessels) {
     const vLat = v.lat;
     const vLng = v.lng;
+    const isStationary = v.navStatus != null && STATIONARY_NAV_STATUS.has(v.navStatus);
 
     // Chokepoints — usually 11 of them, cheap inner loop
     for (const t of CHOKE_TARGETS) {
@@ -94,19 +133,40 @@ function computeMetrics(vessels: Vessel[]): AisDerivedMetrics {
       }
     }
 
-    // Ports — usually 35; same idea, tighter radius
+    // Ports — usually 35; tighter radius, split total vs anchored
     for (const t of PORT_TARGETS) {
       const dLat = (vLat - t.lat) * 111;
       const dLng = (vLng - t.lng) * 111 * t.cosLat;
       if (dLat * dLat + dLng * dLng <= PORT_THRESHOLD_KM2) {
-        portCounts.set(t.id, (portCounts.get(t.id) ?? 0) + 1);
+        const m = portMetrics.get(t.id);
+        if (m) {
+          m.total += 1;
+          if (isStationary) m.anchored += 1;
+        } else {
+          portMetrics.set(t.id, { total: 1, anchored: isStationary ? 1 : 0 });
+        }
+      }
+    }
+
+    // Destination tally — captain-typed text, normalised + denoised
+    if (typeof v.destination === 'string' && v.destination.length >= DESTINATION_MIN_LENGTH) {
+      const norm = v.destination.trim().toUpperCase();
+      if (norm.length >= DESTINATION_MIN_LENGTH && !DESTINATION_NOISE.has(norm)) {
+        destCounts.set(norm, (destCounts.get(norm) ?? 0) + 1);
       }
     }
   }
 
+  // Materialise top-N destinations; the long tail is noise anyway.
+  const topDestinations: DestinationTally[] = Array.from(destCounts.entries())
+    .map(([destination, count]) => ({ destination, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, DESTINATION_TOP_N);
+
   return {
     chokepointCounts,
-    portCounts,
+    portMetrics,
+    topDestinations,
     computedAt: Date.now(),
     vesselTotal: vessels.length,
   };

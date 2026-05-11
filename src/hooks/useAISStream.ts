@@ -87,6 +87,33 @@ export type AISStatus =
   | 'connected'   // receiving messages
   | 'error';      // socket failed
 
+/**
+ * High-level vessel category filter used by the Trade tab UI.
+ *
+ * AIS vessel-type codes are defined in ITU-R M.1371, and the cleanest
+ * mental model is "century ranges":
+ *   - 30           → fishing
+ *   - 60-69        → passenger
+ *   - 70-79        → cargo (containers, breakbulk, ro-ro)
+ *   - 80-89        → tanker (crude, chemical, LNG, LPG)
+ *
+ * 'all' shows everything; anything we don't classify (military, pleasure,
+ * special-purpose) only appears when 'all' is selected.
+ */
+export type VesselTypeFilter = 'all' | 'cargo' | 'tanker' | 'fishing' | 'passenger';
+
+export function matchesVesselType(v: Vessel, filter: VesselTypeFilter): boolean {
+  if (filter === 'all') return true;
+  const t = v.shipType;
+  if (t == null) return false;
+  switch (filter) {
+    case 'cargo':     return t >= 70 && t <= 79;
+    case 'tanker':    return t >= 80 && t <= 89;
+    case 'fishing':   return t === 30;
+    case 'passenger': return t >= 60 && t <= 69;
+  }
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 const AISSTREAM_URL      = 'wss://stream.aisstream.io/v0/stream';
 const FLUSH_INTERVAL_MS  = 2_000;           // React render cadence
