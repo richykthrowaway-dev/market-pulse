@@ -294,6 +294,10 @@ const Global = () => {
     ? macroHeatmapQuery.data?.data
     : undefined;
 
+  // ── City label toggle ────────────────────────────────────────────────
+  const cityLabelsEnabled =
+    tradeTabActive && tradeActiveLayers.has('cityLabels');
+
   return (
     <div className="h-screen flex flex-col bg-background text-foreground">
       {/* Header Bar */}
@@ -459,6 +463,7 @@ const Global = () => {
                   economicEvents={economicEvents}
                   onEconomicEventClick={onEconomicEventClick}
                   macroHeatmap={macroHeatmap}
+                  showCityLabels={cityLabelsEnabled}
                 />
               )}
             </Suspense>

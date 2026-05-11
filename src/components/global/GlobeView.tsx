@@ -98,6 +98,8 @@ interface GlobeViewProps {
   onEconomicEventClick?:    (e: EconomicEvent) => void;
   /** GDP growth per country — drives polygon cap color when macroHeatmap layer active */
   macroHeatmap?:            MacroCountry[];
+  /** When true, city/capital name labels are shown at close zoom (altitude < 1.2). */
+  showCityLabels?:          boolean;
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -373,6 +375,7 @@ export default function GlobeView({
   economicEvents,
   onEconomicEventClick,
   macroHeatmap,
+  showCityLabels = false,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -1443,7 +1446,7 @@ export default function GlobeView({
         // back-hemisphere culling, curvature projection, and perspective
         // scaling internally.  Capital cities get a slightly larger font and
         // dot so they stand out from trade/financial cities.
-        labelsData={cityLabelsVisible ? WORLD_CITIES : EMPTY_LABELS}
+        labelsData={showCityLabels && cityLabelsVisible ? WORLD_CITIES : EMPTY_LABELS}
         labelLat={LABEL_LAT}
         labelLng={LABEL_LNG}
         labelText={LABEL_TEXT}
