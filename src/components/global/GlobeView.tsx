@@ -574,6 +574,14 @@ export default function GlobeView({
   const autoRotateRef = useRef(autoRotate);
   autoRotateRef.current = autoRotate;
   const globeRef = useRef<GlobeMethods | undefined>(undefined);
+  // Cached references to the globe's PhongMaterial and its compiled shader so
+  // the altitude poll can adjust bumpScale (uniform) and uSharpness (custom
+  // uniform we inject via onBeforeCompile) at close zoom without re-querying
+  // through react-globe.gl on every tick.
+  const globeMatRef    = useRef<THREE.MeshPhongMaterial | null>(null);
+  // `shader` parameter passed to onBeforeCompile is internal three.js plumbing —
+  // its exact TS type changes across versions, so we type it loosely here.
+  const globeShaderRef = useRef<{ uniforms: Record<string, { value: any }> } | null>(null);
   const [countries, setCountries] = useState<Feature[]>(geoJsonCache ?? []);
   const idleTimer = useRef<ReturnType<typeof setTimeout>>();
   // Hover ISO stored in a ref — changes do NOT trigger React re-renders.
@@ -842,6 +850,11 @@ export default function GlobeView({
         mat.needsUpdate = true;
       }
 
+      // Expose the material ref so the altitude poll can boost bumpScale
+      // at close zoom — terrain shadows become more pronounced and the
+      // surface feels less flat.
+      globeMatRef.current = mat;
+
       if (!mapReady || !bumpMapReady) {
         timeoutId = setTimeout(tryApply, 200);
       }
@@ -852,6 +865,72 @@ export default function GlobeView({
     return () => {
       cancelled = true;
       if (timeoutId) clearTimeout(timeoutId);
+      // Material is owned by react-globe.gl, don't dispose. Just drop our ref.
+      globeMatRef.current = null;
+    };
+  }, [countries]);
+
+  // ── Close-zoom quality enhancement (saturation + contrast shader patch) ──
+  // The 16 K Blue Marble texture caps at ≈2.45 km per texel — at zoom levels
+  // past Z 6.5 the user starts upscaling it, which reads as blur with washed
+  // colours.  We can't add real detail, but we can add *perceived* quality:
+  // boost saturation and contrast on the diffuse map at close zoom, driven
+  // by a uSharpness uniform that the altitude poll ramps 0 → 1 across
+  // Z 6.5 → 9.5.  Cost is one vector-math block in the fragment shader,
+  // no extra texture samples, no recompiles per zoom change.
+  useEffect(() => {
+    if (!countries.length) return;
+    const globe = globeRef.current;
+    if (!globe) return;
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const trySetup = () => {
+      if (cancelled) return;
+      let mat: THREE.MeshPhongMaterial | undefined;
+      try { mat = globe.globeMaterial() as THREE.MeshPhongMaterial; } catch { mat = undefined; }
+      if (!mat) { timeoutId = setTimeout(trySetup, 200); return; }
+
+      // Compose with any previous onBeforeCompile (defensive — react-globe.gl
+      // doesn't currently set one, but if it ever does, we don't want to
+      // clobber it).
+      const previous = mat.onBeforeCompile;
+      mat.onBeforeCompile = (shader) => {
+        if (typeof previous === 'function') previous.call(mat!, shader);
+        shader.uniforms.uSharpness = { value: 0 };
+        // Prepend the uniform declaration, then inject the colour-boost
+        // block right after the standard <map_fragment> chunk (which is
+        // where `diffuseColor` gets set from the diffuse texture).
+        shader.fragmentShader =
+          'uniform float uSharpness;\n' +
+          shader.fragmentShader.replace(
+            '#include <map_fragment>',
+            `#include <map_fragment>
+            #ifdef USE_MAP
+              vec3 _c = diffuseColor.rgb;
+              float _lum = dot(_c, vec3(0.299, 0.587, 0.114));
+              // Saturation: pull each channel further from luminance (up to +55 %)
+              _c = mix(vec3(_lum), _c, 1.0 + uSharpness * 0.55);
+              // Contrast: expand around mid-grey (up to +40 %)
+              _c = (_c - 0.5) * (1.0 + uSharpness * 0.40) + 0.5;
+              diffuseColor.rgb = clamp(_c, 0.0, 1.0);
+            #endif
+            `,
+          );
+        // Stash the compiled shader so the altitude poll can update the uniform.
+        globeShaderRef.current = shader;
+      };
+      // Force a re-compile so onBeforeCompile is invoked on the next frame.
+      mat.needsUpdate = true;
+    };
+
+    trySetup();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
+      globeShaderRef.current = null;
     };
   }, [countries]);
 
@@ -1362,6 +1441,36 @@ export default function GlobeView({
       //   Z 15 ≈ neighborhood       ( kmPerPx ≈ 0.0048)
       const zoomLevel = Math.log2(40075 / (256 * kmPerPx));
       setZoom((prev) => Math.abs(prev - zoomLevel) < 0.05 ? prev : zoomLevel);
+
+      // ── Close-zoom globe quality enhancement ────────────────────────────
+      // At zoom levels past 6.5 the 16K Blue Marble texture is being
+      // magnified (1 texel covers <2 km but each screen pixel is much
+      // smaller), so it reads as blurry with washed-out colours.  Compensate
+      // by ramping a single `uSharpness` uniform 0 → 1 across Z 6.5 → 9.5
+      // (drives saturation + contrast boosts in the fragment shader), and
+      // by lifting bumpScale 6 → 14 across the same range (terrain shadows
+      // get deeper, the sphere reads less flat).  Both stop at the cap so
+      // very-close zooms don't over-saturate or get cartoonish shadows.
+      const SHARP_START = 6.5;
+      const SHARP_FULL  = 9.5;
+      const sharpT = Math.max(0, Math.min(1, (zoomLevel - SHARP_START) / (SHARP_FULL - SHARP_START)));
+
+      const shader = globeShaderRef.current;
+      if (shader?.uniforms?.uSharpness) {
+        if (Math.abs(shader.uniforms.uSharpness.value - sharpT) > 0.01) {
+          shader.uniforms.uSharpness.value = sharpT;
+        }
+      }
+
+      const globeMat = globeMatRef.current;
+      if (globeMat) {
+        const BASE_BUMP = 6;
+        const MAX_BUMP  = 14;
+        const targetBump = BASE_BUMP + (MAX_BUMP - BASE_BUMP) * sharpT;
+        if (Math.abs(globeMat.bumpScale - targetBump) > 0.05) {
+          globeMat.bumpScale = targetBump;
+        }
+      }
 
       // ── Live-flights size gradient ──────────────────────────────────────
       // Live flight dots are 2.5 px by default — barely visible at city
