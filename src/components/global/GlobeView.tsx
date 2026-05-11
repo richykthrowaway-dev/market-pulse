@@ -718,8 +718,8 @@ export default function GlobeView({
     if (!countries.length) return;
     const mat = new THREE.PointsMaterial({
       color:           0x67e8f9, // sky-300
-      size:            4.0,      // screen px — 3.5 × 1.15 ≈ 4.0 (sizeAttenuation off)
-      sizeAttenuation: false,
+      size:            2.0,      // world-space units (globe radius ≈ 100 units)
+      sizeAttenuation: true,     // dots shrink/grow with zoom distance
       transparent:     true,
       opacity:         0.9,
       depthWrite:      false,
