@@ -10,6 +10,10 @@ import {
   type TradeDirection,
 } from '@/hooks/useTradeBreakdown';
 import {
+  useBilateralStatic,
+  lookupBilateral,
+} from '@/hooks/useBilateralStatic';
+import {
   HoverCard, HoverCardContent, HoverCardTrigger,
 } from '@/components/ui/hover-card';
 import { HS_CHAPTER_NAMES } from '@/lib/hsChapters';
@@ -338,13 +342,19 @@ function PartnerRow({
 /**
  * Hover-card body — TRUE BILATERAL product breakdown.
  *
- * Calls api-wits in `level=bilateral` mode, which sets both
- * `reporterCode` AND `partnerCode` on Comtrade so the returned product
- * shares reflect ONLY trade flowing between the two specific countries
- * (e.g. "what USA exports specifically to Canada by HS Chapter").
+ * Two-tier data fetching:
+ *   1. STATIC (CDN) — `useBilateralStatic(reporter)` returns the pre-built
+ *      JSON for our top-50 reporters, served from Vercel's edge CDN.  We
+ *      pull this lazily on first hover and cache it for the whole session;
+ *      every subsequent partner hover is a synchronous Map lookup (~0 ms).
+ *   2. LIVE API (fallback) — when the reporter isn't in the static dataset
+ *      (smaller economy) OR a specific partner isn't pre-fetched, we call
+ *      `api-wits` in `level=bilateral` mode.  This guarantees full coverage
+ *      while keeping the common case CDN-fast.
  *
- * Lazy-fetched: the query only fires once the hover card opens, so
- * rendering the partner list doesn't trigger 12 background API calls.
+ * Both tiers are hover-gated via `fetchEnabled` so opening the partners
+ * card doesn't fire 12 background requests.  The live-API hook only runs
+ * when static data is unavailable AND the hover is active.
  */
 function PartnerBreakdown({
   reporter, partnerIso2, partnerName, ourDirection, fetchEnabled,
@@ -359,15 +369,36 @@ function PartnerBreakdown({
   ourDirection: TradeDirection;
   fetchEnabled: boolean;
 }) {
-  // True bilateral: reporter + partner + same direction as the row.
-  // Row in "Exports to" → what reporter EXPORTS to this partner.
-  // Row in "Imports from" → what reporter IMPORTS from this partner.
-  const { data, isLoading } = useTradeBreakdown(
-    fetchEnabled ? reporter : null,
+  // ── Tier 1: static CDN dataset ─────────────────────────────────────────
+  // Fetches the reporter's JSON on first hover, caches per session.
+  const { data: staticData, isLoading: staticLoading } =
+    useBilateralStatic(fetchEnabled ? reporter : null);
+  const staticEntry = lookupBilateral(staticData, partnerIso2, ourDirection);
+
+  // ── Tier 2: live API fallback ──────────────────────────────────────────
+  // Only triggers when (a) the popover is open, (b) static is done loading,
+  // and (c) the static dataset didn't have this specific (reporter, partner).
+  const needLiveFallback = fetchEnabled && !staticLoading && !staticEntry;
+  const { data: liveData, isLoading: liveLoading } = useTradeBreakdown(
+    needLiveFallback ? reporter : null,
     ourDirection,
     'bilateral',
     partnerIso2,
   );
+
+  // ── Pick whichever source actually has data ────────────────────────────
+  const isLoading   = staticLoading || (needLiveFallback && liveLoading);
+  const source: 'static' | 'live' | null = staticEntry
+    ? 'static'
+    : (liveData?.products?.length ? 'live' : null);
+
+  const products = source === 'static'
+    ? staticEntry!.topChapters
+    : (liveData?.products ?? []);
+  const year = source === 'static' ? staticEntry!.year : liveData?.year ?? null;
+  const totalUsd = source === 'static'
+    ? staticEntry!.totalUsd
+    : (liveData?.totalUsd ?? null);
 
   const reporterName = COUNTRY_META[reporter]?.name ?? reporter;
   const verbLabel =
@@ -375,9 +406,9 @@ function PartnerBreakdown({
       ? `${reporterName} → ${partnerName}`
       : `${partnerName} → ${reporterName}`;
 
-  const topChapters = (data?.products ?? []).slice(0, 6);
-  const otherShare  = (data?.products ?? []).slice(6).reduce((s, p) => s + p.share, 0);
-  const totalUsdB   = data?.totalUsd ? data.totalUsd / 1e9 : null;
+  const topChapters = products.slice(0, 6);
+  const otherShare  = products.slice(6).reduce((s, p) => s + p.share, 0);
+  const totalUsdB   = totalUsd != null ? totalUsd / 1e9 : null;
 
   return (
     <div className="space-y-2">
@@ -387,18 +418,26 @@ function PartnerBreakdown({
           <Package className="w-3 h-3 text-muted-foreground shrink-0" />
           <span className="font-semibold text-xs truncate">{verbLabel}</span>
         </div>
-        {data?.year && (
+        {year != null && (
           <span className="text-[9px] uppercase tracking-wide text-muted-foreground shrink-0">
-            {data.year}
+            {year}
           </span>
         )}
       </div>
 
-      {/* Subhead — total bilateral trade value */}
-      <p className="text-[10px] text-muted-foreground -mt-1 leading-snug">
+      {/* Subhead — total bilateral trade value + data source tag */}
+      <p className="text-[10px] text-muted-foreground -mt-1 leading-snug flex items-center gap-1">
         {totalUsdB != null
-          ? `$${totalUsdB.toFixed(1)}B in total · top HS chapters`
-          : `Bilateral product breakdown · UN Comtrade`}
+          ? <span>${totalUsdB.toFixed(1)}B in total · top HS chapters</span>
+          : <span>Bilateral product breakdown · UN Comtrade</span>}
+        {source === 'static' && (
+          <span
+            className="ml-auto shrink-0 text-[8px] px-1 py-px rounded bg-emerald-500/10 text-emerald-400 uppercase tracking-wider"
+            title="Served from static CDN cache"
+          >
+            cached
+          </span>
+        )}
       </p>
 
       {/* Body */}
