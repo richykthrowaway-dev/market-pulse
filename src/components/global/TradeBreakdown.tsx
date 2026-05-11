@@ -132,6 +132,77 @@ function SectionDrillDown({ section, chapters, direction }: SectionDrillDownProp
   );
 }
 
+// ── "Other" bucket drill-down ──────────────────────────────────────────
+// The headline bar shows the top 5 sections; everything below rank 5
+// becomes the "Other" segment.  Hovering it surfaces the long tail so
+// users can see what's hiding in the bucket — typically Plastics, Stone &
+// Glass, Metals, Textiles, Animals, Vegetables, etc.
+
+interface OtherDrillDownProps {
+  /** Sections ranked 6+ in the headline list, oldest→newest. */
+  sections:    TradeProduct[];
+  /** Combined share of all "Other" sections (0..1). */
+  bucketShare: number;
+  /** Combined value of all "Other" sections in USD. */
+  bucketValue: number;
+  direction:   TradeDirection;
+}
+
+function OtherDrillDown({ sections, bucketShare, bucketValue, direction }: OtherDrillDownProps) {
+  if (sections.length === 0) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-baseline justify-between gap-2 pb-1 border-b border-border">
+          <span className="font-semibold text-sm">Other categories</span>
+          <span className="text-xs text-muted-foreground tabular-nums">
+            {(bucketShare * 100).toFixed(1)}% of {direction}
+          </span>
+        </div>
+        <p className="text-xs italic text-muted-foreground">
+          No long-tail data reported.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-baseline justify-between gap-2 pb-1 border-b border-border">
+        <span className="font-semibold text-sm">Other categories</span>
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {(bucketShare * 100).toFixed(1)}% of {direction}
+        </span>
+      </div>
+      <p className="text-[10px] text-muted-foreground -mt-1">
+        ${(bucketValue / 1e9).toFixed(1)}B · {sections.length}{' '}
+        {sections.length === 1 ? 'section' : 'sections'} below rank 5
+      </p>
+      <div className="space-y-1">
+        {sections.map((s) => {
+          const dispName = displaySectionName(s.code);
+          return (
+            <div key={s.code} className="flex items-center gap-2 text-xs">
+              <span
+                className="inline-block w-2 h-2 rounded-sm shrink-0"
+                style={{ backgroundColor: colorFor(s.code) }}
+              />
+              <span
+                className="flex-1 min-w-0 truncate text-foreground/90"
+                title={dispName}
+              >
+                {dispName}
+              </span>
+              <span className="tabular-nums text-muted-foreground shrink-0 w-12 text-right">
+                {(s.share * 100).toFixed(1)}%
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 interface BreakdownPanelProps {
   title: string;
   icon: React.ReactNode;
@@ -174,14 +245,16 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
 
   // Group long tail (rank 6+) into a single "Other" bucket so the visible
   // bar segments stay readable. The labeled list shows top 5 + "Other".
-  const { topProducts, otherShare, otherValue } = useMemo(() => {
+  // We KEEP the individual rest-sections (otherSections) so the hover
+  // popover on "Other" can drill into the long-tail composition.
+  const { topProducts, otherSections, otherShare, otherValue } = useMemo(() => {
     const products = sectionData?.products ?? [];
     const TOP_N = 5;
-    const top = products.slice(0, TOP_N);
+    const top  = products.slice(0, TOP_N);
     const rest = products.slice(TOP_N);
     const otherShare = rest.reduce((s, r) => s + r.share, 0);
     const otherValue = rest.reduce((s, r) => s + r.valueUsd, 0);
-    return { topProducts: top, otherShare, otherValue };
+    return { topProducts: top, otherSections: rest, otherShare, otherValue };
   }, [sectionData]);
 
   if (sectionLoading) {
@@ -255,11 +328,23 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
           </HoverCard>
         ))}
         {otherShare > 0.001 && (
-          <div
-            style={{ width: `${otherShare * 100}%` }}
-            className="bg-muted-foreground/40"
-            title={`Other: ${(otherShare * 100).toFixed(1)}% (${formatUsdCompact(otherValue)})`}
-          />
+          <HoverCard openDelay={150} closeDelay={50}>
+            <HoverCardTrigger asChild>
+              <div
+                style={{ width: `${otherShare * 100}%` }}
+                className="bg-muted-foreground/40 cursor-help transition-opacity hover:opacity-80"
+                aria-label={`Other categories: ${(otherShare * 100).toFixed(1)}%`}
+              />
+            </HoverCardTrigger>
+            <HoverCardContent side="top" align="center" className="w-80 p-3">
+              <OtherDrillDown
+                sections={otherSections}
+                bucketShare={otherShare}
+                bucketValue={otherValue}
+                direction={direction}
+              />
+            </HoverCardContent>
+          </HoverCard>
         )}
       </div>
 
@@ -292,15 +377,27 @@ function BreakdownPanel({ title, icon, iso2, direction }: BreakdownPanelProps) {
           </HoverCard>
         ))}
         {otherShare > 0.001 && (
-          <div className="flex items-center gap-1.5 min-w-0 px-1 -mx-1">
-            <span
-              className="inline-block w-2 h-2 rounded-sm shrink-0 bg-muted-foreground/40"
-            />
-            <span className="truncate text-muted-foreground">Other</span>
-            <span className="ml-auto tabular-nums text-muted-foreground shrink-0">
-              {(otherShare * 100).toFixed(1)}%
-            </span>
-          </div>
+          <HoverCard openDelay={150} closeDelay={50}>
+            <HoverCardTrigger asChild>
+              <div className="flex items-center gap-1.5 min-w-0 cursor-help rounded px-1 -mx-1 hover:bg-muted/40 transition-colors">
+                <span
+                  className="inline-block w-2 h-2 rounded-sm shrink-0 bg-muted-foreground/40"
+                />
+                <span className="truncate text-muted-foreground">Other</span>
+                <span className="ml-auto tabular-nums text-muted-foreground shrink-0">
+                  {(otherShare * 100).toFixed(1)}%
+                </span>
+              </div>
+            </HoverCardTrigger>
+            <HoverCardContent side="top" align="start" className="w-80 p-3">
+              <OtherDrillDown
+                sections={otherSections}
+                bucketShare={otherShare}
+                bucketValue={otherValue}
+                direction={direction}
+              />
+            </HoverCardContent>
+          </HoverCard>
         )}
       </div>
     </div>
