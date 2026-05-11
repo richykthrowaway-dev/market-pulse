@@ -658,6 +658,10 @@ export default function GlobeView({
   // `shader` parameter passed to onBeforeCompile is internal three.js plumbing —
   // its exact TS type changes across versions, so we type it loosely here.
   const globeShaderRef = useRef<{ uniforms: Record<string, { value: any }> } | null>(null);
+  // Same for the cloud sphere — its material is patched with the day/night
+  // block so clouds darken on the night hemisphere too (otherwise the bright
+  // 40 %-opacity cloud cover would dilute the globe's darkening).
+  const cloudShaderRef = useRef<{ uniforms: Record<string, { value: any }> } | null>(null);
   const [countries, setCountries] = useState<Feature[]>(geoJsonCache ?? []);
   const idleTimer = useRef<ReturnType<typeof setTimeout>>();
   // Hover ISO stored in a ref — changes do NOT trigger React re-renders.
@@ -1034,22 +1038,26 @@ export default function GlobeView({
         // directional / ambient lighting equation can't dilute it.  We try
         // colorspace_fragment first (recent three.js), then encodings_fragment
         // (older three.js), then fall back to opaque_fragment / tonemapping.
-        // Whichever chunk we match, we inject our block right AFTER it so
-        // gl_FragColor is already populated with the lit-and-tonemapped value.
+        // If NONE of those anchors match (some forks of three.js, or future
+        // chunk renames), fall back to a guaranteed last-brace injection so
+        // the patch ALWAYS lands somewhere reasonable.
+        //
+        // Multiplier 0.04 = night hemisphere ≈ 4% screen brightness — very
+        // dark, unmistakably "night."  Combined with the cloud-material
+        // patch (see cloud-layer effect), the entire night side dims
+        // strongly without being washed out by bright cloud cover.
         const dayNightBlock = `
           if (uDayNightOn > 0.5) {
             vec3 _n = normalize(vGlobalPos);
             float _sunDot = dot(_n, uSunDirection);
-            // Wider smoothstep band so the terminator is a soft gradient
-            // rather than a hard line, but the night hemisphere clearly
-            // tops out at the 0.10× multiplier (≈10 % linear / ≈30 % sRGB).
             float _dayMix = smoothstep(-0.10, 0.18, _sunDot);
-            gl_FragColor.rgb *= mix(0.10, 1.0, _dayMix);
-            // Warm sunset glow at the terminator band — additive in linear
-            // space so it survives the subsequent sRGB conversion as visible
-            // colour, not as a washed-out tint.
+            gl_FragColor.rgb *= mix(0.04, 1.0, _dayMix);
+            // Cool blue-grey moonlight tint on deep-night side
+            float _nightOnly = 1.0 - smoothstep(-0.05, 0.05, _sunDot);
+            gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * vec3(0.45, 0.55, 0.85), _nightOnly * 0.6);
+            // Warm sunset glow at the terminator band
             float _term = 1.0 - smoothstep(0.0, 0.20, abs(_sunDot));
-            gl_FragColor.rgb += vec3(0.55, 0.22, 0.05) * _term * 0.60;
+            gl_FragColor.rgb += vec3(0.65, 0.28, 0.06) * _term * 0.65;
             gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
           }
         `;
@@ -1059,12 +1067,30 @@ export default function GlobeView({
           '#include <opaque_fragment>',
           '#include <tonemapping_fragment>',
         ];
+        let injectedVia = '';
         for (const anchor of anchors) {
           if (frag.indexOf(anchor) !== -1) {
             frag = frag.replace(anchor, `${anchor}\n${dayNightBlock}`);
+            injectedVia = anchor;
             break;
           }
         }
+        if (!injectedVia) {
+          // Guaranteed-fallback: inject before the LAST `}` of the shader
+          // (the closing brace of main()).  This is brittle to format
+          // changes but works on any standard glsl fragment shader.
+          const lastBrace = frag.lastIndexOf('}');
+          if (lastBrace !== -1) {
+            frag = frag.slice(0, lastBrace) + dayNightBlock + '\n}' + frag.slice(lastBrace + 1);
+            injectedVia = 'last-brace fallback';
+          }
+        }
+        // One-time diagnostic — toggle Day/Night, open the browser console,
+        // and look for this line.  If it doesn't print, onBeforeCompile
+        // wasn't fired (shader recompile didn't happen).  If it prints with
+        // empty injectedVia, no anchor matched and the fallback wasn't
+        // attempted (fragment had no `}` somehow).
+        console.info('[Day/Night] globe shader patched, day/night block injected via:', injectedVia || 'NONE');
 
         shader.fragmentShader =
           'uniform float uSharpness;\n' +
@@ -1365,6 +1391,75 @@ export default function GlobeView({
           depthWrite:   false, // transparent → don't write depth, only test
           depthTest:    true,
         });
+
+        // Patch the cloud material with the same day/night logic as the
+        // globe.  Without this, the 40 %-opacity cloud cover at full
+        // brightness would dilute the globe's night-side darkening to a
+        // washed ~46 % screen brightness — defeating the purpose.
+        // Sharing the same vGlobalPos varying + uniform names with the
+        // globe shader keeps the day/night logic identical for both.
+        material.onBeforeCompile = (shader) => {
+          shader.uniforms.uDayNightOn   = { value: 0 };
+          shader.uniforms.uSunDirection = { value: new THREE.Vector3(0, 0, 1) };
+          shader.vertexShader = shader.vertexShader
+            .replace(
+              '#include <common>',
+              `#include <common>
+              varying vec3 vGlobalPos;`,
+            )
+            .replace(
+              'void main() {',
+              `void main() {
+              vGlobalPos = (modelMatrix * vec4(position, 1.0)).xyz;`,
+            );
+
+          const cloudDayNightBlock = `
+            if (uDayNightOn > 0.5) {
+              vec3 _n = normalize(vGlobalPos);
+              float _sunDot = dot(_n, uSunDirection);
+              float _dayMix = smoothstep(-0.10, 0.18, _sunDot);
+              // Clouds darken slightly less aggressively than the globe so
+              // they remain visible as faint night clouds rather than
+              // vanishing entirely (more realistic).
+              gl_FragColor.rgb *= mix(0.08, 1.0, _dayMix);
+              // Cool blue-grey moonlight tint
+              float _nightOnly = 1.0 - smoothstep(-0.05, 0.05, _sunDot);
+              gl_FragColor.rgb = mix(gl_FragColor.rgb, gl_FragColor.rgb * vec3(0.5, 0.6, 0.85), _nightOnly * 0.5);
+              gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
+            }
+          `;
+          let cloudFrag = shader.fragmentShader;
+          const cloudAnchors = [
+            '#include <colorspace_fragment>',
+            '#include <encodings_fragment>',
+            '#include <opaque_fragment>',
+            '#include <tonemapping_fragment>',
+          ];
+          let cInjected = '';
+          for (const a of cloudAnchors) {
+            if (cloudFrag.indexOf(a) !== -1) {
+              cloudFrag = cloudFrag.replace(a, `${a}\n${cloudDayNightBlock}`);
+              cInjected = a;
+              break;
+            }
+          }
+          if (!cInjected) {
+            const lb = cloudFrag.lastIndexOf('}');
+            if (lb !== -1) {
+              cloudFrag = cloudFrag.slice(0, lb) + cloudDayNightBlock + '\n}' + cloudFrag.slice(lb + 1);
+              cInjected = 'last-brace fallback';
+            }
+          }
+          shader.fragmentShader =
+            'uniform float uDayNightOn;\n' +
+            'uniform vec3  uSunDirection;\n' +
+            'varying vec3  vGlobalPos;\n' +
+            cloudFrag;
+          cloudShaderRef.current = shader;
+          console.info('[Day/Night] cloud shader patched, day/night block injected via:', cInjected || 'NONE');
+        };
+        material.needsUpdate = true;
+
         cloudsMesh = new THREE.Mesh(geometry, material);
         cloudsMesh.renderOrder = 1; // draw after the globe + polygon caps
         globe.scene().add(cloudsMesh);
@@ -1422,6 +1517,7 @@ export default function GlobeView({
         (cloudsMesh.material as THREE.Material).dispose();
       }
       if (cloudsTexture) cloudsTexture.dispose();
+      cloudShaderRef.current = null;
     };
   }, [countries]);
 
@@ -1710,18 +1806,20 @@ export default function GlobeView({
         }
       }
 
-      // ── Day/night uniforms — write every poll so they survive shader
-      //    recompiles (the 16K texture upgrade re-fires onBeforeCompile,
-      //    which resets the uniform table to its initial state).  At 300ms
-      //    cadence the sun moves 0.0042° between writes — well below the
-      //    terminator's smooth band — so this is also our regular refresh.
-      const dayShader = globeShaderRef.current;
-      if (dayShader?.uniforms?.uDayNightOn) {
-        dayShader.uniforms.uDayNightOn.value = dayNightCycle ? 1 : 0;
-        if (dayNightCycle) {
-          computeSunDirection(dayShader.uniforms.uSunDirection.value);
+      // ── Day/night uniforms — write every poll on BOTH the globe and the
+      //    cloud shader.  Survives any shader recompile (the 16K texture
+      //    upgrade re-fires onBeforeCompile, which resets uniforms).  At
+      //    300 ms cadence the sun moves 0.0042 ° between writes — well below
+      //    the terminator's smooth band.
+      const writeDayNight = (s: typeof globeShaderRef.current) => {
+        if (!s?.uniforms?.uDayNightOn) return;
+        s.uniforms.uDayNightOn.value = dayNightCycle ? 1 : 0;
+        if (dayNightCycle && s.uniforms.uSunDirection) {
+          computeSunDirection(s.uniforms.uSunDirection.value);
         }
-      }
+      };
+      writeDayNight(globeShaderRef.current);
+      writeDayNight(cloudShaderRef.current);
     }, 300);
     return () => clearInterval(id);
   }, [dayNightCycle]);
