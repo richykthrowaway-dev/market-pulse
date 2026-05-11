@@ -8,14 +8,12 @@
   ],
   "headers": [
     {
-      "//": "Versioned bilateral dataset files are immutable by convention — the URL prefix changes on every annual refresh — so the browser and CDN can cache them forever.",
-      "source": "/bilateral/v:version/:file",
+      "source": "/bilateral/v:version(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "//": "Manifest can change across deploys, so cache only briefly. Vercel's edge caches it; the SWR window lets new manifests roll out within minutes.",
       "source": "/bilateral/manifest.json",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=300, stale-while-revalidate=86400" }
