@@ -12,6 +12,7 @@ import { useCommodityPrices, type CommodityPrice } from '@/hooks/useCommodityPri
 import { useEodhdBarsForChart } from '@/hooks/useEodhdBarsForChart';
 import { useEodhdNews } from '@/hooks/useEodhdNews';
 import { CommodityProducersCard } from './CommodityProducersCard';
+import { CommodityCatalystStrip } from './CommodityCatalystStrip';
 import { cn } from '@/lib/utils';
 
 // ── Chart range ──────────────────────────────────────────────────────────────
@@ -62,6 +63,7 @@ export function CommoditiesPanel() {
       {/* ── Expandable chart + news for selected commodity ──────────────── */}
       {selectedPrice && (
         <>
+          <CommodityCatalystStrip price={selectedPrice} />
           <CommodityPriceChart price={selectedPrice} />
           <CommodityNewsFeed price={selectedPrice} />
         </>
