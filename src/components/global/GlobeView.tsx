@@ -391,6 +391,39 @@ function makeEventMarker(d: object): THREE.Object3D {
   return group;
 }
 
+// ── Polygon zoom-fade helper ──────────────────────────────────────────────
+//
+// When the user zooms in close enough to inspect individual ships, the
+// country polygon fill (default alpha 0.13–0.65 depending on mode) blocks
+// the underlying earth texture's water network — major inland waterways
+// like the IJsselmeer, Rhine-Maas delta, Seine, Garonne, Rhône.  Vessels
+// at correct geographic positions end up visually sitting on top of the
+// red/yellow country tint instead of over the water beneath.
+//
+// Fix: scale the alpha of each polygon's returned colour by a zoom-level
+// factor.  At default globe view the polygons stay near full opacity for
+// heatmap legibility; as the user zooms in the alpha drops so the earth
+// texture (which shows real coastlines and waterways) dominates.  Ships
+// stay at their exact positions — only the obscuring overlay fades.
+//
+// Format support:
+//   • "rgba(r, g, b, a)" — most colours in getCapColor
+//   • "#RRGGBBAA"        — FLAG_COLORS template `${hex}72`
+function applyZoomFade(color: string, scale: number): string {
+  if (scale >= 0.999) return color;        // identity case
+  if (color.startsWith('rgba(')) {
+    return color.replace(/,\s*([0-9.]+)\s*\)$/, (_, a) =>
+      `, ${(parseFloat(a) * scale).toFixed(3)})`);
+  }
+  if (color.startsWith('#') && color.length === 9) {
+    // #RRGGBBAA — scale the AA byte
+    const a = parseInt(color.slice(7), 16);
+    const scaledA = Math.max(0, Math.min(255, Math.round(a * scale)));
+    return color.slice(0, 7) + scaledA.toString(16).padStart(2, '0');
+  }
+  return color; // unknown format — pass through
+}
+
 // Module-level GeoJSON cache — survives component remounts / HMR
 let geoJsonCache: Feature[] | null = null;
 let geoJsonPromise: Promise<Feature[]> | null = null;
@@ -1081,6 +1114,11 @@ export default function GlobeView({
   // Plain refs, never cause re-renders. Written every render so the raycaster
   // always reads the latest vessel/flight arrays without needing them in
   // a useEffect dependency array (which would recreate the listener too often).
+  // We MUST pass through the raw liveVessels here — the raycaster reads
+  // `liveVesselsRef.current[hit.index]` and the geometry was built from the
+  // same untouched list, so any filtering at this layer would desync indices.
+  // The "ships over land" visual issue is solved at the rendering layer
+  // (polygon zoom-fade), not by filtering or moving vessel data.
   const liveVesselsRef = useRef<Vessel[] | undefined>(undefined);
   liveVesselsRef.current = liveVessels;
   const liveFlightsRef  = useRef<Flight[] | undefined>(undefined);
@@ -1091,11 +1129,37 @@ export default function GlobeView({
   // the OrbitControls spherical position; no GPU work involved.
   const [cityLabelsVisible, setCityLabelsVisible] = useState(false);
 
+  // Polygon-fill alpha scale, driven by camera altitude.  Bucketed into 4
+  // ranges so the value (and therefore getCapColor's identity) changes at
+  // most a handful of times per zoom gesture — not 60×/second.  React's
+  // setState bails on identical values, so polling cost is essentially zero
+  // until the user crosses a zoom threshold.
+  //
+  // Why fade polygons when zoomed in: the country fill (alpha 0.13–0.65)
+  // sits on top of the NASA earth texture and hides the underlying water
+  // network — IJsselmeer, Rhine-Maas delta, Seine, Garonne, Rhône, etc.
+  // Vessels broadcasting from those real waterways visually appear "on
+  // land" only because the polygon overlay masks the water beneath them.
+  // Fading the fill lets the texture's water show through; ships stay at
+  // their precise lat/lng but now read as being in water.
+  const [polygonAlphaScale, setPolygonAlphaScale] = useState(1.0);
+
   useEffect(() => {
     const id = setInterval(() => {
       const alt = (globeRef.current as any)?.pointOfView()?.altitude;
       if (alt == null) return;
       setCityLabelsVisible(alt < 1.2);
+
+      // Bucketed alpha scale:
+      //   alt ≥ 1.8 → full opacity (full globe view, heatmap legibility wins)
+      //   1.8 > alt ≥ 1.0 → 70 %  (moderate zoom, regional view)
+      //   1.0 > alt ≥ 0.5 → 45 %  (close zoom, ship inspection)
+      //   alt < 0.5       → 25 %  (very close zoom, texture water dominates)
+      const next = alt >= 1.8 ? 1.0
+                 : alt >= 1.0 ? 0.7
+                 : alt >= 0.5 ? 0.45
+                 :              0.25;
+      setPolygonAlphaScale((prev) => prev === next ? prev : next);
     }, 300);
     return () => clearInterval(id);
   }, []);
@@ -1403,40 +1467,53 @@ export default function GlobeView({
       const feat = d as Feature;
       const iso = feat.properties.ISO_A2;
 
-      // Exchange mode: clear all fills so only pins + borders are visible
+      // Compute the raw colour the same way as before — but route every
+      // branch through a single string variable so we can apply the zoom
+      // fade once at the exit.
+      let raw: string;
+
       if (showExchangePins) {
-        if (iso === selectedCountry) return "rgba(255, 255, 255, 0.08)";
-        if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.05)";
-        return "rgba(0, 0, 0, 0)";
-      }
-
-      if (iso === selectedCountry) return "rgba(255, 255, 255, 0.35)";
-      if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.22)";
-
-      // Macro heatmap mode — shade by GDP growth annual %
-      // Green: strong growth (≥5%), yellow: moderate (2–5%), orange: slow (0–2%),
-      // red: contraction (<0%).  Unmapped countries stay neutral.
-      if (macroMap) {
+        // Exchange mode: clear all fills so only pins + borders are visible.
+        raw = iso === selectedCountry        ? "rgba(255, 255, 255, 0.08)"
+            : iso === hoverIsoRef.current    ? "rgba(255, 255, 255, 0.05)"
+            :                                  "rgba(0, 0, 0, 0)";
+      } else if (iso === selectedCountry) {
+        raw = "rgba(255, 255, 255, 0.35)";
+      } else if (iso === hoverIsoRef.current) {
+        raw = "rgba(255, 255, 255, 0.22)";
+      } else if (macroMap) {
+        // Macro heatmap mode — shade by GDP growth annual %.
+        // Green = strong growth (≥5 %), amber/orange = slowing, red = contraction.
         const gdp = macroMap.get(iso);
-        if (gdp === undefined) return "rgba(60, 60, 70, 0.25)";
-        if (gdp >= 6)  return "rgba(16, 185, 129, 0.65)";   // emerald — strong
-        if (gdp >= 4)  return "rgba(52, 211, 153, 0.55)";   // green
-        if (gdp >= 2)  return "rgba(167, 243, 208, 0.45)";  // light green
-        if (gdp >= 0)  return "rgba(251, 191, 36, 0.45)";   // amber — slow
-        if (gdp >= -2) return "rgba(249, 115, 22, 0.55)";   // orange — weak
-        return "rgba(239, 68, 68, 0.65)";                   // red — contraction
-      }
-
-      if (mode === "flags") {
-        return FLAG_COLORS[iso]
+        raw = gdp === undefined ? "rgba(60, 60, 70, 0.25)"
+            : gdp >= 6          ? "rgba(16, 185, 129, 0.65)"
+            : gdp >= 4          ? "rgba(52, 211, 153, 0.55)"
+            : gdp >= 2          ? "rgba(167, 243, 208, 0.45)"
+            : gdp >= 0          ? "rgba(251, 191, 36, 0.45)"
+            : gdp >= -2         ? "rgba(249, 115, 22, 0.55)"
+            :                     "rgba(239, 68, 68, 0.65)";
+      } else if (mode === "flags") {
+        raw = FLAG_COLORS[iso]
           ? `${FLAG_COLORS[iso]}72`
           : "rgba(80, 80, 80, 0.19)";
+      } else {
+        const change = performanceMap[iso];
+        raw = change === undefined ? "rgba(80, 80, 80, 0.13)" : perfColor(change);
       }
-      const change = performanceMap[iso];
-      if (change === undefined) return "rgba(80, 80, 80, 0.13)";
-      return perfColor(change);
+
+      // Zoom fade — preserve interactive highlights (selected / hover) with
+      // a higher alpha floor so they remain legible even when the rest of
+      // the country fill is faded down to reveal water beneath.  When the
+      // exchange-pin mode is active we intentionally keep the highlight
+      // very subtle and let the full fade apply.
+      const isHighlight = !showExchangePins &&
+        (iso === selectedCountry || iso === hoverIsoRef.current);
+      const scale = isHighlight
+        ? Math.max(polygonAlphaScale, 0.6)
+        : polygonAlphaScale;
+      return applyZoomFade(raw, scale);
     },
-    [mode, performanceMap, selectedCountry, showExchangePins, macroMap]
+    [mode, performanceMap, selectedCountry, showExchangePins, macroMap, polygonAlphaScale]
   );
 
   // ── Altitude: only elevate selected country ──
