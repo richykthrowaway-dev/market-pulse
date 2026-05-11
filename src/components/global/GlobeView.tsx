@@ -739,6 +739,46 @@ export default function GlobeView({
   // its `linewidth` px value to NDC offsets in the vertex shader.)
   const riversMatRef = useRef<LineMaterial | null>(null);
 
+  // Reference to the clouds mesh, set when the 4K cloud texture finishes
+  // loading.  Used by the deferred HQ-cloud upgrade effect below so it
+  // can hot-swap the texture once the user actually zooms in.
+  const cloudsMeshRef = useRef<THREE.Mesh | null>(null);
+
+  // ── Deferred HQ cloud texture upgrade ────────────────────────────────────
+  // Lazy-loaded: only fires after the user has zoomed in past altitude 1.5.
+  // The 4K cloud texture is already plenty for the default world view; the
+  // HQ version (~5 MB extra download + 16 MB VRAM swap) only matters at
+  // close zoom.  At default zoom each cloud puff covers < 1 screen pixel,
+  // so the HQ resolution is invisible.
+  useEffect(() => {
+    if (!userZoomedIn) return;
+    const mesh = cloudsMeshRef.current;
+    if (!mesh) return;
+    let cancelled = false;
+    new THREE.TextureLoader().load(
+      CLOUDS_TEXTURE_HQ_URL,
+      (texHQ) => {
+        if (cancelled || !cloudsMeshRef.current) { texHQ.dispose(); return; }
+        const globe = globeRef.current;
+        if (!globe) { texHQ.dispose(); return; }
+        const renderer = globe.renderer();
+        texHQ.anisotropy      = renderer.capabilities.getMaxAnisotropy();
+        texHQ.minFilter       = THREE.LinearMipmapLinearFilter;
+        texHQ.magFilter       = THREE.LinearFilter;
+        texHQ.generateMipmaps = true;
+        texHQ.needsUpdate     = true;
+        const mat = cloudsMeshRef.current.material as THREE.MeshPhongMaterial;
+        const old = mat.map;
+        mat.map   = texHQ;
+        mat.needsUpdate = true;
+        old?.dispose();        // reclaim 4K VRAM
+      },
+      undefined,
+      () => console.warn('[GlobeView] HQ cloud texture failed — keeping 4K'),
+    );
+    return () => { cancelled = true; };
+  }, [userZoomedIn]);
+
   // ── Progressive polygon upgrade: 50m → 10m ───────────────────────────────
   // Lazy-loaded: only fires after the user actually zooms in past
   // altitude 1.5 (signalled via userZoomedIn).  At the default world view
@@ -1531,31 +1571,13 @@ export default function GlobeView({
         };
         rafId = requestAnimationFrame(tick);
 
-        // ── Progressive cloud upgrade ──────────────────────────────────────
-        // Mirror the earth 16K upgrade: once the 4K mesh is rendering, fetch a
-        // higher-quality cloud texture in the background.  On arrival we apply
-        // the same anisotropic + trilinear settings and hot-swap material.map.
-        // The old 4K texture is disposed; cloudsTexture is updated so the outer
-        // cleanup correctly disposes the HQ version on unmount.
-        new THREE.TextureLoader().load(
-          CLOUDS_TEXTURE_HQ_URL,
-          (texHQ) => {
-            if (cancelled || !cloudsMesh) { texHQ.dispose(); return; }
-            texHQ.anisotropy      = renderer.capabilities.getMaxAnisotropy();
-            texHQ.minFilter       = THREE.LinearMipmapLinearFilter;
-            texHQ.magFilter       = THREE.LinearFilter;
-            texHQ.generateMipmaps = true;
-            texHQ.needsUpdate     = true;
-            const mat = cloudsMesh.material as THREE.MeshPhongMaterial;
-            const old = mat.map;
-            mat.map   = texHQ;
-            mat.needsUpdate = true;
-            cloudsTexture = texHQ; // cleanup ref → now points at the HQ texture
-            old?.dispose();        // reclaim 4K VRAM
-          },
-          undefined,
-          () => console.warn('[GlobeView] HQ cloud texture failed — keeping 4K'),
-        );
+        // ── Progressive cloud upgrade — DEFERRED ───────────────────────────
+        // Previously fired here unconditionally, downloading ~5 MB the moment
+        // the 4K cloud mesh existed.  Now extracted to a separate effect
+        // gated on `userZoomedIn` (see HQ cloud upgrade effect below).  At
+        // the default world view, the 4K texture is visually indistinguishable
+        // from HQ — the upgrade only matters when the camera is close.
+        cloudsMeshRef.current = cloudsMesh;
       },
       undefined,
       (err) => console.warn("Failed to load cloud texture:", err),
