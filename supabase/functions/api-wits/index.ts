@@ -349,7 +349,9 @@ async function fetchComtradeChapters(
     `&period=${year}` +
     `&partnerCode=0` +     // 0 = world
     `&cmdCode=AG4` +       // HS 4-digit (Heading) — was AG2 (Chapter)
-    `&flowCode=${flowCode}`;
+    `&flowCode=${flowCode}` +
+    `&breakdownMode=classic` +
+    `&maxRecords=2500`;
 
   let upstream: Response;
   try {
@@ -408,27 +410,18 @@ async function fetchComtradePartners(
   if (!m49) return null;
 
   const flowCode = direction === "exports" ? "X" : "M";
-  // No partnerCode → grouped-by-partner response.
-  //
-  // motCode=0      — keep only the mode-of-transport AGGREGATE row per
-  //                  partner (Comtrade otherwise returns one row per
-  //                  sea/road/rail/air segment, exploding the response
-  //                  past the 500-row preview cap and truncating big
-  //                  reporters like Germany).
-  // customsCode=C00 — keep only the general-trade customs procedure;
-  //                  drops re-export-specific rows (C03) and other
-  //                  procedural breakdowns that are subsets of C00.
-  //
-  // After these two server-side filters Comtrade still returns 2 rows
-  // per partner (with partner2Code = 0 vs 899; values are IDENTICAL),
-  // which we collapse client-side below.
+  // Using `breakdownMode=classic` per the official Comtrade SDK docs.
+  // Classic mode collapses the response server-side to one row per
+  // (cmdCode, partnerCode) pair — partner2Code=0, motCode=0, customsCode=C00
+  // are already set, so we don't need EU-mirror hacks, max-wins dedup, or
+  // partner2 filtering.  Just filter aggregates and we're done.
   const url =
     `${COMTRADE_BASE}?reporterCode=${m49}` +
     `&period=${year}` +
     `&cmdCode=TOTAL` +
     `&flowCode=${flowCode}` +
-    `&motCode=0` +
-    `&customsCode=C00`;
+    `&breakdownMode=classic` +
+    `&maxRecords=2500`;
 
   let upstream: Response;
   try {
@@ -443,48 +436,25 @@ async function fetchComtradePartners(
   const data: any[] = Array.isArray(json?.data) ? json.data : [];
   if (data.length === 0) return null;
 
-  // EU mirror-data fix: Comtrade represents partners in TWO ways
-  //   - Direct:  partnerCode=X partner2Code=X (most non-EU trade)
-  //   - Mirror:  partnerCode=0 partner2Code=X (common for intra-EU,
-  //              when reporter doesn't declare partner directly)
-  // Filtering only on `partnerCode !== '0'` drops all the mirror rows,
-  // which leaves reporters like Germany / France with garbage partner
-  // lists (Greece, Bangladesh, Zimbabwe).  Compute an "effective partner"
-  // M49 from whichever code is real, then dedup by ISO2 with max-wins.
-  const effectivePartner = (r: any): string | null => {
-    const pc  = String(r.partnerCode  ?? "");
-    const p2c = String(r.partner2Code ?? "");
-    const cand =
-      (pc  !== "0" && pc  !== "899" && pc  !== "") ? pc  :
-      (p2c !== "0" && p2c !== "899" && p2c !== "") ? p2c : null;
-    if (!cand || cand === m49) return null;
-    return cand;
-  };
-
-  const byIso2 = new Map<string, ProductRow>();
+  const rows: ProductRow[] = [];
   for (const r of data) {
-    const partnerM49 = effectivePartner(r);
-    if (!partnerM49) continue;
+    const partnerM49 = String(r.partnerCode ?? "");
+    // 0 = World total, 899 = "Areas, NES" / unspecified aggregate.
+    if (!partnerM49 || partnerM49 === "0" || partnerM49 === "899") continue;
+    if (partnerM49 === m49) continue; // self
     const info = M49_TO_INFO[partnerM49];
     if (!info) continue;
 
     const value = typeof r.primaryValue === "number" ? r.primaryValue : 0;
     if (value <= 0) continue;
 
-    // Max-wins per partner — across the multiple partner2Code variants
-    // Comtrade returns (direct, via X, via Y, etc.), keep the highest
-    // value as the "authoritative" bilateral total.
-    const existing = byIso2.get(info.iso2);
-    if (!existing || value > existing.valueUsd) {
-      byIso2.set(info.iso2, {
-        code:     info.iso2,
-        name:     info.name,
-        valueUsd: Math.round(value),
-        share:    0,
-      });
-    }
+    rows.push({
+      code:     info.iso2,
+      name:     info.name,
+      valueUsd: Math.round(value),
+      share:    0,
+    });
   }
-  const rows: ProductRow[] = [...byIso2.values()];
   if (rows.length === 0) return null;
 
   const total = rows.reduce((s, r) => s + r.valueUsd, 0);
@@ -687,8 +657,8 @@ async function fetchComtradeBilateral(
     `&partnerCode=${partnerM49}` +
     `&cmdCode=AG2` +
     `&flowCode=${flowCode}` +
-    `&motCode=0` +
-    `&customsCode=C00`;
+    `&breakdownMode=classic` +
+    `&maxRecords=2500`;
 
   let upstream: Response;
   try {
@@ -703,20 +673,15 @@ async function fetchComtradeBilateral(
   const data: any[] = Array.isArray(json?.data) ? json.data : [];
   if (data.length === 0) return null;
 
-  // Even after motCode=0 + customsCode=C00, Comtrade returns 2 rows per
-  // chapter (varying only by partner2Code 0 vs 899) with IDENTICAL values.
-  // First-write-wins per chapter collapses them.
-  const seen = new Set<string>();
+  // breakdownMode=classic returns one row per chapter — no dedup needed.
   const rows: ProductRow[] = [];
   for (const r of data) {
     const code = String(r.cmdCode ?? "");
     if (!code || code === "TOTAL" || code === "ALL") continue;
-    if (seen.has(code)) continue;
-    seen.add(code);
     const value = typeof r.primaryValue === "number" ? r.primaryValue : 0;
     if (value <= 0) continue;
     rows.push({
-      code,                              // HS 2-digit chapter, e.g. "27"
+      code,
       name: `HS ${code.padStart(2, "0")}`,
       valueUsd: Math.round(value),
       share: 0,

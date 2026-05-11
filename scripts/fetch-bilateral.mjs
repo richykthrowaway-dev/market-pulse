@@ -188,38 +188,18 @@ async function comtradeFetch(url) {
 }
 
 /**
- * Resolve a Comtrade row to its "effective partner" M49 code.
- *
- * Comtrade has two ways to encode a trade partner:
- *   1. Direct:  partnerCode=X partner2Code=X (or 0/899) — most non-EU trade
- *   2. Mirror:  partnerCode=0 partner2Code=X            — common for intra-EU
- *      where the reporter doesn't directly declare the partner and Comtrade
- *      fills in from the partner's own export records.
- *
- * Without handling case (2), reporters like Germany or France appear to have
- * absurd top-partners lists (Greece, Bangladesh, Zimbabwe) because all of
- * their actual top partners use the partnerCode=0 mirror format.
- *
- * Returns null for world aggregates (both codes 0), aggregate regions
- * (899 etc.), and self-trade rows.
- */
-function effectivePartnerM49(r, reporterM49) {
-  const pc  = String(r.partnerCode  ?? '');
-  const p2c = String(r.partner2Code ?? '');
-  // Prefer partnerCode when it points to a real country
-  const candidate =
-    (pc  !== '0' && pc  !== '899' && pc  !== '') ? pc  :
-    (p2c !== '0' && p2c !== '899' && p2c !== '') ? p2c : null;
-  if (!candidate || candidate === reporterM49) return null;
-  return candidate;
-}
-
-/**
  * Fetch top trading partners for a reporter in one direction.
- * Uses the "effective partner" rule so intra-EU mirror data isn't silently
- * dropped (which would leave Germany/France/etc. with garbage partner lists).
- * Max-value-wins per partner avoids re-export double counting.
- * Returns: [{ iso2, valueUsd, share }, ...] sorted desc.
+ *
+ * Uses `breakdownMode=classic` — the official UN Comtrade SDK's preferred
+ * mode for product-and-partner queries.  In classic mode the response is
+ * already collapsed: one row per partner (with partner2Code=0, motCode=0,
+ * customsCode=C00 all set by the server), so we don't need any client-side
+ * dedup, EU mirror-data hacks, or max-wins logic.  Just sort by value.
+ *
+ * Discovered via the official notebook:
+ *   https://github.com/uncomtrade/comtradeapicall/blob/main/tests/example%20calling%20functions%20-%20notebook.ipynb
+ *
+ * Returns: [{ iso2, valueUsd, share }, ...] sorted desc by value.
  */
 async function fetchPartners(reporterM49, year, direction) {
   const flowCode = direction === 'exports' ? 'X' : 'M';
@@ -228,30 +208,22 @@ async function fetchPartners(reporterM49, year, direction) {
     `&period=${year}` +
     `&cmdCode=TOTAL` +
     `&flowCode=${flowCode}` +
-    `&motCode=0` +
-    `&customsCode=C00`;
+    `&breakdownMode=classic` +
+    `&maxRecords=2500`;
 
   const json = await comtradeFetch(url);
   if (!json || !Array.isArray(json.data)) return null;
 
-  // Bucket by ISO2 and keep the MAX value seen.  Across `partner2Code`
-  // re-export variants, max-wins picks the "primary" / largest row for
-  // each partner — preferable to first-write-wins because Comtrade's row
-  // order isn't guaranteed.
-  const byIso2 = new Map();
+  const rows = [];
   for (const r of json.data) {
-    const partnerM49 = effectivePartnerM49(r, reporterM49);
-    if (!partnerM49) continue;
-    const iso2 = M49_TO_ISO2[partnerM49];
-    if (!iso2) continue;             // skip aggregate regions
+    const m49 = String(r.partnerCode ?? '');
+    if (!m49 || m49 === '0' || m49 === '899' || m49 === reporterM49) continue;
+    const iso2 = M49_TO_ISO2[m49];
+    if (!iso2) continue;            // skip aggregate regions not in our map
     const value = typeof r.primaryValue === 'number' ? r.primaryValue : 0;
     if (value <= 0) continue;
-    const existing = byIso2.get(iso2);
-    if (!existing || value > existing.valueUsd) {
-      byIso2.set(iso2, { iso2, valueUsd: Math.round(value) });
-    }
+    rows.push({ iso2, valueUsd: Math.round(value) });
   }
-  const rows = [...byIso2.values()];
   if (rows.length === 0) return null;
 
   const total = rows.reduce((s, r) => s + r.valueUsd, 0);
@@ -262,6 +234,11 @@ async function fetchPartners(reporterM49, year, direction) {
 
 /**
  * Fetch HS-Chapter (AG2) breakdown for one bilateral pair.
+ *
+ * Same `breakdownMode=classic` trick — the server returns one clean row
+ * per HS chapter with no partner2/motCode/customsCode duplication, so
+ * we can skip all client-side dedup logic.
+ *
  * Returns: [{ code, valueUsd, share }, ...] sorted desc.
  */
 async function fetchBilateralChapters(reporterM49, partnerM49, year, direction) {
@@ -272,19 +249,16 @@ async function fetchBilateralChapters(reporterM49, partnerM49, year, direction) 
     `&partnerCode=${partnerM49}` +
     `&cmdCode=AG2` +
     `&flowCode=${flowCode}` +
-    `&motCode=0` +
-    `&customsCode=C00`;
+    `&breakdownMode=classic` +
+    `&maxRecords=2500`;
 
   const json = await comtradeFetch(url);
   if (!json || !Array.isArray(json.data)) return null;
 
-  const seen = new Set();
   const rows = [];
   for (const r of json.data) {
     const code = String(r.cmdCode ?? '');
     if (!code || code === 'TOTAL' || code === 'ALL') continue;
-    if (seen.has(code)) continue;
-    seen.add(code);
     const value = typeof r.primaryValue === 'number' ? r.primaryValue : 0;
     if (value <= 0) continue;
     rows.push({ code, valueUsd: Math.round(value), share: 0 });
