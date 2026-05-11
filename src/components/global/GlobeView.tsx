@@ -2,6 +2,13 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Globe from "react-globe.gl";
 import type { GlobeMethods } from "react-globe.gl";
 import * as THREE from "three";
+// Line2 / LineSegments2 — instanced-quad-based line rendering so we can have
+// thick lines (WebGL's gl.LINES is hard-capped at 1px on every browser).
+// Setting `worldUnits: true` on LineMaterial makes linewidth interpret as
+// 3D world units, so rivers automatically grow on-screen as you zoom in.
+import { LineMaterial }         from "three/examples/jsm/lines/LineMaterial.js";
+import { LineSegmentsGeometry } from "three/examples/jsm/lines/LineSegmentsGeometry.js";
+import { LineSegments2 }        from "three/examples/jsm/lines/LineSegments2.js";
 import geoJsonUrl from "@/data/countries-50m.geojson";
 import { COUNTRY_META, FLAG_COLORS } from "@/data/countryMeta";
 import { EXCHANGES, CONTINENT_COLORS, type ExchangeInfo } from "@/data/exchangeData";
@@ -934,20 +941,39 @@ export default function GlobeView({
       }
     }
 
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    // LineSegmentsGeometry expects a flat Float32Array of [x,y,z,x,y,z,...]
+    // where every consecutive pair of triplets defines one segment — exactly
+    // the layout we already built above.
+    const geometry = new LineSegmentsGeometry();
+    geometry.setPositions(positions);
 
     // Sky-blue, semi-transparent so country shading still reads through.
-    // depthWrite:false avoids interfering with the depth buffer of layers
-    // rendered after this one (vessels, flights, rings).
-    const material = new THREE.LineBasicMaterial({
+    // worldUnits: true → linewidth is in 3D world units (globe radius ≈ 100
+    // in three-globe's coordinate system), so the river renders at a fixed
+    // physical thickness on the sphere and automatically appears larger on
+    // screen as the camera approaches.  0.5 → roughly 1 px at default zoom,
+    // ~4 px at close zoom, ~8 px at maximum dive.
+    const material = new LineMaterial({
       color:       0x60a5fa, // blue-400
+      linewidth:   0.5,      // world units (because worldUnits: true)
+      worldUnits:  true,
       transparent: true,
       opacity:     0.55,
       depthWrite:  false,
     });
+    // LineMaterial's shader always reads the `resolution` uniform even in
+    // worldUnits mode; seed it with the renderer's current size so the
+    // first frame doesn't draw with a default (1, 1) value.  Resize is
+    // handled by react-globe.gl on width/height prop changes and three-
+    // globe pushes the new size through; for our purposes a stale value
+    // here would only matter in screen-pixel mode, which we don't use.
+    try {
+      const size = new THREE.Vector2();
+      globe.renderer().getSize(size);
+      material.resolution.copy(size);
+    } catch { /* renderer not ready yet — material still works */ }
 
-    const lines = new THREE.LineSegments(geometry, material);
+    const lines = new LineSegments2(geometry, material);
     lines.renderOrder = 1; // above polygon caps (default 0), below vessels (2)
     globe.scene().add(lines);
 
