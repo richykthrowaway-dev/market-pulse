@@ -291,8 +291,15 @@ const Global = () => {
     [liveVesselsRaw, vesselTypeFilter],
   );
 
-  /** Per-class vessel counts — drives the filter pill labels. */
+  /** Per-class vessel counts — drives the filter pill labels.
+   *  PERF: gated on liveVesselsEnabled.  Otherwise this loop runs over
+   *  potentially thousands of vessels every 2s (AIS flush cadence) even
+   *  when the user is on the Summary tab and the layer has never been
+   *  enabled. */
   const vesselTypeCounts = useMemo(() => {
+    if (!liveVesselsEnabled) {
+      return { all: 0, cargo: 0, tanker: 0, fishing: 0, passenger: 0, untyped: 0 };
+    }
     let cargo = 0, tanker = 0, fishing = 0, passenger = 0, untyped = 0;
     for (const v of liveVesselsRaw) {
       const t = v.shipType;
@@ -307,7 +314,7 @@ const Global = () => {
       cargo, tanker, fishing, passenger,
       untyped,
     };
-  }, [liveVesselsRaw]);
+  }, [liveVesselsRaw, liveVesselsEnabled]);
 
   // ── Live OpenSky flight feed ─────────────────────────────────────────
   // Poll ONLY when the Trade tab is active AND the 'liveFlights' layer

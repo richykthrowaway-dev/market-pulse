@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useIndices } from "@/hooks/useSupabaseData";
 import { Flag } from "@/components/ui/Flag";
 import { cn } from "@/lib/utils";
@@ -39,11 +39,16 @@ export default function GlobalSummary({ onCountryClick }: GlobalSummaryProps) {
   const { data: indices = [], isLoading } = useIndices();
   const [fallbackLimit, setFallbackLimit] = useState(FALLBACK_PAGE_SIZE);
 
-  const sorted = [...indices].sort((a, b) => {
-    const ai = REGION_ORDER.indexOf(a.region);
-    const bi = REGION_ORDER.indexOf(b.region);
-    return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
-  });
+  // Memoized: indices changes on React Query refetch, not on every render.
+  // Without this, every fallbackLimit-driven re-render reshuffled the whole array.
+  const sorted = useMemo(
+    () => [...indices].sort((a, b) => {
+      const ai = REGION_ORDER.indexOf(a.region);
+      const bi = REGION_ORDER.indexOf(b.region);
+      return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+    }),
+    [indices],
+  );
 
   return (
     <div className="h-full flex flex-col">

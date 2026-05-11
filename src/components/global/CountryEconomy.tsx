@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import {
   Calendar, ChevronLeft, ChevronRight, AlertCircle,
   LayoutGrid, TrendingUp, Landmark, BarChart3,
@@ -225,19 +225,34 @@ export default function CountryEconomy({ iso2 }: CountryEconomyProps) {
   const [view, setView] = useState<EconomyView>('overview');
   const { data: events = [], isLoading, isError } = useEodhdEconomicEvents(iso2);
 
-  // Split into past (have actuals) and upcoming (no actuals), sorted by date asc
-  const pastEvents = events.filter(isPast);
-  const upcomingEvents = events.filter((e) => !isPast(e));
+  // PERF: memoize the stable per-event-list derivations.  Without these,
+  // every page-change (which only needs to slice differently) was
+  // re-filtering the entire events array twice.
+  const { allEvents, totalPages, pastEventsCount } = useMemo(() => {
+    const past     = events.filter(isPast);
+    const upcoming = events.filter((e) => !isPast(e));
+    const combined = [...past, ...upcoming];
+    return {
+      allEvents:       combined,
+      pastEventsCount: past.length,
+      totalPages:      Math.max(1, Math.ceil(combined.length / PAGE_SIZE)),
+    };
+  }, [events]);
 
-  // Combined list for pagination: past first (chronological), then upcoming
-  const allEvents = [...pastEvents, ...upcomingEvents];
-  const totalPages = Math.max(1, Math.ceil(allEvents.length / PAGE_SIZE));
-  const pageEvents = allEvents.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  // Page slice changes on page-state OR allEvents — cheap, memoized too.
+  const { pageEvents, showDivider, pastOnPage } = useMemo(() => {
+    const slice = allEvents.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+    const past  = slice.filter(isPast);
+    const up    = slice.filter((e) => !isPast(e));
+    return {
+      pageEvents:  slice,
+      pastOnPage:  past,
+      showDivider: past.length > 0 && up.length > 0,
+    };
+  }, [allEvents, page]);
 
-  // Find where the past→upcoming boundary falls within this page
-  const pastOnPage = pageEvents.filter(isPast);
-  const upcomingOnPage = pageEvents.filter((e) => !isPast(e));
-  const showDivider = pastOnPage.length > 0 && upcomingOnPage.length > 0;
+  // Reference kept for any consumer that still expects this name in scope.
+  void pastEventsCount;
 
   return (
     <div className="space-y-4 pt-1">

@@ -452,6 +452,24 @@ const RING_LNG = (d: object) => (d as RingDatum).lng;
 const RING_ALT = () => 0.05;
 const EMPTY_RINGS: RingDatum[] = [];
 
+// ── Trade overlay empty arrays + arc accessors ──────────────────────────
+// These were previously declared inside the GlobeView component body, which
+// gave them fresh array/function identities on every render.  Hoisted to
+// module scope so react-globe.gl's reference-equality checks short-circuit
+// (no transition animation re-runs, no arc layer rebuilds on every camera
+// tick).  Drag/zoom interactivity benefits noticeably.
+const GLOBE_EMPTY_POINTS:        TradeNode[]   = [];
+const GLOBE_EMPTY_ARCS:          TradeRoute[]  = [];
+const GLOBE_EMPTY_PARTNER_ARCS:  PartnerArc[]  = [];
+
+const ARC_START_LAT = (d: object) => (d as PartnerArc).startLat;
+const ARC_START_LNG = (d: object) => (d as PartnerArc).startLng;
+const ARC_END_LAT   = (d: object) => (d as PartnerArc).endLat;
+const ARC_END_LNG   = (d: object) => (d as PartnerArc).endLng;
+const ARC_COLOR     = (d: object) => (d as PartnerArc).color;
+const ARC_STROKE    = (d: object) => Math.max(0.4, (d as PartnerArc).share * 6);
+const ARC_LABEL     = (d: object) => (d as PartnerArc).label;
+
 // ── City label layer (zoomed-in detail) ─────────────────────────────────
 // All accessors are module-level so their identity is stable across renders —
 // react-globe.gl only rebuilds its canvas sprite atlas when data *content*
@@ -2492,11 +2510,32 @@ export default function GlobeView({
     </div>`;
   }, []);
 
-  const EMPTY_POINTS:  TradeNode[]  = [];
-  const EMPTY_ARCS:    TradeRoute[] = [];
-  const EMPTY_PARTNER_ARCS: PartnerArc[] = [];
+  // EMPTY arrays — pull from module-scope (GLOBE_EMPTY_POINTS etc.) so the
+  // identity is stable across renders.  react-globe.gl uses reference equality
+  // on pointsData / pathsData / arcsData to decide whether to run transitions,
+  // so a fresh `[]` every render would cause per-render reconciler work.
 
   const globeSize = Math.min(width, height);
+
+  // ── Stable click dispatchers ────────────────────────────────────────────
+  // Both ring + object slots use the same dispatch logic.  Wrapped in
+  // useCallback so react-globe.gl doesn't see a new prop identity (and
+  // rebuild event-handler registrations) on every camera-driven re-render.
+  const handleEventClick = useCallback((d: object) => {
+    const rd = d as RingDatum;
+    if (rd.kind === 'conflict' && onConflictEventClick) {
+      onConflictEventClick(rd.event as ConflictEvent);
+    } else if (rd.kind === 'earthquake' && onEarthquakeEventClick) {
+      onEarthquakeEventClick(rd.event as EarthquakeEvent);
+    } else if (rd.kind === 'natural' && onNaturalEventClick) {
+      onNaturalEventClick(rd.event as NaturalEvent);
+    } else if (rd.kind === 'economic' && onEconomicEventClick) {
+      onEconomicEventClick(rd.event as EconomicEvent);
+    }
+  }, [
+    onConflictEventClick, onEarthquakeEventClick,
+    onNaturalEventClick, onEconomicEventClick,
+  ]);
 
   // ── Merged ring data: conflicts + earthquakes + naturals + economic events ─
   const mergedRings = useMemo<RingDatum[]>(() => {
@@ -2576,7 +2615,7 @@ export default function GlobeView({
         // Three.js-rendered points (ports/airports/chokepoints/hubs) with
         // arc routes (maritime/air/rail). Disabled when no data is passed,
         // so the rest of the app pays zero perf cost.
-        pointsData={tradePoints ?? EMPTY_POINTS}
+        pointsData={tradePoints ?? GLOBE_EMPTY_POINTS}
         pointLat={tradePointLat}
         pointLng={tradePointLng}
         pointAltitude={tradePointAlt}
@@ -2585,7 +2624,7 @@ export default function GlobeView({
         pointLabel={tradePointLabel}
         onPointClick={tradePointClick}
         pointsTransitionDuration={300}
-        pathsData={tradeArcs ?? EMPTY_ARCS}
+        pathsData={tradeArcs ?? GLOBE_EMPTY_ARCS}
         pathPoints={tradePathPoints}
         pathColor={tradePathColor}
         pathStroke={tradePathStroke}
@@ -2602,15 +2641,15 @@ export default function GlobeView({
         // Stroke width scales with trade share so top partners stand out.
         // Dashed animation (dashLength 0.5 / dashGap 0.5 / animateTime 2s)
         // gives the "flow of goods" feel without being distracting.
-        arcsData={partnerArcs ?? EMPTY_PARTNER_ARCS}
-        arcStartLat={(d: object) => (d as PartnerArc).startLat}
-        arcStartLng={(d: object) => (d as PartnerArc).startLng}
-        arcEndLat={(d: object) =>   (d as PartnerArc).endLat}
-        arcEndLng={(d: object) =>   (d as PartnerArc).endLng}
-        arcColor={(d: object) =>    (d as PartnerArc).color}
-        arcStroke={(d: object) =>   Math.max(0.4, (d as PartnerArc).share * 6)}
+        arcsData={partnerArcs ?? GLOBE_EMPTY_PARTNER_ARCS}
+        arcStartLat={ARC_START_LAT}
+        arcStartLng={ARC_START_LNG}
+        arcEndLat={ARC_END_LAT}
+        arcEndLng={ARC_END_LNG}
+        arcColor={ARC_COLOR}
+        arcStroke={ARC_STROKE}
         arcAltitude={0.25}
-        arcLabel={(d: object) =>    (d as PartnerArc).label}
+        arcLabel={ARC_LABEL}
         arcDashLength={0.5}
         arcDashGap={0.5}
         arcDashAnimateTime={2000}
@@ -2627,18 +2666,7 @@ export default function GlobeView({
         ringMaxRadius={ringMaxRadius}
         ringPropagationSpeed={1.2}
         ringRepeatPeriod={1800}
-        onRingClick={(d: object) => {
-          const rd = d as RingDatum;
-          if (rd.kind === 'conflict' && onConflictEventClick) {
-            onConflictEventClick(rd.event as ConflictEvent);
-          } else if (rd.kind === 'earthquake' && onEarthquakeEventClick) {
-            onEarthquakeEventClick(rd.event as EarthquakeEvent);
-          } else if (rd.kind === 'natural' && onNaturalEventClick) {
-            onNaturalEventClick(rd.event as NaturalEvent);
-          } else if (rd.kind === 'economic' && onEconomicEventClick) {
-            onEconomicEventClick(rd.event as EconomicEvent);
-          }
-        }}
+        onRingClick={handleEventClick}
         // ── Solid clickable markers (objectsData) ────────────────────────
         // Pairs each ring with a 3D sphere at the same coordinates — gives
         // a generous click hit area and ensures markers stay visible even
@@ -2648,18 +2676,7 @@ export default function GlobeView({
         objectLng={OBJ_LNG}
         objectAltitude={OBJ_ALT}
         objectThreeObject={makeEventMarker}
-        onObjectClick={(d: object) => {
-          const rd = d as RingDatum;
-          if (rd.kind === 'conflict' && onConflictEventClick) {
-            onConflictEventClick(rd.event as ConflictEvent);
-          } else if (rd.kind === 'earthquake' && onEarthquakeEventClick) {
-            onEarthquakeEventClick(rd.event as EarthquakeEvent);
-          } else if (rd.kind === 'natural' && onNaturalEventClick) {
-            onNaturalEventClick(rd.event as NaturalEvent);
-          } else if (rd.kind === 'economic' && onEconomicEventClick) {
-            onEconomicEventClick(rd.event as EconomicEvent);
-          }
-        }}
+        onObjectClick={handleEventClick}
         // ── City label detail layer ──────────────────────────────────────
         // Fades in automatically when the user zooms below altitude 1.2
         // (roughly "country zoom level" and closer).  react-globe.gl renders
