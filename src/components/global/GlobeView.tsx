@@ -117,6 +117,13 @@ interface GlobeViewProps {
   showCityLabels?:          boolean;
   /** When true, Natural Earth river/lake centerlines are rendered as a blue line layer. */
   showWaterways?:           boolean;
+  /**
+   * Real day/night cycle.  When true, the globe darkens on the hemisphere
+   * facing away from the sun (computed from current UTC time + Earth's
+   * axial tilt).  Useful for visualising which markets / exchanges /
+   * regions are in daylight at the present moment.
+   */
+  dayNightCycle?:           boolean;
 }
 
 // ── Stable constant callbacks (never recreated) ──────────────────────────
@@ -276,6 +283,44 @@ function navStatusColorHex(navStatus: number | undefined): number {
     case 0:
     default: return 0x67e8f9; // under way / unknown — cyan baseline
   }
+}
+
+/**
+ * Compute a unit-length direction vector from the globe's centre toward the
+ * sun at the current UTC time.  In three-globe's coordinate system the
+ * prime meridian (Greenwich) sits at +Z and Y is up.
+ *
+ *   Subsolar longitude:  sunLng = 15° × (12 − UTC-hours)
+ *     (e.g. at UTC 12:00 sunLng = 0° — sun over Greenwich)
+ *   Solar declination:   declines ±23.45° with the year (axial tilt)
+ *     (e.g. ≈ −23.45° at Dec solstice, +23.45° at June solstice)
+ *
+ * Together: dir = ( cos(decl)·sin(sunLng), sin(decl), cos(decl)·cos(sunLng) )
+ *
+ * The cosine declination model is an approximation (accurate to ~1°) — fine
+ * for visual rendering of the terminator.  More precise ephemeris would use
+ * VSOP87 or similar, but the visual difference is sub-pixel at globe scale.
+ */
+function computeSunDirection(target: THREE.Vector3): THREE.Vector3 {
+  const now = new Date();
+  // Day-of-year (UTC), 1-indexed.  Date.UTC(year, 0, 0) is Dec 31 of prev year.
+  const dayOfYear =
+    Math.floor((now.getTime() - Date.UTC(now.getUTCFullYear(), 0, 0)) / 86_400_000);
+  // Earth's axial tilt is 23.45°.  Phase shift +10 days places the minimum
+  // (Dec solstice) on day ~355 of the year.
+  const declRad =
+    -23.45 * Math.PI / 180 * Math.cos(((dayOfYear + 10) * 2 * Math.PI) / 365.25);
+
+  const utcHours =
+    now.getUTCHours() + now.getUTCMinutes() / 60 + now.getUTCSeconds() / 3600;
+  const sunLngRad = ((12 - utcHours) * 15 * Math.PI) / 180;
+
+  const cosDecl = Math.cos(declRad);
+  return target.set(
+    cosDecl * Math.sin(sunLngRad),
+    Math.sin(declRad),
+    cosDecl * Math.cos(sunLngRad),
+  );
 }
 
 /**
@@ -567,6 +612,7 @@ export default function GlobeView({
   macroHeatmap,
   showCityLabels = false,
   showWaterways  = false,
+  dayNightCycle  = false,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -898,27 +944,70 @@ export default function GlobeView({
       const previous = mat.onBeforeCompile;
       mat.onBeforeCompile = (shader) => {
         if (typeof previous === 'function') previous.call(mat!, shader);
-        shader.uniforms.uSharpness = { value: 0 };
-        // Prepend the uniform declaration, then inject the colour-boost
-        // block right after the standard <map_fragment> chunk (which is
-        // where `diffuseColor` gets set from the diffuse texture).
+
+        // Uniforms we control:
+        //   uSharpness     — saturation / contrast boost at close zoom (0..1)
+        //   uDayNightOn    — toggle for the real day/night darkening (0 or 1)
+        //   uSunDirection  — unit vector pointing at the sun in world space,
+        //                    updated every 30 s from UTC time + axial tilt
+        shader.uniforms.uSharpness    = { value: 0 };
+        shader.uniforms.uDayNightOn   = { value: 0 };
+        shader.uniforms.uSunDirection = { value: new THREE.Vector3(0, 0, 1) };
+
+        // Add a world-space-position varying so the fragment shader can compute
+        // the surface normal for the sun-dot product.  For a sphere centred at
+        // origin (which the globe is), normalize(worldPos) IS the surface
+        // normal — no need for a separate normal varying.
+        shader.vertexShader = shader.vertexShader
+          .replace(
+            '#include <common>',
+            `#include <common>
+            varying vec3 vGlobalPos;`,
+          )
+          .replace(
+            'void main() {',
+            `void main() {
+            vGlobalPos = (modelMatrix * vec4(position, 1.0)).xyz;`,
+          );
+
+        // Prepend uniform / varying declarations, then inject the colour-boost
+        // and day/night blocks right after <map_fragment> (which sets
+        // diffuseColor from the diffuse texture).
         shader.fragmentShader =
           'uniform float uSharpness;\n' +
+          'uniform float uDayNightOn;\n' +
+          'uniform vec3  uSunDirection;\n' +
+          'varying vec3  vGlobalPos;\n' +
           shader.fragmentShader.replace(
             '#include <map_fragment>',
             `#include <map_fragment>
             #ifdef USE_MAP
+              // Saturation / contrast boost (ramped at zoom ≥ 6.5)
               vec3 _c = diffuseColor.rgb;
               float _lum = dot(_c, vec3(0.299, 0.587, 0.114));
-              // Saturation: pull each channel further from luminance (up to +55 %)
               _c = mix(vec3(_lum), _c, 1.0 + uSharpness * 0.55);
-              // Contrast: expand around mid-grey (up to +40 %)
               _c = (_c - 0.5) * (1.0 + uSharpness * 0.40) + 0.5;
               diffuseColor.rgb = clamp(_c, 0.0, 1.0);
+
+              // Real day/night cycle.  Compute the surface normal at this
+              // fragment (= normalised world position, since the globe is a
+              // unit sphere about origin in object space), dot with the sun
+              // direction.  Positive = facing the sun (day).  Negative =
+              // facing away (night) → darken.  smoothstep handles the
+              // terminator smoothly so there's no hard line.
+              if (uDayNightOn > 0.5) {
+                vec3 _n = normalize(vGlobalPos);
+                float _sunDot = dot(_n, uSunDirection);
+                float _dayMix = smoothstep(-0.08, 0.12, _sunDot);
+                diffuseColor.rgb *= mix(0.16, 1.0, _dayMix);
+                // Warm sunset glow at the terminator band
+                float _term = 1.0 - smoothstep(0.0, 0.18, abs(_sunDot));
+                diffuseColor.rgb += vec3(0.25, 0.10, 0.02) * _term * 0.55;
+              }
             #endif
             `,
           );
-        // Stash the compiled shader so the altitude poll can update the uniform.
+        // Stash the compiled shader so the altitude poll can update uniforms.
         globeShaderRef.current = shader;
       };
       // Force a re-compile so onBeforeCompile is invoked on the next frame.
@@ -933,6 +1022,44 @@ export default function GlobeView({
       globeShaderRef.current = null;
     };
   }, [countries]);
+
+  // ── Day/night cycle driver ───────────────────────────────────────────────
+  // When `dayNightCycle` is true, refresh the sun direction every 30 s from
+  // the current UTC time + axial-tilt approximation, and flip the shader's
+  // uDayNightOn uniform on.  When false, just clear the uniform.  Mutating
+  // uniforms is free — three.js pushes the new values to the GPU on the
+  // next draw without a recompile.
+  useEffect(() => {
+    const shader = globeShaderRef.current;
+
+    // If the shader isn't compiled yet (the patch effect above hasn't fired
+    // its onBeforeCompile yet), retry shortly.
+    if (!shader?.uniforms?.uDayNightOn) {
+      const retry = setTimeout(() => {
+        // Force the effect to re-run by toggling a state value?  Simpler:
+        // just check again here.  If still null, the patch hasn't completed.
+        // The next time `dayNightCycle` changes we'll succeed.
+        const s = globeShaderRef.current;
+        if (s?.uniforms?.uDayNightOn) {
+          s.uniforms.uDayNightOn.value = dayNightCycle ? 1 : 0;
+          if (dayNightCycle) computeSunDirection(s.uniforms.uSunDirection.value);
+        }
+      }, 400);
+      return () => clearTimeout(retry);
+    }
+
+    shader.uniforms.uDayNightOn.value = dayNightCycle ? 1 : 0;
+    if (!dayNightCycle) return;
+
+    // Initial sun position + recurring refresh every 30 s (sun moves
+    // 15°/hour = 0.125°/30 s — well below the terminator's smooth band).
+    computeSunDirection(shader.uniforms.uSunDirection.value);
+    const id = setInterval(() => {
+      const s = globeShaderRef.current;
+      if (s?.uniforms?.uSunDirection) computeSunDirection(s.uniforms.uSunDirection.value);
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [dayNightCycle]);
 
   // ── Progressive 16K texture upgrade ──────────────────────────────────────
   // The 8K diffuse map loads fast and gives a good initial look.  Once the

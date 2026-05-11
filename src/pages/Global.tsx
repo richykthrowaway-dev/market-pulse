@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } fro
 import { useIndices } from "@/hooks/useSupabaseData";
 import { REGION_TO_ISO } from "@/data/countryMeta";
 import { cn } from "@/lib/utils";
-import { Globe as GlobeIcon, ArrowLeft, Loader2, RotateCw, Pause, Map } from "lucide-react";
+import { Globe as GlobeIcon, ArrowLeft, Loader2, RotateCw, Pause, Map, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const GlobeView = lazy(() => import("@/components/global/GlobeView"));
 const MapView  = lazy(() => import("@/components/global/MapView"));
@@ -103,7 +103,11 @@ const Global = () => {
   const [mode, setMode] = useState<GlobeMode>("flags");
   const [showExchangePins, setShowExchangePins] = useState(false);
   const [selectedExchange, setSelectedExchange] = useState<ExchangeInfo | null>(null);
-  const [autoRotate, setAutoRotate] = useState(true);
+  // Default OFF — most users find the spin distracting when inspecting data.
+  const [autoRotate, setAutoRotate] = useState(false);
+  // Real day/night cycle: when on, sun position is computed from current UTC
+  // time + axial tilt, and the side facing away from the sun is darkened.
+  const [dayNightCycle, setDayNightCycle] = useState(false);
   const [flatMap, setFlatMap] = useState(false);
 
   // ── Global Trade Infrastructure state ───────────────────────────────
@@ -347,6 +351,22 @@ const Global = () => {
             </button>
           )}
 
+          {/* Day/night cycle toggle — globe-only feature */}
+          {!flatMap && (
+            <button
+              onClick={() => setDayNightCycle(v => !v)}
+              className={cn(
+                "flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border text-xs transition-colors",
+                dayNightCycle ? "bg-primary/10 text-primary hover:bg-primary/15" : "hover:bg-muted text-muted-foreground"
+              )}
+              title={dayNightCycle ? "Show globe fully lit" : "Show real day/night cycle based on current UTC time"}
+              aria-pressed={dayNightCycle}
+            >
+              {dayNightCycle ? <Moon className="h-3 w-3" /> : <Sun className="h-3 w-3" />}
+              <span>Day/Night</span>
+            </button>
+          )}
+
           {/* Mode Toggle */}
           <div className="flex rounded-md border border-border overflow-hidden text-xs">
             <button
@@ -469,6 +489,7 @@ const Global = () => {
                   macroHeatmap={macroHeatmap}
                   showCityLabels={cityLabelsEnabled}
                   showWaterways={waterwaysEnabled}
+                  dayNightCycle={dayNightCycle}
                 />
               )}
             </Suspense>
