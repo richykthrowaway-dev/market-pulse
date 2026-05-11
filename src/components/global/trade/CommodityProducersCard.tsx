@@ -1,15 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, Factory, ShoppingCart, AlertTriangle } from 'lucide-react';
+import {
+  ChevronDown, Factory, ShoppingCart, AlertTriangle,
+  ArrowLeftRight, CalendarDays, Grid3X3, BarChart2, Zap,
+} from 'lucide-react';
 import {
   COMMODITIES, CATEGORY_LABELS, CATEGORY_ORDER,
   getCommodity, getConcentration, type CommodityCategory,
 } from '@/data/tradeInfrastructure/commodities';
 import { COMMODITY_CONSUMERS } from '@/data/tradeInfrastructure/commodityConsumers';
 import { COUNTRY_META } from '@/data/countryMeta';
+import { CommoditySeasonalView }      from './CommoditySeasonalView';
+import { CommodityCorrelationMatrix } from './CommodityCorrelationMatrix';
+import { CommodityFlowView }          from './CommodityFlowView';
+import { CommodityMacroView }         from './CommodityMacroView';
+import { CommodityDisruptionView }    from './CommodityDisruptionView';
 import { cn } from '@/lib/utils';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-type View = 'producers' | 'buyers' | 'monopolies';
+type View = 'producers' | 'buyers' | 'monopolies' | 'flow' | 'seasonal' | 'correlations' | 'macro' | 'disruptions';
 
 // ── Concentration colour palette ──────────────────────────────────────────────
 const CONCENTRATION_STYLE = {
@@ -418,70 +426,68 @@ export function CommodityProducersCard() {
   const [view, setView]           = useState<View>('producers');
   const [selectedId, setSelectedId] = useState<string>(DEFAULT_COMMODITY_ID);
 
-  const VIEW_CONFIG: { id: View; label: string; icon: React.ReactNode; tip: string }[] = [
-    {
-      id:    'producers',
-      label: 'Producers',
-      icon:  <Factory className="w-3 h-3" />,
-      tip:   'Top producing countries by output share',
-    },
-    {
-      id:    'buyers',
-      label: 'Buyers',
-      icon:  <ShoppingCart className="w-3 h-3" />,
-      tip:   'Top importing countries by import share',
-    },
-    {
-      id:    'monopolies',
-      label: 'Monopolies',
-      icon:  <AlertTriangle className="w-3 h-3" />,
-      tip:   'All commodities ranked by supply concentration (HHI)',
-    },
+  // 8 views in two rows of 4
+  const VIEW_CONFIG: { id: View; label: string; icon: React.ReactNode; tip: string; needsDropdown: boolean }[] = [
+    { id: 'producers',    label: 'Producers',    icon: <Factory       className="w-3 h-3" />, tip: 'Top producing countries by output share',                needsDropdown: true  },
+    { id: 'buyers',       label: 'Buyers',       icon: <ShoppingCart  className="w-3 h-3" />, tip: 'Top importing countries by import share',                needsDropdown: true  },
+    { id: 'flow',         label: 'Flow',         icon: <ArrowLeftRight className="w-3 h-3" />, tip: 'Producer–buyer overlap and net trade balance',           needsDropdown: true  },
+    { id: 'monopolies',   label: 'Monopolies',   icon: <AlertTriangle className="w-3 h-3" />, tip: 'All commodities ranked by supply concentration (HHI)',   needsDropdown: false },
+    { id: 'seasonal',     label: 'Seasonal',     icon: <CalendarDays  className="w-3 h-3" />, tip: 'Average monthly returns across 5 years',                 needsDropdown: true  },
+    { id: 'correlations', label: 'Correlations', icon: <Grid3X3       className="w-3 h-3" />, tip: '9×9 commodity inter-correlation matrix',                 needsDropdown: false },
+    { id: 'macro',        label: 'Macro',        icon: <BarChart2     className="w-3 h-3" />, tip: 'Sensitivity to USD, real yields, and equity risk',       needsDropdown: true  },
+    { id: 'disruptions',  label: 'Disruptions',  icon: <Zap           className="w-3 h-3" />, tip: 'Live conflict + earthquake alerts in producing regions', needsDropdown: true  },
   ];
 
   const active = VIEW_CONFIG.find((v) => v.id === view)!;
 
   return (
     <div className="border-t border-border bg-purple-500/5">
-      {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div className="px-4 pt-3 pb-2 flex items-center gap-2 flex-wrap">
-        <span className="flex items-center gap-1.5 text-xs font-semibold">
-          {active.icon}
-          {active.label}
-        </span>
+      {/* ── Header: title + view toggle ────────────────────────────────── */}
+      <div className="px-4 pt-3 pb-2">
+        <div className="flex items-center gap-2 mb-2">
+          <span className="flex items-center gap-1.5 text-xs font-semibold shrink-0">
+            {active.icon}
+            {active.label}
+          </span>
+        </div>
 
-        {/* View toggle */}
-        <div className="ml-auto flex rounded border border-border overflow-hidden text-[10px]">
+        {/* 2-row × 4-col toggle grid */}
+        <div className="grid grid-cols-4 gap-1 text-[9px]">
           {VIEW_CONFIG.map((v) => (
             <button
               key={v.id}
               title={v.tip}
               onClick={() => setView(v.id)}
               className={cn(
-                'flex items-center gap-1 px-2 py-1 transition-colors',
+                'flex items-center justify-center gap-1 px-1.5 py-1 rounded transition-colors',
                 view === v.id
                   ? 'bg-purple-600 text-white font-semibold'
-                  : 'hover:bg-muted text-muted-foreground',
+                  : 'border border-border/60 hover:bg-muted text-muted-foreground',
               )}
             >
               {v.icon}
-              <span>{v.label}</span>
+              <span className="truncate">{v.label}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Commodity dropdown — hidden on Monopolies since that shows all */}
-      {view !== 'monopolies' && (
+      {/* Commodity dropdown — hidden on views that show all commodities */}
+      {active.needsDropdown && (
         <div className="px-4 pb-3">
           <CommodityDropdown value={selectedId} onChange={setSelectedId} />
         </div>
       )}
 
       {/* ── Active view ─────────────────────────────────────────────────── */}
-      {view === 'producers'  && <ProducersView  selectedId={selectedId} />}
-      {view === 'buyers'     && <BuyersView     selectedId={selectedId} />}
-      {view === 'monopolies' && <MonopoliesView />}
+      {view === 'producers'    && <ProducersView           selectedId={selectedId} />}
+      {view === 'buyers'       && <BuyersView              selectedId={selectedId} />}
+      {view === 'flow'         && <CommodityFlowView       selectedId={selectedId} />}
+      {view === 'monopolies'   && <MonopoliesView />}
+      {view === 'seasonal'     && <CommoditySeasonalView   selectedId={selectedId} />}
+      {view === 'correlations' && <CommodityCorrelationMatrix />}
+      {view === 'macro'        && <CommodityMacroView      selectedId={selectedId} />}
+      {view === 'disruptions'  && <CommodityDisruptionView selectedId={selectedId} />}
     </div>
   );
 }
