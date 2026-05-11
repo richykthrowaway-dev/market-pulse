@@ -37,6 +37,8 @@ export interface CommodityPrice {
   date:     string;
   /** Unit for price display */
   unit:     string;
+  /** Last ~30 daily closes, oldest → newest. Used to render in-tile sparklines. */
+  sparkline: number[];
 }
 
 // ── Commodity ETF → commodity metadata mapping ────────────────────────────
@@ -79,11 +81,13 @@ serve(async (req) => {
   }
 
   try {
-    // Fetch last 2 EOD bars for each ticker — gives us current + prev close
-    // for daily change calculation. All fetches in parallel.
+    // Fetch last 30 EOD bars per ticker.  /eod is a 1-credit call regardless
+    // of `limit`, so requesting 30 rows instead of 2 costs no extra quota.
+    // First two rows give us current + prev for the daily change; the full
+    // 30 powers the in-tile sparkline chart on the client.
     const results = await Promise.allSettled(
       COMMODITIES.map(async (c) => {
-        const url = `https://eodhd.com/api/eod/${c.ticker}?limit=2&order=d&fmt=json&api_token=${token}`;
+        const url = `https://eodhd.com/api/eod/${c.ticker}?limit=30&order=d&fmt=json&api_token=${token}`;
         const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
         if (!res.ok) return null;
 
@@ -100,6 +104,14 @@ serve(async (req) => {
           ? ((current.close - prev.close) / prev.close) * 100
           : 0;
 
+        // Sparkline expects oldest → newest, but EODHD returns newest-first
+        // (`order=d`).  Reverse + drop any rows missing a `close`.
+        const sparkline = bars
+          .slice()
+          .reverse()
+          .map((b) => b.close)
+          .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+
         return {
           id:        c.id,
           label:     c.label,
@@ -109,6 +121,7 @@ serve(async (req) => {
           changeP:   Math.round(changeP * 100) / 100,
           date:      current.date,
           unit:      c.unit,
+          sparkline,
         } as CommodityPrice;
       }),
     );

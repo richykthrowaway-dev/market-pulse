@@ -15,6 +15,7 @@ import { useEodhdTechnicals } from '@/hooks/useEodhdTechnicals';
 import { CommodityProducersCard } from './CommodityProducersCard';
 import { CommodityCatalystStrip } from './CommodityCatalystStrip';
 import { CommodityDriverBlock }   from './CommodityDriverBlock';
+import { Sparkline }              from '@/components/ui/Sparkline';
 import { cn } from '@/lib/utils';
 
 // ── Chart range ──────────────────────────────────────────────────────────────
@@ -132,15 +133,31 @@ function CommodityPriceStrip({
                 <p className="text-xs font-semibold font-mono tabular-nums mt-0.5">
                   ${p.price.toFixed(2)}
                 </p>
-                <p
-                  className={cn(
-                    'text-[9px] flex items-center gap-0.5 font-medium tabular-nums',
-                    up ? 'text-emerald-400' : dn ? 'text-red-400' : 'text-muted-foreground',
+                {/* Change % and 30d sparkline share one row — left is delta,
+                    right is the mini-chart. */}
+                <div className="flex items-center justify-between gap-1.5 mt-0.5">
+                  <p
+                    className={cn(
+                      'text-[9px] flex items-center gap-0.5 font-medium tabular-nums shrink-0',
+                      up ? 'text-emerald-400' : dn ? 'text-red-400' : 'text-muted-foreground',
+                    )}
+                  >
+                    {up ? <TrendingUp className="w-2.5 h-2.5" /> : dn ? <TrendingDown className="w-2.5 h-2.5" /> : null}
+                    {up ? '+' : ''}{p.changeP.toFixed(2)}%
+                  </p>
+                  {p.sparkline && p.sparkline.length >= 2 && (
+                    <Sparkline
+                      values={p.sparkline}
+                      width={56}
+                      height={14}
+                      color={up ? '#34d399' : dn ? '#f87171' : 'currentColor'}
+                      showFill
+                      showLastDot
+                      label={`${p.label} · last ${p.sparkline.length} closes`}
+                      className="shrink-0 opacity-90"
+                    />
                   )}
-                >
-                  {up ? <TrendingUp className="w-2.5 h-2.5" /> : dn ? <TrendingDown className="w-2.5 h-2.5" /> : null}
-                  {up ? '+' : ''}{p.changeP.toFixed(2)}%
-                </p>
+                </div>
               </button>
             );
           })}

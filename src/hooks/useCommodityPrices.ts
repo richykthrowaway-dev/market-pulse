@@ -19,6 +19,8 @@ export interface CommodityPrice {
   changeP:   number;
   date:      string;
   unit:      string;
+  /** Last ~30 daily closes, oldest → newest. Used by in-tile sparklines. */
+  sparkline: number[];
 }
 
 export interface CommodityPricesResponse {
