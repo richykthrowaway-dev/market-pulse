@@ -61,7 +61,13 @@ const FLUSH_INTERVAL_MS  = 2_000;           // React render cadence
 const STALE_VESSEL_MS    = 5 * 60 * 1_000; // prune vessels not seen in 5 min
 const NO_DATA_TIMEOUT_MS = 12_000;          // warn if no messages in 12 s after open
 const CACHE_KEY          = 'ais-vessel-cache-v1';
-const CACHE_TTL_MS       = 5 * 60 * 1_000; // don't restore caches older than 5 min
+// Cache TTL — extended to 24 hours so coming back the next day still shows
+// vessels instantly.  Cached vessels are given a 60-second grace window on
+// load (see loadCache) — the live WebSocket feed refreshes active vessels'
+// `lastSeen` long before the grace expires, while truly dormant cached
+// vessels get pruned by the normal 5-min stale-prune cycle.
+const CACHE_TTL_MS       = 24 * 60 * 60 * 1_000;
+const CACHE_LOAD_GRACE_MS = 60 * 1_000; // restored vessels get 60s before stale-pruning
 const DISCONNECT_GRACE_MS = 300;            // wait before closing after last subscriber leaves
 const BACKOFF_BASE_MS    = 1_000;
 const BACKOFF_MAX_MS     = 30_000;
@@ -106,7 +112,14 @@ const singleton = (() => {
       if (!raw) return;
       const { vessels, savedAt } = JSON.parse(raw) as { vessels: Vessel[]; savedAt: number };
       if (Date.now() - savedAt > CACHE_TTL_MS) return;   // stale — discard
-      for (const v of vessels) vesselMap.set(v.mmsi, v);
+      // Give every cached vessel a fresh grace window before the stale-prune
+      // can touch them.  Active vessels will have their `lastSeen` overwritten
+      // by live WebSocket data within seconds; dormant ones age out cleanly
+      // once the grace window elapses without a fresh position report.
+      const freshLastSeen = Date.now() - (STALE_VESSEL_MS - CACHE_LOAD_GRACE_MS);
+      for (const v of vessels) {
+        vesselMap.set(v.mmsi, { ...v, lastSeen: freshLastSeen });
+      }
     } catch {
       // corrupt cache — ignore
     }
