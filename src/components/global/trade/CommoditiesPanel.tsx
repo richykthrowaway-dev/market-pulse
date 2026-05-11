@@ -121,42 +121,50 @@ function CommodityPriceStrip({
                 key={p.id}
                 onClick={() => onSelect(p)}
                 className={cn(
-                  'text-left bg-muted/30 rounded px-2 py-1.5 border transition-colors duration-100',
+                  'group relative text-left rounded border bg-muted/30 transition-colors duration-100 overflow-hidden',
+                  'px-3 py-2',
                   selected
                     ? 'border-primary/60 bg-primary/8 ring-1 ring-primary/30'
                     : 'border-border/40 hover:border-primary/30 hover:bg-muted/50',
                 )}
               >
-                <p className="text-[9px] uppercase tracking-wide text-muted-foreground truncate">
-                  {p.label}
-                </p>
-                <p className="text-xs font-semibold font-mono tabular-nums mt-0.5">
-                  ${p.price.toFixed(2)}
-                </p>
-                {/* Change % and 30d sparkline share one row — left is delta,
-                    right is the mini-chart. */}
-                <div className="flex items-center justify-between gap-1.5 mt-0.5">
-                  <p
-                    className={cn(
-                      'text-[9px] flex items-center gap-0.5 font-medium tabular-nums shrink-0',
-                      up ? 'text-emerald-400' : dn ? 'text-red-400' : 'text-muted-foreground',
-                    )}
-                  >
-                    {up ? <TrendingUp className="w-2.5 h-2.5" /> : dn ? <TrendingDown className="w-2.5 h-2.5" /> : null}
-                    {up ? '+' : ''}{p.changeP.toFixed(2)}%
-                  </p>
-                  {p.sparkline && p.sparkline.length >= 2 && (
+                {/* 30-day sparkline as background — fills the right side of the
+                    tile, faded so it doesn't fight the text for attention.
+                    Positioned with right/top/bottom so it scales with the tile
+                    and remains visible at any tile width.  pointer-events-none
+                    so clicks pass through to the parent button. */}
+                {p.sparkline && p.sparkline.length >= 2 && (
+                  <div className="pointer-events-none absolute right-2 top-2 bottom-2 w-[55%] flex items-center justify-end">
                     <Sparkline
                       values={p.sparkline}
-                      width={56}
-                      height={14}
-                      color={up ? '#34d399' : dn ? '#f87171' : 'currentColor'}
+                      width={160}
+                      height={40}
+                      color={up ? '#34d399' : dn ? '#f87171' : '#94a3b8'}
                       showFill
                       showLastDot
                       label={`${p.label} · last ${p.sparkline.length} closes`}
-                      className="shrink-0 opacity-90"
+                      className="opacity-70 group-hover:opacity-90 transition-opacity"
                     />
-                  )}
+                  </div>
+                )}
+
+                {/* Foreground stack — text content sits on top of the sparkline */}
+                <div className="relative z-10">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">
+                    {p.label}
+                  </p>
+                  <p className="text-base font-semibold font-mono tabular-nums mt-0.5">
+                    ${p.price.toFixed(2)}
+                  </p>
+                  <p
+                    className={cn(
+                      'text-[11px] flex items-center gap-0.5 font-medium tabular-nums mt-0.5',
+                      up ? 'text-emerald-400' : dn ? 'text-red-400' : 'text-muted-foreground',
+                    )}
+                  >
+                    {up ? <TrendingUp className="w-3 h-3" /> : dn ? <TrendingDown className="w-3 h-3" /> : null}
+                    {up ? '+' : ''}{p.changeP.toFixed(2)}%
+                  </p>
                 </div>
               </button>
             );
