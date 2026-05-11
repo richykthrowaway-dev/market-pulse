@@ -718,7 +718,7 @@ export default function GlobeView({
     if (!countries.length) return;
     const mat = new THREE.PointsMaterial({
       color:           0x67e8f9, // sky-300
-      size:            3.5,      // screen px (sizeAttenuation off)
+      size:            4.0,      // screen px — 3.5 × 1.15 ≈ 4.0 (sizeAttenuation off)
       sizeAttenuation: false,
       transparent:     true,
       opacity:         0.9,
