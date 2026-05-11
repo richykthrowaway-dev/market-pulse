@@ -46,26 +46,54 @@ const corsHeaders = {
 
 const WITS_BASE     = "https://wits.worldbank.org/API/V1/SDMX/V21/datasource/tradestats-trade";
 
-// Comtrade endpoint selection: when a COMTRADE_API_KEY is configured we use
-// the authenticated `/data/v1/get/` endpoint which returns the full row set
-// (no 500-row preview cap) and supports a higher rate limit.  Without a key
-// we fall back to the public preview endpoint — same query format, just
-// truncated to 500 rows.
-const COMTRADE_API_KEY = Deno.env.get("COMTRADE_API_KEY") ?? "";
-const COMTRADE_BASE    = COMTRADE_API_KEY
-  ? "https://comtradeapi.un.org/data/v1/get/C/A/HS"
-  : "https://comtradeapi.un.org/public/v1/preview/C/A/HS";
+// Comtrade endpoint selection — with auto-fallback.
+// When a COMTRADE_API_KEY is configured we PREFER the authenticated
+// `/data/v1/get/` endpoint (full row set, higher rate limit).  But if that
+// call fails for ANY reason (bad key, rate-limited, network blip), we
+// transparently retry against the public `/preview/` endpoint — the same
+// query shape, truncated to 500 rows.  This makes the whole api-wits
+// chapter/trend/partner/bilateral pipeline survive key issues without the
+// frontend ever seeing an empty result.
+const COMTRADE_API_KEY     = Deno.env.get("COMTRADE_API_KEY") ?? "";
+const COMTRADE_AUTH_BASE   = "https://comtradeapi.un.org/data/v1/get/C/A/HS";
+const COMTRADE_PREVIEW_BASE = "https://comtradeapi.un.org/public/v1/preview/C/A/HS";
 
 /**
- * Append the Comtrade subscription key to a URL when configured.
- * Comtrade accepts it as either an `Ocp-Apim-Subscription-Key` header
- * or `subscription-key` query param — we use the query param to keep
- * the existing per-call fetch shape unchanged.
+ * Fetch Comtrade for a given query-string (e.g. `?reporterCode=842&...`),
+ * preferring the authenticated tier when a key is configured, falling
+ * back to the public preview tier on any error from auth.  Returns the
+ * parsed `data` array (typed loosely as any[]) or [] if both tiers fail.
+ *
+ * We do the JSON parsing inside this helper so callers don't have to
+ * duplicate the try/catch around .json().
  */
-function comtradeUrl(url: string): string {
-  if (!COMTRADE_API_KEY) return url;
-  const sep = url.includes("?") ? "&" : "?";
-  return `${url}${sep}subscription-key=${COMTRADE_API_KEY}`;
+async function fetchComtradeData(queryString: string): Promise<any[]> {
+  const tryFetch = async (base: string, withKey: boolean): Promise<any[] | null> => {
+    let url = base + queryString;
+    if (withKey && COMTRADE_API_KEY) {
+      const sep = url.includes("?") ? "&" : "?";
+      url = `${url}${sep}subscription-key=${COMTRADE_API_KEY}`;
+    }
+    let res: Response;
+    try {
+      res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+    } catch {
+      return null;
+    }
+    if (!res.ok) return null;
+    let json: any;
+    try { json = await res.json(); } catch { return null; }
+    return Array.isArray(json?.data) ? json.data : null;
+  };
+
+  // 1) Authenticated tier first (when key configured).
+  if (COMTRADE_API_KEY) {
+    const data = await tryFetch(COMTRADE_AUTH_BASE, true);
+    if (data && data.length > 0) return data;
+  }
+  // 2) Public preview tier — works without auth, 500-row cap.
+  const data = await tryFetch(COMTRADE_PREVIEW_BASE, false);
+  return data ?? [];
 }
 
 // ── ISO 3166-1 alpha-3 → UN M49 numeric (Comtrade reporter codes) ─────
@@ -344,8 +372,8 @@ async function fetchComtradeChapters(
   if (!m49) return null;
 
   const flowCode = direction === "exports" ? "X" : "M";
-  const url =
-    `${COMTRADE_BASE}?reporterCode=${m49}` +
+  const queryString =
+    `?reporterCode=${m49}` +
     `&period=${year}` +
     `&partnerCode=0` +     // 0 = world
     `&cmdCode=AG4` +       // HS 4-digit (Heading) — was AG2 (Chapter)
@@ -353,17 +381,7 @@ async function fetchComtradeChapters(
     `&breakdownMode=classic` +
     `&maxRecords=2500`;
 
-  let upstream: Response;
-  try {
-    upstream = await fetch(comtradeUrl(url), { signal: AbortSignal.timeout(12_000) });
-  } catch {
-    return null;
-  }
-  if (!upstream.ok) return null;
-
-  let json: any;
-  try { json = await upstream.json(); } catch { return null; }
-  const data: any[] = Array.isArray(json?.data) ? json.data : [];
+  const data = await fetchComtradeData(queryString);
   if (data.length === 0) return null;
 
   const rows: ProductRow[] = [];
@@ -415,25 +433,15 @@ async function fetchComtradePartners(
   // (cmdCode, partnerCode) pair — partner2Code=0, motCode=0, customsCode=C00
   // are already set, so we don't need EU-mirror hacks, max-wins dedup, or
   // partner2 filtering.  Just filter aggregates and we're done.
-  const url =
-    `${COMTRADE_BASE}?reporterCode=${m49}` +
+  const queryString =
+    `?reporterCode=${m49}` +
     `&period=${year}` +
     `&cmdCode=TOTAL` +
     `&flowCode=${flowCode}` +
     `&breakdownMode=classic` +
     `&maxRecords=2500`;
 
-  let upstream: Response;
-  try {
-    upstream = await fetch(comtradeUrl(url), { signal: AbortSignal.timeout(15_000) });
-  } catch {
-    return null;
-  }
-  if (!upstream.ok) return null;
-
-  let json: any;
-  try { json = await upstream.json(); } catch { return null; }
-  const data: any[] = Array.isArray(json?.data) ? json.data : [];
+  const data = await fetchComtradeData(queryString);
   if (data.length === 0) return null;
 
   const rows: ProductRow[] = [];
@@ -494,8 +502,8 @@ async function fetchComtradeTrend(
   const now = new Date().getUTCFullYear();
   const years = Array.from({ length: 6 }, (_, i) => now - 6 + i).join(",");
 
-  const url =
-    `${COMTRADE_BASE}?reporterCode=${m49}` +
+  const queryString =
+    `?reporterCode=${m49}` +
     `&period=${years}` +
     `&partnerCode=0` +
     `&cmdCode=TOTAL` +
@@ -503,17 +511,7 @@ async function fetchComtradeTrend(
     `&motCode=0` +
     `&customsCode=C00`;
 
-  let upstream: Response;
-  try {
-    upstream = await fetch(comtradeUrl(url), { signal: AbortSignal.timeout(15_000) });
-  } catch {
-    return null;
-  }
-  if (!upstream.ok) return null;
-
-  let json: any;
-  try { json = await upstream.json(); } catch { return null; }
-  const data: any[] = Array.isArray(json?.data) ? json.data : [];
+  const data = await fetchComtradeData(queryString);
   if (data.length === 0) return null;
 
   // First-write-wins per year — Comtrade returns 2 rows per year
@@ -770,8 +768,8 @@ async function fetchComtradeBilateral(
   if (!reporterM49 || !partnerM49) return null;
 
   const flowCode = direction === "exports" ? "X" : "M";
-  const url =
-    `${COMTRADE_BASE}?reporterCode=${reporterM49}` +
+  const queryString =
+    `?reporterCode=${reporterM49}` +
     `&period=${year}` +
     `&partnerCode=${partnerM49}` +
     `&cmdCode=AG2` +
@@ -779,17 +777,7 @@ async function fetchComtradeBilateral(
     `&breakdownMode=classic` +
     `&maxRecords=2500`;
 
-  let upstream: Response;
-  try {
-    upstream = await fetch(comtradeUrl(url), { signal: AbortSignal.timeout(12_000) });
-  } catch {
-    return null;
-  }
-  if (!upstream.ok) return null;
-
-  let json: any;
-  try { json = await upstream.json(); } catch { return null; }
-  const data: any[] = Array.isArray(json?.data) ? json.data : [];
+  const data = await fetchComtradeData(queryString);
   if (data.length === 0) return null;
 
   // breakdownMode=classic returns one row per chapter — no dedup needed.
