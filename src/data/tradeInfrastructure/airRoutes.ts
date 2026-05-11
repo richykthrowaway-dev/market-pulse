@@ -3,10 +3,22 @@ import type { TradeRoute } from './types';
 /**
  * Major air-cargo corridors.
  *
- * Planes genuinely fly great-circle routes, so most routes need no
- * waypoints. Transpolar and transpacific legs get explicit waypoints so
- * the visible arc traces the northward polar bulge rather than a flat
- * chord that visually clips through continents.
+ * Aircraft fly close to great-circle paths, but real cargo routings deviate
+ * from the geodesic in two important ways:
+ *
+ *   1. Air-traffic-control corridors — airways are not continuous, they
+ *      bend through specific routing points.  Visually unimportant at
+ *      globe scale.
+ *
+ *   2. Closed airspace.  Since Feb 2022, Russia and Belarus closed their
+ *      airspace to most Western carriers in response to sanctions.
+ *      Cargo carriers that pre-2022 flew the great circle from East Asia
+ *      to Europe over Siberia now reroute via Central Asia, the Caspian,
+ *      Turkey and the Balkans — adding 1–3 hours and ~10–15% fuel burn.
+ *
+ * The routes below model the post-2022 realities for Western carriers.
+ * Transpacific and intra-Atlantic routes are not affected and remain
+ * great-circle approximations.
  */
 export const AIR_ROUTES: TradeRoute[] = [
   {
@@ -48,15 +60,21 @@ export const AIR_ROUTES: TradeRoute[] = [
     startLat: 22.308, startLng: 113.919,
     endLat:   50.038, endLng:     8.562,
     importance: 90,
-    description: 'Asia–Europe airfreight artery; perishables, pharma, e-commerce.',
+    // Post-2022: rerouted SOUTH of Russia via Central Asia + Turkey.
+    // Pre-2022 Siberian great circle is unavailable to Lufthansa Cargo /
+    // Cathay / Air France-KLM Cargo / etc.
+    description: 'Asia–Europe airfreight artery; perishables, pharma, e-commerce. Post-2022 Southern routing via Central Asia + Caucasus.',
     tags: ['cargo'],
     waypoints: [
-      { lat: 32, lng: 108 },   // Over south-central China
-      { lat: 42, lng:  90 },   // Central Asia
-      { lat: 50, lng:  68 },   // Kazakhstan
-      { lat: 56, lng:  45 },   // Russia / Ural area
-      { lat: 58, lng:  25 },   // Eastern Europe / Baltic
-      { lat: 54, lng:  12 },   // Northern Germany approach
+      { lat: 30, lng: 105 },   // SW China
+      { lat: 36, lng:  95 },   // Tibet/Qinghai border
+      { lat: 40, lng:  82 },   // Western China / Tian Shan
+      { lat: 43, lng:  70 },   // Kazakhstan (Almaty area)
+      { lat: 41, lng:  55 },   // Caspian Sea south
+      { lat: 40, lng:  44 },   // Caucasus / Armenia-Azerbaijan
+      { lat: 41, lng:  32 },   // Turkey north (Black Sea approach)
+      { lat: 44, lng:  25 },   // Romania / Balkans
+      { lat: 47, lng:  17 },   // Hungary / Austria approach
     ],
   },
 
@@ -66,13 +84,18 @@ export const AIR_ROUTES: TradeRoute[] = [
     startLat: 31.144, startLng: 121.808,
     endLat:   50.038, endLng:     8.562,
     importance: 85,
+    description: 'Shanghai cargo trunk to Europe. Post-2022 Southern routing — Russian airspace closed.',
     tags: ['cargo'],
     waypoints: [
-      { lat: 40, lng: 110 },
-      { lat: 50, lng:  88 },
-      { lat: 56, lng:  62 },
-      { lat: 58, lng:  38 },
-      { lat: 55, lng:  18 },
+      { lat: 36, lng: 110 },   // Northern China interior
+      { lat: 40, lng:  95 },   // Gansu corridor
+      { lat: 42, lng:  80 },   // Kazakhstan east
+      { lat: 43, lng:  65 },   // Kazakhstan / Aral region
+      { lat: 41, lng:  52 },   // Caspian Sea
+      { lat: 40, lng:  42 },   // Caucasus
+      { lat: 42, lng:  32 },   // Turkey north
+      { lat: 45, lng:  22 },   // Balkans
+      { lat: 47, lng:  15 },   // Austria / Hungary
     ],
   },
 
@@ -168,15 +191,18 @@ export const AIR_ROUTES: TradeRoute[] = [
     startLat:  1.364, startLng: 103.992,
     endLat:   50.038, endLng:     8.562,
     importance: 72,
-    description: 'SE Asia → Europe long-haul cargo.',
+    description: 'SE Asia → Europe long-haul cargo. Post-2022 routes south of Russia via Iran or Caucasus.',
     tags: ['cargo'],
     waypoints: [
-      { lat: 14, lng:  98 },   // Myanmar / Thailand
-      { lat: 26, lng:  82 },   // Northern India
-      { lat: 36, lng:  66 },   // Afghanistan / Central Asia
-      { lat: 46, lng:  52 },   // Kazakhstan / Caspian
-      { lat: 54, lng:  34 },   // Ukraine / Russia
-      { lat: 54, lng:  18 },   // Poland
+      { lat:  6, lng:  96 },   // Andaman Sea
+      { lat: 12, lng:  85 },   // Bay of Bengal
+      { lat: 20, lng:  76 },   // Central India
+      { lat: 28, lng:  68 },   // Pakistan / Afghanistan border
+      { lat: 32, lng:  58 },   // Iran
+      { lat: 38, lng:  48 },   // NW Iran / Azerbaijan
+      { lat: 41, lng:  35 },   // Turkey (Anatolia)
+      { lat: 44, lng:  24 },   // Romania
+      { lat: 47, lng:  16 },   // Austria
     ],
   },
 ];
