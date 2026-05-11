@@ -81,13 +81,14 @@ serve(async (req) => {
   }
 
   try {
-    // Fetch last 90 EOD bars per ticker (~3 months).  /eod is a 1-credit call
-    // regardless of `limit`, so requesting 90 rows costs no extra quota.
-    // First two rows give current + prev for the daily change; the full 90
-    // power the in-tile sparkline with a 1W/1M/3M range toggle on the client.
+    // Fetch last 252 EOD bars per ticker (~1 year of trading days).
+    // /eod is a 1-credit call regardless of `limit`, so requesting 252 rows
+    // costs no extra quota.  First two rows give current + prev for the daily
+    // change; the full 252 power the in-tile sparkline with a
+    // 1D/1W/1M/3M/6M/1Y range toggle on the client.
     const results = await Promise.allSettled(
       COMMODITIES.map(async (c) => {
-        const url = `https://eodhd.com/api/eod/${c.ticker}?limit=90&order=d&fmt=json&api_token=${token}`;
+        const url = `https://eodhd.com/api/eod/${c.ticker}?limit=252&order=d&fmt=json&api_token=${token}`;
         const res = await fetch(url, { signal: AbortSignal.timeout(12_000) });
         if (!res.ok) return null;
 

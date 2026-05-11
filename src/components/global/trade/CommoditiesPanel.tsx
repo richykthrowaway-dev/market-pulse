@@ -23,9 +23,26 @@ type Range = '1M' | '3M' | '1Y';
 const RANGE_DAYS: Record<Range, number> = { '1M': 30, '3M': 90, '1Y': 365 };
 
 // ── Sparkline range (tile minicharts) ────────────────────────────────────────
-type SparkRange = '1W' | '1M' | '3M';
-/** How many trailing closes to slice from the 90-bar sparkline array. */
-const SPARK_BARS: Record<SparkRange, number> = { '1W': 5, '1M': 22, '3M': 90 };
+type SparkRange = '1D' | '1W' | '1M' | '3M' | '6M' | '1Y';
+/**
+ * How many trailing EOD closes to slice from the 252-bar sparkline array.
+ * Using trading-day counts (≈252/yr) so each label reflects actual market
+ * sessions rather than calendar days.
+ *   1D →  2 bars (prev close + today) — shows today's single-day move
+ *   1W →  5 bars (~one trading week)
+ *   1M → 22 bars (~one trading month)
+ *   3M → 63 bars (~one trading quarter)
+ *   6M → 126 bars (~two quarters)
+ *   1Y → 252 bars (full year of trading sessions)
+ */
+const SPARK_BARS: Record<SparkRange, number> = {
+  '1D':   2,
+  '1W':   5,
+  '1M':  22,
+  '3M':  63,
+  '6M': 126,
+  '1Y': 252,
+};
 
 /**
  * CommoditiesPanel — dedicated "Commodities" tab on the Global page.
@@ -116,18 +133,18 @@ function CommodityPriceStrip({
 
         {/* Sparkline range toggle */}
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide mr-0.5">
+          <span className="text-[9px] text-muted-foreground/60 uppercase tracking-wide mr-0.5 hidden sm:inline">
             Sparkline
           </span>
-          <div className="flex rounded border border-border overflow-hidden text-[10px]">
-            {(['1W', '1M', '3M'] as SparkRange[]).map(r => (
+          <div className="flex rounded border border-border overflow-hidden text-[9px]">
+            {(['1D', '1W', '1M', '3M', '6M', '1Y'] as SparkRange[]).map(r => (
               <button
                 key={r}
                 onClick={() => setSparkRange(r)}
                 className={cn(
-                  'px-2 py-0.5 transition-colors',
+                  'px-1.5 py-0.5 transition-colors tabular-nums',
                   sparkRange === r
-                    ? 'bg-primary text-primary-foreground'
+                    ? 'bg-primary text-primary-foreground font-semibold'
                     : 'hover:bg-muted text-muted-foreground',
                 )}
               >
