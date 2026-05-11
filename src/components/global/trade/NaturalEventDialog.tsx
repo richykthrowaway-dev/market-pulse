@@ -116,7 +116,9 @@ export function NaturalEventDialog({ event, onClose, onSetAlert }: Props) {
   return (
     <div
       ref={cardRef}
-      className={`fixed z-[400] w-[400px] max-h-[82vh] overflow-y-auto bg-card/95 backdrop-blur-md border border-border rounded-lg shadow-2xl pointer-events-auto select-none${pos ? '' : ' bottom-6 left-6'}`}
+      // PERF: removed `backdrop-blur-md` — see EarthquakeDialog for rationale.
+      // Solid `bg-card` avoids the per-frame GPU blur over the animated globe.
+      className={`fixed z-[400] w-[400px] max-h-[82vh] overflow-y-auto bg-card border border-border rounded-lg shadow-2xl pointer-events-auto select-none${pos ? '' : ' bottom-6 left-6'}`}
       style={pos ? { left: pos.x, top: pos.y } : undefined}
       onPointerDown={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}

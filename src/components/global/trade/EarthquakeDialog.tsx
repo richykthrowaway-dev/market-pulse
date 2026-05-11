@@ -91,7 +91,12 @@ export function EarthquakeDialog({ event, onClose, onSetAlert }: Props) {
   return (
     <div
       ref={cardRef}
-      className={`fixed z-[400] w-[400px] max-h-[78vh] overflow-y-auto bg-card/95 backdrop-blur-md border border-border rounded-lg shadow-2xl pointer-events-auto select-none${pos ? '' : ' bottom-6 left-6'}`}
+      // PERF: removed `backdrop-blur-md` — it forced a per-frame gaussian
+      // recomputation over the animated globe behind the card, dropping
+      // the globe's frame rate when many event rings were on screen.
+      // The `bg-card` solid fill (with 95% theme alpha) gives the same
+      // visual weight without the GPU cost.
+      className={`fixed z-[400] w-[400px] max-h-[78vh] overflow-y-auto bg-card border border-border rounded-lg shadow-2xl pointer-events-auto select-none${pos ? '' : ' bottom-6 left-6'}`}
       style={pos ? { left: pos.x, top: pos.y } : undefined}
       onPointerDown={(e) => e.stopPropagation()}
       onWheel={(e) => e.stopPropagation()}
