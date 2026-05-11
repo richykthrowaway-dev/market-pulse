@@ -9,6 +9,9 @@ import { cn } from "@/lib/utils";
 import { ArrowUpIcon, ArrowDownIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import type { CountryStock } from "@/hooks/useCountryStocks";
 import { MacroSnapshot } from "./MacroSnapshot";
+import { CountryHeaderStrip } from "./summary/CountryHeaderStrip";
+import { CurrencyCard } from "./summary/CurrencyCard";
+import { IndexCard } from "./summary/IndexCard";
 
 /** Unified shape for company display, normalized across data sources. */
 interface DisplayCompany {
@@ -144,14 +147,24 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
       {/* Country Header */}
       <div className="flex items-center gap-3">
         <Flag code={meta.name} size={48} />
-        <div>
+        <div className="min-w-0 flex-1">
           <h2 className="text-xl font-bold">{meta.name}</h2>
           {meta.indexName && <p className="text-sm text-muted-foreground">{meta.indexName}</p>}
         </div>
       </div>
 
+      {/* ── Status strip: market open/closed + local time + sovereign rating ─ */}
+      {/* Compact chip row.  Derives entirely from local data (exchangeData +
+          sovereignRatings) — no new network calls. */}
+      <CountryHeaderStrip iso2={iso2} />
+
       {/* ── EODHD Macro Snapshot ──────────────────────────────────────────── */}
       <MacroSnapshot iso2={iso2} />
+
+      {/* ── Currency card ──────────────────────────────────────────────────── */}
+      {/* Local currency vs USD with today's % move.  Reuses the cached
+          api-fx-rates response.  Suppressed for USD-denominated countries. */}
+      <CurrencyCard iso2={iso2} />
 
       {/* ── Major Indices (Yahoo Finance, live) ─────────────────────────── */}
       {(liveIndices.length > 0 || indicesLoading) && (
@@ -162,56 +175,55 @@ export default function CountrySummary({ iso2, stocks, isLoading }: CountrySumma
           {indicesLoading && liveIndices.length === 0 ? (
             <div className="space-y-2">
               {Array.from({ length: 2 }).map((_, i) => (
-                <div key={i} className="h-16 bg-muted/40 rounded-lg animate-pulse" />
+                <div key={i} className="h-24 bg-muted/40 rounded-lg animate-pulse" />
               ))}
             </div>
           ) : (
             <div className="space-y-2">
-              {liveIndices.map((idx) => {
-                const positive = (idx.changePercent ?? 0) >= 0;
-                const hasData = !idx.unavailable && idx.price !== null;
-                return (
-                  <div
-                    key={idx.symbol}
-                    className="bg-muted/40 rounded-lg p-3 flex justify-between items-center hover:bg-muted/55 transition-colors"
-                  >
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{idx.name}</p>
-                      <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                        {idx.symbol}
-                      </p>
-                    </div>
-                    {hasData ? (
-                      <div className="text-right shrink-0 ml-3">
-                        <p className="text-base font-bold font-mono">
-                          {idx.price!.toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </p>
-                        <p
-                          className={cn(
-                            "text-xs font-mono flex items-center justify-end gap-0.5",
-                            positive ? "text-success" : "text-danger"
-                          )}
-                        >
-                          {positive ? (
-                            <ArrowUpIcon className="h-3 w-3" />
-                          ) : (
-                            <ArrowDownIcon className="h-3 w-3" />
-                          )}
-                          {positive ? "+" : ""}
-                          {(idx.changePercent ?? 0).toFixed(2)}%
+              {/* First/primary index gets the rich card (sparkline + 52w + YTD).
+                  Secondary indices render in a compact row to avoid 5+ heavy
+                  HTTP calls per country selection. */}
+              {liveIndices.map((idx, i) => (
+                i === 0
+                  ? <IndexCard key={idx.symbol} index={idx} />
+                  : (
+                    <div
+                      key={idx.symbol}
+                      className="bg-muted/40 rounded-lg p-3 flex justify-between items-center hover:bg-muted/55 transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{idx.name}</p>
+                        <p className="text-xs text-muted-foreground font-mono mt-0.5">
+                          {idx.symbol}
                         </p>
                       </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground italic shrink-0 ml-3">
-                        unavailable
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+                      {!idx.unavailable && idx.price !== null ? (
+                        <div className="text-right shrink-0 ml-3">
+                          <p className="text-base font-bold font-mono">
+                            {idx.price.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </p>
+                          <p className={cn(
+                            "text-xs font-mono flex items-center justify-end gap-0.5",
+                            (idx.changePercent ?? 0) >= 0 ? "text-success" : "text-danger",
+                          )}>
+                            {(idx.changePercent ?? 0) >= 0
+                              ? <ArrowUpIcon className="h-3 w-3" />
+                              : <ArrowDownIcon className="h-3 w-3" />}
+                            {(idx.changePercent ?? 0) >= 0 ? '+' : ''}
+                            {(idx.changePercent ?? 0).toFixed(2)}%
+                          </p>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic shrink-0 ml-3">
+                          unavailable
+                        </span>
+                      )}
+                    </div>
+                  )
+              ))}
             </div>
           )}
         </div>
