@@ -1862,10 +1862,17 @@ export default function GlobeView({
   const liveFlightsRef  = useRef<Flight[] | undefined>(undefined);
   liveFlightsRef.current = liveFlights;
 
-  // ── City labels: shown only when zoomed in below altitude 1.2 ────────────
-  // Polling at 300ms is cheap — pointOfView() is a pure getter that reads
-  // the OrbitControls spherical position; no GPU work involved.
-  const [cityLabelsVisible, setCityLabelsVisible] = useState(false);
+  // ── City label visibility threshold (tiered by altitude) ────────────────
+  // Previously this was a single boolean (alt < 1.2 → show all, else hide
+  // all), which meant at the default zoom (~2.5) the user saw zero labels
+  // even though we have ~189 cities in the dataset.  Tiered behaviour gives
+  // a real map experience: the largest metros are always visible, smaller
+  // cities reveal progressively as the user zooms in.
+  //
+  // Value stored is a MINIMUM POPULATION (in thousands) — labels with
+  // pop >= threshold render.  Capital cities are always shown when their
+  // population exceeds the relaxed-capital threshold.
+  const [labelPopThreshold, setLabelPopThreshold] = useState<number>(8000);
 
   // Scale bar overlay state: width in screen pixels and the printable label.
   // Updated from the altitude poll using the camera's actual FOV + the
@@ -1895,7 +1902,17 @@ export default function GlobeView({
       const alt = (globe as any)?.pointOfView()?.altitude;
       if (alt == null || alt <= 0) return;
 
-      setCityLabelsVisible(alt < 1.2);
+      // Tiered city-label visibility — population threshold by altitude.
+      // Bands hand-picked to feel like a real map: at world view you see
+      // only mega-cities, by mid-zoom you see all major capitals, fully
+      // zoomed in you see everything in the dataset.
+      const popThreshold =
+        alt > 2.4 ? 10000 :   // World view: only mega-cities (10M+ metros)
+        alt > 1.8 ?  4000 :   //  Continental: major regional cities
+        alt > 1.2 ?  2000 :   //  Country zoom: most national capitals
+        alt > 0.7 ?   800 :   //  Region zoom: mid-size cities too
+                        0;    //  Close zoom: everything in the dataset
+      setLabelPopThreshold(popThreshold);
 
       // Flip the high-fidelity-assets gate when the user first zooms in.
       // Once true it stays true — the upgrades run once and the higher-
@@ -2590,6 +2607,23 @@ export default function GlobeView({
     onNaturalEventClick, onEconomicEventClick,
   ]);
 
+  // ── Visible city labels — filtered by altitude-driven population threshold ─
+  // Recomputes only when the threshold band changes (every few zoom steps),
+  // NOT on every poll tick.  Capitals get a relaxed threshold so the world
+  // capitals always appear at country-zoom and closer.
+  const visibleCities = useMemo<WorldCity[]>(() => {
+    if (!showCityLabels) return EMPTY_LABELS;
+    if (labelPopThreshold <= 0) return WORLD_CITIES;
+    // Capitals revealed when their pop crosses HALF the regular threshold —
+    // gives small-country capitals (e.g. Reykjavik, Ljubljana) earlier
+    // visibility than commercial cities of similar population.
+    const capitalThreshold = Math.max(0, labelPopThreshold / 2);
+    return WORLD_CITIES.filter(c =>
+      c.pop >= labelPopThreshold ||
+      (c.capital && c.pop >= capitalThreshold),
+    );
+  }, [showCityLabels, labelPopThreshold]);
+
   // ── Merged ring data: conflicts + earthquakes + naturals + economic events ─
   const mergedRings = useMemo<RingDatum[]>(() => {
     const out: RingDatum[] = [];
@@ -2731,13 +2765,23 @@ export default function GlobeView({
         objectThreeObject={makeEventMarker}
         onObjectClick={handleEventClick}
         // ── City label detail layer ──────────────────────────────────────
-        // Fades in automatically when the user zooms below altitude 1.2
-        // (roughly "country zoom level" and closer).  react-globe.gl renders
-        // labels as canvas-sprite billboards on the sphere surface — handles
-        // back-hemisphere culling, curvature projection, and perspective
-        // scaling internally.  Capital cities get a slightly larger font and
-        // dot so they stand out from trade/financial cities.
-        labelsData={showCityLabels && cityLabelsVisible ? WORLD_CITIES : EMPTY_LABELS}
+        // Tiered visibility by current altitude — see labelPopThreshold in
+        // the altitude poll.  At world view (alt > 2.4) only mega-cities
+        // (10M+ metros) show; mid-zoom reveals capitals + major regional
+        // cities; close zoom (alt < 0.7) shows the full ~189-city dataset.
+        // react-globe.gl renders labels as canvas-sprite billboards on the
+        // sphere surface — handles back-hemisphere culling, curvature
+        // projection, and perspective scaling internally.  Capital cities
+        // get a slightly larger font and dot so they stand out from
+        // trade/financial cities, AND get an earlier reveal (half the
+        // population threshold) so all national capitals appear at
+        // country-zoom regardless of their metro size.
+        //
+        // visibleCities is a memoised subset of WORLD_CITIES gated by
+        // labelPopThreshold (driven by current altitude band) — see the
+        // population-band table in the altitude poll.  At default world
+        // view only mega-cities show; as the user zooms in more reveal.
+        labelsData={visibleCities}
         labelLat={LABEL_LAT}
         labelLng={LABEL_LNG}
         labelText={LABEL_TEXT}
