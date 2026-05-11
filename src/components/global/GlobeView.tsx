@@ -1174,12 +1174,17 @@ export default function GlobeView({
     setSunTick((t) => t + 1);
     if (!dayNightCycle) return;
 
-    // Recurring refresh every 30 s (sun moves 15 °/hour = 0.125 °/30 s —
-    // well below the shader terminator's smooth band).
+    // Recurring refresh every 5 minutes.  Sun moves 15°/hour = 1.25°/5min,
+    // still well inside the shader terminator's smooth band so the visual
+    // jump is imperceptible.  Previous 30 s cadence triggered a polygon-cap
+    // recompute (setSunTick → getCapColor) 120× per hour for negligible
+    // visual gain — bumping to 5 min cuts that to 12×/hour while the
+    // shader's own uniform-only writes (in the 500 ms poll) keep the
+    // terminator visually smooth.
     const id = setInterval(() => {
       writeUniform(globeShaderRef.current);
       setSunTick((t) => t + 1);
-    }, 30_000);
+    }, 5 * 60_000);
     return () => clearInterval(id);
   }, [dayNightCycle]);
 
@@ -1710,7 +1715,16 @@ export default function GlobeView({
   // the scale bar, so the two displays are always coherent.
   const [zoom, setZoom] = useState<number>(3);
 
+  // Reusable Vector2 — hoisted out of the poll body so we don't allocate
+  // a fresh THREE.Vector2 every tick (was creating ~120 garbage objects
+  // per minute, putting needless pressure on the JS GC).
+  const pollSize = useRef(new THREE.Vector2()).current;
+
   useEffect(() => {
+    // Poll cadence: 500 ms.  Was 300 ms which produced 200 wake-ups/min
+    // of mostly-noop work even when the user wasn't interacting.  At
+    // 500 ms the scale-bar / zoom / shader-uniform updates still feel
+    // instant during a drag, but idle CPU usage drops ~40%.
     const id = setInterval(() => {
       const globe = globeRef.current;
       if (!globe) return;
@@ -1733,10 +1747,9 @@ export default function GlobeView({
         if (mat.linewidth !== lw) mat.linewidth = lw;
         // Keep resolution in sync with the canvas — handles window resizes
         // without needing a separate ResizeObserver.
-        const size = new THREE.Vector2();
-        globe.renderer().getSize(size);
-        if (mat.resolution.x !== size.x || mat.resolution.y !== size.y) {
-          mat.resolution.copy(size);
+        globe.renderer().getSize(pollSize);
+        if (mat.resolution.x !== pollSize.x || mat.resolution.y !== pollSize.y) {
+          mat.resolution.copy(pollSize);
         }
       }
 
@@ -1745,14 +1758,15 @@ export default function GlobeView({
       // then pick the largest nice round km value that fits in ~100 px.
       const camera = (globe as any).camera?.() as THREE.PerspectiveCamera | undefined;
       if (!camera) return;
-      const size = new THREE.Vector2();
-      globe.renderer().getSize(size);
+      // Reuse the hoisted pollSize Vector2 (already filled above for rivers,
+      // or filled here if rivers weren't active this tick).
+      globe.renderer().getSize(pollSize);
       // Globe radius is 100 world units in three-globe; camera-to-surface
       // distance is therefore 100 * altitude.  px-per-globe-unit at that
       // distance follows directly from the perspective formula.
       const cotHalfFov = 1 / Math.tan((camera.fov * Math.PI) / 360);
       const cameraToSurface = 100 * alt;
-      const pxPerGlobeUnit = (cotHalfFov * size.y) / 2 / cameraToSurface;
+      const pxPerGlobeUnit = (cotHalfFov * pollSize.y) / 2 / cameraToSurface;
       // Earth radius (6371 km) over globe radius (100) ⇒ 63.71 km per unit.
       const kmPerPx = 63.71 / pxPerGlobeUnit;
       const targetKm = 100 * kmPerPx; // we aim for ≈100-px-wide bar
@@ -1847,9 +1861,9 @@ export default function GlobeView({
       };
       writeDayNight(globeShaderRef.current);
       writeDayNight(cloudShaderRef.current);
-    }, 300);
+    }, 500);
     return () => clearInterval(id);
-  }, [dayNightCycle]);
+  }, [dayNightCycle, pollSize]);
 
   // Tooltip shown when the cursor is over a vessel or flight dot.
   // Uses position:fixed so it escapes the parent's overflow:hidden.

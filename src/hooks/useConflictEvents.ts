@@ -37,12 +37,22 @@ export interface ConflictEventsResponse {
 // Deno isolate, so the client only re-fetches when the server data is fresh.
 const STALE = 5 * 60_000; // 5 min — matches CONFLICTS_TTL in api-conflicts
 
-export function useConflictEvents() {
+/**
+ * @param enabled  Gate the network call.  When false (the layer is off
+ *                 or the Trade tab is hidden), no fetch fires and the
+ *                 5-minute background poller is disabled.  Defaults to
+ *                 true for any existing callers that haven't migrated.
+ */
+export function useConflictEvents(enabled: boolean = true) {
   return useQuery<ConflictEventsResponse>({
     queryKey:             ['conflict-events'],
+    enabled,
     staleTime:            STALE,
     gcTime:               STALE * 2,
-    refetchInterval:      STALE,
+    // Only auto-refresh while the consumer is actually using the data.
+    // Otherwise we'd burn an edge-function invocation every 5 min, per
+    // user, for the entire session.
+    refetchInterval:      enabled ? STALE : false,
     refetchOnWindowFocus: false,
     queryFn: async () => {
       const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID    as string)?.trim();

@@ -263,7 +263,7 @@ const Global = () => {
   // function or external API quotas in the background.
   const conflictEventsEnabled =
     tradeTabActive && tradeActiveLayers.has('conflictEvents');
-  const conflictEventsQuery = useConflictEvents();
+  const conflictEventsQuery = useConflictEvents(conflictEventsEnabled);
   const conflictEvents = conflictEventsEnabled
     ? conflictEventsQuery.data?.events
     : undefined;
