@@ -1003,40 +1003,75 @@ export default function GlobeView({
         // Prepend uniform / varying declarations, then inject the colour-boost
         // and day/night blocks right after <map_fragment> (which sets
         // diffuseColor from the diffuse texture).
+        // The saturation/contrast boost stays in <map_fragment> (pre-lighting)
+        // because it's intentionally a tweak to the texture's diffuse colour.
+        //
+        // The day/night darkening is moved to AFTER lighting (just before
+        // <colorspace_fragment> converts linear → sRGB) and AGAIN to be safe
+        // we also patch after the colorspace chunk if it exists.  Operating
+        // on the final lit colour bypasses three-globe's directional-light
+        // setup, which is positioned at the camera and would otherwise
+        // partially compensate for our darkening.  Multiplier 0.10 in
+        // linear-space output ⇒ ≈30 % screen brightness on night side, plus
+        // a deliberately bright warm glow at the terminator band.
+        let frag = shader.fragmentShader;
+
+        // ① Saturation/contrast tweak — keeps existing close-zoom behaviour.
+        frag = frag.replace(
+          '#include <map_fragment>',
+          `#include <map_fragment>
+          #ifdef USE_MAP
+            vec3 _c = diffuseColor.rgb;
+            float _lum = dot(_c, vec3(0.299, 0.587, 0.114));
+            _c = mix(vec3(_lum), _c, 1.0 + uSharpness * 0.55);
+            _c = (_c - 0.5) * (1.0 + uSharpness * 0.40) + 0.5;
+            diffuseColor.rgb = clamp(_c, 0.0, 1.0);
+          #endif
+          `,
+        );
+
+        // ② Day/night darkening — applied to the FINAL lit colour, so the
+        // directional / ambient lighting equation can't dilute it.  We try
+        // colorspace_fragment first (recent three.js), then encodings_fragment
+        // (older three.js), then fall back to opaque_fragment / tonemapping.
+        // Whichever chunk we match, we inject our block right AFTER it so
+        // gl_FragColor is already populated with the lit-and-tonemapped value.
+        const dayNightBlock = `
+          if (uDayNightOn > 0.5) {
+            vec3 _n = normalize(vGlobalPos);
+            float _sunDot = dot(_n, uSunDirection);
+            // Wider smoothstep band so the terminator is a soft gradient
+            // rather than a hard line, but the night hemisphere clearly
+            // tops out at the 0.10× multiplier (≈10 % linear / ≈30 % sRGB).
+            float _dayMix = smoothstep(-0.10, 0.18, _sunDot);
+            gl_FragColor.rgb *= mix(0.10, 1.0, _dayMix);
+            // Warm sunset glow at the terminator band — additive in linear
+            // space so it survives the subsequent sRGB conversion as visible
+            // colour, not as a washed-out tint.
+            float _term = 1.0 - smoothstep(0.0, 0.20, abs(_sunDot));
+            gl_FragColor.rgb += vec3(0.55, 0.22, 0.05) * _term * 0.60;
+            gl_FragColor.rgb = clamp(gl_FragColor.rgb, 0.0, 1.0);
+          }
+        `;
+        const anchors = [
+          '#include <colorspace_fragment>',
+          '#include <encodings_fragment>',
+          '#include <opaque_fragment>',
+          '#include <tonemapping_fragment>',
+        ];
+        for (const anchor of anchors) {
+          if (frag.indexOf(anchor) !== -1) {
+            frag = frag.replace(anchor, `${anchor}\n${dayNightBlock}`);
+            break;
+          }
+        }
+
         shader.fragmentShader =
           'uniform float uSharpness;\n' +
           'uniform float uDayNightOn;\n' +
           'uniform vec3  uSunDirection;\n' +
           'varying vec3  vGlobalPos;\n' +
-          shader.fragmentShader.replace(
-            '#include <map_fragment>',
-            `#include <map_fragment>
-            #ifdef USE_MAP
-              // Saturation / contrast boost (ramped at zoom ≥ 6.5)
-              vec3 _c = diffuseColor.rgb;
-              float _lum = dot(_c, vec3(0.299, 0.587, 0.114));
-              _c = mix(vec3(_lum), _c, 1.0 + uSharpness * 0.55);
-              _c = (_c - 0.5) * (1.0 + uSharpness * 0.40) + 0.5;
-              diffuseColor.rgb = clamp(_c, 0.0, 1.0);
-
-              // Real day/night cycle.  Compute the surface normal at this
-              // fragment (= normalised world position, since the globe is a
-              // unit sphere about origin in object space), dot with the sun
-              // direction.  Positive = facing the sun (day).  Negative =
-              // facing away (night) → darken.  smoothstep handles the
-              // terminator smoothly so there's no hard line.
-              if (uDayNightOn > 0.5) {
-                vec3 _n = normalize(vGlobalPos);
-                float _sunDot = dot(_n, uSunDirection);
-                float _dayMix = smoothstep(-0.08, 0.12, _sunDot);
-                diffuseColor.rgb *= mix(0.16, 1.0, _dayMix);
-                // Warm sunset glow at the terminator band
-                float _term = 1.0 - smoothstep(0.0, 0.18, abs(_sunDot));
-                diffuseColor.rgb += vec3(0.25, 0.10, 0.02) * _term * 0.55;
-              }
-            #endif
-            `,
-          );
+          frag;
         // Stash the compiled shader so the altitude poll can update uniforms.
         globeShaderRef.current = shader;
       };
@@ -1674,9 +1709,22 @@ export default function GlobeView({
           flightMat.size = size;
         }
       }
+
+      // ── Day/night uniforms — write every poll so they survive shader
+      //    recompiles (the 16K texture upgrade re-fires onBeforeCompile,
+      //    which resets the uniform table to its initial state).  At 300ms
+      //    cadence the sun moves 0.0042° between writes — well below the
+      //    terminator's smooth band — so this is also our regular refresh.
+      const dayShader = globeShaderRef.current;
+      if (dayShader?.uniforms?.uDayNightOn) {
+        dayShader.uniforms.uDayNightOn.value = dayNightCycle ? 1 : 0;
+        if (dayNightCycle) {
+          computeSunDirection(dayShader.uniforms.uSunDirection.value);
+        }
+      }
     }, 300);
     return () => clearInterval(id);
-  }, []);
+  }, [dayNightCycle]);
 
   // Tooltip shown when the cursor is over a vessel or flight dot.
   // Uses position:fixed so it escapes the parent's overflow:hidden.
