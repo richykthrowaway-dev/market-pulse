@@ -701,6 +701,29 @@ export default function GlobeView({
   // useEffect depends on this and bails when it's false.
   const [userZoomedIn, setUserZoomedIn] = useState(false);
 
+  // ── Staggered upgrade triggers ────────────────────────────────────────
+  // When `userZoomedIn` first flips true, all three deferred upgrades —
+  // 16K texture (~8 MB), 10m polygons (~24 MB + JSON.parse stall), HQ
+  // cloud texture (~5 MB) — would fire simultaneously.  Each one alone
+  // is tolerable, but together they cause a multi-second freeze as
+  // network, JSON.parse, and GPU uploads compete for the main thread.
+  //
+  // Fix: stagger.  Wait 600 ms for the zoom animation + OrbitControls
+  // damping to settle, then fire the texture upgrade (single GPU swap).
+  // Wait another 1.4 s, then fire the much-heavier 10m polygon upgrade
+  // (24 MB download + 100 ms JSON.parse + 200 ms polygon transition).
+  // By spacing them out, each gets the full main thread to itself and
+  // the user sees three small upgrades land smoothly rather than one
+  // big freeze.
+  const [texture16kReady, setTexture16kReady] = useState(false);
+  const [polygons10mReady, setPolygons10mReady] = useState(false);
+  useEffect(() => {
+    if (!userZoomedIn) return;
+    const t1 = setTimeout(() => setTexture16kReady(true),   600);
+    const t2 = setTimeout(() => setPolygons10mReady(true), 2000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [userZoomedIn]);
+
   const idleTimer = useRef<ReturnType<typeof setTimeout>>();
   // Hover ISO stored in a ref — changes do NOT trigger React re-renders.
   // Instead, we imperatively poke the globe to re-evaluate colors.
@@ -744,40 +767,16 @@ export default function GlobeView({
   // can hot-swap the texture once the user actually zooms in.
   const cloudsMeshRef = useRef<THREE.Mesh | null>(null);
 
-  // ── Deferred HQ cloud texture upgrade ────────────────────────────────────
-  // Lazy-loaded: only fires after the user has zoomed in past altitude 1.5.
-  // The 4K cloud texture is already plenty for the default world view; the
-  // HQ version (~5 MB extra download + 16 MB VRAM swap) only matters at
-  // close zoom.  At default zoom each cloud puff covers < 1 screen pixel,
-  // so the HQ resolution is invisible.
-  useEffect(() => {
-    if (!userZoomedIn) return;
-    const mesh = cloudsMeshRef.current;
-    if (!mesh) return;
-    let cancelled = false;
-    new THREE.TextureLoader().load(
-      CLOUDS_TEXTURE_HQ_URL,
-      (texHQ) => {
-        if (cancelled || !cloudsMeshRef.current) { texHQ.dispose(); return; }
-        const globe = globeRef.current;
-        if (!globe) { texHQ.dispose(); return; }
-        const renderer = globe.renderer();
-        texHQ.anisotropy      = renderer.capabilities.getMaxAnisotropy();
-        texHQ.minFilter       = THREE.LinearMipmapLinearFilter;
-        texHQ.magFilter       = THREE.LinearFilter;
-        texHQ.generateMipmaps = true;
-        texHQ.needsUpdate     = true;
-        const mat = cloudsMeshRef.current.material as THREE.MeshPhongMaterial;
-        const old = mat.map;
-        mat.map   = texHQ;
-        mat.needsUpdate = true;
-        old?.dispose();        // reclaim 4K VRAM
-      },
-      undefined,
-      () => console.warn('[GlobeView] HQ cloud texture failed — keeping 4K'),
-    );
-    return () => { cancelled = true; };
-  }, [userZoomedIn]);
+  // ── HQ cloud upgrade — REMOVED ────────────────────────────────────────
+  // Previously fired when userZoomedIn flipped, downloading ~5 MB and
+  // triggering a GPU texture swap.  Removed entirely because:
+  //   (a) At any zoom level cloud puffs cover < 1 screen pixel, so the
+  //       HQ resolution boost is essentially imperceptible.
+  //   (b) The swap was contributing to the zoom-in freeze stack along
+  //       with the 16K texture and 10m polygons.
+  // The 4K cloud texture (loaded in the cloud setup effect above) is
+  // kept as the final cloud asset.  cloudsMeshRef is still useful for
+  // future cloud-related effects but no upgrade is performed on it.
 
   // ── Progressive polygon upgrade: 50m → 10m ───────────────────────────────
   // Lazy-loaded: only fires after the user actually zooms in past
@@ -792,12 +791,12 @@ export default function GlobeView({
   // zoom doesn't show that overlap clearly anyway, so deferring is safe.
   useEffect(() => {
     if (!countries.length)     return;     // wait for 50m to land first
-    if (!userZoomedIn)         return;     // wait for zoom-in
+    if (!polygons10mReady)     return;     // wait for stagger delay
     if (geoJsonHighResLoaded)  return;     // already upgraded
     loadGeoJsonHighRes()
       .then(setCountries)
       .catch(() => { /* keep 50m — warning already logged in loader */ });
-  }, [countries.length, userZoomedIn]);
+  }, [countries.length, polygons10mReady]);
 
   // Setup auto-rotation + stop on interaction + resume after idle
   useEffect(() => {
@@ -1271,7 +1270,7 @@ export default function GlobeView({
   // superseded 8K texture is disposed to free ~8 MB of GPU VRAM.
   useEffect(() => {
     if (!countries.length) return;
-    if (!userZoomedIn) return;
+    if (!texture16kReady) return;
     let cancelled  = false;
     let retryId:    ReturnType<typeof setTimeout>;
     let pendingTex: THREE.Texture | null = null;
@@ -1319,7 +1318,7 @@ export default function GlobeView({
       clearTimeout(retryId);
       if (pendingTex && !applied) pendingTex.dispose();
     };
-  }, [countries.length, userZoomedIn]);
+  }, [countries.length, texture16kReady]);
 
   // ── Waterway layer (rivers + lake centerlines) ───────────────────────
   // Renders Natural Earth's 10 m rivers as a single Three.js LineSegments
@@ -2486,7 +2485,11 @@ export default function GlobeView({
         polygonStrokeColor={getStrokeColor}
         polygonAltitude={getAltitude}
         polygonLabel={getLabel}
-        polygonsTransitionDuration={200}
+        // 200 ms → 0 ms.  When the 50m → 10m polygon set swaps, react-globe.gl
+        // would animate a 200 ms transition that rebuilds geometry on every
+        // frame — visible as a hitch on the zoom-in upgrade.  Instant swap
+        // is barely perceptible vs the animation and much cheaper.
+        polygonsTransitionDuration={0}
         onPolygonClick={handleClick}
         onPolygonHover={handleHover}
         // ── Exchange HTML pin layer ──
