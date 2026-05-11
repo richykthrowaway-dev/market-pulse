@@ -225,6 +225,63 @@ function fmtShipType(code: number | undefined): string {
   return `Type ${code}`;
 }
 
+/** AIS NavigationalStatus code → label.  Codes 9-14 are reserved; 15 is filtered upstream. */
+const NAV_STATUS_LABEL: Record<number, string> = {
+  0:  'Under way',
+  1:  'At anchor',
+  2:  'Not under command',
+  3:  'Restricted maneuver',
+  4:  'Constrained by draught',
+  5:  'Moored',
+  6:  'Aground',
+  7:  'Fishing',
+  8:  'Sailing',
+};
+function fmtNavStatus(code: number | undefined): string | undefined {
+  if (code === undefined) return undefined;
+  return NAV_STATUS_LABEL[code] ?? `Status ${code}`;
+}
+
+/**
+ * Map AIS NavigationalStatus → vessel dot colour.
+ *   Under way (0) / unknown      → cyan   (default — most ships fall here)
+ *   Anchored (1)                 → blue
+ *   Moored   (5)                 → violet
+ *   Fishing  (7)                 → green
+ *   Sailing  (8)                 → teal
+ *   Constrained by draught (4)   → amber  (heavy laden vessels)
+ *   Not-under-command / restr-mvr / aground (2,3,6) → orange (distressed)
+ *
+ * Returned as a hex int for THREE.Color.setHex().
+ */
+function navStatusColorHex(navStatus: number | undefined): number {
+  switch (navStatus) {
+    case 1:  return 0x60a5fa; // anchored
+    case 5:  return 0x8b5cf6; // moored
+    case 7:  return 0x4ade80; // fishing
+    case 8:  return 0x14b8a6; // sailing
+    case 4:  return 0xfbbf24; // constrained by draught
+    case 2:
+    case 3:
+    case 6:  return 0xf97316; // distressed
+    case 0:
+    default: return 0x67e8f9; // under way / unknown — cyan baseline
+  }
+}
+
+/** Format an ISO ETA string to a compact "Jun 15, 18:30 UTC" form. */
+function fmtEta(iso: string | undefined): string | undefined {
+  if (!iso) return undefined;
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return undefined;
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const mm = months[d.getUTCMonth()];
+  const dd = d.getUTCDate();
+  const hh = String(d.getUTCHours()).padStart(2, '0');
+  const mn = String(d.getUTCMinutes()).padStart(2, '0');
+  return `${mm} ${dd}, ${hh}:${mn} UTC`;
+}
+
 // ── Unified ring layer — conflicts (orange/red) + earthquakes (teal) ────
 // react-globe.gl has a single `ringsData` slot, so we merge both event
 // types into a discriminated union and dispatch in each callback.
@@ -829,7 +886,13 @@ export default function GlobeView({
   useEffect(() => {
     if (!countries.length) return;
     const mat = new THREE.PointsMaterial({
-      color:           0x67e8f9, // sky-300
+      // White base — per-vertex `color` attribute on the geometry drives the
+      // actual hue per vessel (set by navStatus).  Without vertexColors, all
+      // dots would be tinted by this uniform; with vertexColors=true the
+      // shader multiplies vertex color × material color, so white means
+      // "pass the vertex color through unchanged."
+      color:           0xffffff,
+      vertexColors:    true,
       size:            3.5,      // screen px at default zoom (fixed baseline)
       sizeAttenuation: false,
       transparent:     true,
@@ -884,6 +947,11 @@ export default function GlobeView({
     // vessel dots and the land masses beneath them.
     const radius = globe.getGlobeRadius() * 1.0055;
     const positions = new Float32Array(liveVessels.length * 3);
+    // Tier 1: per-vertex colour from NavigationalStatus.  Float32 RGB, 3 floats per
+    // vertex.  Material has vertexColors:true, so the shader uses these values
+    // directly (multiplied by the white material colour ⇒ vertex color passthrough).
+    const colors    = new Float32Array(liveVessels.length * 3);
+    const tmpColor  = new THREE.Color();
 
     // Spherical (lat, lng) → Cartesian — MUST match globe.gl's internal
     // polar2Cartesian (node_modules/globe.gl/dist/globe.gl.js:63859),
@@ -902,10 +970,17 @@ export default function GlobeView({
       positions[i * 3]     = radius * sinPhi * Math.cos(theta);
       positions[i * 3 + 1] = radius * Math.cos(phi);
       positions[i * 3 + 2] = radius * sinPhi * Math.sin(theta);
+
+      // Per-vessel colour from nav status (THREE.Color.setHex normalises 0xRRGGBB → 0-1 floats)
+      tmpColor.setHex(navStatusColorHex(v.navStatus));
+      colors[i * 3]     = tmpColor.r;
+      colors[i * 3 + 1] = tmpColor.g;
+      colors[i * 3 + 2] = tmpColor.b;
     }
 
     const geometry = new THREE.BufferGeometry();
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('color',    new THREE.BufferAttribute(colors,    3));
 
     const points = new THREE.Points(geometry, vesselMatRef.current);
     points.renderOrder = 2;
@@ -1566,11 +1641,36 @@ export default function GlobeView({
                 <p className="text-cyan-300 font-semibold leading-tight mb-1.5">
                   {hoverTip.vessel.name?.trim() || `MMSI ${hoverTip.vessel.mmsi}`}
                 </p>
-                <div className="space-y-0.5 text-[10px] text-muted-foreground">
+                <div className="space-y-0.5 text-[10px] text-muted-foreground min-w-[200px]">
+                  {/* Identity ────────────────────────────────────────── */}
                   <div className="flex justify-between gap-3">
                     <span>MMSI</span>
                     <span className="text-foreground font-mono">{hoverTip.vessel.mmsi}</span>
                   </div>
+                  {hoverTip.vessel.imo != null && (
+                    <div className="flex justify-between gap-3">
+                      <span>IMO</span>
+                      <span className="text-foreground font-mono">{hoverTip.vessel.imo}</span>
+                    </div>
+                  )}
+                  {hoverTip.vessel.callSign && (
+                    <div className="flex justify-between gap-3">
+                      <span>Call sign</span>
+                      <span className="text-foreground font-mono">{hoverTip.vessel.callSign}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between gap-3">
+                    <span>Type</span>
+                    <span className="text-foreground">{fmtShipType(hoverTip.vessel.shipType)}</span>
+                  </div>
+                  {fmtNavStatus(hoverTip.vessel.navStatus) && (
+                    <div className="flex justify-between gap-3">
+                      <span>Status</span>
+                      <span className="text-foreground">{fmtNavStatus(hoverTip.vessel.navStatus)}</span>
+                    </div>
+                  )}
+
+                  {/* Motion ───────────────────────────────────────────── */}
                   {hoverTip.vessel.sog != null && (
                     <div className="flex justify-between gap-3">
                       <span>Speed</span>
@@ -1583,10 +1683,41 @@ export default function GlobeView({
                       <span className="text-foreground">{Math.round(hoverTip.vessel.cog)}°</span>
                     </div>
                   )}
-                  <div className="flex justify-between gap-3">
-                    <span>Type</span>
-                    <span className="text-foreground">{fmtShipType(hoverTip.vessel.shipType)}</span>
-                  </div>
+
+                  {/* Voyage ───────────────────────────────────────────── */}
+                  {hoverTip.vessel.destination && (
+                    <div className="flex justify-between gap-3 pt-1 border-t border-white/5 mt-1">
+                      <span>Destination</span>
+                      <span className="text-foreground uppercase truncate max-w-[120px]" title={hoverTip.vessel.destination}>
+                        {hoverTip.vessel.destination}
+                      </span>
+                    </div>
+                  )}
+                  {fmtEta(hoverTip.vessel.eta) && (
+                    <div className="flex justify-between gap-3">
+                      <span>ETA</span>
+                      <span className="text-foreground">{fmtEta(hoverTip.vessel.eta)}</span>
+                    </div>
+                  )}
+
+                  {/* Physical ─────────────────────────────────────────── */}
+                  {(hoverTip.vessel.length != null || hoverTip.vessel.width != null) && (
+                    <div className="flex justify-between gap-3 pt-1 border-t border-white/5 mt-1">
+                      <span>Dimensions</span>
+                      <span className="text-foreground">
+                        {hoverTip.vessel.length != null ? `${Math.round(hoverTip.vessel.length)}` : '—'}
+                        {' × '}
+                        {hoverTip.vessel.width  != null ? `${Math.round(hoverTip.vessel.width)}`  : '—'}
+                        {' m'}
+                      </span>
+                    </div>
+                  )}
+                  {hoverTip.vessel.draught != null && hoverTip.vessel.draught > 0 && (
+                    <div className="flex justify-between gap-3">
+                      <span>Draught</span>
+                      <span className="text-foreground">{hoverTip.vessel.draught.toFixed(1)} m</span>
+                    </div>
+                  )}
                 </div>
               </>
             ) : hoverTip.kind === 'flight' && hoverTip.flight ? (

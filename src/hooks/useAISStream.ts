@@ -46,6 +46,38 @@ export interface Vessel {
   heading?:  number;
   /** Wall-clock ms when we last received a position for this MMSI. */
   lastSeen:  number;
+
+  // ── Tier 1 enrichment (NavigationalStatus from PositionReport) ──────────
+  /**
+   * AIS Navigation Status code (0–15). Common values:
+   *   0  = Under way using engine
+   *   1  = At anchor
+   *   2  = Not under command
+   *   3  = Restricted maneuverability
+   *   4  = Constrained by her draught
+   *   5  = Moored
+   *   6  = Aground
+   *   7  = Engaged in fishing
+   *   8  = Under way sailing
+   *   15 = Default / undefined
+   */
+  navStatus?: number;
+
+  // ── Tier 2 enrichment (from ShipStaticData / StaticDataReport) ──────────
+  /** IMO number — permanent unique ship identifier. */
+  imo?:         number;
+  /** Radio call sign (e.g. "HVOM3"). */
+  callSign?:    string;
+  /** Captain-entered destination text — e.g. "ROTTERDAM", "FOR ORDERS". */
+  destination?: string;
+  /** ETA at destination — ISO string. AIS broadcasts month/day/hour/minute (no year). */
+  eta?:         string;
+  /** Ship length in meters (Dimension A + B). */
+  length?:      number;
+  /** Ship width in meters (Dimension C + D). */
+  width?:       number;
+  /** Maximum static draught in meters — how deep the ship sits. */
+  draught?:     number;
 }
 
 export type AISStatus =
@@ -72,8 +104,118 @@ const DISCONNECT_GRACE_MS = 300;            // wait before closing after last su
 const BACKOFF_BASE_MS    = 1_000;
 const BACKOFF_MAX_MS     = 30_000;
 
-// Both Class A (large commercial ships) and Class B (smaller coastal vessels).
-const SUBSCRIBED_MESSAGE_TYPES = ['PositionReport', 'StandardClassBPositionReport'] as const;
+// Position reports for both Class A (large commercial ships) and Class B
+// (smaller coastal vessels), PLUS the static-data variants that carry
+// destination / ETA / IMO / callsign / dimensions for ship enrichment.
+//
+// Static data is broadcast every ~6 minutes (much less often than position
+// reports, which fire every 2-30 seconds), so a freshly-seen vessel may not
+// have destination/IMO info immediately — it streams in over time.
+const SUBSCRIBED_MESSAGE_TYPES = [
+  'PositionReport',                // Class A position (mostly large vessels)
+  'StandardClassBPositionReport',  // Class B position (smaller vessels)
+  'ShipStaticData',                // Class A static — destination, ETA, IMO, dimensions
+  'StaticDataReport',              // Class B static (split across PartNumber 0 + 1)
+] as const;
+
+// ─── Static-data parsing helpers ──────────────────────────────────────────
+
+/**
+ * Subset of Vessel fields populated by ShipStaticData / StaticDataReport.
+ * Stored as a partial record so we can merge it into a Vessel later when
+ * a position report arrives for the same MMSI.
+ */
+type StaticData = Partial<Pick<Vessel,
+  'name' | 'shipType' | 'imo' | 'callSign' | 'destination' | 'eta' |
+  'length' | 'width' | 'draught'
+>>;
+
+/**
+ * AIS ETA broadcasts month/day/hour/minute but NO year — by convention
+ * it's interpreted as "the next occurrence." If the broadcast month has
+ * already passed in the current year, we roll forward to next year.
+ * Returns an ISO datetime string, or undefined if the values are sentinel
+ * "not set" markers (month=0, day=0, hour=24, minute=60).
+ */
+function parseAisEta(eta: { Month?: number; Day?: number; Hour?: number; Minute?: number } | undefined): string | undefined {
+  if (!eta) return undefined;
+  const { Month = 0, Day = 0, Hour = 24, Minute = 60 } = eta;
+  if (!Month || !Day || Month > 12 || Day > 31) return undefined;
+  const now    = new Date();
+  let   year   = now.getUTCFullYear();
+  if (Month < now.getUTCMonth() + 1) year += 1;
+  const hour   = Hour   >= 24 ? 0 : Hour;
+  const minute = Minute >= 60 ? 0 : Minute;
+  const d = new Date(Date.UTC(year, Month - 1, Day, hour, minute));
+  return isNaN(d.getTime()) ? undefined : d.toISOString();
+}
+
+/** Extract length/width from AIS Dimension A/B/C/D (each is a distance in metres). */
+function parseAisDimension(
+  dim: { A?: number; B?: number; C?: number; D?: number } | undefined,
+): { length?: number; width?: number } {
+  if (!dim) return {};
+  const A = dim.A ?? 0, B = dim.B ?? 0, C = dim.C ?? 0, D = dim.D ?? 0;
+  const length = A + B || undefined;
+  const width  = C + D || undefined;
+  return { length, width };
+}
+
+/** Parse a ShipStaticData (Class A) message body into a StaticData record. */
+function parseShipStaticData(body: any): StaticData {
+  const dim = parseAisDimension(body?.Dimension);
+  return {
+    name:        typeof body?.Name        === 'string' ? body.Name.trim()        : undefined,
+    callSign:    typeof body?.CallSign    === 'string' ? body.CallSign.trim()    : undefined,
+    destination: typeof body?.Destination === 'string' ? body.Destination.trim() : undefined,
+    imo:         typeof body?.ImoNumber   === 'number' ? body.ImoNumber
+               : typeof body?.Imo         === 'number' ? body.Imo
+               : undefined,
+    shipType:    typeof body?.Type        === 'number' ? body.Type
+               : typeof body?.ShipType    === 'number' ? body.ShipType
+               : undefined,
+    draught:     typeof body?.MaximumStaticDraught === 'number' ? body.MaximumStaticDraught : undefined,
+    eta:         parseAisEta(body?.Eta),
+    length:      dim.length,
+    width:       dim.width,
+  };
+}
+
+/**
+ * Parse a StaticDataReport (Class B) message body.  Class B static data is
+ * split into two parts: PartNumber 0 carries the name, PartNumber 1 carries
+ * shipType / CallSign / Dimension.  Each part returns its own slice.
+ */
+function parseStaticDataReport(body: any): StaticData {
+  const partNum = body?.PartNumber;
+  if (partNum === 0) {
+    return {
+      name: typeof body?.Name === 'string' ? body.Name.trim() : undefined,
+    };
+  }
+  if (partNum === 1) {
+    const dim = parseAisDimension(body?.Dimension);
+    return {
+      shipType:  typeof body?.ShipType === 'number' ? body.ShipType : undefined,
+      callSign:  typeof body?.CallSign === 'string' ? body.CallSign.trim() : undefined,
+      length:    dim.length,
+      width:     dim.width,
+    };
+  }
+  return {};
+}
+
+/** Drop undefined / empty values so a merge never overwrites real data with junk. */
+function compact<T extends Record<string, any>>(o: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const k in o) {
+    const v = o[k];
+    if (v !== undefined && v !== '' && !(typeof v === 'number' && isNaN(v))) {
+      (out as any)[k] = v;
+    }
+  }
+  return out;
+}
 
 // ─── Module-level singleton state ─────────────────────────────────────────────
 // Shared by all hook instances in the same JS module (same browser tab).
@@ -84,6 +226,10 @@ const singleton = (() => {
   let ws:              WebSocket | null = null;
   let status:          AISStatus = 'idle';
   let vesselMap:       Map<number, Vessel> = new Map();
+  // Orphan static data: arrives before we've seen a PositionReport for this
+  // MMSI. Kept here until a position report creates the vessel, at which
+  // point we merge and delete. Bounded growth — pruned alongside vessels.
+  let staticDataMap:   Map<number, StaticData> = new Map();
   let rawCount         = 0;
   let flushTimer:      ReturnType<typeof setInterval>  | undefined;
   let noDataTimer:     ReturnType<typeof setTimeout>   | undefined;
@@ -145,6 +291,13 @@ const singleton = (() => {
     for (const [mmsi, v] of vesselMap) {
       if (v.lastSeen < cutoff) vesselMap.delete(mmsi);
     }
+    // Safety cap on the orphan static-data map.  In practice this map stays
+    // small (most vessels broadcast position before static), but if a ship
+    // ever broadcasts static-only its entry would sit here forever.  Cap at
+    // 5 000 — well above realistic counts — and clear on overflow so the
+    // next static broadcast (every ~6 min) re-populates.
+    if (staticDataMap.size > 5_000) staticDataMap.clear();
+
     saveCache();
     notify();
   }
@@ -220,22 +373,56 @@ const singleton = (() => {
           return;
         }
 
-        const isClassA = msg.MessageType === 'PositionReport';
-        const isClassB = msg.MessageType === 'StandardClassBPositionReport';
+        // Dispatch by message type. Four kinds matter to us:
+        //   • PositionReport               — Class A position (lat/lng + course + speed + navStatus)
+        //   • StandardClassBPositionReport — Class B position (same core fields, no navStatus)
+        //   • ShipStaticData               — Class A static (destination, ETA, IMO, dims, draught)
+        //   • StaticDataReport             — Class B static (name + callSign + dims, split in 2 parts)
+        const meta    = msg.MetaData ?? msg.Metadata ?? {};
+        const msgType = msg.MessageType;
+
+        // ── Resolve MMSI (used by every branch) ──────────────────────────
+        const mmsiRaw =
+          meta.MMSI
+          ?? msg.Message?.PositionReport?.UserID
+          ?? msg.Message?.StandardClassBPositionReport?.UserID
+          ?? msg.Message?.ShipStaticData?.UserID
+          ?? msg.Message?.StaticDataReport?.UserID;
+        const mmsi = typeof mmsiRaw === 'number' ? mmsiRaw
+                   : typeof mmsiRaw === 'string' ? parseInt(mmsiRaw, 10)
+                   : NaN;
+        if (!mmsi || isNaN(mmsi)) return;
+
+        // ── Static-data branch (no position, just enrichment) ────────────
+        if (msgType === 'ShipStaticData' || msgType === 'StaticDataReport') {
+          const slice = msgType === 'ShipStaticData'
+            ? parseShipStaticData(msg.Message?.ShipStaticData)
+            : parseStaticDataReport(msg.Message?.StaticDataReport);
+          const clean = compact(slice);
+          if (Object.keys(clean).length === 0) return;
+
+          const existing = vesselMap.get(mmsi);
+          if (existing) {
+            // Vessel already on the map — merge enrichment in place.
+            vesselMap.set(mmsi, { ...existing, ...clean });
+          } else {
+            // No position yet — stash in the orphan map.  When a
+            // PositionReport for this MMSI arrives we'll merge it then.
+            const prior = staticDataMap.get(mmsi) ?? {};
+            staticDataMap.set(mmsi, { ...prior, ...clean });
+          }
+          return;
+        }
+
+        // ── Position-report branch ───────────────────────────────────────
+        const isClassA = msgType === 'PositionReport';
+        const isClassB = msgType === 'StandardClassBPositionReport';
         if (!isClassA && !isClassB) return;
 
-        // Real messages use MetaData (capital D); try both spellings defensively
-        const meta = msg.MetaData ?? msg.Metadata ?? {};
-        const pos  = isClassA
+        const pos = isClassA
           ? msg.Message?.PositionReport
           : msg.Message?.StandardClassBPositionReport;
         if (!pos) return;
-
-        const mmsiRaw = meta.MMSI ?? pos.UserID;
-        const mmsi    = typeof mmsiRaw === 'number' ? mmsiRaw
-                      : typeof mmsiRaw === 'string' ? parseInt(mmsiRaw, 10)
-                      : NaN;
-        if (!mmsi || isNaN(mmsi)) return;
 
         // Coordinates: MetaData uses lowercase keys in real messages
         const lat = typeof meta.latitude  === 'number' ? meta.latitude
@@ -246,7 +433,6 @@ const singleton = (() => {
                   : typeof meta.Longitude === 'number' ? meta.Longitude
                   : typeof pos.Longitude  === 'number' ? pos.Longitude
                   : null;
-
         if (lat === null || lng === null) return;
         // AIS sentinel: lat 91 / lng 181 = unavailable
         if (Math.abs(lat) > 90 || Math.abs(lng) > 180) return;
@@ -255,17 +441,42 @@ const singleton = (() => {
         const heading = typeof headingRaw === 'number' && headingRaw < 360
           ? headingRaw : undefined;
 
-        vesselMap.set(mmsi, {
-          mmsi,
+        // ── Tier 1: Navigation status (Class A only; Class B doesn't carry it) ──
+        // Codes:
+        //   0=Under way (engine), 1=Anchored, 2=Not under cmd, 3=Restricted mvr,
+        //   4=Constrained by draught, 5=Moored, 6=Aground, 7=Fishing, 8=Sailing,
+        //   15=Default/undefined.  Other values (9-14) are reserved.
+        const navRaw    = pos.NavigationalStatus;
+        const navStatus = typeof navRaw === 'number' && navRaw >= 0 && navRaw <= 15 && navRaw !== 15
+          ? navRaw : undefined;
+
+        // Drain any orphan static data we received before this position report.
+        const orphan = staticDataMap.get(mmsi);
+        if (orphan) staticDataMap.delete(mmsi);
+
+        const positionPart = compact({
           name:     typeof meta.ShipName  === 'string' ? meta.ShipName.trim() : undefined,
           shipType: typeof pos.ShipType   === 'number' ? pos.ShipType
                   : typeof meta.ShipType  === 'number' ? meta.ShipType : undefined,
-          lat, lng,
           cog:     typeof pos.Cog === 'number' ? pos.Cog : undefined,
           sog:     typeof pos.Sog === 'number' ? pos.Sog : undefined,
           heading,
-          lastSeen: Date.now(),
+          navStatus,
         });
+
+        // Merge order: existing vessel → orphan static → fresh position fields.
+        // Fresh position fields win over orphan static (e.g. shipType from
+        // a position report supersedes a stale orphan), but existing vessel
+        // values are kept when neither orphan nor position supply them.
+        const existing = vesselMap.get(mmsi);
+        vesselMap.set(mmsi, {
+          ...(existing ?? {}),
+          ...(orphan   ?? {}),
+          ...positionPart,
+          mmsi,
+          lat, lng,
+          lastSeen: Date.now(),
+        } as Vessel);
       } catch (err) {
         console.warn('[AISStream] failed to parse message:', err);
       }
@@ -311,6 +522,7 @@ const singleton = (() => {
       ws = null;
       saveCache();         // persist positions before clearing
       vesselMap.clear();
+      staticDataMap.clear();
       rawCount = 0;
       backoffDelay = BACKOFF_BASE_MS;
       setStatus('idle');
