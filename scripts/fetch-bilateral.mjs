@@ -164,19 +164,41 @@ ISO2_TO_M49.NO = '579';
 // Comtrade fetchers
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Module-level flag set when we detect the daily quota is exhausted.
+// Subsequent calls fast-fail rather than wasting wall time hitting 403s,
+// and we surface a clear message at the top of the script output.
+let quotaExhausted = false;
+
 async function comtradeFetch(url) {
+  if (quotaExhausted) return null;
   const ctrl = new AbortController();
   const tid  = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(withKey(url), { signal: ctrl.signal });
+
+    if (res.status === 403) {
+      // Daily call-volume quota exhausted (per-subscription cap, separate
+      // from rate-limit 429).  Replenishes on a 24h cycle; no point retrying.
+      const body = await res.text().catch(() => '');
+      console.error('\n══════════════════════════════════════════════════════════════');
+      console.error('  ⛔ Comtrade quota exhausted (HTTP 403)');
+      console.error('     ' + body.slice(0, 300));
+      console.error('     All subsequent calls will be skipped until next run.');
+      console.error('══════════════════════════════════════════════════════════════\n');
+      quotaExhausted = true;
+      return null;
+    }
+
     if (res.status === 429) {
-      // Rate-limited — back off 60 s and retry once
+      // Rate-limited (separate from quota) — back off 60 s and retry once.
       console.warn('  ⏸  429 rate-limited, sleeping 60 s and retrying');
       await sleep(60_000);
       const res2 = await fetch(withKey(url), { signal: ctrl.signal });
+      if (res2.status === 403) { quotaExhausted = true; return null; }
       if (!res2.ok) return null;
       return await res2.json();
     }
+
     if (!res.ok) return null;
     return await res.json();
   } catch (err) {
