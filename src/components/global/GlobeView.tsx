@@ -687,6 +687,20 @@ export default function GlobeView({
   // 40 %-opacity cloud cover would dilute the globe's darkening).
   const cloudShaderRef = useRef<{ uniforms: Record<string, { value: any }> } | null>(null);
   const [countries, setCountries] = useState<Feature[]>(geoJsonCache ?? []);
+
+  // ── Lazy high-fidelity asset gate ─────────────────────────────────────
+  // Three heavy progressive upgrades — 10m country polygons (~24 MB),
+  // 16K Earth texture (~8 MB), HQ cloud texture (~5 MB) — only matter
+  // when the user is actually zoomed in close enough to perceive them.
+  // For users who stay at the default world-view altitude (~2.5) they're
+  // 37 MB of wasted bandwidth + permanently heavier GPU rasterisation.
+  //
+  // This flag flips from false → true the first time the user zooms in
+  // past altitude 1.5 (roughly continent zoom).  Once true it stays
+  // true so we don't oscillate: the upgrade is one-way.  Each upgrade
+  // useEffect depends on this and bails when it's false.
+  const [userZoomedIn, setUserZoomedIn] = useState(false);
+
   const idleTimer = useRef<ReturnType<typeof setTimeout>>();
   // Hover ISO stored in a ref — changes do NOT trigger React re-renders.
   // Instead, we imperatively poke the globe to re-evaluate colors.
@@ -726,19 +740,24 @@ export default function GlobeView({
   const riversMatRef = useRef<LineMaterial | null>(null);
 
   // ── Progressive polygon upgrade: 50m → 10m ───────────────────────────────
-  // Same playbook as the 16K earth texture: after the 50m polygons are
-  // rendering, fetch the 10m Natural Earth file (~24 MB, jsDelivr CDN) in
-  // the background.  Once it arrives, swap the polygon set so port channels,
-  // estuaries, and inland waterways become accurately drawn — live AIS
-  // vessels stop visually overlapping land in places like Rotterdam,
-  // Antwerp, Amsterdam, Hamburg.  Failure is silent; we just stay on 50m.
+  // Lazy-loaded: only fires after the user actually zooms in past
+  // altitude 1.5 (signalled via userZoomedIn).  At the default world view
+  // the 50m dataset is plenty — switching to 10m would download ~24 MB
+  // and ~5× more polygon vertices to render forever after, all for detail
+  // the user can't see at that zoom level.  Once triggered, the upgrade
+  // is one-way and 10m stays loaded for the rest of the session.
+  //
+  // 10m matters most when the AIS layer is on (vessels visually overlap
+  // land in tight ports — Rotterdam, Antwerp, Hamburg).  AIS at default
+  // zoom doesn't show that overlap clearly anyway, so deferring is safe.
   useEffect(() => {
     if (!countries.length)     return;     // wait for 50m to land first
+    if (!userZoomedIn)         return;     // wait for zoom-in
     if (geoJsonHighResLoaded)  return;     // already upgraded
     loadGeoJsonHighRes()
       .then(setCountries)
       .catch(() => { /* keep 50m — warning already logged in loader */ });
-  }, [countries.length]);
+  }, [countries.length, userZoomedIn]);
 
   // Setup auto-rotation + stop on interaction + resume after idle
   useEffect(() => {
@@ -1200,17 +1219,19 @@ export default function GlobeView({
   }, [dayNightCycle, sunTick]);
 
   // ── Progressive 16K texture upgrade ──────────────────────────────────────
-  // The 8K diffuse map loads fast and gives a good initial look.  Once the
-  // globe is on screen we fetch the 16K version (~8 MB) in the background.
-  // When it arrives we apply the same anisotropic + trilinear filtering and
-  // swap material.map in one frame — no flicker.  The superseded 8K texture
-  // is disposed to free ~8 MB of GPU VRAM.
+  // Lazy-loaded: only fires after the user has zoomed in (userZoomedIn).
+  // At default world view the 8K texture is visually indistinguishable from
+  // 16K because each pixel covers many texels; the 16K upgrade is purely a
+  // close-zoom benefit and costs 8 MB of bandwidth + GPU VRAM upfront.
   //
-  // Retry loop: we need the 8K map to already be decoded (mat.map.image set)
-  // before swapping, otherwise three-globe might overwrite us.  Poll until
-  // both are ready, then perform the single swap.
+  // The 8K diffuse map loads fast and gives a good initial look.  Once the
+  // user zooms in past altitude 1.5 we fetch the 16K version (~8 MB) in the
+  // background.  When it arrives we apply the same anisotropic + trilinear
+  // filtering and swap material.map in one frame — no flicker.  The
+  // superseded 8K texture is disposed to free ~8 MB of GPU VRAM.
   useEffect(() => {
     if (!countries.length) return;
+    if (!userZoomedIn) return;
     let cancelled  = false;
     let retryId:    ReturnType<typeof setTimeout>;
     let pendingTex: THREE.Texture | null = null;
@@ -1258,7 +1279,7 @@ export default function GlobeView({
       clearTimeout(retryId);
       if (pendingTex && !applied) pendingTex.dispose();
     };
-  }, [countries.length]);
+  }, [countries.length, userZoomedIn]);
 
   // ── Waterway layer (rivers + lake centerlines) ───────────────────────
   // Renders Natural Earth's 10 m rivers as a single Three.js LineSegments
@@ -1732,6 +1753,13 @@ export default function GlobeView({
       if (alt == null || alt <= 0) return;
 
       setCityLabelsVisible(alt < 1.2);
+
+      // Flip the high-fidelity-assets gate when the user first zooms in.
+      // Once true it stays true — the upgrades run once and the higher-
+      // res assets are kept for the rest of the session.
+      if (alt < 1.5) {
+        setUserZoomedIn(prev => prev || true);
+      }
 
       // ── River line thickness (bucketed) ─────────────────────────────────
       // Stay at the default "thin" width until the user has zoomed in
