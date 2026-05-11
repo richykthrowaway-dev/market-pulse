@@ -2496,10 +2496,24 @@ export default function GlobeView({
   // react-globe.gl only does a transition when the data identity flips.
   const tradePointLat   = useCallback((d: object) => (d as TradeNode).lat, []);
   const tradePointLng   = useCallback((d: object) => (d as TradeNode).lng, []);
-  // 0.006 sits just above the polygon-cap altitude (0.005) so the marker
-  // is never z-occluded by the country polygon when it lands on a coast.
-  // The 0.1%-of-radius offset is visually imperceptible — still reads flat.
-  const tradePointAlt   = useCallback((_d: object) => 0.006, []);
+  // Altitude is dynamic per-point so the marker always sits ABOVE its
+  // country's polygon cap:
+  //   - Default polygon cap altitude:   0.005 → points use 0.006 (snug)
+  //   - SELECTED country polygon cap:   0.03  → points use 0.035 (clears it)
+  //
+  // Without the conditional, selecting a country (e.g. clicking the US)
+  // raised its polygon to 0.03 while the airports / ports / hubs inside it
+  // stayed at 0.006 — embedding them INSIDE the raised polygon mass.  Three.js
+  // raycasting then hits the polygon first and consumes hover/click events
+  // intended for the trade points underneath.  Lifting points in the
+  // selected country above 0.03 puts them back in front of the raycaster.
+  const tradePointAlt = useCallback(
+    (d: object) => {
+      const n = d as TradeNode;
+      return n.countryISO2 === selectedCountry ? 0.035 : 0.006;
+    },
+    [selectedCountry],
+  );
   const tradePointRadius = useCallback((d: object) => {
     const n = d as TradeNode;
     const isSelected = n.id === selectedTradeNodeId;
