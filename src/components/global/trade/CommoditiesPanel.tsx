@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { subDays, format, parseISO } from 'date-fns';
 import { useCommodityPrices, type CommodityPrice } from '@/hooks/useCommodityPrices';
+import { useCommodityIntraday, buildIntradayMap } from '@/hooks/useCommodityIntraday';
 import { useEodhdBarsForChart } from '@/hooks/useEodhdBarsForChart';
 import { useEodhdNews } from '@/hooks/useEodhdNews';
 import { useEodhdTechnicals } from '@/hooks/useEodhdTechnicals';
@@ -115,9 +116,18 @@ function CommodityPriceStrip({
   const { data, isLoading } = useCommodityPrices();
   const prices = data?.prices ?? [];
 
-  // Sparkline timeframe toggle — slices the 90-bar array client-side, no
-  // extra network traffic.  Default 1M matches the previous 30-bar view.
+  // Sparkline timeframe toggle.  Default 1M matches the previous view.
   const [sparkRange, setSparkRange] = useState<SparkRange>('1M');
+
+  // Intraday data — only fetched when the user switches to the 1D tab.
+  // `enabled` gates the network call so we don't burn 45 EODHD credits
+  // on every panel mount.
+  const { data: intradayData, isLoading: intradayLoading } =
+    useCommodityIntraday(sparkRange === '1D');
+  const intradayMap = useMemo(
+    () => buildIntradayMap(intradayData?.intraday ?? []),
+    [intradayData],
+  );
 
   return (
     <div className="px-4 py-3">
@@ -170,12 +180,14 @@ function CommodityPriceStrip({
             const dn       = p.changeP < 0;
             const selected = p.id === selectedId;
 
-            // Slice the trailing N bars for the selected sparkline timeframe.
-            // The full array is oldest→newest, so .slice(-N) gives the most
-            // recent N closes — exactly what we want.
-            const sparkValues = p.sparkline && p.sparkline.length >= 2
-              ? p.sparkline.slice(-SPARK_BARS[sparkRange])
-              : null;
+            // 1D → use hourly intraday closes (may still be loading on first select).
+            // All other ranges → slice the trailing N bars from the 252-bar EOD array.
+            const sparkValues: number[] | null =
+              sparkRange === '1D'
+                ? (intradayMap.get(p.id) ?? null)
+                : (p.sparkline && p.sparkline.length >= 2
+                    ? p.sparkline.slice(-SPARK_BARS[sparkRange])
+                    : null);
 
             return (
               <button
@@ -190,9 +202,15 @@ function CommodityPriceStrip({
                 )}
               >
                 {/* Sparkline as background — fills the right side of the tile.
-                    Sliced to the selected timeframe (1W/1M/3M).
+                    1D → hourly intraday bars (fetched lazily on first select).
+                    All others → EOD slice from the 252-bar array.
                     pointer-events-none so clicks pass through to the button. */}
-                {sparkValues && sparkValues.length >= 2 && (
+                {sparkRange === '1D' && intradayLoading ? (
+                  /* Subtle pulse placeholder while intraday loads */
+                  <div className="pointer-events-none absolute right-2 top-2 bottom-2 w-[55%] flex items-center justify-end opacity-30">
+                    <div className="w-full h-5 rounded bg-muted-foreground/20 animate-pulse" />
+                  </div>
+                ) : sparkValues && sparkValues.length >= 2 ? (
                   <div className="pointer-events-none absolute right-2 top-2 bottom-2 w-[55%] flex items-center justify-end">
                     <Sparkline
                       values={sparkValues}
@@ -201,11 +219,16 @@ function CommodityPriceStrip({
                       color={up ? '#34d399' : dn ? '#f87171' : '#94a3b8'}
                       showFill
                       showLastDot
-                      label={`${p.label} · ${sparkRange}`}
+                      label={`${p.label} · ${sparkRange}${sparkRange === '1D' ? ' · hourly' : ''}`}
                       className="opacity-70 group-hover:opacity-90 transition-opacity"
                     />
                   </div>
-                )}
+                ) : sparkRange === '1D' ? (
+                  /* Markets closed / no intraday data available */
+                  <div className="pointer-events-none absolute right-2 top-2 bottom-2 w-[55%] flex items-center justify-end pr-1">
+                    <span className="text-[8px] text-muted-foreground/40 italic">mkt closed</span>
+                  </div>
+                ) : null}
 
                 {/* Foreground stack — text content sits on top of the sparkline */}
                 <div className="relative z-10">
