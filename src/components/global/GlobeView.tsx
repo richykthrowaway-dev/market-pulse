@@ -13,6 +13,7 @@ import type { EarthquakeEvent } from "@/hooks/useEarthquakes";
 import type { Flight } from "@/hooks/useOpenSkyFlights";
 import type { EconomicEvent } from "@/hooks/useEconomicEvents";
 import type { MacroCountry } from "@/hooks/useMacroHeatmap";
+import { WORLD_CITIES, type WorldCity } from "@/data/worldCities";
 
 // ── Earth textures (NASA Blue Marble + topology + clouds) ──────────────
 //
@@ -229,6 +230,19 @@ const RING_LNG = (d: object) => (d as RingDatum).lng;
 // country 0.03) — kept at 0.05 so they're never occluded by country fills.
 const RING_ALT = () => 0.05;
 const EMPTY_RINGS: RingDatum[] = [];
+
+// ── City label layer (zoomed-in detail) ─────────────────────────────────
+// All accessors are module-level so their identity is stable across renders —
+// react-globe.gl only rebuilds its canvas sprite atlas when data *content*
+// changes, not on every React re-render.
+const EMPTY_LABELS: WorldCity[] = [];
+const LABEL_LAT        = (d: object) => (d as WorldCity).lat;
+const LABEL_LNG        = (d: object) => (d as WorldCity).lng;
+const LABEL_TEXT       = (d: object) => (d as WorldCity).name;
+const LABEL_COLOR      = () => 'rgba(255,255,255,0.85)';
+const LABEL_SIZE       = (d: object) => (d as WorldCity).capital ? 0.50 : 0.35;
+const LABEL_DOT_RADIUS = (d: object) => (d as WorldCity).capital ? 0.28 : 0.18;
+const LABEL_DOT_ORIENT = () => 'bottom' as const;
 
 /** Color callback — orange/red for conflicts, teal for earthquakes, blue for economic events. */
 function ringColor(d: object) {
@@ -825,6 +839,20 @@ export default function GlobeView({
   const liveFlightsRef  = useRef<Flight[] | undefined>(undefined);
   liveFlightsRef.current = liveFlights;
 
+  // ── City labels: shown only when zoomed in below altitude 1.2 ────────────
+  // Polling at 300ms is cheap — pointOfView() is a pure getter that reads
+  // the OrbitControls spherical position; no GPU work involved.
+  const [cityLabelsVisible, setCityLabelsVisible] = useState(false);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      const alt = (globeRef.current as any)?.pointOfView()?.altitude;
+      if (alt == null) return;
+      setCityLabelsVisible(alt < 1.2);
+    }, 300);
+    return () => clearInterval(id);
+  }, []);
+
   // Tooltip shown when the cursor is over a vessel or flight dot.
   // Uses position:fixed so it escapes the parent's overflow:hidden.
   const [hoverTip, setHoverTip] = useState<{
@@ -1408,6 +1436,23 @@ export default function GlobeView({
             onEconomicEventClick(rd.event as EconomicEvent);
           }
         }}
+        // ── City label detail layer ──────────────────────────────────────
+        // Fades in automatically when the user zooms below altitude 1.2
+        // (roughly "country zoom level" and closer).  react-globe.gl renders
+        // labels as canvas-sprite billboards on the sphere surface — handles
+        // back-hemisphere culling, curvature projection, and perspective
+        // scaling internally.  Capital cities get a slightly larger font and
+        // dot so they stand out from trade/financial cities.
+        labelsData={cityLabelsVisible ? WORLD_CITIES : EMPTY_LABELS}
+        labelLat={LABEL_LAT}
+        labelLng={LABEL_LNG}
+        labelText={LABEL_TEXT}
+        labelColor={LABEL_COLOR}
+        labelSize={LABEL_SIZE}
+        labelAltitude={0.01}
+        labelResolution={2}
+        labelDotRadius={LABEL_DOT_RADIUS}
+        labelDotOrientation={LABEL_DOT_ORIENT}
       />
 
       {/* ── Vessel / flight hover tooltip ────────────────────────────────── */}
