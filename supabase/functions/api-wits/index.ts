@@ -621,6 +621,105 @@ for (const [m49, info] of Object.entries(M49_TO_INFO)) {
   if (info.iso2) ISO2_TO_M49[info.iso2] = m49;
 }
 
+// ── ISO3 → { ISO2, name } derived lookup ─────────────────────────────────
+// WITS returns partner identifiers as lowercase ISO3 codes; we convert to
+// ISO2 + display name for the client.  Built from ISO3_TO_M49 (key) and
+// M49_TO_INFO (value) so the two maps don't drift apart.
+const ISO3_TO_INFO: Record<string, { iso2: string; name: string }> = {};
+for (const [iso3, m49] of Object.entries(ISO3_TO_M49)) {
+  const info = M49_TO_INFO[m49];
+  if (info) ISO3_TO_INFO[iso3] = info;
+}
+
+/**
+ * Fetch TOP TRADING PARTNERS via World Bank WITS — a coverage-rich
+ * fallback for when UN Comtrade's preview tier rate-limits us or simply
+ * has no data for the reporter.
+ *
+ * WITS publishes per-partner indicators that already give us the share
+ * directly (no need to compute totals client-side):
+ *   - XPRT-PRTNR-SHR — Partner share of total exports
+ *   - MPRT-PRTNR-SHR — Partner share of total imports
+ *
+ * WITS partner codes are lowercase ISO3 (e.g. "usa", "deu", "chn") plus
+ * some aggregate codes ("wld" = world total, "ots" = others not elsewhere
+ * specified, "spe" = special category).  We drop aggregates and convert
+ * the rest to ISO2 + display name via ISO3_TO_INFO.
+ *
+ * Since the indicator already encodes share as a percentage value, the
+ * `valueUsd` field is unavailable — we set it to 0 and the client uses
+ * `share` for ranking.  The downstream UI (PartnerRow) only reads `share`,
+ * so this is transparent.
+ */
+async function fetchWitsPartners(
+  reporter: string, // ISO3 uppercase
+  year: number,
+  direction: "exports" | "imports",
+): Promise<ProductRow[] | null> {
+  const indicator = direction === "exports" ? "XPRT-PRTNR-SHR" : "MPRT-PRTNR-SHR";
+  const url =
+    `${WITS_BASE}/reporter/${encodeURIComponent(reporter.toLowerCase())}` +
+    `/year/${year}` +
+    `/partner/all` +
+    `/product/Total` +
+    `/indicator/${indicator}` +
+    `?format=JSON`;
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(url, { signal: AbortSignal.timeout(12_000) });
+  } catch {
+    return null;
+  }
+  if (!upstream.ok) return null;
+
+  let json: any;
+  try { json = await upstream.json(); } catch { return null; }
+
+  const seriesDims: SdmxDimension[] = json?.structure?.dimensions?.series ?? [];
+  if (seriesDims.length === 0) return null;
+
+  // PARTNER is the dimension we iterate over; PRODUCTCODE is locked to Total.
+  const partnerDimIdx = seriesDims.findIndex(d => d.id === "PARTNER");
+  if (partnerDimIdx === -1) return null;
+  const partners = seriesDims[partnerDimIdx].values;
+
+  const series = json?.dataSets?.[0]?.series ?? {};
+  const rows: ProductRow[] = [];
+
+  for (const [seriesKey, seriesVal] of Object.entries(series) as Array<[string, any]>) {
+    const indices    = seriesKey.split(":").map(s => parseInt(s, 10));
+    const partnerIdx = indices[partnerDimIdx];
+    const partner    = partners[partnerIdx];
+    if (!partner) continue;
+
+    const code3 = partner.id.toLowerCase();
+    // Drop WITS aggregate codes — "wld" world total, "ots" others n.e.s.,
+    // "spe" special category, "all" all countries placeholder.
+    if (code3 === "wld" || code3 === "ots" || code3 === "spe" || code3 === "all") continue;
+
+    const info = ISO3_TO_INFO[code3.toUpperCase()];
+    if (!info) continue; // unknown / non-country code
+
+    // Observation: { "0": [value, status] } — value is partner share (%, 0-100).
+    const value = seriesVal?.observations?.["0"]?.[0];
+    if (typeof value !== "number" || value <= 0) continue;
+
+    rows.push({
+      code:     info.iso2,
+      name:     info.name,
+      // No absolute USD available from share indicator; downstream UI only
+      // reads `share`, so 0 is harmless.
+      valueUsd: 0,
+      share:    value / 100, // convert percent → fraction to match Comtrade path
+    });
+  }
+
+  if (rows.length === 0) return null;
+  rows.sort((a, b) => b.share - a.share);
+  return rows.slice(0, 20);
+}
+
 /**
  * Fetch a TRUE BILATERAL product breakdown — exactly what `reporter`
  * traded with `partner` in `direction`, broken down by HS Chapter (2-digit).
@@ -725,10 +824,15 @@ serve(async (req) => {
 
   // Year fallback chain: WITS publishes annually with a 1-2 year lag. If a
   // specific year was requested, try only that year. Otherwise walk back
-  // from 3 years ago until we find data — country coverage isn't uniform.
+  // from 2 years ago until we find data — country coverage isn't uniform.
+  // Widened from 3 → 5 attempts (currentYear-2 through -6) because smaller
+  // reporters often skip a year or two; bumping the range covers them
+  // without meaningfully increasing latency in the common case (cache hits
+  // on the first successful year).
+  const currentYear = new Date().getFullYear();
   const yearsToTry = explicitYear
     ? [parseInt(explicitYear, 10)]
-    : [new Date().getFullYear() - 3, new Date().getFullYear() - 4, new Date().getFullYear() - 5];
+    : [currentYear - 2, currentYear - 3, currentYear - 4, currentYear - 5, currentYear - 6];
 
   // Bilateral mode takes an extra `partner` ISO2 query param and has a
   // different fetcher signature, so it's dispatched separately.
@@ -751,9 +855,36 @@ serve(async (req) => {
     return json({ reporter, partner, direction, level, products: [] });
   }
 
+  // ── Partners path: try Comtrade first, then WITS as a fallback ──────────
+  // Comtrade's preview tier is rate-limited and has spotty coverage for
+  // many small/mid reporters.  When Comtrade comes back empty for every
+  // candidate year, we fall back to WITS's partner-share indicator which
+  // has much broader country coverage (it's published by World Bank from
+  // multiple underlying sources, not just Comtrade).
+  if (level === "partners") {
+    // Pass 1: Comtrade across the year range
+    for (const year of yearsToTry) {
+      if (!Number.isFinite(year)) continue;
+      const products = await fetchComtradePartners(reporter, year, direction);
+      if (products && products.length > 0) {
+        const totalUsd = products.reduce((s, r) => s + r.valueUsd, 0);
+        return json({ reporter, direction, level, year, totalUsd, products, source: "comtrade" });
+      }
+    }
+    // Pass 2: WITS partner-share indicator (different source — wider coverage)
+    for (const year of yearsToTry) {
+      if (!Number.isFinite(year)) continue;
+      const products = await fetchWitsPartners(reporter, year, direction);
+      if (products && products.length > 0) {
+        // valueUsd is unavailable on the WITS share indicator; totalUsd ≈ 0.
+        return json({ reporter, direction, level, year, totalUsd: 0, products, source: "wits" });
+      }
+    }
+    return json({ reporter, direction, level, products: [] });
+  }
+
   const fetcher =
     level === "chapter"  ? fetchComtradeChapters :
-    level === "partners" ? fetchComtradePartners :
     level === "trend"    ? fetchComtradeTrend :
     fetchAndParse;
 
