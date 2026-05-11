@@ -14,6 +14,13 @@ export interface MacroSnapshot {
   inflation:    { value: number | null; date: string | null };
   unemployment: { value: number | null; date: string | null };
   interestRate: { value: number | null; date: string | null };
+  /** Full historical series per indicator (oldest → newest). */
+  history: {
+    gdpGrowth:    MacroDataPoint[];
+    inflation:    MacroDataPoint[];
+    unemployment: MacroDataPoint[];
+    interestRate: MacroDataPoint[];
+  };
 }
 
 /**
@@ -33,12 +40,18 @@ const ISO2_TO_ISO3: Record<string, string> = {
   AE: 'ARE', KW: 'KWT', BH: 'BHR', OM: 'OMN', JO: 'JOR',
 };
 
-async function fetchIndicator(
+/**
+ * Fetch the FULL series for a macro indicator (oldest → newest).  EODHD
+ * returns chronological order natively; we keep it that way for chart
+ * consumers.  Returns [] on any error so the caller doesn't have to
+ * null-check the array.
+ */
+async function fetchIndicatorSeries(
   projectId: string,
   anonKey: string,
   iso3: string,
   indicator: string,
-): Promise<MacroDataPoint | null> {
+): Promise<MacroDataPoint[]> {
   try {
     const params = new URLSearchParams({
       endpoint: 'macro-indicator',
@@ -49,14 +62,18 @@ async function fetchIndicator(
       `https://${projectId}.supabase.co/functions/v1/api-eodhd?${params}`,
       { headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` } },
     );
-    if (!res.ok) return null;
+    if (!res.ok) return [];
     const data: MacroDataPoint[] = await res.json();
-    if (!Array.isArray(data) || data.length === 0) return null;
-    // Most recent value is the last element (EODHD returns oldest→newest)
-    return data[data.length - 1];
+    if (!Array.isArray(data)) return [];
+    return data;
   } catch {
-    return null;
+    return [];
   }
+}
+
+/** Convenience: last data point from a series, or null if empty. */
+function lastOf(series: MacroDataPoint[]): MacroDataPoint | null {
+  return series.length > 0 ? series[series.length - 1] : null;
 }
 
 /**
@@ -79,19 +96,33 @@ export function useEodhdMacro(iso2: string | null) {
       const projectId = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string).trim();
       const anonKey   = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string).trim();
 
-      // Fetch all 4 indicators in parallel — 4 × 1 credit = 4 credits per country
-      const [gdp, cpi, unemp, rate] = await Promise.all([
-        fetchIndicator(projectId, anonKey, iso3!, 'gdp_growth_rate'),
-        fetchIndicator(projectId, anonKey, iso3!, 'inflation_consumer_prices_annual'),
-        fetchIndicator(projectId, anonKey, iso3!, 'unemployment_total_percent'),
-        fetchIndicator(projectId, anonKey, iso3!, 'real_interest_rate'),
+      // Fetch all 4 indicator series in parallel — 4 × 1 credit = 4 credits per country.
+      // We now return the FULL history so chart consumers can use it without
+      // an additional round trip.  The MacroSnapshot summary fields are
+      // derived from the last element of each series.
+      const [gdpSeries, cpiSeries, unempSeries, rateSeries] = await Promise.all([
+        fetchIndicatorSeries(projectId, anonKey, iso3!, 'gdp_growth_rate'),
+        fetchIndicatorSeries(projectId, anonKey, iso3!, 'inflation_consumer_prices_annual'),
+        fetchIndicatorSeries(projectId, anonKey, iso3!, 'unemployment_total_percent'),
+        fetchIndicatorSeries(projectId, anonKey, iso3!, 'real_interest_rate'),
       ]);
+
+      const gdp   = lastOf(gdpSeries);
+      const cpi   = lastOf(cpiSeries);
+      const unemp = lastOf(unempSeries);
+      const rate  = lastOf(rateSeries);
 
       return {
         gdpGrowth:    { value: gdp?.Value   ?? null, date: gdp?.Date   ?? null },
         inflation:    { value: cpi?.Value   ?? null, date: cpi?.Date   ?? null },
         unemployment: { value: unemp?.Value ?? null, date: unemp?.Date ?? null },
         interestRate: { value: rate?.Value  ?? null, date: rate?.Date  ?? null },
+        history: {
+          gdpGrowth:    gdpSeries,
+          inflation:    cpiSeries,
+          unemployment: unempSeries,
+          interestRate: rateSeries,
+        },
       };
     },
   });

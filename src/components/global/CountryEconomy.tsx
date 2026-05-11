@@ -1,11 +1,37 @@
 import { useState } from 'react';
-import { Calendar, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import {
+  Calendar, ChevronLeft, ChevronRight, AlertCircle,
+  LayoutGrid, TrendingUp, Landmark, BarChart3,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useEodhdEconomicEvents, type EodhdEconomicEvent } from '@/hooks/useEodhdEconomicEvents';
 import { TradingViewEconomicCalendar } from '@/components/tradingview/TradingViewEconomicCalendar';
 import { TradeSnapshot } from './TradeSnapshot';
 import { TradeBreakdown } from './TradeBreakdown';
 import { TradePartners } from './TradePartners';
+import { MacroTrendChart } from './economy/MacroTrendChart';
+import { FiscalHealthCard } from './economy/FiscalHealthCard';
+import { SovereignRatingBadges } from './economy/SovereignRatingBadges';
+import { ComparisonScorecard } from './economy/ComparisonScorecard';
+
+// ── View toggle ──────────────────────────────────────────────────────────────
+// The Economy tab is split into four focused lenses (same pattern as the
+// Commodities and Trade tabs).  Each view mounts independently so its
+// network calls only fire when the user navigates into it.
+type EconomyView = 'overview' | 'trends' | 'fiscal' | 'compare';
+
+interface ViewOption {
+  key:   EconomyView;
+  label: string;
+  icon:  React.ComponentType<{ className?: string }>;
+}
+
+const VIEWS: ViewOption[] = [
+  { key: 'overview', label: 'Overview',     icon: LayoutGrid  },
+  { key: 'trends',   label: 'Macro Trends', icon: TrendingUp  },
+  { key: 'fiscal',   label: 'Fiscal Health',icon: Landmark    },
+  { key: 'compare',  label: 'Compare',      icon: BarChart3   },
+];
 
 const PAGE_SIZE = 20;
 
@@ -196,6 +222,7 @@ function TodayDivider() {
 
 export default function CountryEconomy({ iso2 }: CountryEconomyProps) {
   const [page, setPage] = useState(0);
+  const [view, setView] = useState<EconomyView>('overview');
   const { data: events = [], isLoading, isError } = useEodhdEconomicEvents(iso2);
 
   // Split into past (have actuals) and upcoming (no actuals), sorted by date asc
@@ -214,6 +241,45 @@ export default function CountryEconomy({ iso2 }: CountryEconomyProps) {
 
   return (
     <div className="space-y-4 pt-1">
+      {/* ── View toggle ───────────────────────────────────────────────── */}
+      <div className="flex flex-wrap gap-1 px-1">
+        {VIEWS.map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => setView(key)}
+            className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-[11px] font-medium transition-colors',
+              view === key
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'border-border text-muted-foreground hover:text-foreground hover:border-primary/40',
+            )}
+          >
+            <Icon className="w-3 h-3" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Macro Trends view ─────────────────────────────────────────── */}
+      {view === 'trends' && (
+        <MacroTrendChart iso2={iso2} />
+      )}
+
+      {/* ── Fiscal Health view ────────────────────────────────────────── */}
+      {view === 'fiscal' && (
+        <>
+          <FiscalHealthCard iso2={iso2} />
+          <SovereignRatingBadges iso2={iso2} />
+        </>
+      )}
+
+      {/* ── Compare view ──────────────────────────────────────────────── */}
+      {view === 'compare' && (
+        <ComparisonScorecard iso2={iso2} />
+      )}
+
+      {/* ── Overview view (existing content) ──────────────────────────── */}
+      {view === 'overview' && (<>
       {/* ── Section 0: Trade & external-sector snapshot ── */}
       <TradeSnapshot iso2={iso2} />
 
@@ -338,6 +404,7 @@ export default function CountryEconomy({ iso2 }: CountryEconomyProps) {
         height={400}
         className="rounded-lg overflow-hidden"
       />
+      </>)}
     </div>
   );
 }
