@@ -60,20 +60,24 @@ export const AIR_ROUTES: TradeRoute[] = [
     startLat: 22.308, startLng: 113.919,
     endLat:   50.038, endLng:     8.562,
     importance: 90,
-    // Post-2022: rerouted SOUTH of Russia via Central Asia + Turkey.
-    // Pre-2022 Siberian great circle is unavailable to Lufthansa Cargo /
-    // Cathay / Air France-KLM Cargo / etc.
-    description: 'Asia–Europe airfreight artery; perishables, pharma, e-commerce. Post-2022 Southern routing via Central Asia + Caucasus.',
+    // Post-2022 routing via Hexi Corridor + Central Asia.  Pre-2022
+    // Siberian great circle is unavailable to Western carriers.  Real
+    // tracks (Cathay Cargo, Lufthansa Cargo) avoid the Tibetan plateau
+    // interior — oxygen / decompression-escape constraints push the
+    // path further north through the Gansu corridor.
+    description: 'Asia–Europe airfreight artery; perishables, pharma, e-commerce. Post-2022 routing via Hexi Corridor + Central Asia + Caucasus + Turkey.',
     tags: ['cargo'],
     waypoints: [
-      { lat: 30, lng: 105 },   // SW China
-      { lat: 36, lng:  95 },   // Tibet/Qinghai border
-      { lat: 40, lng:  82 },   // Western China / Tian Shan
-      { lat: 43, lng:  70 },   // Kazakhstan (Almaty area)
-      { lat: 41, lng:  55 },   // Caspian Sea south
+      { lat: 28, lng: 110 },   // Over Hunan / Guangxi
+      { lat: 34, lng: 105 },   // Over Shaanxi (Xi'an area)
+      { lat: 38, lng:  98 },   // Hexi corridor (Jiayuguan-Lanzhou axis)
+      { lat: 41, lng:  88 },   // Northern Xinjiang
+      { lat: 43, lng:  76 },   // Almaty / Bishkek — Tian Shan north
+      { lat: 42, lng:  62 },   // Uzbekistan
+      { lat: 40, lng:  52 },   // Caspian Sea
       { lat: 40, lng:  44 },   // Caucasus / Armenia-Azerbaijan
       { lat: 41, lng:  32 },   // Turkey north (Black Sea approach)
-      { lat: 44, lng:  25 },   // Romania / Balkans
+      { lat: 44, lng:  25 },   // Romania
       { lat: 47, lng:  17 },   // Hungary / Austria approach
     ],
   },
@@ -84,18 +88,19 @@ export const AIR_ROUTES: TradeRoute[] = [
     startLat: 31.144, startLng: 121.808,
     endLat:   50.038, endLng:     8.562,
     importance: 85,
-    description: 'Shanghai cargo trunk to Europe. Post-2022 Southern routing — Russian airspace closed.',
+    description: 'Shanghai cargo trunk to Europe. Post-2022 routing via Central Asia, Caspian and Turkey — Russian airspace closed to Western carriers.',
     tags: ['cargo'],
     waypoints: [
-      { lat: 36, lng: 110 },   // Northern China interior
-      { lat: 40, lng:  95 },   // Gansu corridor
-      { lat: 42, lng:  80 },   // Kazakhstan east
-      { lat: 43, lng:  65 },   // Kazakhstan / Aral region
-      { lat: 41, lng:  52 },   // Caspian Sea
-      { lat: 40, lng:  42 },   // Caucasus
-      { lat: 42, lng:  32 },   // Turkey north
+      { lat: 35, lng: 113 },   // Henan / Hubei
+      { lat: 39, lng: 102 },   // Northern China (Ningxia)
+      { lat: 41, lng:  92 },   // Hami / Xinjiang east
+      { lat: 43, lng:  80 },   // Western Xinjiang (Khorgos region)
+      { lat: 43, lng:  67 },   // Kazakhstan central
+      { lat: 41, lng:  55 },   // Caspian Sea
+      { lat: 40, lng:  44 },   // Caucasus
+      { lat: 42, lng:  32 },   // Turkey
       { lat: 45, lng:  22 },   // Balkans
-      { lat: 47, lng:  15 },   // Austria / Hungary
+      { lat: 47, lng:  15 },   // Austria
     ],
   },
 
@@ -191,17 +196,18 @@ export const AIR_ROUTES: TradeRoute[] = [
     startLat:  1.364, startLng: 103.992,
     endLat:   50.038, endLng:     8.562,
     importance: 72,
-    description: 'SE Asia → Europe long-haul cargo. Post-2022 routes south of Russia via Iran or Caucasus.',
+    description: 'SE Asia → Europe long-haul cargo. Southern routing via India + Iran + Turkey (also avoids Russian airspace).',
     tags: ['cargo'],
     waypoints: [
-      { lat:  6, lng:  96 },   // Andaman Sea
-      { lat: 12, lng:  85 },   // Bay of Bengal
-      { lat: 20, lng:  76 },   // Central India
-      { lat: 28, lng:  68 },   // Pakistan / Afghanistan border
-      { lat: 32, lng:  58 },   // Iran
-      { lat: 38, lng:  48 },   // NW Iran / Azerbaijan
-      { lat: 41, lng:  35 },   // Turkey (Anatolia)
-      { lat: 44, lng:  24 },   // Romania
+      { lat:  6, lng:  96 },   // Andaman Sea / Strait of Malacca exit
+      { lat: 13, lng:  88 },   // Bay of Bengal
+      { lat: 20, lng:  78 },   // Central India (Hyderabad-Nagpur axis)
+      { lat: 26, lng:  70 },   // NW India / Sindh-Rajasthan border
+      { lat: 30, lng:  62 },   // South Iran / Persian Gulf
+      { lat: 34, lng:  53 },   // Central Iran
+      { lat: 38, lng:  44 },   // NW Iran (Tabriz region)
+      { lat: 42, lng:  35 },   // Turkey east
+      { lat: 45, lng:  24 },   // Romania
       { lat: 47, lng:  16 },   // Austria
     ],
   },
