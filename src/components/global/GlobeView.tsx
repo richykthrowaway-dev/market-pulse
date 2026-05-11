@@ -391,37 +391,37 @@ function makeEventMarker(d: object): THREE.Object3D {
   return group;
 }
 
-// ── Polygon zoom-fade helper ──────────────────────────────────────────────
-//
-// When the user zooms in close enough to inspect individual ships, the
-// country polygon fill (default alpha 0.13–0.65 depending on mode) blocks
-// the underlying earth texture's water network — major inland waterways
-// like the IJsselmeer, Rhine-Maas delta, Seine, Garonne, Rhône.  Vessels
-// at correct geographic positions end up visually sitting on top of the
-// red/yellow country tint instead of over the water beneath.
-//
-// Fix: scale the alpha of each polygon's returned colour by a zoom-level
-// factor.  At default globe view the polygons stay near full opacity for
-// heatmap legibility; as the user zooms in the alpha drops so the earth
-// texture (which shows real coastlines and waterways) dominates.  Ships
-// stay at their exact positions — only the obscuring overlay fades.
-//
-// Format support:
-//   • "rgba(r, g, b, a)" — most colours in getCapColor
-//   • "#RRGGBBAA"        — FLAG_COLORS template `${hex}72`
-function applyZoomFade(color: string, scale: number): string {
-  if (scale >= 0.999) return color;        // identity case
-  if (color.startsWith('rgba(')) {
-    return color.replace(/,\s*([0-9.]+)\s*\)$/, (_, a) =>
-      `, ${(parseFloat(a) * scale).toFixed(3)})`);
+// ── Waterway data (Natural Earth 10m rivers + lake centerlines) ──────────
+// Rendered as a Three.js LineSegments layer on top of the country polygons
+// so the rivers / canals that AIS vessels actually broadcast from are
+// visible underneath the dots.  Without this layer, ships in the Rhine,
+// Seine, Garonne etc. visually sit on the country fill — the data is
+// correct, but the map gives no indication that there's water there.
+// ~2 MB GeoJSON, jsDelivr CDN, cached across remounts.
+const NE_RIVERS_URL = "https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_10m_rivers_lake_centerlines.geojson";
+
+let riversCache:   Feature[] | null = null;
+let riversPromise: Promise<Feature[]> | null = null;
+
+function loadRivers(): Promise<Feature[]> {
+  if (riversCache) return Promise.resolve(riversCache);
+  if (!riversPromise) {
+    riversPromise = fetch(NE_RIVERS_URL)
+      .then((r) => {
+        if (!r.ok) throw new Error(`rivers HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => {
+        riversCache = data.features ?? [];
+        return riversCache!;
+      })
+      .catch((err) => {
+        console.warn('[GlobeView] rivers load failed:', err);
+        riversPromise = null; // allow retry
+        throw err;
+      });
   }
-  if (color.startsWith('#') && color.length === 9) {
-    // #RRGGBBAA — scale the AA byte
-    const a = parseInt(color.slice(7), 16);
-    const scaledA = Math.max(0, Math.min(255, Math.round(a * scale)));
-    return color.slice(0, 7) + scaledA.toString(16).padStart(2, '0');
-  }
-  return color; // unknown format — pass through
+  return riversPromise;
 }
 
 // Module-level GeoJSON cache — survives component remounts / HMR
@@ -558,6 +558,16 @@ export default function GlobeView({
       return;
     }
     loadGeoJson().then(setCountries).catch(console.error);
+  }, []);
+
+  // ── Rivers / lake centerlines (~2 MB, jsDelivr CDN) ─────────────────────
+  // Fetched once per page load.  Drives the imperative LineSegments effect
+  // below — when `rivers` populates, that effect rebuilds the mesh.  Failure
+  // is silent (no rivers drawn, everything else still works).
+  const [rivers, setRivers] = useState<Feature[]>(riversCache ?? []);
+  useEffect(() => {
+    if (riversCache) { setRivers(riversCache); return; }
+    loadRivers().then(setRivers).catch(() => { /* warning logged in loader */ });
   }, []);
 
   // ── Progressive polygon upgrade: 50m → 10m ───────────────────────────────
@@ -863,6 +873,91 @@ export default function GlobeView({
     };
   }, [countries.length]);
 
+  // ── Waterway layer (rivers + lake centerlines) ───────────────────────
+  // Renders Natural Earth's 10 m rivers as a single Three.js LineSegments
+  // mesh.  Sits above the country polygons (renderOrder 1) and below the
+  // live AIS vessel dots, so ships appear directly over the blue river
+  // they're broadcasting from.  One draw call for every river worldwide —
+  // packing all segments into a single position buffer keeps GPU cost
+  // negligible regardless of feature count.
+  //
+  // Lat/lng → Cartesian uses the same polar2Cartesian convention as
+  // vessels/flights/trade points so all layers align perfectly on the
+  // sphere.  Altitude 1.006 sits just above polygon caps (1.005) and
+  // just below vessels (1.0055), so ships render on top of the rivers
+  // they're navigating.
+  useEffect(() => {
+    if (!countries.length || !rivers.length) return;
+    const globe = globeRef.current;
+    if (!globe) return;
+
+    // Count segments first so we can allocate a single Float32Array
+    // (avoids array growth + final copy when we have ~thousands of
+    // small LineStrings).
+    let segCount = 0;
+    for (const f of rivers) {
+      const g = f.geometry as any;
+      if (g.type === 'LineString') {
+        segCount += Math.max(0, g.coordinates.length - 1);
+      } else if (g.type === 'MultiLineString') {
+        for (const ls of g.coordinates) segCount += Math.max(0, ls.length - 1);
+      }
+    }
+    if (segCount === 0) return;
+
+    const radius    = globe.getGlobeRadius() * 1.006;
+    const positions = new Float32Array(segCount * 6); // 2 endpoints × xyz
+    let i = 0;
+
+    const addPoint = (lng: number, lat: number) => {
+      const phi    = (90 - lat) * (Math.PI / 180);
+      const theta  = (90 - lng) * (Math.PI / 180);
+      const sinPhi = Math.sin(phi);
+      positions[i++] = radius * sinPhi * Math.cos(theta);
+      positions[i++] = radius * Math.cos(phi);
+      positions[i++] = radius * sinPhi * Math.sin(theta);
+    };
+
+    const addLineString = (coords: [number, number][]) => {
+      for (let k = 0; k < coords.length - 1; k++) {
+        addPoint(coords[k][0],     coords[k][1]);
+        addPoint(coords[k + 1][0], coords[k + 1][1]);
+      }
+    };
+
+    for (const f of rivers) {
+      const g = f.geometry as any;
+      if (g.type === 'LineString') {
+        addLineString(g.coordinates);
+      } else if (g.type === 'MultiLineString') {
+        for (const ls of g.coordinates) addLineString(ls);
+      }
+    }
+
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+
+    // Sky-blue, semi-transparent so country shading still reads through.
+    // depthWrite:false avoids interfering with the depth buffer of layers
+    // rendered after this one (vessels, flights, rings).
+    const material = new THREE.LineBasicMaterial({
+      color:       0x60a5fa, // blue-400
+      transparent: true,
+      opacity:     0.55,
+      depthWrite:  false,
+    });
+
+    const lines = new THREE.LineSegments(geometry, material);
+    lines.renderOrder = 1; // above polygon caps (default 0), below vessels (2)
+    globe.scene().add(lines);
+
+    return () => {
+      try { globe.scene().remove(lines); } catch { /* scene already gone */ }
+      geometry.dispose();
+      material.dispose();
+    };
+  }, [rivers, countries.length]);
+
   // ── Cloud layer ─────────────────────────────────────────────────────
   // Renders a slightly-larger transparent sphere over the Blue Marble globe
   // with an animated slow rotation, simulating the appearance of a real
@@ -1129,37 +1224,11 @@ export default function GlobeView({
   // the OrbitControls spherical position; no GPU work involved.
   const [cityLabelsVisible, setCityLabelsVisible] = useState(false);
 
-  // Polygon-fill alpha scale, driven by camera altitude.  Bucketed into 4
-  // ranges so the value (and therefore getCapColor's identity) changes at
-  // most a handful of times per zoom gesture — not 60×/second.  React's
-  // setState bails on identical values, so polling cost is essentially zero
-  // until the user crosses a zoom threshold.
-  //
-  // Why fade polygons when zoomed in: the country fill (alpha 0.13–0.65)
-  // sits on top of the NASA earth texture and hides the underlying water
-  // network — IJsselmeer, Rhine-Maas delta, Seine, Garonne, Rhône, etc.
-  // Vessels broadcasting from those real waterways visually appear "on
-  // land" only because the polygon overlay masks the water beneath them.
-  // Fading the fill lets the texture's water show through; ships stay at
-  // their precise lat/lng but now read as being in water.
-  const [polygonAlphaScale, setPolygonAlphaScale] = useState(1.0);
-
   useEffect(() => {
     const id = setInterval(() => {
       const alt = (globeRef.current as any)?.pointOfView()?.altitude;
       if (alt == null) return;
       setCityLabelsVisible(alt < 1.2);
-
-      // Bucketed alpha scale:
-      //   alt ≥ 1.8 → full opacity (full globe view, heatmap legibility wins)
-      //   1.8 > alt ≥ 1.0 → 70 %  (moderate zoom, regional view)
-      //   1.0 > alt ≥ 0.5 → 45 %  (close zoom, ship inspection)
-      //   alt < 0.5       → 25 %  (very close zoom, texture water dominates)
-      const next = alt >= 1.8 ? 1.0
-                 : alt >= 1.0 ? 0.7
-                 : alt >= 0.5 ? 0.45
-                 :              0.25;
-      setPolygonAlphaScale((prev) => prev === next ? prev : next);
     }, 300);
     return () => clearInterval(id);
   }, []);
@@ -1467,53 +1536,40 @@ export default function GlobeView({
       const feat = d as Feature;
       const iso = feat.properties.ISO_A2;
 
-      // Compute the raw colour the same way as before — but route every
-      // branch through a single string variable so we can apply the zoom
-      // fade once at the exit.
-      let raw: string;
-
+      // Exchange mode: clear all fills so only pins + borders are visible
       if (showExchangePins) {
-        // Exchange mode: clear all fills so only pins + borders are visible.
-        raw = iso === selectedCountry        ? "rgba(255, 255, 255, 0.08)"
-            : iso === hoverIsoRef.current    ? "rgba(255, 255, 255, 0.05)"
-            :                                  "rgba(0, 0, 0, 0)";
-      } else if (iso === selectedCountry) {
-        raw = "rgba(255, 255, 255, 0.35)";
-      } else if (iso === hoverIsoRef.current) {
-        raw = "rgba(255, 255, 255, 0.22)";
-      } else if (macroMap) {
-        // Macro heatmap mode — shade by GDP growth annual %.
-        // Green = strong growth (≥5 %), amber/orange = slowing, red = contraction.
-        const gdp = macroMap.get(iso);
-        raw = gdp === undefined ? "rgba(60, 60, 70, 0.25)"
-            : gdp >= 6          ? "rgba(16, 185, 129, 0.65)"
-            : gdp >= 4          ? "rgba(52, 211, 153, 0.55)"
-            : gdp >= 2          ? "rgba(167, 243, 208, 0.45)"
-            : gdp >= 0          ? "rgba(251, 191, 36, 0.45)"
-            : gdp >= -2         ? "rgba(249, 115, 22, 0.55)"
-            :                     "rgba(239, 68, 68, 0.65)";
-      } else if (mode === "flags") {
-        raw = FLAG_COLORS[iso]
-          ? `${FLAG_COLORS[iso]}72`
-          : "rgba(80, 80, 80, 0.19)";
-      } else {
-        const change = performanceMap[iso];
-        raw = change === undefined ? "rgba(80, 80, 80, 0.13)" : perfColor(change);
+        if (iso === selectedCountry) return "rgba(255, 255, 255, 0.08)";
+        if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.05)";
+        return "rgba(0, 0, 0, 0)";
       }
 
-      // Zoom fade — preserve interactive highlights (selected / hover) with
-      // a higher alpha floor so they remain legible even when the rest of
-      // the country fill is faded down to reveal water beneath.  When the
-      // exchange-pin mode is active we intentionally keep the highlight
-      // very subtle and let the full fade apply.
-      const isHighlight = !showExchangePins &&
-        (iso === selectedCountry || iso === hoverIsoRef.current);
-      const scale = isHighlight
-        ? Math.max(polygonAlphaScale, 0.6)
-        : polygonAlphaScale;
-      return applyZoomFade(raw, scale);
+      if (iso === selectedCountry) return "rgba(255, 255, 255, 0.35)";
+      if (iso === hoverIsoRef.current) return "rgba(255, 255, 255, 0.22)";
+
+      // Macro heatmap mode — shade by GDP growth annual %
+      // Green: strong growth (≥5%), yellow: moderate (2–5%), orange: slow (0–2%),
+      // red: contraction (<0%).  Unmapped countries stay neutral.
+      if (macroMap) {
+        const gdp = macroMap.get(iso);
+        if (gdp === undefined) return "rgba(60, 60, 70, 0.25)";
+        if (gdp >= 6)  return "rgba(16, 185, 129, 0.65)";   // emerald — strong
+        if (gdp >= 4)  return "rgba(52, 211, 153, 0.55)";   // green
+        if (gdp >= 2)  return "rgba(167, 243, 208, 0.45)";  // light green
+        if (gdp >= 0)  return "rgba(251, 191, 36, 0.45)";   // amber — slow
+        if (gdp >= -2) return "rgba(249, 115, 22, 0.55)";   // orange — weak
+        return "rgba(239, 68, 68, 0.65)";                   // red — contraction
+      }
+
+      if (mode === "flags") {
+        return FLAG_COLORS[iso]
+          ? `${FLAG_COLORS[iso]}72`
+          : "rgba(80, 80, 80, 0.19)";
+      }
+      const change = performanceMap[iso];
+      if (change === undefined) return "rgba(80, 80, 80, 0.13)";
+      return perfColor(change);
     },
-    [mode, performanceMap, selectedCountry, showExchangePins, macroMap, polygonAlphaScale]
+    [mode, performanceMap, selectedCountry, showExchangePins, macroMap]
   );
 
   // ── Altitude: only elevate selected country ──
