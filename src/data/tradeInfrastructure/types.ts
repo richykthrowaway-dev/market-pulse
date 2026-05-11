@@ -81,6 +81,15 @@ export interface Chokepoint extends TradeNodeBase {
   kind: 'chokepoint';
   /** Modes that this chokepoint constrains. */
   modes: TransportMode[];
+  /**
+   * Approximate typical 24-hour vessel-transit count under normal conditions.
+   * Sourced from public transit statistics (e.g. Hormuz ~50/day, Suez ~50/day,
+   * Panama ~36/day pre-drought).  Used by the Intel view's Choke Point Status
+   * Board to compute a ↑/↓ vs-typical indicator.  Note: this is the count of
+   * vessels passing through over 24h, not the instantaneous count nearby — the
+   * board calibrates by comparing instantaneous AIS density to this baseline.
+   */
+  typicalDailyTransits?: number;
 }
 
 export interface InlandHub extends TradeNodeBase {

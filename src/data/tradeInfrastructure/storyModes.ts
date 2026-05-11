@@ -54,4 +54,44 @@ export const STORY_MODES: StoryMode[] = [
     description: 'Chokepoints + recent disruption flags. Designed to grow into a live resilience overlay.',
     layers: ['chokepoints', 'maritimeRoutes', 'risk'],
   },
+
+  // ── Crisis lenses ─────────────────────────────────────────────────────────
+  // Each preset zooms to an ongoing or recurrent crisis and lights up the
+  // layers that make the situation legible.  Designed so a user landing
+  // here can immediately understand "what's happening with X right now".
+  {
+    id: 'red-sea-crisis',
+    title: 'Red Sea Crisis',
+    description: 'Bab el-Mandeb attacks, Suez diversions, Cape route reactivation. Live vessels + maritime + conflicts.',
+    layers: ['chokepoints', 'maritimeRoutes', 'seaports', 'liveVessels', 'conflictEvents'],
+    focus: { lat: 15, lng: 42, altitude: 1.8 },
+  },
+  {
+    id: 'panama-drought',
+    title: 'Panama Canal Squeeze',
+    description: 'Drought-driven transit cuts and the Atlantic ↔ Pacific bottleneck. Watch vessel queues build up.',
+    layers: ['chokepoints', 'maritimeRoutes', 'seaports', 'liveVessels'],
+    focus: { lat: 9, lng: -80, altitude: 1.8 },
+  },
+  {
+    id: 'taiwan-contingency',
+    title: 'Taiwan Contingency',
+    description: 'Taiwan Strait flows, semiconductor air-cargo lanes, regional naval pressure. Chips and containers in one view.',
+    layers: ['chokepoints', 'maritimeRoutes', 'seaports', 'airRoutes', 'airports', 'conflictEvents'],
+    focus: { lat: 24, lng: 121, altitude: 2.0 },
+  },
+  {
+    id: 'russia-energy-cutoff',
+    title: 'Russia Energy Cutoff',
+    description: 'Pipeline-free Europe: LNG ports, rail re-routes, Eastern European inland hubs. Post-sanctions geometry.',
+    layers: ['seaports', 'railCorridors', 'inlandHubs', 'maritimeRoutes', 'economicEvents'],
+    focus: { lat: 55, lng: 30, altitude: 2.4 },
+  },
+  {
+    id: 'usmca-border',
+    title: 'USMCA Nearshoring',
+    description: 'Mexico–US border crossings, Texas rail hubs, Gulf ports. The reshoring corridor that replaced China-to-US.',
+    layers: ['seaports', 'airports', 'railCorridors', 'inlandHubs', 'tradePartnerArcs'],
+    focus: { lat: 30, lng: -100, altitude: 2.4 },
+  },
 ];

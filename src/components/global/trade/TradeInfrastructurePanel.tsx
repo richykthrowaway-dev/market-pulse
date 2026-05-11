@@ -4,6 +4,7 @@ import {
   Layers, Compass, Search, Sparkles,
   Network, ShieldAlert, Globe2, Radio, Loader2,
   CalendarDays, BarChart3, Type, Waves, ArrowLeftRight,
+  Activity,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -13,6 +14,15 @@ import {
 import type { AISStatus } from '@/hooks/useAISStream';
 import { FLIGHT_DATA_SOURCE, type FlightStatus } from '@/hooks/useOpenSkyFlights';
 import { useAirportDetail } from '@/hooks/useAirportDetail';
+import { TradeIntelView } from './TradeIntelView';
+
+// ── View toggle ─────────────────────────────────────────────────────────────
+// The panel currently has two top-level lenses:
+//   - 'infrastructure': the curated nodes/routes/layers control surface
+//   - 'intel':          AIS-derived live metrics + global policy calendar
+// Adding a view toggle here mirrors the pattern used in the Commodities tab,
+// keeping the user's mental model consistent across the app.
+type PanelView = 'infrastructure' | 'intel';
 
 /**
  * TradeInfrastructurePanel — the "intelligence panel" half of the Global
@@ -102,6 +112,7 @@ export function TradeInfrastructurePanel({
   flightStatus = 'idle', flightCount = 0,
 }: Props) {
   const [search, setSearch] = useState('');
+  const [view,   setView]   = useState<PanelView>('infrastructure');
 
   const toggleLayer = useCallback((key: LayerKey) => {
     const next = new Set(activeLayers);
@@ -165,6 +176,39 @@ export function TradeInfrastructurePanel({
         </p>
       </div>
 
+      {/* ── View toggle (Infrastructure / Intel) ───────────────────────── */}
+      <div className="px-4 pt-3 pb-1 shrink-0">
+        <div className="inline-flex rounded-md border border-border bg-card/40 p-0.5 text-[10px] font-medium uppercase tracking-wide">
+          <button
+            onClick={() => setView('infrastructure')}
+            className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1 rounded transition-colors',
+              view === 'infrastructure'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Layers className="w-3 h-3" />
+            Infrastructure
+          </button>
+          <button
+            onClick={() => setView('intel')}
+            className={cn(
+              'flex items-center gap-1.5 px-2.5 py-1 rounded transition-colors',
+              view === 'intel'
+                ? 'bg-primary text-primary-foreground'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Activity className="w-3 h-3" />
+            Intel
+          </button>
+        </div>
+      </div>
+
+      {view === 'intel' && <TradeIntelView />}
+
+      {view === 'infrastructure' && (<>
       {/* ── Metrics strip ─────────────────────────────────────────────── */}
       <div className="px-4 py-3 grid grid-cols-3 gap-2 shrink-0">
         <MetricCard label="Seaports"     value={counts.seaports}    color={NODE_COLOR.seaport} />
@@ -263,6 +307,7 @@ export function TradeInfrastructurePanel({
       {selectedNode && (
         <NodeDetail node={selectedNode} onClose={() => onSelectNode(null)} />
       )}
+      </>)}
     </div>
   );
 }
