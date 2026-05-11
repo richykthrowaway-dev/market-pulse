@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
+import { useQueries, type UseQueryOptions } from '@tanstack/react-query';
 import { COUNTRY_META } from '@/data/countryMeta';
 
 /**
@@ -194,6 +195,46 @@ function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): nu
 const NE_STALE = 30 * 60_000; // 30 min
 
 /**
+ * Per-category fetch tuning.  Each category has very different volume +
+ * freshness characteristics, so a one-size-fits-all single fetch wastes
+ * payload on wildfires while starving storms/volcanoes that get pushed
+ * off the response.
+ *
+ * Concretely (data observed live):
+ *   - Wildfires:   ~1000+ active+recent globally → narrow window (14d, open)
+ *   - SevereStorms: ~7 in 60d (rare outside hurricane season) → wide window,
+ *                   include closed so recently-dissipated typhoons still show
+ *   - Volcanoes:   ~1-5 active globally → narrow + open
+ *   - Floods:      ~30-60 active → medium window + open
+ *
+ * Each query is enabled INDEPENDENTLY based on its layer toggle, so a
+ * user who only wants Storms doesn't pay for wildfires.
+ */
+interface CategorySpec {
+  category: NaturalEventCategory;
+  /** EONET ?category= ID — happens to match our NaturalEventCategory but kept explicit for clarity. */
+  eonetId:  string;
+  /** ?status param — 'open' (active only) or 'all' (includes closed). */
+  status:   'open' | 'all';
+  /** ?days lookback window. */
+  days:     number;
+  /** ?limit cap — bounds payload size when a category gets noisy. */
+  limit:    number;
+}
+
+const CATEGORY_SPECS: CategorySpec[] = [
+  // Wildfires: huge volume — keep window tight to focus on active fires only.
+  { category: 'wildfires',    eonetId: 'wildfires',    status: 'open', days: 14, limit: 250 },
+  // SevereStorms: rare globally — capture recently-closed (dissipated) ones
+  // too, since they remain newsworthy for damage assessment and shipping.
+  { category: 'severeStorms', eonetId: 'severeStorms', status: 'all',  days: 60, limit:  60 },
+  // Volcanoes: slow-moving, low volume — narrow window keeps it relevant.
+  { category: 'volcanoes',    eonetId: 'volcanoes',    status: 'open', days: 30, limit:  40 },
+  // Floods: medium volume — moderate window.
+  { category: 'floods',       eonetId: 'floods',       status: 'open', days: 30, limit: 100 },
+];
+
+/**
  * Resolve a geometry record to (lat, lng).  Points are trivial — GeoJSON
  * order is [lng, lat].  Polygons we collapse to the first vertex (used for
  * flood polygons etc. where a single representative point is sufficient).
@@ -213,34 +254,18 @@ function geometryToLatLng(g: EonetGeometry): { lat: number; lng: number } | null
   return null;
 }
 
-export function useNaturalEvents(enabled: boolean) {
-  return useQuery<NaturalEvent[]>({
-    queryKey:             ['eonet-natural-events'],
-    enabled,
-    staleTime:            NE_STALE,
-    gcTime:               NE_STALE * 2,
-    refetchInterval:      enabled ? NE_STALE : false,
-    refetchOnWindowFocus: false,
-    queryFn: async () => {
-      const url =
-        'https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=30&limit=300';
-      const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
-      if (!res.ok) throw new Error(`EONET ${res.status}`);
+/**
+ * Parse a single raw EONET event into our flat NaturalEvent shape.
+ * Returns null when the event is unmappable (no recognized category,
+ * empty geometry, bad coordinates).
+ */
+function parseEvent(e: EonetEvent, forcedCategory: NaturalEventCategory): NaturalEvent | null {
+        // When the call was scoped to a single category we know the answer
+        // up-front; otherwise we'd map via e.categories[].id.  Both paths
+        // produce the same NaturalEventCategory.
+        const category = forcedCategory;
 
-      const data = await res.json() as EonetResponse;
-      const events = data.events ?? [];
-
-      const out: NaturalEvent[] = [];
-      for (const e of events) {
-        // Each event carries 1+ category; map the first that we recognize.
-        let category: NaturalEventCategory | null = null;
-        for (const c of e.categories ?? []) {
-          const mapped = EONET_CATEGORY_MAP[c.id];
-          if (mapped) { category = mapped; break; }
-        }
-        if (!category) continue;          // not one of our four categories
-
-        if (!Array.isArray(e.geometry) || e.geometry.length === 0) continue;
+        if (!Array.isArray(e.geometry) || e.geometry.length === 0) return null;
 
         // Most-recent geometry as "current location".  EONET orders the
         // array oldest→newest but doesn't guarantee it, so sort defensively.
@@ -248,7 +273,7 @@ export function useNaturalEvents(enabled: boolean) {
         const latest = sorted[sorted.length - 1];
         const earliest = sorted[0];
         const pos    = geometryToLatLng(latest);
-        if (!pos) continue;
+        if (!pos) return null;
 
         // ── Derived: growth rate per day (intensity change over time) ──
         // Only meaningful if both earliest and latest carry a magnitude.
@@ -293,7 +318,7 @@ export function useNaturalEvents(enabled: boolean) {
           }
         }
 
-        out.push({
+        return {
           id:               e.id,
           title:            e.title,
           category,
@@ -312,9 +337,82 @@ export function useNaturalEvents(enabled: boolean) {
           growthRatePerDay,
           motionSpeedKmh,
           bearingDeg,
-        });
-      }
-      return out;
-    },
+        };
+}
+
+/** Build the EONET URL for a single category fetch. */
+function buildUrl(spec: CategorySpec): string {
+  const params = new URLSearchParams({
+    category: spec.eonetId,
+    status:   spec.status,
+    days:     String(spec.days),
+    limit:    String(spec.limit),
   });
+  return `https://eonet.gsfc.nasa.gov/api/v3/events?${params}`;
+}
+
+async function fetchCategory(spec: CategorySpec): Promise<NaturalEvent[]> {
+  const res = await fetch(buildUrl(spec), { signal: AbortSignal.timeout(20_000) });
+  if (!res.ok) throw new Error(`EONET ${spec.eonetId} ${res.status}`);
+  const data = await res.json() as EonetResponse;
+  const out: NaturalEvent[] = [];
+  for (const e of (data.events ?? [])) {
+    const parsed = parseEvent(e, spec.category);
+    if (parsed) out.push(parsed);
+  }
+  return out;
+}
+
+/**
+ * useNaturalEvents — accepts either a single boolean (legacy: enable all
+ * categories) OR a per-category enabled map.  Returns the combined event
+ * list across all enabled categories.
+ *
+ * Internally fires up to 4 PARALLEL queries (one per category), each
+ * with its own tuning (window, status, limit) and independent cache key.
+ * This avoids the "wildfires drown out storms" pathology where a single
+ * unified fetch would burn its 300-event budget on wildfires and never
+ * return the rare-but-newsworthy storm/volcano entries.
+ */
+export function useNaturalEvents(enabled: boolean | Partial<Record<NaturalEventCategory, boolean>>): {
+  data:      NaturalEvent[] | undefined;
+  isLoading: boolean;
+  isError:   boolean;
+} {
+  const enabledMap = typeof enabled === 'boolean'
+    ? { wildfires: enabled, severeStorms: enabled, volcanoes: enabled, floods: enabled }
+    : enabled;
+
+  // Build a query option for every category — disabled ones don't fire.
+  const queries: UseQueryOptions<NaturalEvent[]>[] = CATEGORY_SPECS.map(spec => ({
+    queryKey:             ['eonet-natural-events', spec.eonetId, spec.status, spec.days, spec.limit],
+    enabled:              !!enabledMap[spec.category],
+    staleTime:            NE_STALE,
+    gcTime:               NE_STALE * 2,
+    refetchInterval:      enabledMap[spec.category] ? NE_STALE : false,
+    refetchOnWindowFocus: false,
+    queryFn:              () => fetchCategory(spec),
+  }));
+
+  const results = useQueries({ queries });
+
+  const data = useMemo<NaturalEvent[] | undefined>(() => {
+    // If no category is enabled, return undefined so consumers can short-circuit.
+    if (!CATEGORY_SPECS.some(s => enabledMap[s.category])) return undefined;
+    const combined: NaturalEvent[] = [];
+    for (const r of results) {
+      if (r.data) combined.push(...r.data);
+    }
+    return combined;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    results[0].data, results[1].data, results[2].data, results[3].data,
+    enabledMap.wildfires, enabledMap.severeStorms, enabledMap.volcanoes, enabledMap.floods,
+  ]);
+
+  return {
+    data,
+    isLoading: results.some(r => r.isLoading),
+    isError:   results.every(r => r.isError),
+  };
 }

@@ -311,22 +311,23 @@ const Global = () => {
     setSelectedEarthquake(e);
   }, []);
 
-  // ── NASA EONET natural events (gated on any of 4 layer toggles) ──────
-  // One HTTP call returns all four categories; we filter client-side based
-  // on which sub-layers are active.  Cheap to fetch once, expensive to call
-  // multiple times — so we lean into the "one fetch, four layers" pattern.
-  const naturalEventsEnabled =
-    tradeTabActive && (
-      tradeActiveLayers.has('wildfires')    ||
-      tradeActiveLayers.has('severeStorms') ||
-      tradeActiveLayers.has('volcanoes')    ||
-      tradeActiveLayers.has('floods')
-    );
-  const naturalEventsQuery = useNaturalEvents(naturalEventsEnabled);
-  const naturalEvents = useMemo<NaturalEvent[] | undefined>(() => {
-    if (!naturalEventsEnabled || !naturalEventsQuery.data) return undefined;
-    return naturalEventsQuery.data.filter(e => tradeActiveLayers.has(e.category));
-  }, [naturalEventsEnabled, naturalEventsQuery.data, tradeActiveLayers]);
+  // ── NASA EONET natural events ──────────────────────────────────────────
+  // Per-category gating: each natural-event category fires its own EONET
+  // query, with parameters tuned to that category's volume + freshness.
+  // Toggling on Wildfires alone fires only the wildfires query; toggling
+  // Storms also fires only the storms query.  This avoids the "wildfires
+  // drown out everything else" pathology of the previous single-fetch
+  // design where storms (rare globally) got pushed off the response.
+  const naturalEnabledMap = useMemo(() => ({
+    wildfires:    tradeTabActive && tradeActiveLayers.has('wildfires'),
+    severeStorms: tradeTabActive && tradeActiveLayers.has('severeStorms'),
+    volcanoes:    tradeTabActive && tradeActiveLayers.has('volcanoes'),
+    floods:       tradeTabActive && tradeActiveLayers.has('floods'),
+  }), [tradeTabActive, tradeActiveLayers]);
+  const naturalEventsQuery = useNaturalEvents(naturalEnabledMap);
+  // The hook only returns events for enabled categories, so no extra
+  // client-side filter is needed.  We keep the variable for prop plumbing.
+  const naturalEvents = naturalEventsQuery.data;
   const [selectedNaturalEvent, setSelectedNaturalEvent] = useState<NaturalEvent | null>(null);
   const onNaturalEventClick = useCallback((e: NaturalEvent) => {
     setSelectedNaturalEvent(e);
