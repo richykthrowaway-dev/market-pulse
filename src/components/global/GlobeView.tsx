@@ -1470,7 +1470,10 @@ export default function GlobeView({
         //   - Keeps cloud position purely a function of wall-clock time,
         //     so a tab pause + resume doesn't cause a sudden cloud jump.
         const startTime = performance.now();
-        const ROT_SPEED = 0.000012; // radians per millisecond
+        // 50 % slower than the original 0.000012 rad/ms — clouds now complete
+        // one rotation in ~18 min instead of ~9 min.  Quieter, less attention-
+        // grabbing while still conveying that the planet is "alive".
+        const ROT_SPEED = 0.000006; // radians per millisecond
         const tick = () => {
           if (!cloudsMesh) return;
           cloudsMesh.rotation.y = (performance.now() - startTime) * ROT_SPEED;
