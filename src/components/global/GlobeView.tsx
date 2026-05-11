@@ -1716,6 +1716,23 @@ export default function GlobeView({
     const colors    = new Float32Array(liveVessels.length * 3);
     const tmpColor  = new THREE.Color();
 
+    // ── Freshness fade ────────────────────────────────────────────────
+    // Vessels stay in the AIS map for up to 30 min after their last
+    // broadcast (STALE_VESSEL_MS in useAISStream).  Dots are color-faded
+    // by age so fresh positions are vivid and stale ones recede into the
+    // globe background.  Implementation: multiply the per-vertex RGB by
+    // an age factor — works with the existing vertexColors material
+    // without needing a custom shader for per-vertex alpha.
+    //
+    //   < 2 min   →  full color (1.0)
+    //   2-30 min  →  linear fade from 1.0 → FADE_FLOOR
+    //   > 30 min  →  pruned (won't appear here)
+    const now           = Date.now();
+    const FRESH_MS      = 2  * 60 * 1_000;   // <2 min = vivid
+    const FADED_AT_MS   = 30 * 60 * 1_000;   // 30 min = floor
+    const FADE_RANGE_MS = FADED_AT_MS - FRESH_MS;
+    const FADE_FLOOR    = 0.30;              // floor brightness for stale dots
+
     // Spherical (lat, lng) → Cartesian — MUST match globe.gl's internal
     // polar2Cartesian (node_modules/globe.gl/dist/globe.gl.js:63859),
     // since that is what positions all the library-rendered objects
@@ -1734,11 +1751,19 @@ export default function GlobeView({
       positions[i * 3 + 1] = radius * Math.cos(phi);
       positions[i * 3 + 2] = radius * sinPhi * Math.sin(theta);
 
-      // Per-vessel colour from nav status (THREE.Color.setHex normalises 0xRRGGBB → 0-1 floats)
+      // Per-vessel colour from nav status × age fade
       tmpColor.setHex(navStatusColorHex(v.navStatus));
-      colors[i * 3]     = tmpColor.r;
-      colors[i * 3 + 1] = tmpColor.g;
-      colors[i * 3 + 2] = tmpColor.b;
+      const age = now - v.lastSeen;
+      let ageFactor: number;
+      if (age <= FRESH_MS) {
+        ageFactor = 1.0;
+      } else {
+        const t = Math.min(1, (age - FRESH_MS) / FADE_RANGE_MS);
+        ageFactor = 1.0 - (1.0 - FADE_FLOOR) * t;
+      }
+      colors[i * 3]     = tmpColor.r * ageFactor;
+      colors[i * 3 + 1] = tmpColor.g * ageFactor;
+      colors[i * 3 + 2] = tmpColor.b * ageFactor;
     }
 
     const geometry = new THREE.BufferGeometry();

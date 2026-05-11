@@ -117,16 +117,24 @@ export function matchesVesselType(v: Vessel, filter: VesselTypeFilter): boolean 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const AISSTREAM_URL      = 'wss://stream.aisstream.io/v0/stream';
 const FLUSH_INTERVAL_MS  = 2_000;           // React render cadence
-const STALE_VESSEL_MS    = 5 * 60 * 1_000; // prune vessels not seen in 5 min
+// Stale-prune window — kept generous (30 min) because we're on aisstream.io's
+// free tier (~30 msg/sec).  With ~50k+ active vessels globally, a single
+// vessel may only re-broadcast position every few minutes from our sampled
+// stream.  Holding onto last-known positions for 30 min dramatically improves
+// visible vessel count.  Renderer fades old positions visually so users can
+// see freshness at a glance (see GlobeView vessel rendering).
+const STALE_VESSEL_MS    = 30 * 60 * 1_000;
 const NO_DATA_TIMEOUT_MS = 12_000;          // warn if no messages in 12 s after open
 const CACHE_KEY          = 'ais-vessel-cache-v1';
-// Cache TTL — extended to 24 hours so coming back the next day still shows
-// vessels instantly.  Cached vessels are given a 60-second grace window on
-// load (see loadCache) — the live WebSocket feed refreshes active vessels'
-// `lastSeen` long before the grace expires, while truly dormant cached
-// vessels get pruned by the normal 5-min stale-prune cycle.
+// Cache TTL — 24 hours so coming back the next day still shows vessels
+// instantly.  Cached vessels are loaded with a stale-grace window
+// (CACHE_LOAD_GRACE_MS) before they're eligible for stale-pruning.
 const CACHE_TTL_MS       = 24 * 60 * 60 * 1_000;
-const CACHE_LOAD_GRACE_MS = 60 * 1_000; // restored vessels get 60s before stale-pruning
+// Grace period for cache-restored vessels.  With a 30-min stale window we
+// give restored vessels 5 minutes to receive a fresh broadcast before they
+// become stale-prune-eligible — enough headroom for at least one full
+// AIS class-A position cycle even for slow-broadcasting moored vessels.
+const CACHE_LOAD_GRACE_MS = 5 * 60 * 1_000;
 const DISCONNECT_GRACE_MS = 300;            // wait before closing after last subscriber leaves
 const BACKOFF_BASE_MS    = 1_000;
 const BACKOFF_MAX_MS     = 30_000;
