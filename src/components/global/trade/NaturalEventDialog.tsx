@@ -1,11 +1,44 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import {
   ExternalLink, X, Bell, GripHorizontal,
-  Flame, Wind, Mountain, Droplets, Route,
+  Flame, Wind, Mountain, Droplets, Route, Navigation, TrendingUp, Activity,
 } from 'lucide-react';
 import type { NaturalEvent, NaturalEventCategory } from '@/hooks/useNaturalEvents';
 import { getMaterialAffectedCommodities } from '@/lib/conflicts/affectedCommodities';
 import { COUNTRY_META } from '@/data/countryMeta';
+import { cn } from '@/lib/utils';
+
+/**
+ * Saffir-Simpson hurricane wind scale (in knots).  Used to translate raw
+ * `magnitudeValue` (kts) into a familiar category label.
+ *   <34   Tropical depression
+ *   34-63 Tropical storm
+ *   64-82 Cat 1
+ *   83-95 Cat 2
+ *   96-112 Cat 3
+ *   113-136 Cat 4
+ *   137+  Cat 5
+ */
+function stormCategoryLabel(kts: number): string {
+  if (kts >= 137) return 'Cat 5';
+  if (kts >= 113) return 'Cat 4';
+  if (kts >= 96)  return 'Cat 3';
+  if (kts >= 83)  return 'Cat 2';
+  if (kts >= 64)  return 'Cat 1';
+  if (kts >= 34)  return 'Tropical storm';
+  return 'Tropical depression';
+}
+
+/** Bearing degrees → 8-point compass (N, NE, E, …) for readable storm motion. */
+function bearingToCompass(deg: number): string {
+  const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+  return dirs[Math.round(((deg % 360) / 45)) % 8];
+}
+
+/** Compact integer with thousands separator — "12,345 acres". */
+function fmtCount(n: number): string {
+  return Math.round(n).toLocaleString();
+}
 
 /**
  * NaturalEventDialog — draggable detail card for NASA EONET natural events.
@@ -137,8 +170,22 @@ export function NaturalEventDialog({ event, onClose, onSetAlert }: Props) {
           <Icon className={`w-4 h-4 ${style.iconFg}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            {style.label} · {dateLabel}
+          <div className="text-[10px] uppercase tracking-wide text-muted-foreground flex items-center gap-1.5 flex-wrap">
+            <span>{style.label}</span>
+            <span>·</span>
+            <span>{dateLabel}</span>
+            {/* Active vs Closed badge.  EONET's `closed` field is the
+                authoritative status — null = still active. */}
+            {event.closed === null ? (
+              <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-500/15 text-red-400 border border-red-500/30 uppercase tracking-wide flex items-center gap-1">
+                <Activity className="w-2.5 h-2.5" />
+                Active
+              </span>
+            ) : (
+              <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-muted/40 text-muted-foreground border border-border uppercase tracking-wide">
+                Closed
+              </span>
+            )}
           </div>
           <div className="text-sm font-semibold text-foreground mt-0.5 leading-tight">
             {event.title}
@@ -166,6 +213,77 @@ export function NaturalEventDialog({ event, onClose, onSetAlert }: Props) {
           </span>
         )}
       </div>
+
+      {/* ── Magnitude / motion stats ────────────────────────────────────── */}
+      {/* Quantitative event data from EONET geometry.magnitudeValue/Unit
+          plus derived growth-rate (acres-or-kts per day) and storm motion
+          (translation speed + bearing) computed from the geometry track.
+          Per category:
+            wildfires    → "1,500 acres · +320/day"
+            severeStorms → "120 kts (Cat 4) · Moving NW at 14 km/h · +18 kts/day"
+            volcanoes/floods → usually no magnitude; section is skipped */}
+      {(event.magnitudeValue != null || event.motionSpeedKmh != null) && (
+        <div className="mx-3 mt-2.5 rounded-md border border-border bg-card/60 p-2 space-y-1">
+          {/* Primary magnitude line */}
+          {event.magnitudeValue != null && event.magnitudeUnit && (
+            <div className="flex items-baseline gap-2">
+              <span className={cn('text-base font-bold tabular-nums', style.iconFg)}>
+                {fmtCount(event.magnitudeValue)}
+              </span>
+              <span className="text-[11px] text-muted-foreground uppercase tracking-wide">
+                {event.magnitudeUnit}
+              </span>
+              {/* Saffir-Simpson category label for storms — uses knots */}
+              {event.category === 'severeStorms' && event.magnitudeUnit.toLowerCase() === 'kts' && (
+                <span className="text-[10px] font-semibold text-foreground/70 px-1.5 py-0.5 rounded bg-muted/40">
+                  {stormCategoryLabel(event.magnitudeValue)}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Growth rate — signed delta per day */}
+          {event.growthRatePerDay != null && Math.abs(event.growthRatePerDay) >= 0.1 && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <TrendingUp className={cn(
+                'w-3 h-3',
+                event.growthRatePerDay > 0 ? 'text-amber-400' : 'text-emerald-400',
+              )} />
+              <span>
+                {event.growthRatePerDay > 0 ? '+' : ''}
+                <span className="tabular-nums font-semibold text-foreground/80">
+                  {fmtCount(event.growthRatePerDay)}
+                </span>
+                {' '}
+                {event.magnitudeUnit ?? ''}/day
+                <span className="ml-1 opacity-60">
+                  {event.growthRatePerDay > 0 ? '(intensifying)' : '(weakening)'}
+                </span>
+              </span>
+            </div>
+          )}
+
+          {/* Storm/event motion — translation across earth surface */}
+          {event.motionSpeedKmh != null && event.motionSpeedKmh > 1 && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              <Navigation
+                className="w-3 h-3 text-foreground/70"
+                style={event.bearingDeg != null
+                  ? { transform: `rotate(${event.bearingDeg}deg)` }
+                  : undefined}
+              />
+              <span>
+                Moving{event.bearingDeg != null ? ` ${bearingToCompass(event.bearingDeg)}` : ''}
+                {' at '}
+                <span className="tabular-nums font-semibold text-foreground/80">
+                  {event.motionSpeedKmh.toFixed(1)}
+                </span>
+                {' km/h'}
+              </span>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Description ─────────────────────────────────────────────────── */}
       {event.description && (
@@ -217,19 +335,31 @@ export function NaturalEventDialog({ event, onClose, onSetAlert }: Props) {
       </div>
 
       {/* ── Source footer ────────────────────────────────────────────────── */}
-      <div className="px-3 pt-2 pb-3 flex items-center justify-between border-t border-border/50 mt-2">
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground">
-          Source: NASA EONET{event.sourceName ? ` · ${event.sourceName}` : ''}
-        </span>
-        {event.sourceUrl && (
-          <a
-            href={event.sourceUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`text-[11px] ${style.iconFg} hover:opacity-80 flex items-center gap-1`}
-          >
-            View source <ExternalLink className="w-3 h-3" />
-          </a>
+      {/* Show all source agencies + deep-link to each.  Wildfires often have
+          two sources (IRWIN incident report + NASA FIRMS satellite); storms
+          may have NOAA NHC + others.  Each is independently linkable. */}
+      <div className="px-3 pt-2 pb-3 border-t border-border/50 mt-2">
+        <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+          Source: NASA EONET
+        </div>
+        {event.sources.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {event.sources.map(s => (
+              <a
+                key={s.id + s.url}
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  'flex items-center gap-1 px-1.5 py-0.5 rounded border border-border bg-card text-[10px] transition-colors hover:opacity-80',
+                  style.iconFg,
+                )}
+              >
+                {s.id}
+                <ExternalLink className="w-2.5 h-2.5 opacity-70" />
+              </a>
+            ))}
+          </div>
         )}
       </div>
     </div>

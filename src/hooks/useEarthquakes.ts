@@ -13,24 +13,61 @@ import { useQuery } from '@tanstack/react-query';
  * can cascade with aftershocks that affect supply chains (mining, ports).
  */
 
+/** USGS PAGER (Prompt Assessment of Global Earthquakes for Response) alert level. */
+export type PagerAlert = 'green' | 'yellow' | 'orange' | 'red';
+
 export interface EarthquakeEvent {
   id:        string;
   /** ISO date string YYYY-MM-DD */
   date:      string;
   /** Unix epoch ms */
   time:      number;
+  /** Unix epoch ms — when USGS last revised the solution (>= time). */
+  updated:   number;
   lat:       number;
   lng:       number;
   /** Depth in km below surface */
   depth:     number;
   /** Richter / moment magnitude */
   magnitude: number;
+  /**
+   * Magnitude type code from USGS — e.g. 'mww' (W-phase moment tensor),
+   * 'mb' (body wave), 'ml' (Richter), 'md' (duration).  Lets us label the
+   * magnitude badge as "M 6.4 Mww" instead of bare "M 6.4".
+   */
+  magType:   string | null;
   /** USGS place description, e.g. "12km NNW of Ridgecrest, California" */
   place:     string;
   /** USGS significance score 0–1000 (blends mag + pop exposure + shaking) */
   sig:       number;
   /** Whether a tsunami warning was issued */
   tsunami:   boolean;
+  /**
+   * PAGER impact estimate — green/yellow/orange/red.  Single most useful
+   * field on the response: green = no fatalities expected; red = mass-
+   * casualty event predicted.  null for events too small for PAGER.
+   */
+  alert:     PagerAlert | null;
+  /** Number of "Did You Feel It?" citizen reports submitted to USGS. */
+  felt:      number | null;
+  /** Community Determined Intensity (1–12 scale, citizen-reported shaking). */
+  cdi:       number | null;
+  /** Modified Mercalli Intensity (instrument-derived shaking, 1–10 scale). */
+  mmi:       number | null;
+  /** 'reviewed' (manually QC'd) vs 'automatic' (raw algorithm). */
+  status:    'reviewed' | 'automatic' | null;
+  /**
+   * Event type — usually 'earthquake', but can be 'quarry blast', 'mining
+   * explosion', 'explosion', 'sonic boom' etc.  Useful to flag non-tectonic
+   * events explicitly so users don't read them as natural seismicity.
+   */
+  type:      string;
+  /**
+   * Available USGS product types for this event — drives deep-link buttons
+   * (shakemap, dyfi, losspager, moment-tensor, focal-mechanism, ...).
+   * Parsed from the comma-delimited `types` string on the response.
+   */
+  types:     string[];
   /** ISO 3166-1 alpha-2 country code derived from place string (best-effort). */
   countryIso2: string;
   /** Direct link to USGS event page */
@@ -103,9 +140,18 @@ export function useEarthquakes(enabled: boolean) {
             mag:     number;
             place:   string;
             time:    number;
+            updated: number;
             url:     string;
             sig:     number;
             tsunami: number;
+            magType: string | null;
+            alert:   string | null;
+            felt:    number | null;
+            cdi:     number | null;
+            mmi:     number | null;
+            status:  string | null;
+            type:    string;
+            types:   string;   // comma-delimited: ",dyfi,origin,phase-data,"
           };
         }>;
       };
@@ -115,17 +161,42 @@ export function useEarthquakes(enabled: boolean) {
         .map((f): EarthquakeEvent => {
           const [lng, lat, depth] = f.geometry.coordinates;
           const p = f.properties;
+          // `types` is a comma-bordered string like ",dyfi,origin,shakemap,";
+          // split + drop empty entries to get a clean string[].
+          const typesArr = (p.types ?? '')
+            .split(',')
+            .map(s => s.trim())
+            .filter(Boolean);
+          const alertRaw = p.alert?.toLowerCase();
+          const alert: PagerAlert | null =
+            alertRaw === 'green'  ? 'green'  :
+            alertRaw === 'yellow' ? 'yellow' :
+            alertRaw === 'orange' ? 'orange' :
+            alertRaw === 'red'    ? 'red'    : null;
+          const statusRaw = p.status?.toLowerCase();
+          const status: EarthquakeEvent['status'] =
+            statusRaw === 'reviewed'  ? 'reviewed'  :
+            statusRaw === 'automatic' ? 'automatic' : null;
           return {
             id:          f.id,
             date:        new Date(p.time).toISOString().slice(0, 10),
             time:        p.time,
+            updated:     p.updated ?? p.time,
             lat,
             lng,
             depth:       depth ?? 0,
             magnitude:   p.mag,
+            magType:     p.magType ?? null,
             place:       p.place ?? '',
             sig:         p.sig ?? 0,
             tsunami:     p.tsunami === 1,
+            alert,
+            felt:        typeof p.felt === 'number' ? p.felt : null,
+            cdi:         typeof p.cdi  === 'number' ? p.cdi  : null,
+            mmi:         typeof p.mmi  === 'number' ? p.mmi  : null,
+            status,
+            type:        p.type ?? 'earthquake',
+            types:       typesArr,
             countryIso2: extractCountry(p.place ?? ''),
             sourceUrl:   p.url ?? '',
           };

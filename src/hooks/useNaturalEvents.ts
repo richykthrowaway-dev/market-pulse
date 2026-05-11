@@ -28,6 +28,11 @@ export type NaturalEventCategory =
   | 'volcanoes'
   | 'floods';
 
+export interface NaturalEventSource {
+  id:  string;
+  url: string;
+}
+
 export interface NaturalEvent {
   id:           string;
   title:        string;
@@ -43,8 +48,43 @@ export interface NaturalEvent {
   sourceUrl:    string;
   /** Source agency name, e.g. "InciWeb", "NASA FIRMS", "NOAA NHC". */
   sourceName:   string | null;
+  /** Full source list (id + url per source). */
+  sources:      NaturalEventSource[];
   /** Number of geometry points — high count = long-duration / long-track event. */
   geometryCount: number;
+  /**
+   * EONET event-closed timestamp.  null = currently open / active.
+   * String = ISO datetime when the event was marked closed.
+   */
+  closed:       string | null;
+  /**
+   * Latest geometry's magnitude value — the event's quantitative size.
+   * Per category:
+   *   wildfires    → acres (or hectares — see magnitudeUnit)
+   *   severeStorms → average max sustained wind speed in knots
+   *   volcanoes    → usually unset
+   *   floods       → usually unset
+   */
+  magnitudeValue: number | null;
+  /** Unit label for `magnitudeValue` — e.g. "acres", "kts", "ha". */
+  magnitudeUnit:  string | null;
+  /**
+   * Magnitude growth rate per day, computed from the FIRST and LATEST
+   * geometry points.  For wildfires: acres/day spread. For storms: kts/day
+   * intensification.  null when fewer than 2 magnitude points exist.
+   */
+  growthRatePerDay: number | null;
+  /**
+   * Translation speed of the event over Earth's surface (km/h), from the
+   * last two geometry points.  Meaningful for moving systems like storms;
+   * largely zero for stationary wildfires.
+   */
+  motionSpeedKmh:   number | null;
+  /**
+   * Initial bearing of motion (degrees clockwise from north) from the
+   * last two geometry points.  null when only one geometry exists.
+   */
+  bearingDeg:       number | null;
 }
 
 // ── EONET → our category mapping ────────────────────────────────────────────
@@ -102,6 +142,9 @@ interface EonetGeometry {
   date:        string;            // ISO 8601 with time
   type:        'Point' | 'Polygon';
   coordinates: number[] | number[][] | number[][][];
+  /** EONET per-point magnitude (fire size, wind speed, etc.). */
+  magnitudeValue?: number | null;
+  magnitudeUnit?:  string | null;
 }
 
 interface EonetEvent {
@@ -109,6 +152,8 @@ interface EonetEvent {
   title:       string;
   description: string | null;
   link:        string;
+  /** ISO datetime when the event closed; null = still active. */
+  closed:      string | null;
   categories:  Array<{ id: string; title: string }>;
   sources:     Array<{ id: string; url: string }>;
   geometry:    EonetGeometry[];
@@ -116,6 +161,34 @@ interface EonetEvent {
 
 interface EonetResponse {
   events: EonetEvent[];
+}
+
+// ── Geometry-track derived metrics ─────────────────────────────────────────
+// Two-point haversine + bearing.  These run inside the hook on each fetch,
+// not in render — they're cheap (~6 trig ops per event) but we still keep
+// them outside the React tree so they don't memo-spin.
+
+/** Initial bearing in degrees clockwise from north, going from a → b. */
+function bearingBetween(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const φ1 = aLat * Math.PI / 180;
+  const φ2 = bLat * Math.PI / 180;
+  const Δλ = (bLng - aLng) * Math.PI / 180;
+  const y = Math.sin(Δλ) * Math.cos(φ2);
+  const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+  const θ = Math.atan2(y, x);
+  return (θ * 180 / Math.PI + 360) % 360;
+}
+
+/** Great-circle distance in km via the haversine formula. */
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371; // Earth radius km
+  const φ1 = aLat * Math.PI / 180;
+  const φ2 = bLat * Math.PI / 180;
+  const dφ = (bLat - aLat) * Math.PI / 180;
+  const dλ = (bLng - aLng) * Math.PI / 180;
+  const a = Math.sin(dφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(dλ / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 const NE_STALE = 30 * 60_000; // 30 min
@@ -173,21 +246,72 @@ export function useNaturalEvents(enabled: boolean) {
         // array oldest→newest but doesn't guarantee it, so sort defensively.
         const sorted = [...e.geometry].sort((a, b) => a.date.localeCompare(b.date));
         const latest = sorted[sorted.length - 1];
+        const earliest = sorted[0];
         const pos    = geometryToLatLng(latest);
         if (!pos) continue;
 
+        // ── Derived: growth rate per day (intensity change over time) ──
+        // Only meaningful if both earliest and latest carry a magnitude.
+        // For wildfires this is acres-per-day spread; for storms it's
+        // wind-kts-per-day intensification.
+        let growthRatePerDay: number | null = null;
+        if (
+          earliest !== latest &&
+          typeof earliest.magnitudeValue === 'number' &&
+          typeof latest.magnitudeValue   === 'number'
+        ) {
+          const t0 = new Date(earliest.date).getTime();
+          const t1 = new Date(latest.date).getTime();
+          const days = (t1 - t0) / 86_400_000;
+          if (days > 0) {
+            growthRatePerDay = (latest.magnitudeValue - earliest.magnitudeValue) / days;
+          }
+        }
+
+        // ── Derived: storm motion (last two points → speed + bearing) ──
+        // For multi-point events we use the most recent two geometries.
+        // For static events (single point) this stays null.
+        let motionSpeedKmh: number | null = null;
+        let bearingDeg:     number | null = null;
+        if (sorted.length >= 2) {
+          const prev    = sorted[sorted.length - 2];
+          const prevPos = geometryToLatLng(prev);
+          if (prevPos) {
+            const t0 = new Date(prev.date).getTime();
+            const t1 = new Date(latest.date).getTime();
+            const hours = (t1 - t0) / 3_600_000;
+            if (hours > 0) {
+              const km = haversineKm(prevPos.lat, prevPos.lng, pos.lat, pos.lng);
+              motionSpeedKmh = km / hours;
+              // Only report bearing when there's meaningful displacement
+              // (>1 km) — stationary wildfires would otherwise emit
+              // noisy bearings from sub-pixel coordinate jitter.
+              if (km > 1) {
+                bearingDeg = bearingBetween(prevPos.lat, prevPos.lng, pos.lat, pos.lng);
+              }
+            }
+          }
+        }
+
         out.push({
-          id:            e.id,
-          title:         e.title,
+          id:               e.id,
+          title:            e.title,
           category,
-          date:          latest.date.slice(0, 10),
-          lat:           pos.lat,
-          lng:           pos.lng,
-          countryIso2:   nearestCountry(pos.lat, pos.lng),
-          description:   e.description,
-          sourceUrl:     e.sources?.[0]?.url ?? e.link ?? '',
-          sourceName:    e.sources?.[0]?.id ?? null,
-          geometryCount: e.geometry.length,
+          date:             latest.date.slice(0, 10),
+          lat:              pos.lat,
+          lng:              pos.lng,
+          countryIso2:      nearestCountry(pos.lat, pos.lng),
+          description:      e.description,
+          sourceUrl:        e.sources?.[0]?.url ?? e.link ?? '',
+          sourceName:       e.sources?.[0]?.id ?? null,
+          sources:          (e.sources ?? []).map(s => ({ id: s.id, url: s.url })),
+          geometryCount:    e.geometry.length,
+          closed:           e.closed,
+          magnitudeValue:   typeof latest.magnitudeValue === 'number' ? latest.magnitudeValue : null,
+          magnitudeUnit:    latest.magnitudeUnit ?? null,
+          growthRatePerDay,
+          motionSpeedKmh,
+          bearingDeg,
         });
       }
       return out;
