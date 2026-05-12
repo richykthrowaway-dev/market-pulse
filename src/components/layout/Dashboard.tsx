@@ -207,7 +207,7 @@ export function Dashboard() {
         </div>
 
         {/* Chart — ~2/3 width */}
-        <div className="lg:w-2/3 min-w-0">
+        <div className="lg:w-2/3 min-w-0 h-64 md:h-96 lg:h-[500px]">
           <StockChart
             symbol={activeStock.symbol}
             name={activeStock.name}

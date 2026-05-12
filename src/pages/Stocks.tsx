@@ -434,21 +434,23 @@ const Stocks = () => {
           {activeStock && (
             <>
               {/* ── Above-the-fold: loads immediately ── */}
-              <StockChart
-                symbol={activeStock.symbol}
-                name={activeStock.name}
-                currentPrice={activeStock.price}
-                volatility={2.5}
-                onRangeChange={setChartDays}
-                externalBars={
-                  isPinnedSelected && activePinnedData
-                    ? activePinnedData.bars      // pinned stock — EODHD bars already fetched
-                    : (activeLocalBars ?? undefined) // local stock — 5Y EODHD bars
-                }
-                exchange={isPinnedSelected && activePinnedMeta ? activePinnedMeta.exchange : undefined}
-                logoUrl={isPinnedSelected && activePinnedData ? activePinnedData.stock.logoUrl : undefined}
-                currency={isPinnedSelected && activePinnedData ? activePinnedData.stock.currency : 'USD'}
-              />
+              <div className="h-64 md:h-96">
+                <StockChart
+                  symbol={activeStock.symbol}
+                  name={activeStock.name}
+                  currentPrice={activeStock.price}
+                  volatility={2.5}
+                  onRangeChange={setChartDays}
+                  externalBars={
+                    isPinnedSelected && activePinnedData
+                      ? activePinnedData.bars      // pinned stock — EODHD bars already fetched
+                      : (activeLocalBars ?? undefined) // local stock — 5Y EODHD bars
+                  }
+                  exchange={isPinnedSelected && activePinnedMeta ? activePinnedMeta.exchange : undefined}
+                  logoUrl={isPinnedSelected && activePinnedData ? activePinnedData.stock.logoUrl : undefined}
+                  currency={isPinnedSelected && activePinnedData ? activePinnedData.stock.currency : 'USD'}
+                />
+              </div>
 
               {/* TradingView Advanced Chart — range synced to timeframe buttons.
                   key forces a full remount on symbol or range change so the
