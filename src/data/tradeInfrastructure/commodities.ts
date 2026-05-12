@@ -655,6 +655,65 @@ export const COMMODITIES: readonly Commodity[] = [
       { iso2: 'BG', share:  2.5 },
     ],
   },
+
+  // ── Phase 2: new commodity entries ──────────────────────────────────────
+  {
+    id:       'rare-earths',
+    label:    'Rare Earths',
+    category: 'metals',
+    unit:     'kt REO',
+    source:   'USGS',
+    year:     2023,
+    useCase:  'Permanent magnets for EV motors, wind turbines, defense systems; phosphors for screens and lighting.',
+    producers: [
+      { iso2: 'CN', share: 68.0 },
+      { iso2: 'US', share: 12.3 },
+      { iso2: 'MM', share:  5.5 }, // Myanmar
+      { iso2: 'AU', share:  5.4 },
+      { iso2: 'TH', share:  2.2 },
+      { iso2: 'MG', share:  1.4 }, // Madagascar
+      { iso2: 'IN', share:  1.0 },
+      { iso2: 'RU', share:  0.8 },
+    ],
+  },
+  {
+    id:       'steel',
+    label:    'Steel',
+    category: 'metals',
+    unit:     'Mt crude steel',
+    source:   'World Steel Association',
+    year:     2023,
+    useCase:  'Construction (rebar, structural), automotive, machinery, shipbuilding, appliances.',
+    producers: [
+      { iso2: 'CN', share: 54.0 },
+      { iso2: 'IN', share:  7.3 },
+      { iso2: 'JP', share:  4.7 },
+      { iso2: 'US', share:  4.3 },
+      { iso2: 'RU', share:  4.0 },
+      { iso2: 'KR', share:  3.5 },
+      { iso2: 'DE', share:  1.9 },
+      { iso2: 'TR', share:  1.9 },
+    ],
+  },
+  {
+    id:       'lumber',
+    label:    'Lumber',
+    category: 'agriculture',
+    unit:     'M m³ industrial roundwood',
+    source:   'FAOSTAT',
+    year:     2022,
+    useCase:  'Construction framing, furniture, pulp & paper feedstock, packaging.',
+    producers: [
+      { iso2: 'US', share: 19.0 },
+      { iso2: 'RU', share: 11.0 },
+      { iso2: 'CN', share:  8.5 },
+      { iso2: 'CA', share:  7.2 },
+      { iso2: 'BR', share:  6.5 },
+      { iso2: 'SE', share:  3.8 },
+      { iso2: 'FI', share:  3.6 },
+      { iso2: 'DE', share:  3.5 },
+    ],
+  },
 ] as const;
 
 /** id → Commodity index, built once at module load. */

@@ -14,6 +14,8 @@ import { useEodhdBarsForChart } from '@/hooks/useEodhdBarsForChart';
 import { useEodhdNews } from '@/hooks/useEodhdNews';
 import { useEodhdTechnicals } from '@/hooks/useEodhdTechnicals';
 import { CommodityProducersCard } from './CommodityProducersCard';
+import { ProductCompositionCard } from './ProductCompositionCard';
+import { RareEarthsBreakdownCard } from './RareEarthsBreakdownCard';
 import { CommodityCatalystStrip } from './CommodityCatalystStrip';
 import { CommodityDriverBlock }   from './CommodityDriverBlock';
 import { Sparkline }              from '@/components/ui/Sparkline';
@@ -100,6 +102,12 @@ export function CommoditiesPanel() {
       <div className="border-t border-border">
         <CommodityProducersCard />
       </div>
+
+      {/* ── Product → Commodity breakdown ─────────────────────────────────── */}
+      <ProductCompositionCard />
+
+      {/* ── Rare earths drill-down (17 elements behind the REMX tile) ───── */}
+      <RareEarthsBreakdownCard />
     </div>
   );
 }
@@ -176,8 +184,6 @@ function CommodityPriceStrip({
       ) : (
         <div className="grid grid-cols-3 gap-1.5">
           {prices.map((p) => {
-            const up       = p.changeP > 0;
-            const dn       = p.changeP < 0;
             const selected = p.id === selectedId;
 
             // 1D → use hourly intraday closes (may still be loading on first select).
@@ -188,6 +194,20 @@ function CommodityPriceStrip({
                 : (p.sparkline && p.sparkline.length >= 2
                     ? p.sparkline.slice(-SPARK_BARS[sparkRange])
                     : null);
+
+            // Derive the gain % from the visible sparkline bars so the number
+            // always matches the selected range.
+            //   formula: (last − first) / first × 100
+            // Falls back to the API's 1-day changeP only when sparkValues is not
+            // yet available (e.g. intraday still loading, or insufficient history).
+            const sparkGainP =
+              sparkValues && sparkValues.length >= 2 && sparkValues[0] !== 0
+                ? ((sparkValues[sparkValues.length - 1] - sparkValues[0]) / sparkValues[0]) * 100
+                : null;
+
+            const displayChangeP = sparkGainP ?? p.changeP;
+            const up = displayChangeP > 0;
+            const dn = displayChangeP < 0;
 
             return (
               <button
@@ -245,7 +265,8 @@ function CommodityPriceStrip({
                     )}
                   >
                     {up ? <TrendingUp className="w-3 h-3" /> : dn ? <TrendingDown className="w-3 h-3" /> : null}
-                    {up ? '+' : ''}{p.changeP.toFixed(2)}%
+                    {up ? '+' : ''}{displayChangeP.toFixed(2)}%
+                    <span className="text-[8px] font-normal opacity-50 ml-0.5">{sparkRange}</span>
                   </p>
                 </div>
               </button>

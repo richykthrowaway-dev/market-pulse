@@ -61,8 +61,8 @@ export const MARITIME_ROUTES: TradeRoute[] = [
     tags: ['container', 'asia-europe'],
     waypoints: [
       { lat:  2.5, lng: 102 },    // Phillip Channel area
-      { lat:  3.5, lng:  99 },    // Malacca Strait middle
-      { lat:  5.5, lng:  95.5 },  // Malacca Strait north exit
+      { lat:  3.5, lng: 101 },    // Malacca Strait middle (mid-strait at 3.5°N; Sumatra coast ~99.2E, Malaysia ~103E)
+      { lat:  5.5, lng:  95.5 },  // Malacca Strait north exit (Andaman Sea, W of Sumatra tip)
       { lat:  6,   lng:  90 },    // Andaman Sea / Indian Ocean entry
       { lat:  6,   lng:  82 },    // South of Sri Lanka (8° Channel)
       { lat:  9,   lng:  72 },    // Open Indian Ocean (W of Maldives)
@@ -88,7 +88,9 @@ export const MARITIME_ROUTES: TradeRoute[] = [
     passesThrough: ['cp.suez', 'cp.gibraltar'],
     description: 'Mediterranean → North Europe terminal leg of Asia–Europe corridor.',
     waypoints: [
-      { lat: 31.5, lng:  31 },    // Port Said area
+      { lat: 30.5, lng:  32.4 },  // Suez Canal mid-section (canal runs ~32.3E; Ismailia area)
+      { lat: 31.2, lng:  32.3 },  // Port Said — Mediterranean entrance of canal (31.26N, 32.31E)
+      { lat: 32,   lng:  31 },    // Open Eastern Mediterranean NW of Port Said
       { lat: 33,   lng:  28 },    // Eastern Mediterranean (S of Cyprus)
       { lat: 34,   lng:  23 },    // South of Crete
       { lat: 36.5, lng:  17 },    // Ionian Sea (S of Italy)
@@ -223,8 +225,9 @@ export const MARITIME_ROUTES: TradeRoute[] = [
     tags: ['energy', 'crude'],
     waypoints: [
       { lat: 26.5, lng: 53 },    // Persian Gulf middle
-      { lat: 26.5, lng: 56.5 },  // Hormuz strait exit
-      { lat: 24,   lng: 60 },    // Gulf of Oman
+      { lat: 26.5, lng: 56.5 },  // Hormuz strait exit (main channel, N of Musandam)
+      { lat: 26,   lng: 58 },    // Gulf of Oman — east of Musandam (coast pulls to ~24N by 58E)
+      { lat: 24,   lng: 60 },    // Gulf of Oman (clear of Oman coast)
       { lat: 18,   lng: 63 },    // Arabian Sea north
       { lat: 12,   lng: 67 },    // Arabian Sea
       { lat:  8,   lng: 72 },    // Indian Ocean (W of India)
@@ -232,7 +235,7 @@ export const MARITIME_ROUTES: TradeRoute[] = [
       { lat:  4,   lng: 84 },    // Open Indian Ocean
       { lat:  4,   lng: 91 },    // Approaching Andaman Sea
       { lat:  5,   lng: 96 },    // Malacca Strait north entry
-      { lat:  4,   lng: 100 },   // Malacca Strait middle
+      { lat:  4,   lng: 101.5 },  // Malacca Strait middle (mid-strait at 4°N; Sumatra coast ~100E, Malaysia ~103E)
       { lat:  2,   lng: 103 },   // Phillip Channel
     ],
   },
@@ -247,14 +250,15 @@ export const MARITIME_ROUTES: TradeRoute[] = [
     tags: ['energy', 'crude'],
     waypoints: [
       { lat: 26.5, lng: 53 },
-      { lat: 26.5, lng: 56.5 },  // Hormuz exit
+      { lat: 26.5, lng: 56.5 },  // Hormuz exit (main channel, N of Musandam)
+      { lat: 26,   lng: 58 },    // Gulf of Oman — east of Musandam
       { lat: 24,   lng: 60 },
       { lat: 16,   lng: 64 },
       { lat:  8,   lng: 73 },
       { lat:  4,   lng: 84 },
       { lat:  4,   lng: 91 },
       { lat:  5,   lng: 96 },    // Malacca north
-      { lat:  4,   lng: 100 },   // Malacca middle
+      { lat:  4,   lng: 101.5 },  // Malacca middle (mid-strait at 4°N)
       { lat:  2,   lng: 104 },   // Singapore Strait
       { lat:  4,   lng: 106 },   // South China Sea SW
       { lat:  9,   lng: 109 },   // Off southern Vietnam
@@ -353,7 +357,7 @@ export const MARITIME_ROUTES: TradeRoute[] = [
       { lat:   5,   lng:  78 },   // S of Sri Lanka
       { lat:   4,   lng:  88 },   // Open Indian Ocean
       { lat:   5,   lng:  96 },   // Malacca north
-      { lat:   4,   lng: 100 },   // Malacca middle
+      { lat:   4,   lng: 101.5 },  // Malacca middle (mid-strait at 4°N)
       { lat:   2,   lng: 104 },   // Singapore Strait
       { lat:   8,   lng: 109 },   // South China Sea
       { lat:  14,   lng: 113 },   // South China Sea
@@ -377,8 +381,11 @@ export const MARITIME_ROUTES: TradeRoute[] = [
       { lat: 11,   lng: 70 },    // Arabian Sea
       { lat: 15,   lng: 64 },    // Arabian Sea NW
       { lat: 20,   lng: 60 },    // Arabian Sea N
-      { lat: 24,   lng: 58 },    // Gulf of Oman approach
-      { lat: 25.5, lng: 56.5 },  // Hormuz strait
+      { lat: 23,   lng: 59 },    // Gulf of Oman (Oman coast at 59E is ~22-23N — clear)
+      { lat: 25.5, lng: 58 },    // Gulf of Oman N (Oman coast at 58E is ~24N — clear at 25.5N)
+      { lat: 26.8, lng: 57 },    // Hormuz main channel (N of Musandam tip ~26.4N,56.3E)
+      { lat: 26.8, lng: 55.5 },  // Persian Gulf interior — just west of Hormuz
+      { lat: 26,   lng: 55 },    // Persian Gulf heading SW toward Dubai
     ],
   },
 ];
