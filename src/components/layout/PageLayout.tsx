@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from '@/components/layout/Navbar';
 import { Sidebar } from '@/components/layout/Sidebar';
+import { MobileShell } from '@/components/layout/MobileShell';
+import { useIsMobile } from '@/hooks/useIsMobile';
 import { useStatement } from '@/contexts/StatementContext';
 
 interface PageLayoutProps {
@@ -11,11 +13,12 @@ interface PageLayoutProps {
   description?: string;
   /** Canonical path (e.g. "/portfolio") */
   canonical?: string;
-  /** When true, suppresses the visible h1 heading (page manages its own title via usePageMeta) */
+  /** When true, suppresses the visible h1 heading */
   hideTitle?: boolean;
 }
 
 export function PageLayout({ children, title, description, canonical, hideTitle }: PageLayoutProps) {
+  const isMobile = useIsMobile();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { parsedStatement, fileName, isParsingFile, handleFileUpload, clearStatement } = useStatement();
 
@@ -44,15 +47,24 @@ export function PageLayout({ children, title, description, canonical, hideTitle 
   const portfolioMeta = parsedStatement
     ? `${parsedStatement.meta.broker || 'Statement'} • ${parsedStatement.openPositions.length} pos • ${parsedStatement.trades.length} trades`
     : null;
-  
-  const toggleSidebar = () => {
-    setIsSidebarCollapsed(prev => !prev);
-  };
-  
+
+  const toggleSidebar = () => setIsSidebarCollapsed(prev => !prev);
+
+  // ── Mobile layout ──────────────────────────────────────────────────────────
+  if (isMobile) {
+    return (
+      <MobileShell title={title}>
+        {!hideTitle && <h1 className="text-xl font-bold mb-4">{title}</h1>}
+        {children}
+      </MobileShell>
+    );
+  }
+
+  // ── Desktop layout (unchanged) ─────────────────────────────────────────────
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      
+
       <div className="flex-1 flex">
         <Sidebar
           isCollapsed={isSidebarCollapsed}
@@ -63,7 +75,7 @@ export function PageLayout({ children, title, description, canonical, hideTitle 
           onFileUpload={handleFileUpload}
           isParsingFile={isParsingFile}
         />
-        
+
         <main className="flex-1 transition-all duration-300">
           <div className={`container max-w-full animate-fade-in ${hideTitle ? 'p-4 lg:p-4' : 'p-4 lg:p-6'}`}>
             {!hideTitle && <h1 className="text-2xl font-bold mb-6">{title}</h1>}
