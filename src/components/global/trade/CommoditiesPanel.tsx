@@ -2,8 +2,9 @@ import { useState, useMemo } from 'react';
 import {
   BarChart3, TrendingUp, TrendingDown, Layers,
   Newspaper, LineChart as LineChartIcon, Loader2,
-  ExternalLink,
+  ExternalLink, Gem, Zap, Hammer, BatteryCharging, Sprout,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine,
 } from 'recharts';
@@ -46,6 +47,117 @@ const SPARK_BARS: Record<SparkRange, number> = {
   '6M': 126,
   '1Y': 252,
 };
+
+// ── Commodity categorisation ────────────────────────────────────────────────
+// Maps each commodity id (matches keys returned by the api-commodity-prices
+// edge function) to a category label. Tiles are rendered grouped by category
+// in the order listed in CATEGORY_ORDER.
+type CommodityCategory =
+  | 'Precious Metals'
+  | 'Energy'
+  | 'Industrial Metals'
+  | 'Battery & Tech Metals'
+  | 'Agriculture';
+
+const CATEGORY_ORDER: CommodityCategory[] = [
+  'Precious Metals',
+  'Energy',
+  'Industrial Metals',
+  'Battery & Tech Metals',
+  'Agriculture',
+];
+
+/**
+ * Visual treatment per category. Each "bucket" renders with a tinted background
+ * and a thick left accent bar so the groupings read at a glance.
+ *
+ * Colors picked to evoke the category:
+ *   - Precious        → amber  (gold/silver shine)
+ *   - Energy          → orange (flame/oil)
+ *   - Industrial      → slate  (steel/concrete)
+ *   - Battery & Tech  → violet (high-tech)
+ *   - Agriculture     → emerald (crops)
+ *
+ * `tintBg` is applied at low alpha so the existing tile borders/contents still read.
+ */
+const CATEGORY_STYLE: Record<CommodityCategory, {
+  icon:    LucideIcon;
+  /** Tailwind classes for the bucket container — accent border + tinted bg. */
+  bucket:  string;
+  /** Tailwind classes for the heading text + icon color. */
+  heading: string;
+}> = {
+  'Precious Metals': {
+    icon:    Gem,
+    bucket:  'bg-amber-500/[0.04] border-l-2 border-amber-500/60',
+    heading: 'text-amber-400',
+  },
+  'Energy': {
+    icon:    Zap,
+    bucket:  'bg-orange-500/[0.04] border-l-2 border-orange-500/60',
+    heading: 'text-orange-400',
+  },
+  'Industrial Metals': {
+    icon:    Hammer,
+    bucket:  'bg-slate-500/[0.05] border-l-2 border-slate-400/60',
+    heading: 'text-slate-300',
+  },
+  'Battery & Tech Metals': {
+    icon:    BatteryCharging,
+    bucket:  'bg-violet-500/[0.04] border-l-2 border-violet-500/60',
+    heading: 'text-violet-400',
+  },
+  'Agriculture': {
+    icon:    Sprout,
+    bucket:  'bg-emerald-500/[0.04] border-l-2 border-emerald-500/60',
+    heading: 'text-emerald-400',
+  },
+};
+
+const CATEGORY_OF: Record<string, CommodityCategory> = {
+  // Precious
+  gold:        'Precious Metals',
+  silver:      'Precious Metals',
+  platinum:    'Precious Metals',
+  palladium:   'Precious Metals',
+  // Energy
+  crude_oil:   'Energy',
+  brent:       'Energy',
+  natural_gas: 'Energy',
+  heating_oil: 'Energy',
+  gasoline:    'Energy',
+  coal:        'Energy',
+  uranium:     'Energy',
+  hydrogen:    'Energy',
+  carbon:      'Energy',
+  // Industrial / base metals
+  copper:      'Industrial Metals',
+  aluminum:    'Industrial Metals',
+  iron_ore:    'Industrial Metals',
+  nickel:      'Industrial Metals',
+  zinc:        'Industrial Metals',
+  tin:         'Industrial Metals',
+  steel:       'Industrial Metals',
+  // Battery / tech
+  lithium:     'Battery & Tech Metals',
+  cobalt:      'Battery & Tech Metals',
+  rare_earths: 'Battery & Tech Metals',
+  // Agriculture (soft commodities + fertiliser + lumber)
+  corn:        'Agriculture',
+  wheat:       'Agriculture',
+  soybeans:    'Agriculture',
+  coffee:      'Agriculture',
+  sugar:       'Agriculture',
+  cotton:      'Agriculture',
+  cocoa:       'Agriculture',
+  phosphate:   'Agriculture',
+  potash:      'Agriculture',
+  lumber:      'Agriculture',
+};
+
+function categoryOf(p: CommodityPrice): CommodityCategory {
+  return CATEGORY_OF[p.id] ?? 'Industrial Metals';
+}
 
 /**
  * CommoditiesPanel — dedicated "Commodities" tab on the Global page.
@@ -127,15 +239,36 @@ function CommodityPriceStrip({
   // Sparkline timeframe toggle.  Default 1M matches the previous view.
   const [sparkRange, setSparkRange] = useState<SparkRange>('1M');
 
-  // Intraday data — only fetched when the user switches to the 1D tab.
-  // `enabled` gates the network call so we don't burn 45 EODHD credits
-  // on every panel mount.
+  // Intraday data — fetched for 1D (1h bars) and 1W (aggregated to 4h bars).
+  // `enabled` gates the network call so we don't burn 145 EODHD credits
+  // on every panel mount when on longer-range tabs.
   const { data: intradayData, isLoading: intradayLoading } =
-    useCommodityIntraday(sparkRange === '1D');
+    useCommodityIntraday(sparkRange === '1D' || sparkRange === '1W');
+
+  // 1h bars map — used as-is for the 1D sparkline.
   const intradayMap = useMemo(
     () => buildIntradayMap(intradayData?.intraday ?? []),
     [intradayData],
   );
+
+  // 4h bars map — 1h bars grouped into 4-hour buckets for the 1W sparkline.
+  // Takes the last close in each 4h window, giving ~8–10 points over 5 days.
+  const intraday4hMap = useMemo(() => {
+    const intraday = intradayData?.intraday ?? [];
+    return new Map(
+      intraday.map(d => {
+        const buckets = new Map<number, number>();
+        for (const bar of d.bars) {
+          const bucket = Math.floor(bar.timestamp / (4 * 3600));
+          buckets.set(bucket, bar.close);
+        }
+        const closes = Array.from(buckets.keys())
+          .sort((a, b) => a - b)
+          .map(k => buckets.get(k)!);
+        return [d.id, closes] as [string, number[]];
+      }),
+    );
+  }, [intradayData]);
 
   return (
     <div className="px-4 py-3">
@@ -174,107 +307,162 @@ function CommodityPriceStrip({
       </div>
 
       {isLoading ? (
-        <div className="grid grid-cols-3 gap-1.5">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="h-14 rounded bg-muted/30 animate-pulse" />
+        <div className="grid grid-cols-4 gap-1">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="h-11 rounded bg-muted/30 animate-pulse" />
           ))}
         </div>
       ) : prices.length === 0 ? (
         <p className="text-xs text-muted-foreground italic">Loading commodity data…</p>
       ) : (
-        <div className="grid grid-cols-3 gap-1.5">
-          {prices.map((p) => {
-            const selected = p.id === selectedId;
-
-            // 1D → use hourly intraday closes (may still be loading on first select).
-            // All other ranges → slice the trailing N bars from the 252-bar EOD array.
-            const sparkValues: number[] | null =
-              sparkRange === '1D'
-                ? (intradayMap.get(p.id) ?? null)
-                : (p.sparkline && p.sparkline.length >= 2
-                    ? p.sparkline.slice(-SPARK_BARS[sparkRange])
-                    : null);
-
-            // Derive the gain % from the visible sparkline bars so the number
-            // always matches the selected range.
-            //   formula: (last − first) / first × 100
-            // Falls back to the API's 1-day changeP only when sparkValues is not
-            // yet available (e.g. intraday still loading, or insufficient history).
-            const sparkGainP =
-              sparkValues && sparkValues.length >= 2 && sparkValues[0] !== 0
-                ? ((sparkValues[sparkValues.length - 1] - sparkValues[0]) / sparkValues[0]) * 100
-                : null;
-
-            const displayChangeP = sparkGainP ?? p.changeP;
-            const up = displayChangeP > 0;
-            const dn = displayChangeP < 0;
-
-            return (
-              <button
-                key={p.id}
-                onClick={() => onSelect(p)}
-                className={cn(
-                  'group relative text-left rounded border bg-muted/30 transition-colors duration-100 overflow-hidden',
-                  'px-3 py-2',
-                  selected
-                    ? 'border-primary/60 bg-primary/8 ring-1 ring-primary/30'
-                    : 'border-border/40 hover:border-primary/30 hover:bg-muted/50',
-                )}
-              >
-                {/* Sparkline as background — fills the right side of the tile.
-                    1D → hourly intraday bars (fetched lazily on first select).
-                    All others → EOD slice from the 252-bar array.
-                    pointer-events-none so clicks pass through to the button. */}
-                {sparkRange === '1D' && intradayLoading ? (
-                  /* Subtle pulse placeholder while intraday loads */
-                  <div className="pointer-events-none absolute right-2 top-2 bottom-2 w-[55%] flex items-center justify-end opacity-30">
-                    <div className="w-full h-5 rounded bg-muted-foreground/20 animate-pulse" />
-                  </div>
-                ) : sparkValues && sparkValues.length >= 2 ? (
-                  <div className="pointer-events-none absolute right-2 top-2 bottom-2 w-[55%] flex items-center justify-end">
-                    <Sparkline
-                      values={sparkValues}
-                      width={160}
-                      height={40}
-                      color={up ? '#34d399' : dn ? '#f87171' : '#94a3b8'}
-                      showFill
-                      showLastDot
-                      label={`${p.label} · ${sparkRange}${sparkRange === '1D' ? ' · hourly' : ''}`}
-                      className="opacity-70 group-hover:opacity-90 transition-opacity"
-                    />
-                  </div>
-                ) : sparkRange === '1D' ? (
-                  /* Markets closed / no intraday data available */
-                  <div className="pointer-events-none absolute right-2 top-2 bottom-2 w-[55%] flex items-center justify-end pr-1">
-                    <span className="text-[8px] text-muted-foreground/40 italic">mkt closed</span>
-                  </div>
-                ) : null}
-
-                {/* Foreground stack — text content sits on top of the sparkline */}
-                <div className="relative z-10">
-                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground truncate">
-                    {p.label}
-                  </p>
-                  <p className="text-base font-semibold font-mono tabular-nums mt-0.5">
-                    ${p.price.toFixed(2)}
-                  </p>
-                  <p
+        /* Group tiles by commodity category — fixed category order, then
+           alphabetical within each group. Categories with no matching prices
+           are skipped (so a partial API response doesn't show empty headings). */
+        (() => {
+          const byCategory = new Map<CommodityCategory, CommodityPrice[]>();
+          for (const p of prices) {
+            const cat = categoryOf(p);
+            if (!byCategory.has(cat)) byCategory.set(cat, []);
+            byCategory.get(cat)!.push(p);
+          }
+          for (const arr of byCategory.values()) {
+            arr.sort((a, b) => a.label.localeCompare(b.label));
+          }
+          return (
+            <div className="space-y-1.5">
+              {CATEGORY_ORDER.filter(c => byCategory.has(c)).map(cat => {
+                const style = CATEGORY_STYLE[cat];
+                const Icon  = style.icon;
+                const items = byCategory.get(cat)!;
+                return (
+                  <section
+                    key={cat}
                     className={cn(
-                      'text-[11px] flex items-center gap-0.5 font-medium tabular-nums mt-0.5',
-                      up ? 'text-emerald-400' : dn ? 'text-red-400' : 'text-muted-foreground',
+                      'rounded-md pl-2 pr-1.5 pt-1 pb-1.5',
+                      style.bucket,
                     )}
                   >
-                    {up ? <TrendingUp className="w-3 h-3" /> : dn ? <TrendingDown className="w-3 h-3" /> : null}
-                    {up ? '+' : ''}{displayChangeP.toFixed(2)}%
-                    <span className="text-[8px] font-normal opacity-50 ml-0.5">{sparkRange}</span>
-                  </p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                    <header className="flex items-center mb-1">
+                      <h4 className={cn(
+                        'flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider',
+                        style.heading,
+                      )}>
+                        <Icon className="w-2.5 h-2.5" />
+                        {cat}
+                      </h4>
+                    </header>
+                    <div className="grid grid-cols-4 gap-1">
+                      {items.map(p => (
+                        <CommodityTile
+                          key={p.id}
+                          price={p}
+                          selected={p.id === selectedId}
+                          sparkRange={sparkRange}
+                          intradayMap={intradayMap}
+                          intraday4hMap={intraday4hMap}
+                          intradayLoading={intradayLoading}
+                          onSelect={onSelect}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          );
+        })()
       )}
     </div>
+  );
+}
+
+// ── Tile (one commodity) ────────────────────────────────────────────────────
+
+function CommodityTile({
+  price: p,
+  selected,
+  sparkRange,
+  intradayMap,
+  intraday4hMap,
+  intradayLoading,
+  onSelect,
+}: {
+  price:           CommodityPrice;
+  selected:        boolean;
+  sparkRange:      SparkRange;
+  intradayMap:     Map<string, number[]>;
+  intraday4hMap:   Map<string, number[]>;
+  intradayLoading: boolean;
+  onSelect:        (p: CommodityPrice) => void;
+}) {
+  // 1D → 1h intraday closes.
+  // 1W → 4h aggregated intraday closes (~8–10 points over 5 trading days).
+  // All other ranges → slice the trailing N bars from the 252-bar EOD array.
+  const sparkValues: number[] | null =
+    sparkRange === '1D'
+      ? (intradayMap.get(p.id) ?? null)
+      : sparkRange === '1W'
+        ? (intraday4hMap.get(p.id) ?? null)
+        : (p.sparkline && p.sparkline.length >= 2
+            ? p.sparkline.slice(-SPARK_BARS[sparkRange])
+            : null);
+
+  // Derive gain % from the visible sparkline so it always matches the range.
+  const sparkGainP =
+    sparkValues && sparkValues.length >= 2 && sparkValues[0] !== 0
+      ? ((sparkValues[sparkValues.length - 1] - sparkValues[0]) / sparkValues[0]) * 100
+      : null;
+
+  const displayChangeP = sparkGainP ?? p.changeP;
+  const up = displayChangeP > 0;
+  const dn = displayChangeP < 0;
+
+  return (
+    <button
+      onClick={() => onSelect(p)}
+      title={`${p.label} (${p.ticker}) · ${up ? '+' : ''}${displayChangeP.toFixed(2)}% ${sparkRange}`}
+      className={cn(
+        'group relative text-left rounded border bg-muted/30 transition-colors duration-100 overflow-hidden',
+        'px-1.5 py-1',
+        selected
+          ? 'border-primary/60 bg-primary/8 ring-1 ring-primary/30'
+          : 'border-border/40 hover:border-primary/30 hover:bg-muted/50',
+      )}
+    >
+      {/* Sparkline sits as a faint background spanning the full tile width
+          since we no longer split the tile into text/spark columns. */}
+      {sparkValues && sparkValues.length >= 2 ? (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-end">
+          <Sparkline
+            values={sparkValues}
+            width={120}
+            height={28}
+            color={up ? '#34d399' : dn ? '#f87171' : '#94a3b8'}
+            showFill
+            showLastDot={false}
+            label={`${p.label} · ${sparkRange}`}
+          />
+        </div>
+      ) : null}
+
+      <div className="relative z-10 leading-tight">
+        <p className="text-[9px] uppercase tracking-wide text-muted-foreground truncate">
+          {p.label}
+        </p>
+        <p className="text-[12px] font-semibold font-mono tabular-nums">
+          ${p.price.toFixed(2)}
+        </p>
+        <p
+          className={cn(
+            'text-[10px] flex items-center gap-0.5 font-medium tabular-nums',
+            up ? 'text-emerald-400' : dn ? 'text-red-400' : 'text-muted-foreground',
+          )}
+        >
+          {up ? <TrendingUp className="w-2.5 h-2.5" /> : dn ? <TrendingDown className="w-2.5 h-2.5" /> : null}
+          {up ? '+' : ''}{displayChangeP.toFixed(2)}%
+        </p>
+      </div>
+    </button>
   );
 }
 
@@ -283,11 +471,14 @@ function CommodityPriceStrip({
 function CommodityPriceChart({ price }: { price: CommodityPrice }) {
   const [range, setRange] = useState<Range>('1Y');
 
-  // Ticker is EODHD format e.g. "GLD.US" — split into symbol + exchange.
+  // Use the EODHD ticker override for chart data (futures entries carry an
+  // eodhdTicker like "GLD.US" so the chart keeps working after switching the
+  // price source to Yahoo Finance futures).
+  const chartTicker = price.eodhdTicker ?? price.ticker;
   const [symbol, exchange] = useMemo(() => {
-    const parts = price.ticker.split('.');
-    return [parts[0] ?? price.ticker, parts[1] ?? 'US'];
-  }, [price.ticker]);
+    const parts = chartTicker.split('.');
+    return [parts[0] ?? chartTicker, parts[1] ?? 'US'];
+  }, [chartTicker]);
 
   const { data: bars = [], isLoading } = useEodhdBarsForChart(symbol, exchange);
   const { data: tech } = useEodhdTechnicals(symbol, exchange);
@@ -547,9 +738,9 @@ const SENTIMENT_STYLE = {
 } as const;
 
 function CommodityNewsFeed({ price }: { price: CommodityPrice }) {
-  // Use the full EODHD ticker (e.g. "GLD.US") as the symbol filter.
+  // Use the EODHD ticker for news (futures entries carry eodhdTicker).
   const { data: articles = [], isLoading } = useEodhdNews({
-    symbol: price.ticker,
+    symbol: price.eodhdTicker ?? price.ticker,
     limit: 15,
   });
 

@@ -11,16 +11,18 @@ import { useQuery } from '@tanstack/react-query';
  */
 
 export interface CommodityPrice {
-  id:        string;
-  label:     string;
-  ticker:    string;
-  price:     number;
-  prevClose: number;
-  changeP:   number;
-  date:      string;
-  unit:      string;
+  id:           string;
+  label:        string;
+  ticker:       string;
+  /** EODHD ticker for chart + news subsystems (only present for futures entries). */
+  eodhdTicker?: string;
+  price:        number;
+  prevClose:    number;
+  changeP:      number;
+  date:         string;
+  unit:         string;
   /** Last ~30 daily closes, oldest → newest. Used by in-tile sparklines. */
-  sparkline: number[];
+  sparkline:    number[];
 }
 
 export interface CommodityPricesResponse {
