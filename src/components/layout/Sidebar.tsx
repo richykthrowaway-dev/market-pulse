@@ -20,9 +20,11 @@ interface SidebarProps {
   onClearStatement?: () => void;
   onFileUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   isParsingFile?: boolean;
+  /** Called after a nav item is clicked — used by MobileShell to close the drawer. */
+  onNavigate?: () => void;
 }
 
-export function Sidebar({ isCollapsed, onToggle, className, portfolioFileName, portfolioMeta, onClearStatement, onFileUpload, isParsingFile }: SidebarProps) {
+export function Sidebar({ isCollapsed, onToggle, className, portfolioFileName, portfolioMeta, onClearStatement, onFileUpload, isParsingFile, onNavigate }: SidebarProps) {
   const location = useLocation();
 
   const navItems = [
@@ -80,6 +82,7 @@ export function Sidebar({ isCollapsed, onToggle, className, portfolioFileName, p
               <Link
                 key={index}
                 to={item.href}
+                onClick={onNavigate}
                 className={cn(
                   "flex items-center gap-3 rounded-md px-3 py-1.5 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                   isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground",
