@@ -106,10 +106,12 @@ const Currencies = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 overflow-hidden rounded-b-lg">
-            <TradingViewForexRates
-              height={420}
-              className="w-full"
-            />
+            <div className="overflow-x-auto h-48 md:h-64">
+              <TradingViewForexRates
+                height={420}
+                className="w-full h-full"
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -122,10 +124,12 @@ const Currencies = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0 overflow-hidden rounded-b-lg">
-            <TradingViewForexHeatmap
-              height={500}
-              className="w-full"
-            />
+            <div className="overflow-x-auto h-48 md:h-64">
+              <TradingViewForexHeatmap
+                height={500}
+                className="w-full h-full"
+              />
+            </div>
           </CardContent>
         </Card>
 

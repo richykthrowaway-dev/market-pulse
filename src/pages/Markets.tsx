@@ -103,11 +103,15 @@ const Markets = () => {
       <div className="flex flex-col gap-2">
         <div className="bg-card rounded-lg px-3 pt-2 pb-2 shadow border border-border">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">S&P 500 Heatmap</h2>
-          <TradingViewHeatmap dataSource="SPX500" height={heatmapHeight} className="w-full" />
+          <div className="overflow-x-auto min-h-[300px]">
+            <TradingViewHeatmap dataSource="SPX500" height={heatmapHeight} className="w-full" />
+          </div>
         </div>
         <div className="bg-card rounded-lg px-3 pt-2 pb-2 shadow border border-border">
           <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">ETF Heatmap</h2>
-          <TradingViewEtfHeatmap height={heatmapHeight} className="w-full" />
+          <div className="overflow-x-auto min-h-[300px]">
+            <TradingViewEtfHeatmap height={heatmapHeight} className="w-full" />
+          </div>
         </div>
       </div>
 

@@ -344,7 +344,7 @@ function MarketCapCard({ holdings, marketCaps }: { holdings: { ticker: string; m
     <Card>
       <CardContent className="py-2 px-3 space-y-2">
         <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Market Cap</p>
-        <div className="flex justify-center">
+        <div className="flex justify-center w-full">
           <ResponsiveContainer width={100} height={100}>
             <PieChart>
               <Pie

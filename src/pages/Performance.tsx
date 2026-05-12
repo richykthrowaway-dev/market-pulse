@@ -113,17 +113,21 @@ export default function Performance() {
         <PerformanceKpiGrid summary={summary} isLoading={isLoading} />
 
         {/* ── Charts row ─────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <EquityCurveChart
-            data={equityCurve}
-            benchmarkLabel={BENCHMARK_LABELS[benchmark]}
-            isLoading={isLoading}
-          />
-          <DrawdownChart
-            data={drawdownData}
-            benchmarkLabel={BENCHMARK_LABELS[benchmark]}
-            isLoading={isLoading}
-          />
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 min-w-0 h-48 md:h-72">
+            <EquityCurveChart
+              data={equityCurve}
+              benchmarkLabel={BENCHMARK_LABELS[benchmark]}
+              isLoading={isLoading}
+            />
+          </div>
+          <div className="flex-1 min-w-0 h-48 md:h-72">
+            <DrawdownChart
+              data={drawdownData}
+              benchmarkLabel={BENCHMARK_LABELS[benchmark]}
+              isLoading={isLoading}
+            />
+          </div>
         </div>
 
         {/* ── Performance table ──────────────────────────────────────── */}
