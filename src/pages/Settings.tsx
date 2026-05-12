@@ -111,9 +111,9 @@ const Settings = () => {
                 </div>
               </div>
               
-              <div className="pt-4 border-t">
+              <div className="pt-4 border-t flex flex-wrap gap-2">
                 <Button>Save Changes</Button>
-                <Button variant="outline" className="ml-2">Cancel</Button>
+                <Button variant="outline">Cancel</Button>
               </div>
             </div>
           </div>

@@ -175,7 +175,7 @@ function NumInput({
             const v = parseFloat(e.target.value);
             if (!isNaN(v)) onChange(clamp(v, min, max ?? Infinity));
           }}
-          className={`${prefix ? 'pl-7' : ''} ${suffix ? 'pr-12' : ''}`}
+          className={`w-full ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-12' : ''}`}
         />
         {suffix && (
           <span className="absolute right-3 text-muted-foreground text-sm pointer-events-none select-none whitespace-nowrap">
@@ -547,7 +547,7 @@ const FeeCalculators = () => {
               <div className="lg:col-span-2 space-y-4">
 
                 {/* Key stats */}
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <StatBox
                     label={merAName}
                     value={fmtCompact(merResult.finalA)}
@@ -625,7 +625,7 @@ const FeeCalculators = () => {
                         const approxFirstYearFee = merInitial * (f.mer / 100);
                         const approxLastYearFee  = f.final * (f.mer / 100);
                         return (
-                          <div key={i} className="py-3 flex items-center justify-between gap-4">
+                          <div key={i} className="py-3 flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-2">
                               <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: f.color }} />
                               <div>
@@ -798,7 +798,7 @@ const FeeCalculators = () => {
                         const costVsBest   = best - s.final;
                         const pctLost      = best > 0 ? (costVsBest / best) * 100 : 0;
                         return (
-                          <div key={i} className="py-3 flex items-center justify-between gap-4">
+                          <div key={i} className="py-3 flex flex-wrap items-center justify-between gap-4">
                             <div className="flex items-center gap-2 min-w-0">
                               <span
                                 className="w-2.5 h-2.5 rounded-full shrink-0"

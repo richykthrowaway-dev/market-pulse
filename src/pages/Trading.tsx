@@ -175,7 +175,7 @@ function PositionsTable({ accountId }: { accountId: string }) {
   const positionList = Array.isArray(positions) ? positions : [];
 
   return (
-    <div className="trading-table">
+    <div className="trading-table overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -242,7 +242,7 @@ function OrdersTable({ accountId }: { accountId: string }) {
   };
 
   return (
-    <div className="trading-table">
+    <div className="trading-table overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -305,7 +305,7 @@ function TradesTable() {
   }
 
   return (
-    <div className="trading-table">
+    <div className="trading-table overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -507,7 +507,7 @@ function QuickOrder({ accountId }: { accountId: string }) {
 
         {/* Order type */}
         <Select value={orderType} onValueChange={setOrderType}>
-          <SelectTrigger className="text-sm">
+          <SelectTrigger className="w-full text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -557,7 +557,7 @@ function QuickOrder({ accountId }: { accountId: string }) {
               placeholder="0.00"
               value={price}
               onChange={(e) => setPrice(e.target.value)}
-              className="font-mono-num text-sm"
+              className="w-full font-mono-num text-sm"
             />
           </div>
         )}
