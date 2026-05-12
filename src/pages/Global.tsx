@@ -486,7 +486,7 @@ const Global = () => {
           <GlobeIcon className="h-5 w-5 text-primary" />
           <h1 className="text-base font-semibold">Global Investment Hub</h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           {/* Flat map toggle */}
           <button
             onClick={() => setFlatMap(v => !v)}
@@ -589,9 +589,9 @@ const Global = () => {
       </div>
 
       {/* 50/50 Split */}
-      <div className="flex-1 flex min-h-0">
+      <div className="flex-1 flex flex-col md:flex-row min-h-0">
         {/* Left — Globe with CSS-only starfield background */}
-        <div ref={leftRef} className="w-1/2 relative overflow-hidden">
+        <div ref={leftRef} className="h-[60vh] md:h-auto md:flex-1 relative overflow-hidden">
           {/* Base layer — tiled inline-SVG starfield.
               ~3 KB data URL, zero network calls, paints instantly.
               The Milky Way "band" effect previously contributed by the
@@ -737,7 +737,7 @@ const Global = () => {
         </div>
 
         {/* Right — Panel */}
-        <div className="w-1/2 border-l border-border bg-card overflow-hidden">
+        <div className="md:w-1/2 border-t md:border-t-0 md:border-l border-border bg-card overflow-hidden">
           {selectedCountry ? (
             <CountryPanel
               key={selectedCountry}

@@ -8,7 +8,7 @@ const Screener = () => {
   return (
     <PageLayout title="Screener & Calendar">
       <Tabs defaultValue="screener" className="w-full">
-        <TabsList className="mb-4">
+        <TabsList className="mb-4 flex-wrap gap-1 h-auto">
           <TabsTrigger value="screener">Stock Screener</TabsTrigger>
           <TabsTrigger value="calendar">Economic Calendar</TabsTrigger>
         </TabsList>
@@ -20,7 +20,7 @@ const Screener = () => {
               className="max-w-md"
             />
           </div>
-          <div className="bg-card rounded-lg p-4 shadow border border-border">
+          <div className="bg-card rounded-lg p-4 shadow border border-border overflow-x-auto">
             <TradingViewScreener
               defaultColumn="overview"
               defaultScreen="most_capitalized"
@@ -33,7 +33,7 @@ const Screener = () => {
         </TabsContent>
 
         <TabsContent value="calendar">
-          <div className="bg-card rounded-lg p-4 shadow border border-border">
+          <div className="bg-card rounded-lg p-4 shadow border border-border overflow-x-auto">
             <TradingViewEconomicCalendar
               height={600}
               importanceFilter="-1,0,1"

@@ -129,7 +129,7 @@ const Analysis = () => {
             </div>
             {sectorLoading && <span className="text-xs text-muted-foreground animate-pulse">Loading…</span>}
           </div>
-          <div className="h-80">
+          <div className="h-48 md:h-80">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={sectorData} margin={{ top: 10, right: 20, left: 0, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -170,11 +170,11 @@ const Analysis = () => {
             {stocksLoading && <span className="text-xs text-muted-foreground animate-pulse">Loading…</span>}
           </div>
           {stocksLoading ? (
-            <div className="h-80 flex items-center justify-center text-muted-foreground">Loading…</div>
+            <div className="h-48 md:h-80 flex items-center justify-center text-muted-foreground">Loading…</div>
           ) : treemapData.length === 0 ? (
-            <div className="h-80 flex items-center justify-center text-muted-foreground">No stock data available</div>
+            <div className="h-48 md:h-80 flex items-center justify-center text-muted-foreground">No stock data available</div>
           ) : (
-            <div className="h-80">
+            <div className="h-48 md:h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <Treemap data={treemapData} dataKey="value" stroke="#fff" fill="#6b7280" content={<TreemapCell />} />
               </ResponsiveContainer>
