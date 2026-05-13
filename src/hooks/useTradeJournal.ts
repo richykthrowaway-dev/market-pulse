@@ -4,6 +4,8 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react';
 
 export type TradeSide = 'long' | 'short';
 
+export type ExitReason = 'target' | 'stop' | 'time' | 'discretion' | 'panic';
+
 export interface TradeEntry {
   id: string;
   symbol: string;
@@ -17,6 +19,16 @@ export interface TradeEntry {
   notes: string;
   tags: string[];
   createdAt: string;   // ISO timestamp
+  // NEW — Wave 1, all optional
+  stopLoss?: number;
+  target?: number;
+  entryTime?: string;        // "HH:MM"
+  exitTime?: string;
+  setup?: string;
+  mistakes?: string[];
+  exitReason?: ExitReason;
+  inPlaybook?: boolean;
+  screenshot?: string;       // IDB key, not the blob itself
 }
 
 export interface DayPnL {
