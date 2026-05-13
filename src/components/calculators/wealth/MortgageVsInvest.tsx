@@ -29,6 +29,7 @@ function compute(extraPayment: number, balance: number, mortgageRate: number, ye
   let balA = balance, balBase = balance;
   let totalInterestA = 0, totalInterestBase = 0;
   let investPortfolio = 0;
+  let freedCashPortfolio = 0;
 
   const series: { year: number; mortgageSavings: number; investValue: number }[] = [];
 
@@ -44,24 +45,34 @@ function compute(extraPayment: number, balance: number, mortgageRate: number, ye
     const principalA = Math.min(balA, stdPayment - intA + extra);
     balA = Math.max(0, balA - principalA);
 
-    investPortfolio = investPortfolio * (1 + monthlyInvestRate) + (hadBalance ? extraPayment : 0);
+    if (hadBalance) {
+      // scenario B: invest extra payment while A is still paying mortgage
+      investPortfolio = investPortfolio * (1 + monthlyInvestRate) + extraPayment;
+    } else {
+      // scenario A: mortgage paid off — reinvest freed stdPayment + extraPayment
+      freedCashPortfolio = freedCashPortfolio * (1 + monthlyInvestRate) + stdPayment + extraPayment;
+      // scenario B: still investing the extraPayment over the full term
+      investPortfolio = investPortfolio * (1 + monthlyInvestRate) + extraPayment;
+    }
 
     if (m % 12 === 0) {
       series.push({
         year: m / 12,
-        mortgageSavings: Math.round(totalInterestBase - totalInterestA),
+        mortgageSavings: Math.round((totalInterestBase - totalInterestA) + freedCashPortfolio),
         investValue: Math.round(investPortfolio),
       });
     }
   }
 
   const finalInvest = Math.round(investPortfolio);
-  const finalSaved = Math.round(totalInterestBase - totalInterestA);
+  const interestSaved = Math.round(totalInterestBase - totalInterestA);
+  const finalSaved = Math.round((totalInterestBase - totalInterestA) + freedCashPortfolio);
+  const finalFreedCash = Math.round(freedCashPortfolio);
   const netDiff = finalInvest - finalSaved;
   const investWins = netDiff > 0;
   const breakEvenYear = series.find(s => s.investValue > s.mortgageSavings)?.year ?? null;
 
-  return { series, finalInvest, finalSaved, netDiff, investWins, breakEvenYear };
+  return { series, finalInvest, finalSaved, interestSaved, finalFreedCash, netDiff, investWins, breakEvenYear };
 }
 
 export function MortgageVsInvest() {
@@ -89,7 +100,7 @@ export function MortgageVsInvest() {
       </>}
       results={<>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatBox label="Interest Saved"    value={fmtCompact(r.finalSaved)}    sub="By paying extra"      highlight={!r.investWins ? 'positive' : undefined} />
+          <StatBox label="Mortgage Paydown Wealth" value={fmtCompact(r.finalSaved)} sub="Interest saved + freed-cash reinvested" highlight={!r.investWins ? 'positive' : undefined} />
           <StatBox label="Investment Value"  value={fmtCompact(r.finalInvest)}   sub="By investing instead" highlight={r.investWins ? 'positive' : undefined} />
           <StatBox label="Net Difference"    value={fmtCompact(Math.abs(r.netDiff))}
             sub={r.investWins ? 'Investing wins by' : 'Mortgage wins by'}
@@ -123,14 +134,14 @@ export function MortgageVsInvest() {
               Investing your extra{' '}
               <strong className="text-foreground">${extraPayment.toLocaleString()}/month</strong> beats
               mortgage paydown by{' '}
-              <strong className="text-foreground">{fmtDollar(r.netDiff)}</strong> over {yearsRemaining} years
-              given these rates.
+              <strong className="text-foreground">{fmtDollar(r.netDiff)}</strong> over {yearsRemaining} years —
+              even after reinvesting the freed monthly payment once the mortgage is paid off.
             </>
           ) : (
             <>
-              Paying extra on your mortgage saves{' '}
-              <strong className="text-foreground">{fmtDollar(Math.abs(r.netDiff))}</strong> more than
-              investing over {yearsRemaining} years given a{' '}
+              Paying extra on your mortgage and then reinvesting the freed monthly payment beats investing by{' '}
+              <strong className="text-foreground">{fmtDollar(Math.abs(r.netDiff))}</strong> over {yearsRemaining} years
+              ({fmtDollar(r.interestSaved)} interest saved + {fmtDollar(r.finalFreedCash)} freed-cash portfolio), given a{' '}
               <strong className="text-foreground">{mortgageRate}%</strong> mortgage rate vs{' '}
               <strong className="text-foreground">{investReturn}%</strong> investment return.
             </>

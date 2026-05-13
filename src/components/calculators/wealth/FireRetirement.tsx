@@ -61,15 +61,15 @@ export function FireRetirement() {
       inputs={<>
         <NumInput label="Current Savings"             value={savings}    onChange={setSavings}    min={0}   step={5_000}  prefix="$" />
         <NumInput label="Monthly Contribution"        value={contrib}    onChange={setContrib}    min={0}   step={100}    prefix="$" />
-        <NumInput label="Expected Annual Return"      value={ret}        onChange={setRet}        min={0}   max={30}      step={0.5} suffix="%" />
-        <NumInput label="Safe Withdrawal Rate"        value={swr}        onChange={setSwr}        min={0.5} max={10}      step={0.25} suffix="%" help="4% is the traditional FIRE guideline" />
+        <NumInput label="Expected Annual Return"      value={ret}        onChange={setRet}        min={0}   max={30}      step={0.5} suffix="%" help="Use REAL return (return - inflation, ~5% real) if your SWR is inflation-adjusted, or NOMINAL return (~7%) if your expenses are in today's dollars." />
+        <NumInput label="Safe Withdrawal Rate"        value={swr}        onChange={setSwr}        min={0.5} max={10}      step={0.25} suffix="%" help="Trinity Study uses 4% real (inflation-adjusted) withdrawals. Use a real return rate above to match." />
         <NumInput label="Monthly Expenses in Retirement" value={expenses} onChange={setExpenses}  min={0}   step={500}    prefix="$" />
         <NumInput label="Current Age"                 value={currentAge} onChange={setCurrentAge} min={18}  max={80}      step={1} suffix="yrs" />
         <NumInput label="Target Retirement Age"       value={targetAge}  onChange={setTargetAge}  min={currentAge + 1} max={100} step={1} suffix="yrs" />
       </>}
       results={<>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <StatBox label="FIRE Number"    value={fmtCompact(r.fireNumber)}          sub="Portfolio target" />
+          <StatBox label="FIRE Number"    value={fmtCompact(r.fireNumber)}          sub="Portfolio target · In today's dollars" />
           <StatBox label="Years to FIRE"  value={r.reached ? `${r.yearsToFire}` : '50+'} sub={r.reached ? 'At current rate' : 'Not reached'} highlight={r.reached ? 'positive' : 'negative'} />
           <StatBox label="Age at FIRE"    value={r.reached ? `${r.fireAge}`    : '—'}    sub={r.reached ? 'Projected' : '—'} />
           <StatBox label="Monthly Income" value={r.reached ? fmtCompact(r.monthlyPassiveIncome) : '—'} sub={r.reached ? `At ${swr}% SWR` : '—'} highlight={r.reached ? 'positive' : undefined} />
@@ -107,20 +107,20 @@ export function FireRetirement() {
                 At your current savings rate you reach financial independence at age{' '}
                 <strong className="text-foreground">{r.fireAge}</strong> —{' '}
                 <strong className="text-foreground">{Math.round(targetAge - r.fireAge)} years</strong> ahead of your retirement target.
-                Your FIRE number is <strong className="text-foreground">{fmtDollar(r.fireNumber)}</strong>.
+                Your FIRE number is <strong className="text-foreground">{fmtDollar(r.fireNumber)}</strong>. All figures in today's dollars.
               </>
             ) : (
               <>
                 You reach FI at age{' '}
                 <strong className="text-foreground">{r.fireAge}</strong> —{' '}
                 <strong className="text-foreground">{Math.round(r.fireAge - targetAge)} years</strong> after your target retirement age.
-                Your FIRE number is <strong className="text-foreground">{fmtDollar(r.fireNumber)}</strong>.
+                Your FIRE number is <strong className="text-foreground">{fmtDollar(r.fireNumber)}</strong>. All figures in today's dollars.
               </>
             )
           ) : (
             <>
               At current settings FIRE is not reached within 50 years. Try increasing contributions,
-              reducing target expenses, or a higher expected return.
+              reducing target expenses, or a higher expected return. All figures in today's dollars.
             </>
           )}
         </Callout>
