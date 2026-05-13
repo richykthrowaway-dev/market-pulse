@@ -6,6 +6,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { Button } from '@/components/ui/button';
 import { useStatement } from '@/contexts/StatementContext';
 import { cn } from '@/lib/utils';
+import { ViewModeToggle } from '@/components/layout/ViewModeToggle';
 
 interface MobileShellProps {
   children: React.ReactNode;
@@ -71,6 +72,9 @@ export function MobileShell({ children, title }: MobileShellProps) {
 
         <span className="font-semibold text-sm tracking-tight">{pageTitle}</span>
 
+        <div className="flex items-center gap-1">
+        <ViewModeToggle />
+
         <Button
           variant="ghost"
           size="icon"
@@ -81,6 +85,7 @@ export function MobileShell({ children, title }: MobileShellProps) {
           <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </Button>
+        </div>
       </header>
 
       {/* ── Scrollable content ── */}

@@ -11,6 +11,7 @@ import { StatementProvider } from "@/contexts/StatementContext";
 import { NavbarSlotProvider } from "@/contexts/NavbarSlotContext";
 import { queryClientDefaults } from "@/config/queryDefaults";
 import { initBatchQuoteService } from "@/services/batchQuoteService";
+import { MobilePreviewFrame } from "@/components/layout/MobilePreviewFrame";
 
 // ── Lazy page chunks ──────────────────────────────────────────────────────────
 // Each page is a separate async chunk. Vite splits them automatically when
@@ -37,6 +38,7 @@ const RiskAnalysis  = lazy(() => import("./pages/RiskAnalysis"));
 const FeeCalculators = lazy(() => import("./pages/FeeCalculators"));
 const Watchlists    = lazy(() => import("./pages/Watchlists"));
 const TradeJournal  = lazy(() => import("./pages/TradeJournal"));
+const Learn         = lazy(() => import("./pages/Learn"));
 
 const queryClient = new QueryClient({
   defaultOptions: queryClientDefaults,
@@ -55,6 +57,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <MobilePreviewFrame>
               <Suspense fallback={
                 <div className="flex items-center justify-center h-screen w-screen bg-background">
                   <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
@@ -75,11 +78,13 @@ const App = () => (
                 <Route path="/trading" element={<Trading />} />
                 <Route path="/fee-calculators" element={<FeeCalculators />} />
                 <Route path="/journal" element={<TradeJournal />} />
+                <Route path="/learn" element={<Learn />} />
                 <Route path="/settings" element={<Settings />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
               </Suspense>
+              </MobilePreviewFrame>
             </BrowserRouter>
             </NavbarSlotProvider>
           </StatementProvider>

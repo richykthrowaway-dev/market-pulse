@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { StockSearch } from '@/components/search/StockSearch';
 import { useNavbarSlot } from '@/contexts/NavbarSlotContext';
+import { ViewModeToggle } from '@/components/layout/ViewModeToggle';
 
 interface NavbarProps {
   className?: string;
@@ -28,6 +29,8 @@ export function Navbar({ className }: NavbarProps) {
         </div>
         
         <div className="flex items-center gap-4">
+          <ViewModeToggle />
+
           <Button
             variant="ghost"
             size="icon"

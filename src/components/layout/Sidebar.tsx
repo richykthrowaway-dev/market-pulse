@@ -3,7 +3,7 @@ import React from 'react';
 import {
   BarChart, PieChart, BarChart3, Wallet, LineChart, Globe,
   DollarSign, Settings, ChevronRight, ChevronLeft, Home, Search, CandlestickChart, ShieldAlert,
-  FileText, Upload, X, Calculator, Star, BookOpen
+  FileText, Upload, X, Calculator, Star, BookOpen, GraduationCap
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,7 @@ export function Sidebar({ isCollapsed, onToggle, className, portfolioFileName, p
     { title: 'Trading', icon: CandlestickChart, href: '/trading' },
     { title: 'Fee Calculators', icon: Calculator, href: '/fee-calculators' },
     { title: 'Journal', icon: BookOpen, href: '/journal' },
+    { title: 'Learn', icon: GraduationCap, href: '/learn' },
     { title: 'Settings', icon: Settings, href: '/settings' },
   ];
 
