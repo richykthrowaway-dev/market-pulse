@@ -17,6 +17,10 @@ function compute(extraPayment: number, balance: number, mortgageRate: number, ye
   const monthlyInvestRate = investReturn / 100 / 12;
   const totalMonths = yearsRemaining * 12;
 
+  if (totalMonths <= 0) {
+    return { series: [], finalInvest: 0, finalSaved: 0, netDiff: 0, investWins: false, breakEvenYear: null };
+  }
+
   const stdPayment = balance > 0 && monthlyMortRate > 0
     ? balance * (monthlyMortRate * Math.pow(1 + monthlyMortRate, totalMonths))
       / (Math.pow(1 + monthlyMortRate, totalMonths) - 1)
@@ -33,13 +37,14 @@ function compute(extraPayment: number, balance: number, mortgageRate: number, ye
     totalInterestBase += intBase;
     balBase = Math.max(0, balBase - (stdPayment - intBase));
 
+    const hadBalance = balA > 0;
     const intA = balA * monthlyMortRate;
     totalInterestA += intA;
-    const extra = balA > 0 ? extraPayment : 0;
+    const extra = hadBalance ? extraPayment : 0;
     const principalA = Math.min(balA, stdPayment - intA + extra);
     balA = Math.max(0, balA - principalA);
 
-    investPortfolio = investPortfolio * (1 + monthlyInvestRate) + extraPayment;
+    investPortfolio = investPortfolio * (1 + monthlyInvestRate) + (hadBalance ? extraPayment : 0);
 
     if (m % 12 === 0) {
       series.push({
