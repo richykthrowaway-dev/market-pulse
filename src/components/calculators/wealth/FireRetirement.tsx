@@ -14,6 +14,7 @@ import { fmtDollar, fmtCompact, yFmt } from '../calcUtils';
 
 function compute(savings: number, monthlyContrib: number, returnPct: number, swrPct: number, monthlyExpenses: number, currentAge: number) {
   const fireNumber = (monthlyExpenses * 12) / (swrPct / 100);
+  if (swrPct <= 0) return { series: [], fireNumber: 0, yearsToFire: 0, fireAge: currentAge, monthlyPassiveIncome: 0, reached: false };
   const monthlyRate = returnPct / 100 / 12;
   let balance = savings;
   let months = 0;
@@ -51,9 +52,7 @@ export function FireRetirement() {
   );
 
   // Find the year where balance first crosses target
-  const crossoverYear = r.reached
-    ? r.series.find(s => s.balance >= s.target)?.year ?? r.yearsToFire
-    : null;
+  const crossoverYear = r.reached ? Math.ceil(r.yearsToFire) : null;
 
   return (
     <CalculatorShell
@@ -107,14 +106,14 @@ export function FireRetirement() {
               <>
                 At your current savings rate you reach financial independence at age{' '}
                 <strong className="text-foreground">{r.fireAge}</strong> —{' '}
-                <strong className="text-foreground">{targetAge - r.fireAge} years</strong> ahead of your retirement target.
+                <strong className="text-foreground">{Math.round(targetAge - r.fireAge)} years</strong> ahead of your retirement target.
                 Your FIRE number is <strong className="text-foreground">{fmtDollar(r.fireNumber)}</strong>.
               </>
             ) : (
               <>
                 You reach FI at age{' '}
                 <strong className="text-foreground">{r.fireAge}</strong> —{' '}
-                <strong className="text-foreground">{r.fireAge - targetAge} years</strong> after your target retirement age.
+                <strong className="text-foreground">{Math.round(r.fireAge - targetAge)} years</strong> after your target retirement age.
                 Your FIRE number is <strong className="text-foreground">{fmtDollar(r.fireNumber)}</strong>.
               </>
             )
