@@ -10,11 +10,16 @@ import { supabase } from '@/integrations/supabase/client'
  * Supabase already handles refresh.
  */
 
-async function getAuthHeaders(): Promise<Record<string, string>> {
-  // Ensure we have a Supabase session — sign in anonymously if needed so
-  // SnapTrade works for users who haven't created an account.
+async function getAuthHeaders(opts: { requireFullAccount?: boolean } = {}): Promise<Record<string, string>> {
+  // Ensure we have a Supabase session. For READ-ONLY market data we'll
+  // sign in anonymously if needed. For SnapTrade (which spends a real
+  // per-user connection slot from a finite paid pool), we require a
+  // proper account so drive-by traffic can't burn the slots.
   let { data } = await supabase.auth.getSession()
   if (!data.session) {
+    if (opts.requireFullAccount) {
+      throw new Error('Please create an account before connecting a brokerage.')
+    }
     const { error } = await supabase.auth.signInAnonymously()
     if (error) {
       throw new Error(
@@ -24,6 +29,9 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
     }
     ;({ data } = await supabase.auth.getSession())
   }
+  if (opts.requireFullAccount && data.session?.user?.is_anonymous) {
+    throw new Error('Please create an account before connecting a brokerage. Anonymous sessions cannot link real money accounts.')
+  }
   const token = data.session?.access_token
   if (!token) throw new Error('no session token after sign-in')
   const anon = (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string)?.trim()
@@ -31,6 +39,28 @@ async function getAuthHeaders(): Promise<Record<string, string>> {
     Authorization: `Bearer ${token}`,
     apikey: anon,
     'Content-Type': 'application/json',
+  }
+}
+
+/**
+ * Whitelist of origins SnapTrade is allowed to redirect users to in the
+ * Connect-Brokerage popup. Defense in depth: even if our edge function
+ * is compromised and returns a malicious URL, we won't open it.
+ */
+const SNAPTRADE_ALLOWED_REDIRECT_HOSTS = new Set([
+  'app.snaptrade.com',
+  'connect.snaptrade.com',
+  'snaptrade.com',
+])
+
+function assertSnaptradeRedirect(url: string): void {
+  let parsed: URL
+  try { parsed = new URL(url) } catch { throw new Error('Invalid redirectURI') }
+  if (parsed.protocol !== 'https:') {
+    throw new Error('redirectURI must be https')
+  }
+  if (!SNAPTRADE_ALLOWED_REDIRECT_HOSTS.has(parsed.hostname)) {
+    throw new Error(`redirectURI host not allowed: ${parsed.hostname}`)
   }
 }
 
@@ -134,7 +164,8 @@ export function useConnectBrokerage() {
 
   return useMutation({
     mutationFn: async (opts?: { broker?: string }) => {
-      const headers = await getAuthHeaders()
+      // Require a real (non-anonymous) account — see getAuthHeaders
+      const headers = await getAuthHeaders({ requireFullAccount: true })
 
       // 1. Register (idempotent)
       const regRes = await fetch(functionUrl('api-snaptrade-register'), {
@@ -157,6 +188,9 @@ export function useConnectBrokerage() {
       }
       const { redirectURI } = (await connRes.json()) as { redirectURI?: string }
       if (!redirectURI) throw new Error('SnapTrade returned no redirectURI')
+      // Defense in depth — refuse to open the popup if the redirect
+      // doesn't resolve to a known SnapTrade host.
+      assertSnaptradeRedirect(redirectURI)
 
       // 3. Open the portal in a popup and wait for it to close
       const popup = window.open(

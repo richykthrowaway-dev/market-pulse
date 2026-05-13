@@ -16,13 +16,14 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const userId = await getCallerUserId(req);
-    if (!userId) {
-      return new Response(JSON.stringify({ error: "not authenticated" }), {
+    const caller = await getCallerUserId(req);
+    if (!caller) {
+      return new Response(JSON.stringify({ error: "not authenticated — anonymous users cannot connect a brokerage" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const userId = caller.userId;
 
     const supa = createClient(
       Deno.env.get("SUPABASE_URL")!,

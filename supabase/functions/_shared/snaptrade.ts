@@ -124,21 +124,50 @@ export const corsHeaders = {
 };
 
 /**
- * Extract the calling user's Supabase auth ID from the JWT in the
- * Authorization header. Used by edge functions to scope operations
- * to the authenticated user.
+ * Verify the calling user's JWT via the Supabase Auth API and return
+ * their auth.users.id. Returns null if the token is missing, expired,
+ * or forged.
+ *
+ * IMPORTANT: do NOT parse the JWT payload without verification — the
+ * function gateway verifies by default, but if a deploy ever forgets
+ * `--no-verify-jwt`-off semantics, base64-decode would let an attacker
+ * forge a JWT with another user's `sub` claim and steal their data.
+ * The Auth API call is the only safe way.
+ *
+ * Also rejects anonymous Supabase users for SnapTrade endpoints —
+ * anonymous accounts are unauthenticated and would let drive-by traffic
+ * exhaust the free-tier connection slots.
  */
-export async function getCallerUserId(req: Request): Promise<string | null> {
+export async function getCallerUserId(
+  req: Request,
+  opts: { allowAnonymous?: boolean } = {},
+): Promise<{ userId: string; isAnonymous: boolean } | null> {
   const auth = req.headers.get("Authorization");
   if (!auth?.startsWith("Bearer ")) return null;
   const jwt = auth.slice("Bearer ".length);
-  // Parse JWT payload (no verification — Supabase already verified it
-  // via the function gateway before we got here).
-  try {
-    const payload = jwt.split(".")[1];
-    const decoded = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
-    return decoded.sub ?? null;
-  } catch {
+
+  const supaUrl     = Deno.env.get("SUPABASE_URL");
+  const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supaUrl || !serviceRole) {
+    console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY for JWT verify");
     return null;
   }
+
+  // Use the auth user endpoint to verify cryptographically — this
+  // checks signature + expiry against the project's JWT secret.
+  const res = await fetch(`${supaUrl}/auth/v1/user`, {
+    headers: {
+      apikey:        serviceRole,
+      Authorization: `Bearer ${jwt}`,
+    },
+  });
+  if (!res.ok) return null;
+
+  const user = (await res.json()) as { id?: string; is_anonymous?: boolean };
+  if (!user.id) return null;
+
+  const isAnonymous = !!user.is_anonymous;
+  if (isAnonymous && !opts.allowAnonymous) return null;
+
+  return { userId: user.id, isAnonymous };
 }
