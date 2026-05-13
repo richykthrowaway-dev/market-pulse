@@ -21,6 +21,7 @@
     { "name": "stocks",              "freshnessColumn": "updated_at" },
     { "name": "ohlcv_bars",          "freshnessColumn": "ts" },
     { "name": "symbols",             "freshnessColumn": null },
+    { "name": "news",                "freshnessColumn": "published_at" },
     { "name": "news_articles",       "freshnessColumn": "published_at" },
     { "name": "fundamentals_cache", "freshnessColumn": "updated_at" },
     { "name": "snaptrade_users",     "freshnessColumn": "created_at" },
