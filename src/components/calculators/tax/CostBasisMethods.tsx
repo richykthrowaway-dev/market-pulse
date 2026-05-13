@@ -3,17 +3,20 @@ import { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Scale, Plus, X } from 'lucide-react';
+import { Label } from '@/components/ui/label';
+import { Scale, Plus, X, Info } from 'lucide-react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip as RechartsTooltip, ResponsiveContainer, Cell,
 } from 'recharts';
+import { cn } from '@/lib/utils';
 import { CalculatorShell, Callout } from '../CalculatorShell';
 import { NumInput } from '../NumInput';
 import { ChartTooltip } from '../ChartTooltip';
 import { fmtDollar, yFmt } from '../calcUtils';
 
 type Lot = { date: string; shares: number; price: number };
+type Country = 'US' | 'CA';
 
 type MethodResult = {
   method: string;
@@ -53,7 +56,36 @@ function calcAverage(lots: Lot[], sharesToSell: number, salePrice: number) {
   return { proceeds, basis, gain };
 }
 
+function CountryToggle({
+  value, onChange,
+}: { value: Country; onChange: (c: Country) => void }) {
+  const options: { value: Country; label: string }[] = [
+    { value: 'US', label: 'United States' },
+    { value: 'CA', label: 'Canada' },
+  ];
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-sm font-medium">Country</Label>
+      <div className="grid grid-cols-2 gap-2">
+        {options.map(opt => (
+          <Button
+            key={opt.value}
+            type="button"
+            variant={value === opt.value ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => onChange(opt.value)}
+            className={cn('w-full', value === opt.value && 'font-semibold')}
+          >
+            {opt.label}
+          </Button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function CostBasisMethods() {
+  const [country, setCountry] = useState<Country>('US');
   const [lots, setLots] = useState<Lot[]>([
     { date: '2022-01-15', shares: 50, price: 100 },
     { date: '2023-06-10', shares: 30, price: 120 },
@@ -61,7 +93,11 @@ export function CostBasisMethods() {
   ]);
   const [salePrice, setSalePrice] = useState(130);
   const [sharesToSell, setSharesToSell] = useState(60);
-  const [taxRate, setTaxRate] = useState(22);
+  const [taxRateUS, setTaxRateUS] = useState(22);
+  const [taxRateCA, setTaxRateCA] = useState(26);
+
+  const taxRate = country === 'US' ? taxRateUS : taxRateCA;
+  const setTaxRate = country === 'US' ? setTaxRateUS : setTaxRateCA;
 
   const updateLot = (i: number, patch: Partial<Lot>) => {
     setLots(prev => prev.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
@@ -79,13 +115,23 @@ export function CostBasisMethods() {
   const results: MethodResult[] = useMemo(() => {
     const totalAvailable = lots.reduce((s, l) => s + l.shares, 0);
     const sell = Math.min(sharesToSell, totalAvailable);
+    const computeTax = (gain: number) => {
+      if (country === 'CA') {
+        const taxableGain = Math.max(0, gain) * 0.5;
+        return taxableGain * (taxRate / 100);
+      }
+      return Math.max(0, gain) * (taxRate / 100);
+    };
     const apply = (label: string, r: { proceeds: number; basis: number; gain: number }) => ({
       method: label,
       proceeds: r.proceeds,
       basis: r.basis,
       gain: r.gain,
-      tax: Math.max(0, r.gain) * (taxRate / 100),
+      tax: computeTax(r.gain),
     });
+    if (country === 'CA') {
+      return [apply('Average Cost (ACB)', calcAverage(lots, sell, salePrice))];
+    }
     return [
       apply('FIFO',         calcMethod(lots, sell, salePrice, (a, b) => a.date.localeCompare(b.date))),
       apply('LIFO',         calcMethod(lots, sell, salePrice, (a, b) => b.date.localeCompare(a.date))),
@@ -93,7 +139,7 @@ export function CostBasisMethods() {
       apply('Lowest Cost',  calcMethod(lots, sell, salePrice, (a, b) => a.price - b.price)),
       apply('Average Cost', calcAverage(lots, sell, salePrice)),
     ];
-  }, [lots, sharesToSell, salePrice, taxRate]);
+  }, [lots, sharesToSell, salePrice, taxRate, country]);
 
   const { bestMethod, worstMethod, diff } = useMemo(() => {
     if (!results.length) return { bestMethod: '', worstMethod: '', diff: 0 };
@@ -113,12 +159,21 @@ export function CostBasisMethods() {
     isBest: r.method === bestMethod,
   }));
 
+  const caGain = results[0]?.gain ?? 0;
+  const caTaxableGain = Math.max(0, caGain) * 0.5;
+  const caTax = caTaxableGain * (taxRate / 100);
+
   return (
     <CalculatorShell
       title="Cost-Basis Methods"
-      description="Compare how FIFO, LIFO, Highest/Lowest Cost, and Average Cost affect the tax bill on a single sale."
+      description={
+        country === 'US'
+          ? 'Compare how FIFO, LIFO, Highest/Lowest Cost, and Average Cost affect the tax bill on a single sale.'
+          : 'Canada requires Adjusted Cost Base (ACB) — weighted average of all identical securities.'
+      }
       inputs={
         <>
+          <CountryToggle value={country} onChange={setCountry} />
           <div className="space-y-2">
             <p className="text-sm font-medium">Tax Lots</p>
             <div className="overflow-x-auto">
@@ -194,7 +249,7 @@ export function CostBasisMethods() {
             step={1}
           />
           <NumInput
-            label="Tax Rate"
+            label={country === 'US' ? 'Tax Rate' : 'Marginal Tax Rate'}
             value={taxRate}
             onChange={setTaxRate}
             min={0}
@@ -206,9 +261,21 @@ export function CostBasisMethods() {
       }
       results={
         <>
+          {country === 'CA' && (
+            <div className="flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-sm">
+              <Info className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-muted-foreground">
+                Canada requires using <strong className="text-foreground">Adjusted Cost Base (ACB)</strong> — a
+                weighted average of all identical securities. Other methods (FIFO, LIFO, Highest/Lowest Cost) are
+                not permitted by the CRA.
+              </p>
+            </div>
+          )}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Method Comparison</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {country === 'CA' ? 'ACB Calculation' : 'Method Comparison'}
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <div className="overflow-x-auto">
@@ -224,7 +291,7 @@ export function CostBasisMethods() {
                   </thead>
                   <tbody>
                     {results.map(r => {
-                      const isBest = r.method === bestMethod;
+                      const isBest = country === 'US' && r.method === bestMethod;
                       return (
                         <tr
                           key={r.method}
@@ -260,7 +327,9 @@ export function CostBasisMethods() {
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Estimated Tax by Method</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                {country === 'CA' ? 'Estimated Tax (ACB)' : 'Estimated Tax by Method'}
+              </CardTitle>
             </CardHeader>
             <CardContent className="pt-0">
               <ResponsiveContainer width="100%" height={260}>
@@ -271,7 +340,10 @@ export function CostBasisMethods() {
                   <RechartsTooltip content={<ChartTooltip labelPrefix="" />} />
                   <Bar dataKey="tax" name="Est. Tax" radius={[4, 4, 0, 0]}>
                     {chartData.map((entry, i) => (
-                      <Cell key={i} fill={entry.isBest ? '#22c55e' : '#94a3b8'} />
+                      <Cell
+                        key={i}
+                        fill={country === 'CA' ? '#22c55e' : entry.isBest ? '#22c55e' : '#94a3b8'}
+                      />
                     ))}
                   </Bar>
                 </BarChart>
@@ -279,9 +351,21 @@ export function CostBasisMethods() {
             </CardContent>
           </Card>
           <Callout icon={<Scale className="h-4 w-4 text-amber-500" />}>
-            Using <strong className="text-foreground">{bestMethod}</strong> instead of{' '}
-            <strong className="text-foreground">{worstMethod}</strong> saves you{' '}
-            <strong className="text-foreground">{fmtDollar(diff)}</strong> in taxes on this sale.
+            {country === 'US' ? (
+              <>
+                Using <strong className="text-foreground">{bestMethod}</strong> instead of{' '}
+                <strong className="text-foreground">{worstMethod}</strong> saves you{' '}
+                <strong className="text-foreground">{fmtDollar(diff)}</strong> in taxes on this sale.
+              </>
+            ) : (
+              <>
+                Under Canadian ACB rules, this sale generates a{' '}
+                <strong className="text-foreground">{fmtDollar(caGain)}</strong> capital gain. With the 50%
+                inclusion rate, the taxable amount is{' '}
+                <strong className="text-foreground">{fmtDollar(caTaxableGain)}</strong>; estimated tax is{' '}
+                <strong className="text-foreground">{fmtDollar(caTax)}</strong>.
+              </>
+            )}
           </Callout>
         </>
       }
