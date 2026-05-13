@@ -1,6 +1,8 @@
 import { JournalStats, TradeEntry } from '@/hooks/useTradeJournal';
 import { JournalSettings } from '@/hooks/useJournalSettings';
 import { Card } from '@/components/ui/card';
+import { KillSwitchBanner } from './KillSwitchBanner';
+import { GoalProgressCard } from './GoalProgressCard';
 
 interface Props {
   stats: JournalStats;
@@ -9,11 +11,11 @@ interface Props {
   openEditTrade?: (id: string) => void;
 }
 
-export function OverviewTab({ stats, trades, settings, openEditTrade }: Props) {
+export function OverviewTab({ stats, trades, settings }: Props) {
   return (
     <div className="space-y-6">
-      {/* Slot 1: KillSwitchBanner — Task 22 */}
-      {/* Slot 2: GoalProgressCard — Task 21 */}
+      <KillSwitchBanner trades={trades} settings={settings} />
+      <GoalProgressCard trades={trades} settings={settings} />
       {/* Slot 3: InsightCards — Task 24 */}
       {/* Slot 4: OutlierLossList — Task 24 */}
 

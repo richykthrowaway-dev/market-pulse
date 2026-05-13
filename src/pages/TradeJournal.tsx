@@ -19,6 +19,7 @@ import { OverviewTab } from '@/components/journal/OverviewTab';
 import { AnalyticsTab } from '@/components/journal/AnalyticsTab';
 import { RulesTab } from '@/components/journal/RulesTab';
 import { useJournalSettings } from '@/hooks/useJournalSettings';
+import { isDailyMaxLossHit } from '@/components/journal/KillSwitchBanner';
 import { toast } from 'sonner';
 
 const TradeJournal = () => {
@@ -28,6 +29,14 @@ const TradeJournal = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<TradeEntry | null>(null);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+
+  function tryOpenForm() {
+    if (isDailyMaxLossHit(trades, settings) && !window.confirm("You've hit your daily max loss. Log this trade anyway?")) {
+      return;
+    }
+    setEditingTrade(null);
+    setFormOpen(true);
+  }
 
   const handleSubmit = (data: Omit<TradeEntry, 'id' | 'createdAt'>) => {
     if (editingTrade) {
@@ -60,7 +69,7 @@ const TradeJournal = () => {
     return (
       <PageLayout title="Trade Journal">
         <div className="flex items-center justify-end mb-6">
-          <Button onClick={() => setFormOpen(true)}>
+          <Button onClick={tryOpenForm}>
             <Plus className="h-4 w-4 mr-2" /> Log Trade
           </Button>
         </div>
@@ -72,7 +81,7 @@ const TradeJournal = () => {
               Start journaling your trades to track performance over time.
             </p>
           </div>
-          <Button size="lg" onClick={() => setFormOpen(true)}>
+          <Button size="lg" onClick={tryOpenForm}>
             <Plus className="h-4 w-4 mr-2" /> Log Your First Trade
           </Button>
         </div>
@@ -91,7 +100,7 @@ const TradeJournal = () => {
     <PageLayout title="Trade Journal">
       {/* Header */}
       <div className="flex items-center justify-end mb-6">
-        <Button onClick={() => { setEditingTrade(null); setFormOpen(true); }}>
+        <Button onClick={tryOpenForm}>
           <Plus className="h-4 w-4 mr-2" /> Log Trade
         </Button>
       </div>
