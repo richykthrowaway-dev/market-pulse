@@ -16,7 +16,9 @@ import { fmtDollar, yFmt } from '../calcUtils';
 import { cn } from '@/lib/utils';
 
 type Holding = 'short' | 'long';
-const BRACKETS = [10, 12, 22, 24, 32, 35, 37] as const;
+type Country = 'US' | 'CA';
+const US_BRACKETS = [10, 12, 22, 24, 32, 35, 37] as const;
+const CA_BRACKETS = [15, 20.5, 26, 29, 33] as const;
 
 function ToggleGroup<T extends string>({
   label, value, options, onChange,
@@ -48,6 +50,7 @@ function ToggleGroup<T extends string>({
 }
 
 export function CapitalGainsTax() {
+  const [country, setCountry] = useState<Country>('US');
   const [purchasePrice, setPurchasePrice] = useState(100);
   const [salePrice, setSalePrice] = useState(150);
   const [shares, setShares] = useState(100);
@@ -61,27 +64,49 @@ export function CapitalGainsTax() {
     const costBasis = purchasePrice * shares;
     const capitalGain = grossProceeds - costBasis;
 
-    const longTermRate = bracket <= 12 ? 0 : bracket <= 32 ? 15 : 20;
-    const isLongTerm = holding === 'long';
-    const federalRate = isLongTerm ? longTermRate : bracket;
+    let federalRate = 0;
+    let longTermRate = 0;
+    let isLongTerm = false;
+    let taxableGain = 0;
+    let federalTax = 0;
+    let stateTax = 0;
 
-    const federalTax = Math.max(0, capitalGain) * (federalRate / 100);
-    const stateTax = Math.max(0, capitalGain) * (stateRate / 100);
+    if (country === 'US') {
+      longTermRate = bracket <= 12 ? 0 : bracket <= 32 ? 15 : 20;
+      isLongTerm = holding === 'long';
+      federalRate = isLongTerm ? longTermRate : bracket;
+      taxableGain = Math.max(0, capitalGain);
+      federalTax = taxableGain * (federalRate / 100);
+      stateTax = taxableGain * (stateRate / 100);
+    } else {
+      // Canada: 50% inclusion rate
+      taxableGain = Math.max(0, capitalGain) * 0.5;
+      federalRate = bracket;
+      federalTax = taxableGain * (federalRate / 100);
+      stateTax = taxableGain * (stateRate / 100);
+    }
+
     const totalTax = federalTax + stateTax;
     const netProceeds = grossProceeds - totalTax;
     const netGain = capitalGain - totalTax;
-    const effectiveTaxRate = grossProceeds > 0 ? (totalTax / grossProceeds) * 100 : 0;
+    const effectiveTaxRate = capitalGain > 0 ? (totalTax / capitalGain) * 100 : 0;
 
-    const stSavings = capitalGain > 0 && !isLongTerm
+    const stSavings = country === 'US' && capitalGain > 0 && !isLongTerm
       ? capitalGain * ((bracket - longTermRate) / 100)
       : 0;
 
     return {
       grossProceeds, costBasis, capitalGain, federalTax, stateTax,
-      totalTax, netProceeds, netGain, effectiveTaxRate,
+      totalTax, netProceeds, netGain, effectiveTaxRate, taxableGain,
       longTermRate, federalRate, isLongTerm, stSavings,
     };
-  }, [purchasePrice, salePrice, shares, holding, bracket, stateRate]);
+  }, [country, purchasePrice, salePrice, shares, holding, bracket, stateRate]);
+
+  const isCA = country === 'CA';
+  const brackets = isCA ? CA_BRACKETS : US_BRACKETS;
+  const bracketLabel = isCA ? 'Federal Tax Bracket' : 'Federal Income Bracket';
+  const stateRateLabel = isCA ? 'Provincial Tax Rate' : 'State Tax Rate';
+  const stateTaxName = isCA ? 'Provincial Tax' : 'State Tax';
 
   const chartData = [{
     name: 'Sale Proceeds',
@@ -91,14 +116,33 @@ export function CapitalGainsTax() {
     stateTax: r.stateTax,
   }];
 
-  const showShortTermWarning = holding === 'short' && holdingDays < 365 && r.capitalGain > 0;
+  const showShortTermWarning =
+    country === 'US' && holding === 'short' && holdingDays < 365 && r.capitalGain > 0;
+
+  // ensure bracket value is valid when switching countries
+  const bracketValid = (brackets as readonly number[]).includes(bracket);
+  const bracketValue = bracketValid ? bracket : brackets[0];
 
   return (
     <CalculatorShell
       title="Capital Gains Tax"
-      description="Estimate federal and state taxes on stock sale gains, plus the impact of holding for long-term treatment."
+      description="Estimate federal and state/provincial taxes on stock sale gains."
       inputs={
         <>
+          <ToggleGroup<Country>
+            label="Country"
+            value={country}
+            options={[
+              { value: 'US', label: '🇺🇸 US' },
+              { value: 'CA', label: '🇨🇦 Canada' },
+            ]}
+            onChange={(v) => {
+              setCountry(v);
+              // reset bracket to first valid for the new country
+              setBracket(v === 'CA' ? 26 : 22);
+              if (v === 'CA' && stateRate === 0) setStateRate(10);
+            }}
+          />
           <NumInput
             label="Purchase Price"
             value={purchasePrice}
@@ -122,16 +166,18 @@ export function CapitalGainsTax() {
             min={1}
             step={1}
           />
-          <ToggleGroup<Holding>
-            label="Holding Period"
-            value={holding}
-            options={[
-              { value: 'short', label: 'Short-term' },
-              { value: 'long',  label: 'Long-term' },
-            ]}
-            onChange={setHolding}
-          />
-          {holding === 'short' && (
+          {!isCA && (
+            <ToggleGroup<Holding>
+              label="Holding Period"
+              value={holding}
+              options={[
+                { value: 'short', label: 'Short-term' },
+                { value: 'long',  label: 'Long-term' },
+              ]}
+              onChange={setHolding}
+            />
+          )}
+          {!isCA && holding === 'short' && (
             <NumInput
               label="Days Held"
               value={holdingDays}
@@ -144,26 +190,26 @@ export function CapitalGainsTax() {
             />
           )}
           <div className="space-y-1.5">
-            <Label className="text-sm font-medium">Federal Income Bracket</Label>
+            <Label className="text-sm font-medium">{bracketLabel}</Label>
             <select
-              value={bracket}
+              value={bracketValue}
               onChange={e => setBracket(Number(e.target.value))}
               className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              {BRACKETS.map(b => (
+              {brackets.map(b => (
                 <option key={b} value={b}>{b}%</option>
               ))}
             </select>
           </div>
           <NumInput
-            label="State Tax Rate"
+            label={stateRateLabel}
             value={stateRate}
             onChange={setStateRate}
             min={0}
-            max={20}
+            max={25}
             step={0.1}
             suffix="%"
-            help="Optional — leave at 0 for no-tax states"
+            help={isCA ? 'Default ~10% (Ontario approximation)' : 'Optional — leave at 0 for no-tax states'}
           />
         </>
       }
@@ -183,25 +229,33 @@ export function CapitalGainsTax() {
             <StatBox
               label="Capital Gain"
               value={fmtDollar(r.capitalGain)}
-              sub={r.capitalGain >= 0 ? 'Taxable gain' : 'Capital loss'}
+              sub={
+                isCA && r.capitalGain > 0
+                  ? `Taxable: ${fmtDollar(r.taxableGain)} (50%)`
+                  : r.capitalGain >= 0 ? 'Taxable gain' : 'Capital loss'
+              }
               highlight={r.capitalGain >= 0 ? 'positive' : 'negative'}
             />
             <StatBox
               label="Federal Tax"
               value={`-${fmtDollar(r.federalTax)}`}
-              sub={`${r.federalRate}% ${r.isLongTerm ? 'LTCG' : 'ordinary'}`}
+              sub={
+                isCA
+                  ? `${r.federalRate}% on 50% incl.`
+                  : `${r.federalRate}% ${r.isLongTerm ? 'LTCG' : 'ordinary'}`
+              }
               highlight="negative"
             />
             <StatBox
-              label="State Tax"
+              label={stateTaxName}
               value={`-${fmtDollar(r.stateTax)}`}
-              sub={`${stateRate}% state rate`}
+              sub={`${stateRate}% ${isCA ? 'provincial' : 'state'} rate`}
               highlight="negative"
             />
             <StatBox
               label="Net Proceeds"
               value={fmtDollar(r.netProceeds)}
-              sub={`Effective tax: ${r.effectiveTaxRate.toFixed(1)}%`}
+              sub={`Effective tax: ${r.effectiveTaxRate.toFixed(1)}% of capital gain`}
               highlight="positive"
             />
           </div>
@@ -225,26 +279,38 @@ export function CapitalGainsTax() {
                   <Bar dataKey="costBasis"  stackId="a" name="Cost Basis"   fill="#94a3b8" />
                   <Bar dataKey="netGain"    stackId="a" name="Net Gain"     fill="#22c55e" />
                   <Bar dataKey="federalTax" stackId="a" name="Federal Tax"  fill="#ef4444" />
-                  <Bar dataKey="stateTax"   stackId="a" name="State Tax"    fill="#f59e0b" />
+                  <Bar dataKey="stateTax"   stackId="a" name={stateTaxName} fill="#f59e0b" />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
           <Callout icon={<TrendingUp className="h-4 w-4 text-amber-500" />}>
-            {showShortTermWarning && r.stSavings > 0 ? (
+            {isCA && r.capitalGain > 0 ? (
+              <>
+                Canada uses a <strong className="text-foreground">50% inclusion rate</strong>: only{' '}
+                <strong className="text-foreground">{fmtDollar(r.taxableGain)}</strong> of your{' '}
+                <strong className="text-foreground">{fmtDollar(r.capitalGain)}</strong> gain is taxable.
+                Total tax: <strong className="text-foreground">{fmtDollar(r.totalTax)}</strong>.
+              </>
+            ) : showShortTermWarning && r.stSavings > 0 ? (
               <>
                 Waiting <strong className="text-foreground">{365 - holdingDays} more days</strong>{' '}
                 to qualify for long-term rates saves you{' '}
                 <strong className="text-foreground">{fmtDollar(r.stSavings)}</strong> in federal taxes
                 (long-term rate would be <strong className="text-foreground">{r.longTermRate}%</strong>{' '}
                 vs your ordinary <strong className="text-foreground">{bracket}%</strong>).
+                {bracket <= 12 && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Note: LTCG 0% rate only applies if your total income stays under $47,025 (2024 single filer).
+                    If this gain pushes you over, part is taxed at 15%.
+                  </div>
+                )}
               </>
             ) : r.capitalGain <= 0 ? (
               <>
                 You have a capital loss of{' '}
                 <strong className="text-foreground">{fmtDollar(Math.abs(r.capitalGain))}</strong> —
-                no tax is owed, and you may be able to offset other gains or up to $3,000 of ordinary
-                income.
+                no tax is owed{!isCA && ', and you may be able to offset other gains or up to $3,000 of ordinary income'}.
               </>
             ) : (
               <>
@@ -253,7 +319,13 @@ export function CapitalGainsTax() {
                 {fmtDollar(r.grossProceeds)} sale —{' '}
                 <strong className="text-foreground">{fmtDollar(r.totalTax)}</strong> goes to taxes
                 at an effective rate of{' '}
-                <strong className="text-foreground">{r.effectiveTaxRate.toFixed(1)}%</strong>.
+                <strong className="text-foreground">{r.effectiveTaxRate.toFixed(1)}%</strong> of your gain.
+                {!isCA && bracket <= 12 && holding === 'long' && (
+                  <div className="mt-2 text-xs text-muted-foreground">
+                    Note: LTCG 0% rate only applies if your total income stays under $47,025 (2024 single filer).
+                    If this gain pushes you over, part is taxed at 15%.
+                  </div>
+                )}
               </>
             )}
           </Callout>
