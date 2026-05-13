@@ -43,6 +43,7 @@ export function FireRetirement() {
   const [swr,         setSwr]         = useState(4);
   const [expenses,    setExpenses]    = useState(5_000);
   const [currentAge,  setCurrentAge]  = useState(30);
+  const [targetAge,   setTargetAge]   = useState(65);
 
   const r = useMemo(
     () => compute(savings, contrib, ret, swr, expenses, currentAge),
@@ -65,6 +66,7 @@ export function FireRetirement() {
         <NumInput label="Safe Withdrawal Rate"        value={swr}        onChange={setSwr}        min={0.5} max={10}      step={0.25} suffix="%" help="4% is the traditional FIRE guideline" />
         <NumInput label="Monthly Expenses in Retirement" value={expenses} onChange={setExpenses}  min={0}   step={500}    prefix="$" />
         <NumInput label="Current Age"                 value={currentAge} onChange={setCurrentAge} min={18}  max={80}      step={1} suffix="yrs" />
+        <NumInput label="Target Retirement Age"       value={targetAge}  onChange={setTargetAge}  min={currentAge + 1} max={100} step={1} suffix="yrs" />
       </>}
       results={<>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -101,12 +103,21 @@ export function FireRetirement() {
         </Card>
         <Callout icon={r.reached ? <TrendingUp className="h-4 w-4 text-green-500" /> : <AlertTriangle className="h-4 w-4 text-amber-500" />}>
           {r.reached ? (
-            <>
-              At your current savings rate you reach financial independence at age{' '}
-              <strong className="text-foreground">{r.fireAge}</strong> —{' '}
-              <strong className="text-foreground">{r.yearsToFire} years</strong> from now.
-              Your FIRE number is <strong className="text-foreground">{fmtDollar(r.fireNumber)}</strong>.
-            </>
+            r.fireAge <= targetAge ? (
+              <>
+                At your current savings rate you reach financial independence at age{' '}
+                <strong className="text-foreground">{r.fireAge}</strong> —{' '}
+                <strong className="text-foreground">{targetAge - r.fireAge} years</strong> ahead of your retirement target.
+                Your FIRE number is <strong className="text-foreground">{fmtDollar(r.fireNumber)}</strong>.
+              </>
+            ) : (
+              <>
+                You reach FI at age{' '}
+                <strong className="text-foreground">{r.fireAge}</strong> —{' '}
+                <strong className="text-foreground">{r.fireAge - targetAge} years</strong> after your target retirement age.
+                Your FIRE number is <strong className="text-foreground">{fmtDollar(r.fireNumber)}</strong>.
+              </>
+            )
           ) : (
             <>
               At current settings FIRE is not reached within 50 years. Try increasing contributions,
