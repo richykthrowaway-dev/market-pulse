@@ -45,6 +45,9 @@ function compute(holdings: Holding[], growthPct: number, years: number, drip: bo
 
   for (let y = 1; y <= years; y++) {
     noDripIncome = noDripIncome * (1 + growthPct / 100);
+    // DRIP model: under a constant-yield assumption (price grows at the same rate as
+    // the dividend), reinvested dividends buy more shares at rate Y per year. Combined
+    // with per-share dividend growth g, total income grows by (1 + g) * (1 + Y) per year.
     dripIncome = dripIncome * (1 + growthPct / 100) * (1 + DRIP_YIELD_ASSUMPTION);
     const point = {
       year: y,
@@ -59,19 +62,16 @@ function compute(holdings: Holding[], growthPct: number, years: number, drip: bo
     ? (drip ? series[series.length - 1].drip : series[series.length - 1].noDrip)
     : 0;
 
-  // Yield on Holdings: annual income / estimated cost basis
-  // Assume avg share price = annual dividend / 0.025 (2.5% reference yield) per holding
-  const estimatedCost = holdings.reduce((s, h) => {
-    const estPrice = h.dividend > 0 ? h.dividend / 0.025 : 0;
-    return s + h.shares * estPrice;
-  }, 0);
-  const yieldOnHoldings = estimatedCost > 0 ? (currentAnnualIncome / estimatedCost) * 100 : 0;
+  // Avg Annual Dividend / Share: weighted across all holdings.
+  // Honest: dollar per share of annual dividend income, no cost-basis assumption.
+  const totalShares = holdings.reduce((s, h) => s + h.shares, 0);
+  const avgDividendPerShare = totalShares > 0 ? currentAnnualIncome / totalShares : 0;
 
   return {
     currentAnnualIncome,
     monthlyIncome: currentAnnualIncome / 12,
     projectedYearN,
-    yieldOnHoldings,
+    avgDividendPerShare,
     totalDividends,
     series,
   };
@@ -107,8 +107,14 @@ export function DividendIncomeProjector() {
 
   const r = useMemo(() => compute(holdings, growth, years, drip), [holdings, growth, years, drip]);
 
-  const effectiveGrowth = drip ? growth + DRIP_YIELD_ASSUMPTION * 100 : growth;
-  const doublingYears = effectiveGrowth > 0 ? 72 / effectiveGrowth : Infinity;
+  // Doubling time must match the chart math. The DRIP model multiplies per year by
+  // (1 + g) * (1 + Y), so the effective compounded growth rate is that product minus 1
+  // — NOT the additive g + Y used previously (which under-counts the cross term).
+  const effectiveGrowthMultiplier = drip
+    ? (1 + growth / 100) * (1 + DRIP_YIELD_ASSUMPTION) - 1
+    : growth / 100;
+  const effectiveGrowthPct = effectiveGrowthMultiplier * 100;
+  const doublingYears = effectiveGrowthPct > 0 ? 72 / effectiveGrowthPct : Infinity;
 
   function updateRow(i: number, patch: Partial<Holding>) {
     setHoldings(prev => prev.map((h, idx) => idx === i ? { ...h, ...patch } : h));
@@ -233,9 +239,9 @@ export function DividendIncomeProjector() {
             highlight="positive"
           />
           <StatBox
-            label="Yield on Holdings"
-            value={`${r.yieldOnHoldings.toFixed(2)}%`}
-            sub="Est. on cost basis"
+            label="Avg Annual Dividend / Share"
+            value={fmtDollar(r.avgDividendPerShare)}
+            sub="Weighted across holdings"
           />
           <StatBox
             label={`Total Dividends (${years}y)`}
@@ -284,6 +290,12 @@ export function DividendIncomeProjector() {
           </strong>{' '}
           years (Rule of 72). That turns <strong className="text-foreground">{fmtDollar(r.currentAnnualIncome)}</strong>{' '}
           today into <strong className="text-foreground">{fmtDollar(r.projectedYearN)}</strong> per year by year {years}.
+          {drip && (
+            <span className="block mt-2 text-xs text-muted-foreground">
+              DRIP model assumes a 4% reference reinvestment yield with constant yield over time.
+              Actual results vary with share price changes.
+            </span>
+          )}
         </Callout>
       </>}
     />
