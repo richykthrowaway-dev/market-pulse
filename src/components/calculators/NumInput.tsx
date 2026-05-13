@@ -23,7 +23,11 @@ export function NumInput({
   const [raw, setRaw] = useState(String(value));
 
   // Sync when parent drives a value change externally
-  useEffect(() => { setRaw(String(value)); }, [value]);
+  useEffect(() => {
+    if (parseFloat(raw) !== value) {
+      setRaw(String(value));
+    }
+  }, [value]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="space-y-1.5">
