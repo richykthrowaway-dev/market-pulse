@@ -26,3 +26,7 @@ npm-debug.log*
 .claude/
 
 .vercel
+
+# Data audit snapshots are local — don't pollute the repo
+audits/*.json
+!audits/.gitkeep

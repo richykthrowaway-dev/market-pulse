@@ -1,0 +1,34 @@
+{
+  "_comment": "Edge function + table probes for data-audit.mjs. Add new probes here — the script picks them up automatically.",
+
+  "edgeFunctions": [
+    { "name": "api-finnhub",         "qs": "endpoint=quote&symbol=AAPL",                       "expect": "c" },
+    { "name": "api-eodhd",           "qs": "endpoint=eod&symbol=AAPL.US&from=2026-05-01&to=2026-05-13", "expect": null },
+    { "name": "api-market-returns",  "qs": "",                                                  "expect": "returns" },
+    { "name": "api-market-caps",     "qs": "",                                                  "method": "POST", "body": { "tickers": ["AAPL", "MSFT"] } },
+    { "name": "api-fx-rates",        "qs": "",                                                  "expect": "rates" },
+    { "name": "api-news",            "qs": "limit=5",                                           "expect": null },
+    { "name": "api-yahoo",           "qs": "symbol=^GSPC",                                      "expect": null },
+    { "name": "api-commodity-prices","qs": "",                                                  "expect": "prices" },
+    { "name": "api-economic-events", "qs": "from=2026-05-01&to=2026-05-31",                     "expect": null },
+    { "name": "api-macro-heatmap",   "qs": "",                                                  "expect": null },
+    { "name": "api-conflicts",       "qs": "",                                                  "expect": null },
+    { "name": "api-52week",          "qs": "",                                                  "method": "POST", "body": { "tickers": ["AAPL"] }, "expect": "ranges" },
+    { "name": "api-beta",            "qs": "",                                                  "method": "POST", "body": { "tickers": ["AAPL"] } }
+  ],
+
+  "tables": [
+    { "name": "stocks",              "freshnessColumn": "updated_at" },
+    { "name": "ohlcv_bars",          "freshnessColumn": "ts" },
+    { "name": "symbols",             "freshnessColumn": null },
+    { "name": "news_articles",       "freshnessColumn": "published_at" },
+    { "name": "fundamentals_cache", "freshnessColumn": "updated_at" },
+    { "name": "snaptrade_users",     "freshnessColumn": "created_at" },
+    { "name": "snaptrade_holdings",  "freshnessColumn": "synced_at" }
+  ],
+
+  "thresholds": {
+    "slowFunctionMs":    5000,
+    "stalenessWarnHours": 26
+  }
+}
