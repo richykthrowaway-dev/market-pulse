@@ -5,7 +5,7 @@ interface TooltipPayload {
   dataKey: string;
   name: string;
   color: string;
-  value: number;
+  value: number | string | (number | string)[];
 }
 
 interface Props {
@@ -21,9 +21,9 @@ export function ChartTooltip({ active, payload, label, labelPrefix = 'Year', for
   return (
     <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg text-sm">
       <p className="font-medium mb-1.5">{labelPrefix} {label}</p>
-      {payload.map(p => (
-        <p key={p.dataKey} style={{ color: p.color }} className="tabular-nums text-xs">
-          {p.name}: {formatter(p.value)}
+      {payload.map((p, i) => (
+        <p key={`${p.dataKey}-${i}`} style={{ color: p.color }} className="tabular-nums text-xs">
+          {p.name}: {typeof p.value === 'number' ? formatter(p.value) : String(p.value)}
         </p>
       ))}
     </div>

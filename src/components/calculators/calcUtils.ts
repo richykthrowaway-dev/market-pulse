@@ -1,11 +1,11 @@
 // src/components/calculators/calcUtils.ts
 
-export const fmtDollar = (n: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+export const fmtDollar = (n: number, currency = 'USD') =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency, maximumFractionDigits: 0 }).format(n);
 
-export const fmtCompact = (n: number) =>
+export const fmtCompact = (n: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', {
-    style: 'currency', currency: 'USD',
+    style: 'currency', currency,
     notation: 'compact', maximumFractionDigits: 2,
   }).format(n);
 
@@ -20,7 +20,7 @@ export const clamp = (v: number, min: number, max: number) => Math.min(max, Math
 
 /** Year-by-year portfolio growth. netPct already has fee deducted. */
 export function growSeries(initial: number, contrib: number, netPct: number, years: number): number[] {
-  const rate = Math.max(0, netPct) / 100;
+  const rate = netPct / 100;
   const vals = [initial];
   for (let y = 1; y <= years; y++) vals.push(vals[y - 1] * (1 + rate) + contrib);
   return vals;

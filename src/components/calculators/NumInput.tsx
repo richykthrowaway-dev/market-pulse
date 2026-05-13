@@ -1,4 +1,5 @@
 // src/components/calculators/NumInput.tsx
+import React, { useEffect, useState, useId } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { clamp } from './calcUtils';
@@ -16,11 +17,17 @@ interface NumInputProps {
 }
 
 export function NumInput({
-  label, value, onChange, min = 0, max, step = 1, prefix, suffix, help,
+  label, value, onChange, min, max, step = 1, prefix, suffix, help,
 }: NumInputProps) {
+  const id = useId();
+  const [raw, setRaw] = useState(String(value));
+
+  // Sync when parent drives a value change externally
+  useEffect(() => { setRaw(String(value)); }, [value]);
+
   return (
     <div className="space-y-1.5">
-      <Label className="text-sm font-medium">{label}</Label>
+      <Label htmlFor={id} className="text-sm font-medium">{label}</Label>
       <div className="relative flex items-center">
         {prefix && (
           <span className="absolute left-3 text-muted-foreground text-sm pointer-events-none select-none z-10">
@@ -28,14 +35,20 @@ export function NumInput({
           </span>
         )}
         <Input
+          id={id}
           type="number"
-          value={value}
+          value={raw}
           min={min}
           max={max}
           step={step}
           onChange={e => {
+            setRaw(e.target.value);
             const v = parseFloat(e.target.value);
-            if (!isNaN(v)) onChange(clamp(v, min, max ?? Infinity));
+            if (!isNaN(v)) {
+              const lo = min ?? -Infinity;
+              const hi = max ?? Infinity;
+              onChange(clamp(v, lo, hi));
+            }
           }}
           className={`w-full ${prefix ? 'pl-7' : ''} ${suffix ? 'pr-12' : ''}`}
         />
