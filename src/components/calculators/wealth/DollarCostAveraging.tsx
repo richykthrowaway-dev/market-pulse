@@ -187,9 +187,10 @@ export function DollarCostAveraging() {
         )}
         {!loading && !fetchErr && r && r.series.length > 0 && (
           <>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <StatBox label="Total Invested"  value={fmtCompact(r.totalInvested)} />
               <StatBox label="Current Value"   value={fmtCompact(r.currentValue)} highlight={positive ? 'positive' : 'negative'} />
+              <StatBox label="Total Shares"    value={r.totalShares.toLocaleString('en-US', { maximumFractionDigits: 4 })} />
               <StatBox label="Avg Cost / Share" value={`$${r.avgCost.toFixed(2)}`} sub={`vs $${r.lastPrice.toFixed(2)} now`} />
               <StatBox label="Total Return"    value={`${r.returnPct >= 0 ? '+' : ''}${r.returnPct.toFixed(1)}%`} highlight={positive ? 'positive' : 'negative'} />
             </div>
@@ -230,7 +231,7 @@ export function DollarCostAveraging() {
                     />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Area type="monotone" dataKey="invested" name="Total Invested"  stroke="#94a3b8" fill="url(#dcaGrey)"  strokeWidth={1.5} dot={false} />
-                    <Area type="monotone" dataKey="value"    name="Portfolio Value" stroke="#22c55e" fill="url(#dcaGreen)" strokeWidth={2}   dot={false} />
+                    <Area type="monotone" dataKey="value"    name="Portfolio Value" stroke="#22c55e" fill="url(#dcaGreen)" fillOpacity={0} strokeWidth={2}   dot={false} />
                   </AreaChart>
                 </ResponsiveContainer>
               </CardContent>
