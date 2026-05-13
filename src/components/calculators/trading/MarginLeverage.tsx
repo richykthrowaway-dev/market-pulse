@@ -40,7 +40,7 @@ export function MarginLeverage() {
       ? (units * price - equity) / (units * (1 - maintenanceMargin))
       : 0;
     const liquidationPrice = units > 0 ? price - equity / units : 0;
-    const lossAtMarginCall = (marginCallPrice - price) * units;
+    const lossAtMarginCall = Math.abs((marginCallPrice - price) * units);
     const dropPct = price > 0 ? ((price - marginCallPrice) / price) * 100 : 0;
     return {
       totalExposure,
@@ -138,7 +138,7 @@ export function MarginLeverage() {
             />
             <StatBox
               label="Loss at Margin Call"
-              value={fmtCompact(stats.lossAtMarginCall)}
+              value={`-${fmtCompact(stats.lossAtMarginCall)}`}
               sub={`${stats.dropPct.toFixed(1)}% drop from now`}
               highlight="negative"
             />
