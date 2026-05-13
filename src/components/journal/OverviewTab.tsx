@@ -1,8 +1,16 @@
+import { useMemo } from 'react';
 import { JournalStats, TradeEntry } from '@/hooks/useTradeJournal';
 import { JournalSettings } from '@/hooks/useJournalSettings';
 import { Card } from '@/components/ui/card';
 import { KillSwitchBanner } from './KillSwitchBanner';
 import { GoalProgressCard } from './GoalProgressCard';
+import { InsightCard } from './InsightCard';
+import { OutlierLossList } from './OutlierLossList';
+import {
+  computeDayOfWeekInsight,
+  computeAfterLossInsight,
+  computeOutlierLosses,
+} from './computeInsights';
 
 interface Props {
   stats: JournalStats;
@@ -11,13 +19,24 @@ interface Props {
   openEditTrade?: (id: string) => void;
 }
 
-export function OverviewTab({ stats, trades, settings }: Props) {
+export function OverviewTab({ stats, trades, settings, openEditTrade }: Props) {
+  const dowInsight = useMemo(() => computeDayOfWeekInsight(trades), [trades]);
+  const afterLossInsight = useMemo(() => computeAfterLossInsight(trades), [trades]);
+  const outliers = useMemo(() => computeOutlierLosses(trades), [trades]);
+
   return (
     <div className="space-y-6">
       <KillSwitchBanner trades={trades} settings={settings} />
       <GoalProgressCard trades={trades} settings={settings} />
-      {/* Slot 3: InsightCards — Task 24 */}
-      {/* Slot 4: OutlierLossList — Task 24 */}
+
+      {(dowInsight || afterLossInsight) && (
+        <div className="space-y-3">
+          {dowInsight && <InsightCard insight={dowInsight} />}
+          {afterLossInsight && <InsightCard insight={afterLossInsight} />}
+        </div>
+      )}
+
+      <OutlierLossList outliers={outliers} onClick={openEditTrade} />
 
       <Card className="p-6">
         <h3 className="text-lg font-semibold mb-2">Recent activity</h3>
