@@ -2,6 +2,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { useStatement } from '@/contexts/StatementContext';
+import type { OpenPosition } from '@/services/parser/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,9 +29,11 @@ function compute(amount: number, freq: Freq, startDate: string, endDate: string,
   let nextBuy = new Date(startDate);
   const end = new Date(endDate);
 
+  let lastPrice = 0;
   for (const bar of prices) {
     const d = new Date(bar.date);
     if (d < new Date(startDate) || d > end) continue;
+    lastPrice = bar.close; // track last bar within simulation range
     if (d >= nextBuy) {
       totalShares += amount / bar.close;
       totalInvested += amount;
@@ -38,8 +41,6 @@ function compute(amount: number, freq: Freq, startDate: string, endDate: string,
     }
     series.push({ date: bar.date, invested: Math.round(totalInvested), value: Math.round(totalShares * bar.close) });
   }
-
-  const lastPrice = prices.at(-1)?.close ?? 0;
   const currentValue = totalShares * lastPrice;
   const avgCost = totalShares > 0 ? totalInvested / totalShares : 0;
   const returnPct = totalInvested > 0 ? ((currentValue - totalInvested) / totalInvested) * 100 : 0;
@@ -50,11 +51,12 @@ export function DollarCostAveraging() {
   const { data: holdings = [] } = usePortfolio();
   const { parsedStatement } = useStatement();
 
+  interface PortfolioHolding { ticker: string; }
   const tickers = useMemo(() => {
-    const csv = parsedStatement?.openPositions
-      ?.filter((p: any) => p.assetCategory === 'STK' && p.quantity > 0)
-      .map((p: any) => p.symbol as string) ?? [];
-    const db = (holdings as any[]).map((h: any) => h.ticker as string);
+    const csv = (parsedStatement?.openPositions as OpenPosition[] | undefined)
+      ?.filter(p => p.assetCategory === 'STK' && p.quantity > 0)
+      .map(p => p.symbol) ?? [];
+    const db = (holdings as PortfolioHolding[]).map(h => h.ticker).filter(Boolean);
     return [...new Set([...csv, ...db])];
   }, [holdings, parsedStatement]);
 
