@@ -47,6 +47,9 @@ export interface JournalStats {
   totalPnL: number;
   largestWin: number;
   largestLoss: number;
+  expectancy: number;            // mean P&L per trade across all trades
+  rExpectancy: number | null;    // mean R across trades with a stop, or null if none
+  rTradeCount: number;           // how many trades have a stop
 }
 
 // ── P/L calculation ─────────────────────────────────────────────────────────
@@ -56,6 +59,17 @@ export function computePnL(t: TradeEntry): number {
     ? (t.exitPrice - t.entryPrice) * t.quantity
     : (t.entryPrice - t.exitPrice) * t.quantity;
   return gross - t.fees;
+}
+
+export function computeInitialRisk(t: TradeEntry): number | null {
+  if (t.stopLoss === undefined || t.stopLoss === null) return null;
+  return Math.abs(t.entryPrice - t.stopLoss) * t.quantity;
+}
+
+export function computeR(t: TradeEntry): number | null {
+  const risk = computeInitialRisk(t);
+  if (risk === null || risk === 0) return null;
+  return computePnL(t) / risk;
 }
 
 // ── Persistent store (localStorage + IndexedDB dual-write) ─────────────────
@@ -219,7 +233,7 @@ export function useTradeJournal() {
 
   const stats = useMemo((): JournalStats => {
     if (trades.length === 0) {
-      return { totalTrades: 0, winCount: 0, lossCount: 0, winRate: 0, avgWin: 0, avgLoss: 0, profitFactor: 0, totalPnL: 0, largestWin: 0, largestLoss: 0 };
+      return { totalTrades: 0, winCount: 0, lossCount: 0, winRate: 0, avgWin: 0, avgLoss: 0, profitFactor: 0, totalPnL: 0, largestWin: 0, largestLoss: 0, expectancy: 0, rExpectancy: null, rTradeCount: 0 };
     }
     let winCount = 0, lossCount = 0, grossWins = 0, grossLosses = 0;
     let largestWin = 0, largestLoss = 0, totalPnL = 0;
@@ -236,6 +250,13 @@ export function useTradeJournal() {
         if (pnl < largestLoss) largestLoss = pnl;
       }
     }
+    const expectancy = trades.length > 0 ? totalPnL / trades.length : 0;
+    let rSum = 0, rCount = 0;
+    for (const t of trades) {
+      const r = computeR(t);
+      if (r !== null) { rSum += r; rCount += 1; }
+    }
+    const rExpectancy = rCount > 0 ? rSum / rCount : null;
     return {
       totalTrades: trades.length,
       winCount,
@@ -247,6 +268,9 @@ export function useTradeJournal() {
       totalPnL,
       largestWin,
       largestLoss,
+      expectancy,
+      rExpectancy: rExpectancy,
+      rTradeCount: rCount,
     };
   }, [trades]);
 
