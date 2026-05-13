@@ -11,7 +11,6 @@ import { DayOfWeekHeatmap } from '@/components/journal/DayOfWeekHeatmap';
 import { HourOfDayHeatmap } from '@/components/journal/HourOfDayHeatmap';
 import { TradeFormDialog } from '@/components/journal/TradeFormDialog';
 import { TradeLogTable } from '@/components/journal/TradeLogTable';
-import { JournalStatsRow } from '@/components/journal/JournalStatsRow';
 import { HeroStatsRow } from '@/components/journal/HeroStatsRow';
 import { CumulativePnLChart } from '@/components/journal/CumulativePnLChart';
 import { DayDetailDialog } from '@/components/journal/DayDetailDialog';
