@@ -3,7 +3,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, BookOpen, CalendarDays, LineChart, List, Activity, BarChart3, ScrollText } from 'lucide-react';
+import { Plus, BookOpen, CalendarDays, LineChart, List, Activity, BarChart3, ScrollText, Download } from 'lucide-react';
 import { useTradeJournal } from '@/hooks/useTradeJournal';
 import type { TradeEntry } from '@/hooks/useTradeJournal';
 import { PnLCalendar } from '@/components/journal/PnLCalendar';
@@ -16,6 +16,7 @@ import { HeroStatsRow } from '@/components/journal/HeroStatsRow';
 import { CumulativePnLChart } from '@/components/journal/CumulativePnLChart';
 import { DayDetailDialog } from '@/components/journal/DayDetailDialog';
 import { OverviewTab } from '@/components/journal/OverviewTab';
+import { IbkrImportDialog } from '@/components/journal/IbkrImportDialog';
 import { AnalyticsTab } from '@/components/journal/AnalyticsTab';
 import { RulesTab } from '@/components/journal/RulesTab';
 import { useJournalSettings } from '@/hooks/useJournalSettings';
@@ -29,6 +30,7 @@ const TradeJournal = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<TradeEntry | null>(null);
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   function tryOpenForm() {
     if (isDailyMaxLossHit(trades, settings) && !window.confirm("You've hit your daily max loss. Log this trade anyway?")) {
@@ -58,6 +60,11 @@ const TradeJournal = () => {
     toast.success('Trade deleted');
   };
 
+  const handleImport = (drafts: Omit<TradeEntry, 'id' | 'createdAt'>[]) => {
+    drafts.forEach(d => addTrade(d));
+    toast.success(`Imported ${drafts.length} trade${drafts.length !== 1 ? 's' : ''} from IBKR`);
+  };
+
   const handleDayEdit = (trade: TradeEntry) => {
     setSelectedDay(null);
     setEditingTrade(trade);
@@ -69,9 +76,14 @@ const TradeJournal = () => {
     return (
       <PageLayout title="Trade Journal">
         <div className="flex items-center justify-end mb-6">
-          <Button onClick={tryOpenForm}>
-            <Plus className="h-4 w-4 mr-2" /> Log Trade
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => setImportOpen(true)}>
+              <Download className="h-4 w-4 mr-2" /> Import from IBKR
+            </Button>
+            <Button onClick={tryOpenForm}>
+              <Plus className="h-4 w-4 mr-2" /> Log Trade
+            </Button>
+          </div>
         </div>
         <div className="flex flex-col items-center justify-center h-[60vh] gap-4">
           <BookOpen className="h-16 w-16 text-muted-foreground opacity-30" />
@@ -92,6 +104,12 @@ const TradeJournal = () => {
           initialValues={editingTrade}
           mode={editingTrade ? 'edit' : 'add'}
         />
+        <IbkrImportDialog
+          open={importOpen}
+          onOpenChange={setImportOpen}
+          existingTrades={trades}
+          onImport={handleImport}
+        />
       </PageLayout>
     );
   }
@@ -100,9 +118,14 @@ const TradeJournal = () => {
     <PageLayout title="Trade Journal">
       {/* Header */}
       <div className="flex items-center justify-end mb-6">
-        <Button onClick={tryOpenForm}>
-          <Plus className="h-4 w-4 mr-2" /> Log Trade
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Download className="h-4 w-4 mr-2" /> Import from IBKR
+          </Button>
+          <Button onClick={tryOpenForm}>
+            <Plus className="h-4 w-4 mr-2" /> Log Trade
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -182,6 +205,13 @@ const TradeJournal = () => {
         trades={selectedDay ? (tradesByDate.get(selectedDay) ?? []) : []}
         onClose={() => setSelectedDay(null)}
         onEdit={handleDayEdit}
+      />
+
+      <IbkrImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        existingTrades={trades}
+        onImport={handleImport}
       />
     </PageLayout>
   );
