@@ -7,6 +7,8 @@ import { Plus, BookOpen, CalendarDays, LineChart, List, Activity, BarChart3, Scr
 import { useTradeJournal } from '@/hooks/useTradeJournal';
 import type { TradeEntry } from '@/hooks/useTradeJournal';
 import { PnLCalendar } from '@/components/journal/PnLCalendar';
+import { DayOfWeekHeatmap } from '@/components/journal/DayOfWeekHeatmap';
+import { HourOfDayHeatmap } from '@/components/journal/HourOfDayHeatmap';
 import { TradeFormDialog } from '@/components/journal/TradeFormDialog';
 import { TradeLogTable } from '@/components/journal/TradeLogTable';
 import { JournalStatsRow } from '@/components/journal/JournalStatsRow';
@@ -128,8 +130,10 @@ const TradeJournal = () => {
         </TabsContent>
 
         <TabsContent value="calendar">
-          <Card className="p-6">
+          <Card className="p-6 space-y-6">
             <PnLCalendar dailyPnL={dailyPnL} onDayClick={setSelectedDay} />
+            <DayOfWeekHeatmap trades={trades} />
+            <HourOfDayHeatmap trades={trades} />
           </Card>
         </TabsContent>
 
