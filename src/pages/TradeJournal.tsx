@@ -3,7 +3,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, BookOpen, CalendarDays, LineChart, List } from 'lucide-react';
+import { Plus, BookOpen, CalendarDays, LineChart, List, Activity, BarChart3, ScrollText } from 'lucide-react';
 import { useTradeJournal } from '@/hooks/useTradeJournal';
 import type { TradeEntry } from '@/hooks/useTradeJournal';
 import { PnLCalendar } from '@/components/journal/PnLCalendar';
@@ -13,10 +13,15 @@ import { JournalStatsRow } from '@/components/journal/JournalStatsRow';
 import { HeroStatsRow } from '@/components/journal/HeroStatsRow';
 import { CumulativePnLChart } from '@/components/journal/CumulativePnLChart';
 import { DayDetailDialog } from '@/components/journal/DayDetailDialog';
+import { OverviewTab } from '@/components/journal/OverviewTab';
+import { AnalyticsTab } from '@/components/journal/AnalyticsTab';
+import { RulesTab } from '@/components/journal/RulesTab';
+import { useJournalSettings } from '@/hooks/useJournalSettings';
 import { toast } from 'sonner';
 
 const TradeJournal = () => {
   const { trades, addTrade, updateTrade, deleteTrade, dailyPnL, stats, cumulativePnL, tradesByDate, currentStreak } = useTradeJournal();
+  const { settings } = useJournalSettings();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<TradeEntry | null>(null);
@@ -93,18 +98,34 @@ const TradeJournal = () => {
       <HeroStatsRow stats={stats} currentStreak={currentStreak} />
 
       {/* Tabbed content */}
-      <Tabs defaultValue="calendar" className="space-y-4">
+      <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
+          <TabsTrigger value="overview" className="gap-1.5">
+            <Activity className="h-4 w-4" /> Overview
+          </TabsTrigger>
           <TabsTrigger value="calendar" className="gap-1.5">
             <CalendarDays className="h-4 w-4" /> Calendar
           </TabsTrigger>
           <TabsTrigger value="chart" className="gap-1.5">
             <LineChart className="h-4 w-4" /> Equity Curve
           </TabsTrigger>
+          <TabsTrigger value="analytics" className="gap-1.5">
+            <BarChart3 className="h-4 w-4" /> Analytics
+          </TabsTrigger>
           <TabsTrigger value="trades" className="gap-1.5">
-            <List className="h-4 w-4" /> Trade Log
+            <List className="h-4 w-4" /> Trades
+          </TabsTrigger>
+          <TabsTrigger value="rules" className="gap-1.5">
+            <ScrollText className="h-4 w-4" /> Rules
           </TabsTrigger>
         </TabsList>
+
+        <TabsContent value="overview">
+          <OverviewTab stats={stats} trades={trades} settings={settings} openEditTrade={(id) => {
+            const trade = trades.find(t => t.id === id);
+            if (trade) handleEdit(trade);
+          }} />
+        </TabsContent>
 
         <TabsContent value="calendar">
           <Card className="p-6">
@@ -119,10 +140,18 @@ const TradeJournal = () => {
           </Card>
         </TabsContent>
 
+        <TabsContent value="analytics">
+          <AnalyticsTab trades={trades} />
+        </TabsContent>
+
         <TabsContent value="trades">
           <Card className="p-4">
             <TradeLogTable trades={trades} onEdit={handleEdit} onDelete={handleDelete} />
           </Card>
+        </TabsContent>
+
+        <TabsContent value="rules">
+          <RulesTab />
         </TabsContent>
       </Tabs>
 
