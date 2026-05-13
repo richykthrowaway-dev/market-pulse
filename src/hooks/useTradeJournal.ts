@@ -288,6 +288,22 @@ export function useTradeJournal() {
     });
   }, [trades]);
 
+  const currentStreak = useMemo(() => {
+    if (trades.length === 0) return { kind: 'none' as const, length: 0 };
+    // sorted is already exit-date descending in the existing hook — use it
+    const list = sorted; // already DESC by exitDate
+    const firstPnL = computePnL(list[0]);
+    if (firstPnL === 0) return { kind: 'none' as const, length: 0 };
+    const kind: 'win' | 'loss' = firstPnL > 0 ? 'win' : 'loss';
+    let length = 0;
+    for (const t of list) {
+      const p = computePnL(t);
+      if ((kind === 'win' && p > 0) || (kind === 'loss' && p < 0)) length++;
+      else break;
+    }
+    return { kind, length };
+  }, [trades, sorted]);
+
   const tradesByDate = useMemo(() => {
     const map = new Map<string, TradeEntry[]>();
     for (const t of trades) {
@@ -307,5 +323,6 @@ export function useTradeJournal() {
     stats,
     cumulativePnL,
     tradesByDate,
+    currentStreak,
   } as const;
 }

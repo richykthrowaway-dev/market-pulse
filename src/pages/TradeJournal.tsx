@@ -10,12 +10,13 @@ import { PnLCalendar } from '@/components/journal/PnLCalendar';
 import { TradeFormDialog } from '@/components/journal/TradeFormDialog';
 import { TradeLogTable } from '@/components/journal/TradeLogTable';
 import { JournalStatsRow } from '@/components/journal/JournalStatsRow';
+import { HeroStatsRow } from '@/components/journal/HeroStatsRow';
 import { CumulativePnLChart } from '@/components/journal/CumulativePnLChart';
 import { DayDetailDialog } from '@/components/journal/DayDetailDialog';
 import { toast } from 'sonner';
 
 const TradeJournal = () => {
-  const { trades, addTrade, updateTrade, deleteTrade, dailyPnL, stats, cumulativePnL, tradesByDate } = useTradeJournal();
+  const { trades, addTrade, updateTrade, deleteTrade, dailyPnL, stats, cumulativePnL, tradesByDate, currentStreak } = useTradeJournal();
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingTrade, setEditingTrade] = useState<TradeEntry | null>(null);
@@ -89,7 +90,7 @@ const TradeJournal = () => {
       </div>
 
       {/* Stats */}
-      <JournalStatsRow stats={stats} />
+      <HeroStatsRow stats={stats} currentStreak={currentStreak} />
 
       {/* Tabbed content */}
       <Tabs defaultValue="calendar" className="space-y-4">
