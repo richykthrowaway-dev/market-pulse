@@ -27,7 +27,7 @@ const TITLE_MAP: Record<string, string> = {
   '/analysis':        'Analysis',
   '/screener':        'Screener',
   '/trading':         'Trading',
-  '/fee-calculators': 'Fee Calculators',
+  '/calculators':     'Calculators',
   '/journal':         'Journal',
   '/settings':        'Settings',
 };

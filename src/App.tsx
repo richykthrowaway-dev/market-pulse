@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { TradingViewProvider } from "@/components/tradingview";
 import { StatementProvider } from "@/contexts/StatementContext";
@@ -35,7 +35,7 @@ const Settings      = lazy(() => import("./pages/Settings"));
 const Screener      = lazy(() => import("./pages/Screener"));
 const Trading       = lazy(() => import("./pages/Trading"));
 const RiskAnalysis  = lazy(() => import("./pages/RiskAnalysis"));
-const FeeCalculators = lazy(() => import("./pages/FeeCalculators"));
+const Calculators = lazy(() => import("./pages/Calculators"));
 const Watchlists    = lazy(() => import("./pages/Watchlists"));
 const TradeJournal  = lazy(() => import("./pages/TradeJournal"));
 const Learn         = lazy(() => import("./pages/Learn"));
@@ -76,7 +76,8 @@ const App = () => (
                 <Route path="/analysis" element={<Analysis />} />
                 <Route path="/screener" element={<Screener />} />
                 <Route path="/trading" element={<Trading />} />
-                <Route path="/fee-calculators" element={<FeeCalculators />} />
+                <Route path="/fee-calculators" element={<Navigate to="/calculators" replace />} />
+                <Route path="/calculators" element={<Calculators />} />
                 <Route path="/journal" element={<TradeJournal />} />
                 <Route path="/learn" element={<Learn />} />
                 <Route path="/settings" element={<Settings />} />

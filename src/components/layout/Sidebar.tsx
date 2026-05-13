@@ -40,7 +40,7 @@ export function Sidebar({ isCollapsed, onToggle, className, portfolioFileName, p
     { title: 'Analysis', icon: PieChart, href: '/analysis' },
     { title: 'Screener', icon: Search, href: '/screener' },
     { title: 'Trading', icon: CandlestickChart, href: '/trading' },
-    { title: 'Fee Calculators', icon: Calculator, href: '/fee-calculators' },
+    { title: 'Calculators', icon: Calculator, href: '/calculators' },
     { title: 'Journal', icon: BookOpen, href: '/journal' },
     { title: 'Learn', icon: GraduationCap, href: '/learn' },
     { title: 'Settings', icon: Settings, href: '/settings' },
