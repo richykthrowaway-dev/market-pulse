@@ -10,6 +10,7 @@ import { useAnalystRatings, analystColor } from '@/hooks/useAnalystRatings';
 import { TickerStyleEditor } from '@/components/portfolio/TickerStyleEditor';
 import { EarningsCalendar } from '@/components/portfolio/EarningsCalendar';
 import { CorrelationMatrix } from '@/components/portfolio/CorrelationMatrix';
+import { SnapTradeConnectCard } from '@/components/portfolio/SnapTradeConnectCard';
 import { Link2, Unlink2, ArrowUpDown } from 'lucide-react';
 import { useNavbarSlot } from '@/contexts/NavbarSlotContext';
 
@@ -889,8 +890,22 @@ const Portfolio = () => {
 
         {/* Empty */}
         {!isLoading && holdings.length === 0 &&
-        <div className="flex items-center justify-center h-48">
-            <p className="text-muted-foreground">No holdings yet. Upload a statement or add positions.</p>
+        <div className="flex flex-col items-center justify-center gap-3 py-8">
+            <p className="text-muted-foreground text-sm">No holdings yet. Upload a statement or connect a brokerage.</p>
+            <div className="w-full max-w-sm">
+              <SnapTradeConnectCard />
+            </div>
+          </div>
+        }
+
+        {/* SnapTrade controls — visible whenever the user has any holdings,
+            so they can connect another broker or refresh. */}
+        {holdings.length > 0 &&
+        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+            <div /> {/* spacer to right-align */}
+            <div className="w-full sm:w-[280px]">
+              <SnapTradeConnectCard />
+            </div>
           </div>
         }
 
