@@ -2548,10 +2548,7 @@ export default function GlobeView({
   }, [selectedExchange]);
 
   // ── Macro heatmap: build ISO2 → GDP growth lookup ───────────────────────
-  // IMPORTANT: must be declared BEFORE getCapColor because macroMap appears
-  // in getCapColor's dependency array, which is evaluated immediately when
-  // useCallback runs. Accessing a const in the temporal dead zone would throw
-  // a ReferenceError that blanks the entire page.
+  // Declared BEFORE getCapColor (see capColorRef comment below).
   const macroMap = useMemo(() => {
     if (!macroHeatmap?.length) return null;
     const m = new Map<string, number>();
@@ -2559,12 +2556,59 @@ export default function GlobeView({
     return m;
   }, [macroHeatmap]);
 
-  // ── Color callback ──
-  // Reads hoverIsoRef (a ref, not state) so the callback reference only
-  // changes when mode/performanceMap/selectedCountry change — NOT on hover.
-  // Hover color is included via the ref read at evaluation time.
+  // ── Stable color-state bundle ────────────────────────────────────────────
+  //
+  // ROOT CAUSE of the "globe goes invisible on overlay toggle" crash:
+  //   getCapColor had 9 deps (mode, performanceMap, sanctionsMap, lpiMap,
+  //   macroMap, sunDirCached, …).  Every time ANY overlay toggled, one dep
+  //   changed → getCapColor recreated → handleHover recreated (its only dep
+  //   was [getCapColor]) → react-globe.gl received TWO new function props
+  //   simultaneously (polygonCapColor + onPolygonHover).  That dual prop-
+  //   change triggered an internal polygon-layer rebuild in react-globe.gl /
+  //   three-globe that tore down and blanked the globe canvas.
+  //
+  // FIX: move all dynamic values into a ref bundle.  getCapColor reads from
+  //   capColorRef.current so it's always fresh, but the function *identity*
+  //   never changes (empty dep array) → react-globe.gl never sees a new prop
+  //   → no rebuild, no blank globe.
+  //
+  // A dedicated useEffect below imperatively calls
+  //   globe.polygonCapColor(getCapColor)
+  // whenever any tracked value changes, so the new colors actually apply.
+  const capColorRef = useRef({
+    mode,
+    performanceMap,
+    selectedCountry,
+    showExchangePins,
+    showCountryColors,
+    sunDirCached,
+    lpiMap,
+    sanctionsMap,
+    macroMap,
+  });
+  // Update every render so the callback always reads the latest values.
+  capColorRef.current = {
+    mode,
+    performanceMap,
+    selectedCountry,
+    showExchangePins,
+    showCountryColors,
+    sunDirCached,
+    lpiMap,
+    sanctionsMap,
+    macroMap,
+  };
+
+  // ── Color callback — STABLE (empty dep array) ────────────────────────────
+  // All dynamic values come from capColorRef.current, not from closure.
+  // hoverIsoRef is also a ref (no change needed there).
   const getCapColor = useCallback(
     (d: object) => {
+      const {
+        mode, performanceMap, selectedCountry, showExchangePins,
+        showCountryColors, sunDirCached, lpiMap, sanctionsMap, macroMap,
+      } = capColorRef.current;
+
       const feat = d as Feature;
       const iso = feat.properties.ISO_A2;
 
@@ -2652,9 +2696,25 @@ export default function GlobeView({
 
       return raw;
     },
-    [mode, performanceMap, selectedCountry, showExchangePins, macroMap,
-     showCountryColors, sunDirCached, lpiMap, sanctionsMap]
+    [] // eslint-disable-line react-hooks/exhaustive-deps
+    // Intentionally empty — all state comes from capColorRef.current (always
+    // up-to-date), so the function identity is permanently stable.  A
+    // dedicated useEffect handles the imperative color-refresh below.
   );
+
+  // ── Imperative color refresh ─────────────────────────────────────────────
+  // Because getCapColor is now stable (never recreated), react-globe.gl won't
+  // automatically re-evaluate polygon cap colors when overlay data changes.
+  // We push the update ourselves via the imperative setter each time any
+  // color-affecting value changes.
+  useEffect(() => {
+    const globe = globeRef.current as any;
+    if (globe?.polygonCapColor) {
+      globe.polygonCapColor(getCapColor);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sanctionsMap, lpiMap, macroMap, showCountryColors, mode,
+      performanceMap, selectedCountry, showExchangePins, sunDirCached]);
 
   // ── Altitude: only elevate selected country ──
   // Hover altitude is intentionally excluded — geometry rebuilds are expensive.
