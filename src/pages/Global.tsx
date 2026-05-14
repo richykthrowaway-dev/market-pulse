@@ -34,47 +34,14 @@ import { useEconomicEvents, type EconomicEvent } from "@/hooks/useEconomicEvents
 import { useMacroHeatmap } from "@/hooks/useMacroHeatmap";
 import { EconomicEventDialog } from "@/components/global/trade/EconomicEventDialog";
 
-// ── Lightweight CSS starfield (replaces NASA Tycho-2 4.16 MB photo) ──────
-// Generated once at module load: ~140 tiny circles at deterministic positions
-// (seeded PRNG so the pattern is stable across reloads).  Serialised as an
-// inline SVG data URL (~3 KB) and tiled via CSS background-image — zero
-// network round-trips, no decode stall on first paint.
-//
-// We trade the photographic Milky-Way band for the perceived-perf win.  The
-// dark overlay + vignette + globe backlight stack below still gives the
-// "deep space" atmosphere, which is what the photo was contributing 90% of.
-function makeStarfieldDataUrl(seed = 1): string {
-  // Tiny mulberry32 PRNG — deterministic so the same starfield ships in
-  // every build, won't trigger re-paints on re-render, and gzips well.
-  let s = seed;
-  const rng = () => {
-    s = (s + 0x6D2B79F5) | 0;
-    let t = s;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-  const W = 800;
-  const H = 800;
-  const stars: string[] = [];
-  for (let i = 0; i < 140; i++) {
-    const cx = (rng() * W).toFixed(1);
-    const cy = (rng() * H).toFixed(1);
-    // Size + brightness: most stars tiny (0.4–0.8 px), a few "bright" ones
-    const r = (0.35 + rng() * (rng() < 0.1 ? 1.1 : 0.4)).toFixed(2);
-    const o = (0.45 + rng() * 0.5).toFixed(2);
-    stars.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" opacity="${o}"/>`);
-  }
-  const svg =
-    `<svg xmlns='http://www.w3.org/2000/svg' width='${W}' height='${H}'>` +
-    `<rect width='${W}' height='${H}' fill='#02030a'/>` +
-    stars.join('') +
-    `</svg>`;
-  // URI-encode just `#` and `<>` (smaller than full encodeURIComponent)
-  return `url("data:image/svg+xml;utf8,${svg.replace(/#/g, '%23').replace(/</g, '%3C').replace(/>/g, '%3E')}")`;
-}
-
-const STARFIELD_BG = makeStarfieldDataUrl(42);
+// ── Realistic space background — NASA Tycho-2 Skymap ────────────────────
+// Photographic star map rendered from the Tycho-2 catalog (same catalog
+// used for HST guide stars). Public domain (NASA SVS, work of US government).
+// Loaded from NASA's CDN directly. CSS background-image bypasses CORS,
+// browser-caches the image after first load, and NASA SVS URLs have
+// historically been stable for years.
+const NASA_TYCHO_SKYMAP_URL =
+  "https://svs.gsfc.nasa.gov/vis/a000000/a003500/a003572/TychoSkymapII.t5_04096x02048.jpg";
 
 // ── Overlay stack painted on top of the NASA photo ──────────────────────
 // Order matters: in CSS multi-background syntax, EARLIER layers paint
@@ -788,24 +755,23 @@ const Global = () => {
             "sm:h-auto sm:flex-1 relative overflow-hidden transition-[height] duration-300",
           )}
         >
-          {/* Base layer — tiled inline-SVG starfield.
-              ~3 KB data URL, zero network calls, paints instantly.
-              The Milky Way "band" effect previously contributed by the
-              4.16 MB NASA photo is now provided by the overlay below
-              (vignette + globe backlight glow). */}
+          {/* Base layer — NASA Tycho-2 Skymap photographic star map.
+              Fills the container via `cover` and is biased vertically
+              so the Milky Way band appears in the lower half behind
+              the globe's lower hemisphere. Black fallback until loaded. */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              backgroundImage:    STARFIELD_BG,
-              backgroundRepeat:   "repeat",
-              backgroundSize:     "800px 800px",
-              backgroundColor:    "#02030a",
+              backgroundImage:    `url(${NASA_TYCHO_SKYMAP_URL})`,
+              backgroundSize:     "cover",
+              backgroundPosition: "50% 60%",
+              backgroundColor:    "#000",
               willChange:         "transform",
             }}
           />
 
-          {/* Overlay — heavy darkening tint + vignette + globe backlight
-              glow. One compositor layer, all GPU-blended. */}
+          {/* Overlay — darkening tint + vignette + globe backlight glow
+              painted on top of the NASA photo. */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
