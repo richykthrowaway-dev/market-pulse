@@ -137,6 +137,65 @@ serve(async (req) => {
   const interval = url.searchParams.get("interval") ?? "1h";
   const range    = url.searchParams.get("range")    ?? "1mo";
 
+  // ── Batch quotes endpoint ─────────────────────────────────────────────────
+  // ?endpoint=quotes&symbols=AAPL,MSFT,TSM   (comma-separated, max 50)
+  // Returns: Record<symbol, quote | null>
+  if (endpoint === "quotes") {
+    const symbolsParam = url.searchParams.get("symbols") ?? "";
+    const syms = symbolsParam.split(",").map(s => s.trim()).filter(Boolean).slice(0, 50);
+    if (syms.length === 0) {
+      return new Response(JSON.stringify({ error: "symbols param required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const processQuote = async (sym: string) => {
+      try {
+        const upstream = await fetchChart(sym, "1d", "5d");
+        if (!upstream) return null;
+        const data   = await upstream.json();
+        const result = data?.chart?.result?.[0];
+        const meta   = result?.meta;
+        if (!meta) return null;
+        const rawCloses: (number | null)[] =
+          result.indicators?.adjclose?.[0]?.adjclose ??
+          result.indicators?.quote?.[0]?.close ?? [];
+        const closes = rawCloses.filter((v): v is number => v != null && isFinite(v));
+        const price         = typeof meta.regularMarketPrice === "number" ? meta.regularMarketPrice : (closes.length > 0 ? closes[closes.length - 1] : null);
+        const previousClose = closes.length >= 2 ? closes[closes.length - 2] : null;
+        const change        = price !== null && previousClose !== null ? price - previousClose : null;
+        const changePercent = change !== null && previousClose !== null && previousClose !== 0 ? (change / previousClose) * 100 : null;
+        return {
+          symbol: meta.symbol ?? sym,
+          regularMarketPrice:         price,
+          previousClose,
+          regularMarketChange:        change,
+          regularMarketChangePercent: changePercent,
+          regularMarketDayHigh:       meta.regularMarketDayHigh ?? null,
+          regularMarketDayLow:        meta.regularMarketDayLow  ?? null,
+          regularMarketVolume:        meta.regularMarketVolume  ?? null,
+          fiftyTwoWeekHigh:           meta.fiftyTwoWeekHigh ?? null,
+          fiftyTwoWeekLow:            meta.fiftyTwoWeekLow  ?? null,
+          currency:                   meta.currency         ?? null,
+          exchangeName:               meta.exchangeName     ?? null,
+          fullExchangeName:           meta.fullExchangeName ?? null,
+          shortName:                  meta.shortName        ?? null,
+          longName:                   meta.longName         ?? null,
+          marketState:                meta.marketState ?? null,
+        };
+      } catch { return null; }
+    };
+
+    const results = await Promise.all(syms.map(processQuote));
+    const out: Record<string, ReturnType<typeof processQuote> extends Promise<infer T> ? T : never> = {};
+    syms.forEach((s, i) => { out[s] = results[i]; });
+
+    return new Response(JSON.stringify(out), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   if (!symbol) {
     return new Response(JSON.stringify({ error: "symbol param required" }), {
       status: 400,

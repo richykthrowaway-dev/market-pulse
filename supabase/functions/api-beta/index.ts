@@ -5,11 +5,17 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
  *
  * POST body: { tickers: string[], weights: number[] }
  * Response:  { betas: Record<string, number>, portfolioBeta: number,
- *              benchmark: "SPY", dataPoints: number }
+ *              benchmark: "SPY", dataPoints: number,
+ *              portfolioReturns: number[],  // weight-blended daily returns (NEW)
+ *              spyReturns: number[],        // benchmark daily returns (NEW)
+ *              dates: string[] }            // date stamps for each return (NEW)
  *
  * Fetches 1-year daily close prices for all tickers + SPY in parallel from
  * Yahoo Finance, then computes beta = Cov(stock, market) / Var(market) using
  * daily log returns. More accurate than pre-computed metrics.
+ *
+ * Also returns the weight-blended portfolio return series so the frontend
+ * can derive VaR, max drawdown, Sharpe, etc. without another round-trip.
  */
 
 const corsHeaders = {
@@ -22,8 +28,8 @@ const BENCHMARK = "SPY";
 const RANGE = "1y";
 const INTERVAL = "1d";
 
-/** Fetch daily close prices from Yahoo Finance v8 chart endpoint */
-async function fetchCloses(ticker: string): Promise<number[] | null> {
+/** Fetch daily close prices + timestamps from Yahoo Finance v8 chart endpoint */
+async function fetchCloses(ticker: string): Promise<{ closes: number[]; timestamps: number[] } | null> {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=${RANGE}&interval=${INTERVAL}`;
   try {
     const res = await fetch(url, {
@@ -32,10 +38,20 @@ async function fetchCloses(ticker: string): Promise<number[] | null> {
     });
     if (!res.ok) return null;
     const data = await res.json();
-    const closes: number[] | undefined =
-      data?.chart?.result?.[0]?.indicators?.quote?.[0]?.close;
-    if (!closes) return null;
-    return closes.filter((c: number | null) => c != null) as number[];
+    const result = data?.chart?.result?.[0];
+    const closes: (number | null)[] | undefined = result?.indicators?.quote?.[0]?.close;
+    const timestamps: number[] | undefined = result?.timestamp;
+    if (!closes || !timestamps) return null;
+    // Filter out null closes and align timestamps
+    const filteredCloses: number[] = [];
+    const filteredTs: number[] = [];
+    for (let i = 0; i < closes.length; i++) {
+      if (closes[i] != null) {
+        filteredCloses.push(closes[i] as number);
+        filteredTs.push(timestamps[i]);
+      }
+    }
+    return { closes: filteredCloses, timestamps: filteredTs };
   } catch {
     return null;
   }
@@ -101,34 +117,66 @@ serve(async (req) => {
 
     // Fetch benchmark + all stock prices in parallel (one Yahoo call each)
     const allTickers = [BENCHMARK, ...tickers];
-    const closesArr = await Promise.all(allTickers.map(fetchCloses));
+    const fetched = await Promise.all(allTickers.map(fetchCloses));
 
-    const benchCloses = closesArr[0];
-    if (!benchCloses || benchCloses.length < 30) {
+    const benchData = fetched[0];
+    if (!benchData || benchData.closes.length < 30) {
       return new Response(
         JSON.stringify({ error: "Could not fetch benchmark data" }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const marketReturns = logReturns(benchCloses);
+    const marketReturns = logReturns(benchData.closes);
+    // Date stamps for returns array (one shorter than closes)
+    const benchDates = benchData.timestamps.slice(1).map(ts => {
+      const d = new Date(ts * 1000);
+      return d.toISOString().slice(0, 10);
+    });
 
     const betas: Record<string, number> = {};
     let portfolioBeta = 0;
 
+    // For portfolio returns: align each stock's returns to benchmark dates
+    // by truncating to the shorter common-suffix length, then weight-blend.
+    const stockReturnsByTicker: Record<string, number[]> = {};
+    let minLen = marketReturns.length;
+
     for (let i = 0; i < tickers.length; i++) {
       const ticker = tickers[i];
-      const closes = closesArr[i + 1];
+      const data = fetched[i + 1];
       let beta = 1.0;
-      if (closes && closes.length >= 30) {
-        const stockRet = logReturns(closes);
+      if (data && data.closes.length >= 30) {
+        const stockRet = logReturns(data.closes);
         beta = computeBeta(stockRet, marketReturns);
         beta = Math.max(-2, Math.min(4, beta));
+        stockReturnsByTicker[ticker] = stockRet;
+        if (stockRet.length < minLen) minLen = stockRet.length;
+      } else {
+        stockReturnsByTicker[ticker] = [];
       }
       betas[ticker] = Math.round(beta * 1000) / 1000;
       const w = weights?.[i] ?? (1 / tickers.length);
       portfolioBeta += w * beta;
     }
+
+    // Build weight-blended portfolio return series (right-aligned to common length)
+    const portfolioReturns: number[] = new Array(minLen).fill(0);
+    for (let i = 0; i < tickers.length; i++) {
+      const ticker = tickers[i];
+      const stockRet = stockReturnsByTicker[ticker];
+      if (!stockRet.length) continue;
+      const w = weights?.[i] ?? (1 / tickers.length);
+      const offset = stockRet.length - minLen;
+      for (let j = 0; j < minLen; j++) {
+        portfolioReturns[j] += w * stockRet[offset + j];
+      }
+    }
+
+    // Truncate SPY returns + dates to same length
+    const spyOffset = marketReturns.length - minLen;
+    const spyReturns = marketReturns.slice(spyOffset);
+    const dates = benchDates.slice(spyOffset);
 
     return new Response(
       JSON.stringify({
@@ -136,6 +184,9 @@ serve(async (req) => {
         portfolioBeta: Math.round(portfolioBeta * 1000) / 1000,
         benchmark: BENCHMARK,
         dataPoints: marketReturns.length,
+        portfolioReturns,
+        spyReturns,
+        dates,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );

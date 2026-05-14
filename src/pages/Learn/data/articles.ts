@@ -77,6 +77,24 @@ export const articles: Article[] = [
         explanation:
           'Fundamental analysis aims to determine what a company is actually worth (its intrinsic value) by examining financial statements, competitive position, and economic conditions. This is different from technical analysis, which focuses on price patterns and market trends.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Technical vs. Fundamental Analysis',
+        text: '— Complementary, Not Competing Fundamental analysis identifies what to buy or sell. Technical analysis identifies when to buy or sell. Many institutional portfolio managers use a “techno-fundamental” approach: building a universe of fundamentally attractive candidates, then using technical analysis to time entries, set stops, and manage positions. Price is the final arbiter.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Government Data Sources Primary government data for futures fundamental analysis: USDA reports for agriculture',
+        text: '(WASDE, Crop Progress, prospective plantings, export sales); EIA for energy (weekly petroleum, natural gas storage); CFTC COT for positioning; Fed for monetary data; BLS for CPI and NFP; Commerce Department for GDP and trade data. These government publications provide the authoritative data points that move futures prices most reliably on release day. Building a calendar of these releases is a prerequisite for fundamental trading.',
+      },
     ],
   },
   {
@@ -292,6 +310,18 @@ export const articles: Article[] = [
         explanation:
           'Visa primarily benefits from network effects. Its payment network becomes more valuable as more cardholders and merchants join. Merchants accept Visa because billions of consumers carry it, and consumers carry Visa because millions of merchants accept it. This self-reinforcing cycle makes it extremely difficult for new payment networks to compete.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: IP Moats in Semiconductors The semiconductor industry\'s competitive landscape is defined by intellectual property moats',
+        text: '— proprietary chip designs, manufacturing processes, and software development tools that competitors cannot replicate without years of investment and thousands of engineering-years of effort. The most durable IP moats are those embedded in ecosystem relationships that make switching to alternative providers extremely costly: the design software tools that chip designers use, the instruction set architectures that define the interface between hardware and software, and the proprietary interfaces that bind silicon to the applications it enables.',
+      },
     ],
   },
   {
@@ -399,6 +429,24 @@ export const articles: Article[] = [
         explanation:
           'When executives own significant shares in the company, their financial outcomes are directly linked to shareholder returns. This alignment of interests encourages long-term thinking and discourages decisions that benefit management at the expense of shareholders. It does not guarantee stock price increases, but it is a strong trust signal.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Research Quality Evaluation Evaluating research quality for futures:',
+        text: '(1) does it cite primary data sources (USDA, EIA, CFTC) or secondary sources only?; (2) is the methodology for estimates transparent or opaque?; (3) does it acknowledge uncertainty or does it present point forecasts as certain?; (4) does the author have real accountability for their forecasts (skin in the game)?; (5) is there a trackable forecast history to evaluate against? Research that passes these filters is more valuable than polished research that fails them. Much free futures commentary fails several of these criteria.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Management Quality as a Value Driver Management quality is not a soft, unquantifiable attribute',
+        text: '— it is a genuine and measurable driver of long-run equity value visible in the multi-year trajectory of per-share intrinsic value, the returns earned on capital allocation decisions, and the gap between a business\'s potential competitive advantages and the degree to which management has actually realised them. High-quality management teams consistently convert competitive advantages into economic profit. Mediocre teams allow those advantages to atrophy while consuming capital in value-destructive ways. The challenge is distinguishing outcomes driven by management decisions from those driven by industry conditions and macroeconomic tailwinds that would have benefited any team. A business prospering in a secular growth industry with limited competition demonstrates favourable conditions as much as management excellence.',
+      },
     ],
   },
   {
@@ -484,6 +532,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Airlines compete intensely on price because seats on similar routes are nearly identical commodities. This rivalry destroys pricing power and keeps aggregate industry returns low despite high revenues. Supplier power (Boeing, Airbus, jet fuel) and buyer power (price-comparison sites) make it even worse — a classic Five Forces nightmare.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Industry Analysis as a Foundation Understanding the industry structure in which a business operates',
+        text: '— the competitive dynamics, the barriers to entry, the pricing power characteristics, the capital intensity, and the growth drivers — is a prerequisite to accurately assessing what kind of returns the business can sustain over time. A business with apparently strong ROIC in an industry characterised by low barriers, commodity products, and intense competition is likely to see those returns erode rapidly. A business in an industry with genuine barriers and switching costs is more likely to sustain them. Porter\'s Five Forces framework — the threat of new entrants, the bargaining power of suppliers and customers, the threat of substitutes, and the intensity of competitive rivalry — provides a structured approach to industry analysis that directly informs return sustainability assumptions.',
       },
     ],
   },
@@ -755,6 +815,24 @@ export const articles: Article[] = [
         explanation:
           'If the company\'s cost of capital is 15% and the acquisition only returns 5% on invested capital, the company is destroying value — it is paying more than it will get back. Paying down 7% debt also earns less than the 15% cost of capital, making it suboptimal but less destructive than a guaranteed 5% return on $500M. The 20% ROIC reinvestment clearly creates value.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Outsiders Framework William Thorndike\'s research on capital allocation excellence identified a group of CEOs',
+        text: '— the "Outsiders" — who compounded their companies\' per-share value at dramatically higher rates than their peers by applying contrarian capital allocation principles: indifference to conventional earnings per share metrics, willingness to buy back shares aggressively when cheap, discipline to avoid acquisitions at excessive prices, preference for decentralised operations that minimise corporate overhead, and comfort with high leverage when cash flows are stable enough to support it safely. The common thread among the Outsiders is the consistent application of capital allocation as a rigorous analytical discipline rather than as a set of conventional reflexes.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Cash Allocation Timing: When to Be',
+        text: '100%, 75%, 50%, or Fully Defensive Cash allocation is the portfolio’s most important timing variable. A simple model: 100% invested when the S&P 500 is above a rising 200-day SMA and breadth is expanding. 75% when the SMA is rising but breadth is narrowing. 50% when the SMA is flat or rolling over. 25% when the SMA is declining. 0% (fully defensive) when the SMA is declining and breadth is below 30%. This progressive allocation model adapts automatically to the market’s technical condition.',
+      },
     ],
   },
   {
@@ -849,6 +927,24 @@ export const articles: Article[] = [
         explanation:
           'The razor-and-blade model involves selling the primary platform (the machine) at low margin or even below cost, then generating high-margin recurring revenue from consumables or services (the pods). Keurig, Gillette, and printer manufacturers are classic examples. The key is that the platform purchase locks customers into the high-margin consumable ecosystem.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How Companies Make Money: Business Models Explained Simply Every company has a business model',
+        text: '— a description of how it makes money. Apple sells hardware (iPhones, Macs) and services (App Store, iCloud, Apple Music). Visa takes a small percentage of every credit card transaction. Coca-Cola sells sugary drinks through bottlers worldwide. Netflix charges a monthly subscription fee. Understanding the business model tells you where the money comes from and what could disrupt it. If you cannot explain how a company makes money in one sentence, you do not understand it well enough to invest in it.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Market Maker Business Model Always use limit orders in options. The bid-ask spread in liquid options is',
+        text: '2-5% of mid-price. A market order accepts that full cost every time. Working limit orders at mid-price with 60-90 second adjustments captures most fills without the guaranteed execution drag of market orders. Options market makers earn the bid-ask spread on each transaction, managing the resulting complex multi-leg inventory in real time. Their net profit is: spread income minus hedging costs minus losses from adverse price moves their hedging didn\'t fully offset. Beyond the spread, market makers profit from the volatility risk premium: by selling options to retail buyers and delta-hedging the resulting position, they are systematically on the short side of implied volatility that exceeds realized volatility — collecting the VRP regardless of the underlying\'s direction. This structural advantage is why market making in options is profitable even in highly competitive markets.',
+      },
     ],
   },
   {
@@ -937,6 +1033,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Net Revenue Retention measures revenue from the same cohort of customers year-over-year, accounting for expansion, contraction, and churn. A 105% NRR means that even if the company acquired zero new customers, revenue from the existing base would grow 5% — because upsells and expansions more than offset any churn. It does not measure customer count, total growth, or new customer acquisition.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Revenue Concentration Risk Customer concentration',
+        text: '— percentage from the largest customers — represents existential risk that aggregate analysis misses. A business with 30% from one customer faces severe risk if that relationship deteriorates. Chapter 9 — The Balance Sheet',
       },
     ],
   },
@@ -1106,6 +1214,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'When accounts receivable grows 3x faster than revenue, it often means the company is booking revenue that has not actually resulted in cash collection — a common sign of channel stuffing or aggressive revenue recognition. In legitimate businesses, receivables should grow roughly in line with revenue. A shift to annual subscriptions would actually decrease receivables, not increase them.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Every Investor Loses Money',
+        text: '— Including Warren Buffett Warren Buffett lost approximately $25 billion during the 2008 financial crisis. He has publicly acknowledged multiple investment mistakes, including Dexter Shoe Company (a total loss) and his slow recognition of technology companies. George Soros, Peter Lynch, and every other legendary investor has a list of failures. Losses are not a sign that you are doing something wrong. They are an inevitable, structural feature of investing. The market goes up over time, but it does not go up in a straight line. Drawdowns of 10–20% occur every year or two, and drawdowns of 30–50% occur every decade or so.',
       },
     ],
   },
@@ -1296,6 +1416,24 @@ export const articles: Article[] = [
         explanation:
           'Intrinsic value grows at approximately ROIC × Reinvestment Rate = 25% × 60% = 15% per year. The full ROIC (25%) only applies to the portion of earnings actually reinvested. The other 40% is returned to shareholders or held as cash. This formula helps investors understand why high-ROIC businesses with high reinvestment rates are such powerful compounders over long periods.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Compounding as the Core Mechanism The long-term investor\'s fundamental insight is that compounding',
+        text: '— the geometric growth of both intrinsic value and investment returns over time — rewards patience with returns that are non-linearly related to the investment horizon. An investor who holds a business compounding intrinsic value at 15% per year for twenty years ends with a position worth 16 times the initial investment. The same investment held for only five years is worth only 2 times the initial investment. The compounding that occurs in years 15 through 20 generates more absolute value than years 1 through 10 combined, making patience not just a virtue but the primary alpha-generating mechanism for long-term investors.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Natural Gas Fundamental Drivers Natural gas fundamental analysis centers on: storage levels vs.',
+        text: '5-year average (for seasonal context); weather (HDD and CDD vs. normals); production (Permian Basin associated gas has grown dramatically); LNG export demand (pulling gas to international markets); power sector switching (gas vs. coal economics). The weekly EIA storage report is the primary data point. Weather model divergence (2-week forecast changes) produces NG price moves even without data releases. All NG fundamental analysis must integrate weather as the primary demand variable.',
+      },
     ],
   },,
 {
@@ -1412,6 +1550,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Goodwill of $1.2B ($2B purchase price minus $800M net assets) sits on the balance sheet without amortization under US GAAP. Annual impairment testing compares the reporting unit\'s fair value to its carrying value including goodwill. When the division underperforms badly, its fair value falls below carrying value and the excess goodwill must be written off as an impairment charge. This is a non-cash charge but confirms management overpaid.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Why Accounting Understates Intangible Value Accounting standards require that internally generated intangible assets',
+        text: '— brands built through advertising, customer relationships developed through sales effort, software developed for internal use, and intellectual property created through R&D — be expensed as incurred rather than capitalised and amortised. This accounting treatment creates a systematic misrepresentation of the asset base for businesses whose value derives primarily from intangible assets: the assets that generate the most important and most durable competitive advantages are simultaneously the most valuable to the business and the most completely absent from the balance sheet. The practical consequence is that businesses with large intangible asset bases appear to earn extraordinarily high returns on the accounting-measured asset base, creating the apparent paradox of businesses that generate well above-cost-of-capital returns indefinitely without attracting competitive entry.',
+      },
     ]
   },
   {
@@ -1959,6 +2109,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Diluted EPS of $3.85 is the correct choice. It includes all potentially dilutive securities — options, warrants, convertible bonds, RSUs — that could increase the share count and reduce per-share earnings. Using basic EPS overstates what each current share will ultimately earn once dilution occurs, making diluted EPS the more conservative and appropriate figure for investors.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Earnings Per Share',
+        text: '(EPS): The Number Everyone Watches Earnings per share is the company’s total net income divided by the number of shares outstanding. If a company earns $10 billion with 5 billion shares outstanding, EPS is $2.00. Analysts publish consensus EPS estimates before the report, and the stock’s reaction depends heavily on whether the reported EPS beats, meets, or misses that consensus. A one-cent miss can cause a 5–10% stock decline. A significant beat can cause a similar rally. The absolute number matters less than the number relative to expectations.',
+      },
     ],
   },
   {
@@ -2040,6 +2202,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'The combination of falling deferred revenue (shrinking backlog) and receivables growing twice as fast as revenue are classic warning signs. Deferred revenue declining suggests the company is not booking enough new contracts to replace what it is recognizing. Receivables growing far faster than revenue indicates either aggressive revenue recognition or customers taking longer to pay — both are revenue quality red flags.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Revenue Quality Indicators Channel stuffing',
+        text: '— shipping excess product to distributors or retailers at the end of a reporting period to recognise revenue before it is economically earned — is among the most common and most detectable forms of revenue manipulation. Its signature in the financial statements is a consistent pattern of strong revenue recognition in the final month of each quarter followed by elevated customer returns, allowances, or inventory build-ups in the following period. Days sales outstanding that expand in lockstep with quarterly revenue beats are a direct indicator. Bill-and-hold transactions — recognising revenue before physical delivery of goods, with the customer agreeing to purchase goods that will be stored on the seller\'s premises — are legitimate in narrow circumstances but frequently abused.',
       },
     ],
   },
@@ -2128,6 +2302,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: "Company B warrants greater concern. While its current 72% gross margin is higher than Company A's 65%, the 800 basis point decline from 80% is a significant red flag. It suggests the company is losing pricing power or facing rising costs it cannot pass on to customers. A declining margin trend is far more revealing about competitive health than a static level.",
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Gross Profit and Margin Gross profit',
+        text: '— revenue minus cost of goods sold — and the gross margin percentage derived from it reveal the fundamental economics of the core business before any consideration of overhead costs, research, or selling expenses. A high gross margin indicates that the business has pricing power over its inputs — that customers value the product sufficiently to pay a significant premium above the direct cost of producing it. This pricing power is the foundation of all sustainable competitive advantage. Gross margin trends over time are more informative than the absolute level. A business whose gross margin is expanding as it scales is demonstrating operational leverage — its revenues are growing faster than its variable costs, which is the signature of a business with genuine competitive advantages.',
+      },
     ],
   },
   {
@@ -2208,6 +2394,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'With a DOL of 4.0, a 15% increase in revenue produces a 4.0 × 15% = 60% increase in operating income (EBIT). This is the power of operating leverage: fixed costs are already covered, so the incremental revenue flows through to operating profit at a much higher rate than the revenue growth rate itself.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Operating Income and Leverage Operating income',
+        text: '— gross profit minus operating expenses including selling, general and administrative costs, and research and development — measures the profitability of the business before the effects of financing and taxation. The operating margin (operating income as a percentage of revenue) is the central measure of business profitability used in most valuation multiples and is the primary focus of normalisation analysis when earnings quality is assessed. Operating leverage describes the sensitivity of operating income to revenue changes: businesses with high fixed costs and low variable costs exhibit high operating leverage, meaning that revenue growth produces disproportionately large operating income growth, and revenue decline produces disproportionately large operating income decline.',
       },
     ],
   },
@@ -2294,6 +2492,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'CCC = DSO + DIO - DPO = 35 + 55 - 60 = 30 days. This means the company must continuously fund 30 days of its cost base — the gap between when it pays suppliers (at 60 days) and when it collects from customers (90 days total cycle from inventory purchase to cash collection). A 30-day CCC is moderate — better than many businesses but not the negative-CCC structural advantage of a Walmart or Amazon.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Days Calculations The three primary working capital days calculations',
+        text: '— days sales outstanding (DSO = receivables / revenue × 365), days inventory outstanding (DIO = inventory / COGS × 365), and days payable outstanding (DPO = payables / COGS × 365) — together define the cash conversion cycle: DSO + DIO − DPO. A shorter cash conversion cycle means the business converts its investments in working capital to cash more quickly, requiring less invested capital to support a given revenue base. Peer comparison of the cash conversion cycle reveals operational efficiency and competitive position differences that are often not visible in margin analysis alone. Two businesses with identical gross and operating margins but very different cash conversion cycles have fundamentally different capital efficiency: the business with the shorter cycle generates more free cash flow per dollar of revenue because it ties up less capital in working capital.',
+      },
     ],
   },
   {
@@ -2375,6 +2585,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: "Company B earns 20% ROE through a 20% net margin with no leverage whatsoever (1x equity multiplier = assets equal equity = no debt). This is entirely operationally driven. Company A's 20% ROE requires 5x leverage to turn a thin 4% margin into an acceptable return — if margins compress even slightly or credit conditions tighten, its ROE collapses. Margin-driven ROE is almost always more durable than leverage-driven ROE.",
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: DuPont decomposition of ROE reveals whether return changes come from margins, PART III',
+        text: '— EARNINGS QUALITY AND FORENSIC ACCOUNTING How to detect manipulation, assess earnings durability, identify accrual distortions, use the Beneish M-Score and Piotroski F-Score, and normalise financials so that valuation models are built on economic reality rather than accounting artifice. ── Earnings Quality Fundamentals ── Chapter 14 — Earnings Quality',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Combining Macro and Micro Signals Professional equity index fundamental analysis integrates macro context',
+        text: '(Fed cycle, economic growth trajectory) with micro signals (earnings quality, margin sustainability). When macro is supportive (low rates, strong growth) and earnings are improving, full-size long exposure is justified. When macro is deteriorating or earnings are pressured, reducing long exposure is appropriate. When both are negative simultaneously, defensive positioning (reduced size, added hedges) protects capital.',
       },
     ],
   },
@@ -2535,6 +2763,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Current ICR = $150M ÷ $120M = 1.25x. The covenant requires ICR ≥ 1.5x. Since 1.25x < 1.5x, the covenant is already breached. To meet the 1.5x minimum, EBIT would need to be at least $180M (1.5 × $120M), meaning the company is $30M of EBIT short. A covenant breach gives lenders the right to demand immediate repayment, which can trigger a liquidity crisis even for otherwise viable businesses.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Maturity Structure and Refinancing Risk The maturity structure of debt',
+        text: '— the schedule of principal repayment dates — determines when the business must return to capital markets for refinancing. A business with all its debt maturing in the next two years faces significant refinancing risk: if credit market conditions deteriorate, or if the business\'s own credit quality has declined, the refinancing may be available only at much higher rates or on restrictive terms that impair operational flexibility. A business with debt spread evenly over ten years has a much more manageable refinancing requirement in any given year. Refinancing risk is most dangerous for highly leveraged businesses in capital-intensive industries with cyclical revenues.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: High-Interest Debt: Pay This Off Before Investing Credit card debt at',
+        text: '18–24% interest is a guaranteed negative return that no stock market investment can reliably overcome. If you are carrying a balance on high-interest credit cards, paying it off is the single best financial decision you can make. The guaranteed 18–24% return on debt elimination beats the stock market’s average 10% return every time. Once high-interest debt is eliminated, you can redirect those payments into investments.',
+      },
     ],
   },
   {
@@ -2613,6 +2859,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'A declining inventory turnover ratio (from 8.0x to 5.5x is a 31% deterioration) while revenue grows only 5% means inventory is accumulating significantly faster than it is being cleared through sales. The likely outcomes are markdowns (which compress gross margins) or inventory write-downs (which hit operating income directly).',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Inventory Obsolescence and Write-Down Timing Inventory write-downs',
+        text: '— charges to reduce inventory carrying value to its net realisable value — are discretionary in timing. Management can delay recognition of obsolescent inventory to maintain higher reported gross margins, then take a large write-down in a period that is already weak, burying the charge in a bad quarter. The diagnostic: track the inventory reserve as a percentage of gross inventory over time. A declining reserve in a business with products that have finite shelf lives or technology cycles suggests inadequate provisioning.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Crude Inventory Analysis',
+        text: '(Cushing and Coast) US crude oil inventories at Cushing, Oklahoma (the WTI delivery point) and at US Gulf Coast terminals are the most-watched short-term price signals. Cushing stocks specifically affect WTI prices, since delivery occurs there. Declining Cushing stocks signal tightening supply and support prices; rising Cushing stocks signal surplus and pressure prices. The weekly EIA report (Wednesdays 10:30 AM ET) is the primary data point. Consensus estimates (from API the prior evening, from analysts beforehand) determine what qualifies as a surprising report.',
       },
     ],
   },
@@ -2693,6 +2957,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Prior year DSO = ($320M ÷ $1,600M) × 365 = 73 days. Current year DSO = ($600M ÷ $2,000M) × 365 = 110 days. DSO has deteriorated by 37 days. AR grew 87% while revenue grew only 25% — the company is recognizing revenue significantly faster than it is collecting cash, which can indicate extended payment terms, aggressive revenue recognition, or customers under financial stress.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Paper Trading Accounts Most quality futures brokers offer simulated trading',
+        text: '(paper trading) accounts. These allow you to practice strategies, learn the platform, and test systems without risking real capital. Limitations of paper trading: fills are typically better than live (simulated limit orders often fill at theoretical prices that wouldn\'t fill live); psychological engagement is different without real money at stake; market impact doesn\'t exist in simulation. Despite these limitations, paper trading for 3+ months before going live is the single most valuable preparation step for new futures traders.',
       },
     ],
   },
@@ -2779,6 +3055,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: "Buybacks destroy value in two primary scenarios: (1) when shares are repurchased at inflated valuations — paying more than the present value of future cash flows to retire those shares — and (2) when funded by debt at interest rates higher than the FCF yield of the stock, creating negative economic spread. Value-creating buybacks happen when shares trade below intrinsic value and are funded from genuine surplus free cash flow.",
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Qualified vs. Non-Qualified Dividends Qualified dividends are taxed at the long-term capital gains rate',
+        text: '(0%, 15%, or 20%), which is significantly lower than the ordinary income rate. To qualify, the dividend must be paid by a US corporation or a qualified foreign corporation, and you must have held the stock for at least 61 days during the 121-day period surrounding the ex-dividend date. Non-qualified dividends — from REITs, certain foreign stocks, and stocks held for fewer than 61 days — are taxed at your ordinary income rate, which can be as high as 37%.',
       },
     ],
   },
@@ -2933,6 +3221,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: "ASC 842 provides a 'short-term lease' practical expedient that allows companies to keep leases with an initial term of 12 months or less off the balance sheet. A month-to-month lease cancellable with 30 days' notice qualifies as short-term. Long-term fixed leases and leases with purchase options must be recognized as right-of-use assets and liabilities.",
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Liabilities: Visible and Hidden Reported financial debt',
+        text: '— the sum of short-term borrowings and long-term debt appearing on the balance sheet — is the most visible liability but not necessarily the most important one. Businesses accumulate a range of other obligations that can represent significant economic burdens: operating leases that were previously kept off-balance-sheet (though now mostly capitalised under ASC 842 and IFRS 16), pension obligations in defined benefit plans, and take-or-pay contracts that commit the business to future expenditures regardless of operational need. Contingent liabilities — obligations that arise only if a specified future event occurs — are disclosed in footnotes rather than recognised on the balance sheet. Legal settlements, warranty claims, tax disputes, and environmental obligations are common contingent liabilities that can be material in magnitude.',
+      },
     ],
   },
   {
@@ -3016,6 +3322,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Original unfunded status: $8B PBO − $6B assets = $2B underfunded. After the 1% rate decline adds $1B to PBO: ($8B + $1B) − $6B = $3B underfunded. This is material for equity investors because the $3B underfunding must be subtracted from enterprise value when bridging to equity value, and required contributions to close the funding gap reduce free cash flow available to shareholders.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Balance Sheet Strength Assessment The balance sheet strength assessment examines five dimensions: liquidity',
+        text: '(can the business meet its near-term obligations without distress?), leverage (is the total financial burden — including hidden liabilities — appropriate for the cyclicality and stability of the business?), asset quality (are the carrying values of the major asset categories consistent with their economic value?), working capital efficiency (are receivables, inventory, and payables at levels appropriate for the business model and competitive position?), and off-balance-sheet obligations (are the footnote-disclosed commitments material relative to reported debt and equity?). The balance sheet assessment for each dimension produces a qualitative rating — strong, adequate, or concerning — that collectively determines the overall balance sheet quality rating.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
       },
     ],
   },
@@ -3238,6 +3562,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Capital Employed = $50B − $8B = $42B. ROCE = $6B / $42B = 14.3%... wait — actually the correct calculation is $6B / $42B ≈ 14.3%, which is answer B. At 14.3%, the company earns nearly 3x its pre-tax cost of debt of 5%, indicating healthy value creation above the cost of capital. The key takeaway is to always subtract current liabilities (not total liabilities) when computing capital employed.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Capital Intensity and the Cash Flow Cycle Capital-intensive cyclical businesses',
+        text: '— steel, mining, chemicals, oil and gas — have a particularly complex relationship between earnings and cash flow because capital expenditure requirements are themselves cyclical. During downturns, maintenance capital requirements decline as asset utilisation falls and discretionary investment is deferred. During recoveries, the combination of operating leverage and deferred maintenance creates periods of very high free cash flow generation that are as cyclically inflated as the earnings they accompany. Normalising free cash flow for a capital-intensive cyclical requires normalising both the earnings and the capital expenditure simultaneously. The working capital cycle in capital-intensive cyclicals adds a further layer of cash flow volatility. During commodity price upswings, rising inventory values and receivables consume cash as the business scales up.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Split-Strike Synthetic: Capital-Efficient Long Exposure The split-strike synthetic',
+        text: '— buying an OTM call at a higher strike and selling an OTM put at a lower strike — creates a position with positive delta that behaves similarly to owning stock, but at a fraction of the capital cost. Unlike the traditional synthetic long stock (ATM call + short ATM put at the same strike), the split-strike synthetic uses different strikes to create a defined profit zone below the short put strike while retaining participation in upside moves above the long call. Example: stock at $100. Buy the $105 call for $2.50. Sell the $95 put for $2.50. Net cost = zero (the premium from the short put exactly funds the long call).',
+      },
     ]
   },
   {
@@ -3352,6 +3694,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'TBV = $8B − $1.5B − $0.5B − $0.5B = $5.5B. TBV per share = $5.5B / 500M shares = $11.00. P/TBV = $18 / $11 = 1.64x — wait, that is answer C. The correct answer is C (1.6x). At 1.6x TBV, investors should ask: is this bank earning a return on tangible equity that justifies the premium? If ROTCE is 12–15%, a 1.6x P/TBV may be fair; if ROTCE is only 8%, the premium is likely unjustified.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Book Value and Price-to-Book Book value of equity',
+        text: '— total assets minus total liabilities — is the primary valuation anchor for banks because the assets and liabilities are predominantly financial instruments measured at or near market value, making the book value a reasonable approximation of the economic net worth of the business. Price-to-book multiples — the ratio of market capitalisation to book value of equity — are therefore more meaningful for banks than for most other businesses, where book value reflects historical cost accounting that diverges significantly from economic value. Tangible book value — book value minus goodwill and intangible assets from acquisitions — is a stricter measure of the economic equity base that excludes the intangible assets whose value is most uncertain.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Gold as Monetary Asset Gold has served as money and store of value for',
+        text: '5,000+ years. Unlike fiat currencies, gold supply grows slowly (roughly 1.5% annually from mining) and cannot be printed or diluted by policy decisions. This scarcity gives gold its enduring monetary status. Modern gold demand divides into jewelry (~50%), investment (ETFs, bars, coins, ~30%), and industrial/technology (~10%), with central bank demand as a variable but increasingly significant share. Understanding gold\'s monetary role is foundational for trading GC futures.',
+      },
     ]
   },
   {
@@ -3469,6 +3829,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Net Debt = ($8B + $1B) − $4B − $2B = $9B − $6B = $3B. Net Debt / EBITDA = $3B / $3B = 1.0x. Wait — that gives 1.0x, which is answer A. The company has $9B gross debt but only $3B net debt because it holds $6B in liquid assets. At 1.0x Net Debt / EBITDA, this company is conservatively leveraged. This example perfectly illustrates why gross debt ($9B / $3B = 3x gross leverage) overstates the true financial risk.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Liabilities: Visible and Hidden Reported financial debt',
+        text: '— the sum of short-term borrowings and long-term debt appearing on the balance sheet — is the most visible liability but not necessarily the most important one. Businesses accumulate a range of other obligations that can represent significant economic burdens: operating leases that were previously kept off-balance-sheet (though now mostly capitalised under ASC 842 and IFRS 16), pension obligations in defined benefit plans, and take-or-pay contracts that commit the business to future expenditures regardless of operational need. Contingent liabilities — obligations that arise only if a specified future event occurs — are disclosed in footnotes rather than recognised on the balance sheet. Legal settlements, warranty claims, tax disputes, and environmental obligations are common contingent liabilities that can be material in magnitude.',
+      },
     ]
   },
   {
@@ -3582,6 +3954,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'EV = Market Cap ($20B) + Debt ($5B) + Preferred Stock ($1B) + Minority Interest ($0.5B) − Cash ($3B) = $23.5B. The cash reduces the effective acquisition cost because the buyer receives it. The debt, preferred stock, and minority interest all represent claims that an acquirer must satisfy in addition to buying the common equity, so they are added to market cap.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Why Enterprise Value and Equity Value Differ Enterprise value is the total value of the business to all capital providers',
+        text: '— equity holders, debt holders, and preferred stockholders — before considering how that value is distributed among the different claims on the business. Equity value is the residual value available to common shareholders after all other claims have been satisfied. The difference between enterprise value and equity value is the market value of all non-equity claims: net financial debt, preferred equity, minority interests, and any other obligations ranking ahead of common equity in the capital structure. The enterprise-to-equity bridge is not a technicality — it is the step that converts the business valuation to the shareholder valuation, and errors at this step directly translate into incorrect investment decisions. A business with $2 billion of enterprise value and $1 billion of net debt has only $1 billion of equity value.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Scheduled Entries: Dollar-Cost Averaging and Value Averaging Dollar-cost averaging',
+        text: '(DCA) eliminates timing entirely by investing a fixed dollar amount at regular intervals regardless of price. This approach is optimal for investors who lack the time, knowledge, or temperament for active timing. Value averaging, a more sophisticated variant, adjusts the investment amount each period to ensure that the portfolio’s value grows by a target amount: investing more when prices are low (automatically buying more shares cheaply) and less when prices are high (automatically reducing purchases when stocks are expensive). Value averaging has been shown to produce modestly higher returns than DCA because it systematically exploits price fluctuations.',
+      },
     ]
   },
   {
@@ -3717,6 +4107,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'EV/Revenue = $5B / $300M = 16.7x. Rule of 40 = Revenue Growth (50%) + FCF Margin (−15%) = 35. So the correct answer is actually A: 16.7x EV/Revenue with a Rule of 40 score of 35 — below the 40 threshold. Despite the impressive 50% revenue growth, the −15% FCF margin drags the score below 40, which means investors should scrutinize whether the losses are truly productive investment or simply a sign the business model is not scaling efficiently. At 16.7x EV/Revenue, the company needs to demonstrate a clear path to Rule of 40+ performance to sustain the premium.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Identify Growth Companies Look for revenue growth above',
+        text: '15% year-over-year for at least the last three years. Check that the company is gaining market share in a large and expanding market. Verify that gross margins are stable or expanding, indicating pricing power. Evaluate whether the company has a strong competitive position that can sustain growth. Look at the total addressable market — is it large enough to support years of continued expansion? The best growth companies combine rapid revenue growth with improving unit economics, meaning they become more efficient as they scale.',
+      },
     ]
   },
 {
@@ -3814,6 +4216,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A premium multiple is justified when a company has stronger competitive advantages (proprietary products, switching costs) and higher growth relative to peers. Revenue size alone does not justify a premium. A higher dividend yield is typically associated with lower-growth, lower-multiple businesses. More debt increases EV but does not justify a higher multiple — if anything it adds risk.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Cross-Listing and Access Many international indices have multiple listings across different exchanges',
+        text: '— Nikkei trades in Osaka, Singapore, and Chicago, for example. Each listing has different specs, hours, and liquidity. For US retail traders, the most accessible paths are CME-listed versions (NKD) where available, or Interactive Brokers for direct international exchange access. Access complications from US residence rules or broker limitations can eliminate some otherwise attractive international index opportunities — check current access before committing to a strategy.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Context Is the Timer The same hammer candle means entirely different things in different contexts. At the',
+        text: '200-day SMA after a 15% correction in a bull market, it is a high-probability entry signal. In the middle of a range on below-average volume, it is noise. Context — the structural location, the trend direction, the volume, and the broader market environment — determines whether a candle is a timing signal or a random occurrence.',
+      },
     ]
   },
   {
@@ -3911,6 +4331,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A large and persistent gap where net income far exceeds CFO is a red flag for low earnings quality. It suggests a significant portion of reported profits exist as accounting accruals — receivables not yet collected, deferred costs, or aggressive revenue recognition — rather than real cash. Capex reduces free cash flow but not operating cash flow (it appears in investing activities). The gap deserves investigation, not normalisation.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Earnings Quality Framework A systematic earnings quality assessment examines five dimensions: cash conversion',
+        text: '(does cash generation track earnings?), accrual quality (are non-cash accruals declining over time?), revenue quality (are revenue recognition policies conservative and consistently applied?), expense quality (are all recurring costs included in normalised earnings?), and management credibility (does management\'s description of business performance match the financial statement reality?). Scoring each dimension from high to low quality and combining the assessments produces an overall earnings quality rating that should directly influence the valuation approach. High-quality earnings in all five dimensions can be capitalised at a low earnings yield (high P/E multiple), because the risk that the reported earnings are misleading is low.',
+      },
     ]
   },
   {
@@ -4007,6 +4439,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Starting EPS = $1B / 500M = $2.00. Ending EPS = $2B / 900M = $2.22. Despite net income doubling, the 80% increase in share count consumed most of the gain, delivering only an 11% improvement in per-share earnings over five years. This is the dilution trap — strong headline profit growth masking weak per-share progress.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Net Dilution Measurement Net share count change over a period',
+        text: '— new shares issued minus shares repurchased — provides the most direct measure of whether the business is diluting or concentrating shareholder ownership. A positive net share count change means dilution: existing shareholders own a smaller fraction of the business at the end of the period than at the beginning, regardless of how impressive the aggregate business growth appears. A negative net share count change means concentration: existing shareholders own a larger fraction, which is inherently value-accretive if the business continues to perform. Tracking the net share count change separately from the SBC expense is important because the two are often presented inconsistently. The SBC expense includes the grant-date fair value of awards vesting in the period; the net share count change reflects actual shares issued net of buybacks in the same period.',
+      },
     ]
   },
   {
@@ -4096,6 +4540,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'SBC is a genuine economic cost to shareholders even though no cash leaves the company. Each share granted to an employee is a piece of the business permanently given away, diluting existing owners. In this example, excluding SBC inflates reported profitability by 700% ($400M vs $50M). Investors who rely solely on non-GAAP figures are significantly overpaying for what existing shareholders actually receive in economic terms.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: SBC as Invisible Dilution Stock-based compensation takes three primary forms',
+        text: '— stock options, restricted stock units (RSUs), and performance share units (PSUs) — each with different dilution mechanics and different accounting treatment. Stock options grant the right to purchase shares at a fixed exercise price; they dilute only when the market price exceeds the exercise price, and their fair value is estimated using option pricing models (typically Black-Scholes or a binomial lattice) and expensed over the vesting period. RSUs are grants of actual shares that vest over time and dilute on a one-for-one basis regardless of the stock price. PSUs are conditional grants that vest only if specific performance targets are met, creating dilution uncertainty that depends on management\'s assessment of target achievement probability.',
+      },
     ]
   },
   {
@@ -4198,6 +4654,24 @@ export const articles: Article[] = [
         correctIndex: 3,
         explanation: 'Using a blended multiple simultaneously undervalues the high-margin segment (which deserves a premium multiple) and potentially overvalues the low-margin segment (which deserves a discount multiple) relative to pure-play peers. A sum-of-the-parts approach applying segment-specific multiples to each business line separately produces a far more accurate intrinsic value estimate. This is precisely why activists push for spin-offs: separating the parts allows each to be valued appropriately.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Income Tracking and Financial Planning Full-time trading income tracking: monthly P&L statement',
+        text: '(gross trading income, broker fees, data subscriptions, other business expenses, net trading income); quarterly comparison to plan and estimated tax payments; annual comprehensive financial review. Track specifically: months where trading income covered all expenses vs. required reserves drawdown; year-to-date profitability vs. plan; reserve level vs. required minimum. This financial monitoring catches sustainability issues early rather than discovering them when reserves are depleted.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Income Statement: How Much Did They Make? The income statement',
+        text: '(also called the profit and loss statement) shows how much money the company earned and how much it spent over a period, typically a quarter or a year. Start at the top with revenue (total sales), then watch as costs are subtracted: cost of goods sold, operating expenses, interest, and taxes. The bottom line is net income — the profit. The key ratios to check: gross margin (revenue minus cost of goods sold, divided by revenue), operating margin (operating income divided by revenue), and net margin (net income divided by revenue). Higher margins generally indicate a stronger business.',
+      },
     ]
   },
 {
@@ -4277,6 +4751,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'ARR is calculated by annualising the current run-rate of recurring subscriptions: $3.5M MRR × 12 = $42M ARR. The $40M reported may reflect timing differences in recognition. One-time implementation fees are explicitly excluded from ARR because they don\'t recur.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: ARR, NRR, and Contracted Revenue Annual recurring revenue',
+        text: '(ARR) — the annualised value of subscription contracts currently in force — is the primary business metric for SaaS companies because it measures the contracted revenue base that will be recognised over the next 12 months independent of any new customer acquisition. ARR growth reflects both the addition of new customers (new ARR) and the expansion or contraction of existing customer relationships (net expansion or net churn). The trajectory of ARR growth — and its decomposition into new ARR and net expansion ARR — is the most informative leading indicator of future revenue and earnings growth. Net revenue retention (NRR) — the percentage of ARR from the previous period\'s customer cohort that is retained in the current period, including expansions and upgrades — is the most important single metric for assessing the durability and quality of a SaaS business\'s revenue base.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Identify Growth Companies Look for revenue growth above',
+        text: '15% year-over-year for at least the last three years. Check that the company is gaining market share in a large and expanding market. Verify that gross margins are stable or expanding, indicating pricing power. Evaluate whether the company has a strong competitive position that can sustain growth. Look at the total addressable market — is it large enough to support years of continued expansion? The best growth companies combine rapid revenue growth with improving unit economics, meaning they become more efficient as they scale.',
+      },
     ]
   },
   {
@@ -4358,6 +4850,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'The 10% threshold on $200M revenue is $20M. Customer A at $50M (25%) clearly exceeds this and must be disclosed. Customer B at $18M (9%) falls below the threshold and disclosure is not required — though a thorough analyst would still note the combined top-two concentration of 34%.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Revenue Concentration Risk Customer concentration',
+        text: '— percentage from the largest customers — represents existential risk that aggregate analysis misses. A business with 30% from one customer faces severe risk if that relationship deteriorates. Chapter 9 — The Balance Sheet',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Concentration Risk and Conviction Management When conviction is highest, size is largest',
+        text: '— but this concentrates risk. Manage it carefully: ensure your largest positions have the clearest invalidation and the most monitoring. A single outsized loss from your largest position can undo weeks of smaller wins. Size for conviction, but with awareness of the concentration that creates. Part XII — Trade Execution & Management Reading the market is only half the skill. This section covers the other half — how to actually enter, manage, and exit trades with precision using order flow and price action. Chapter 83 — Entry Timing Using Order Flow A valid setup at a good level is necessary but not sufficient. The exact moment you enter matters enormously for risk and reward. This chapter teaches how to time entries using order flow signals — aggressor flips, absorption, delta confirmation — rather than entering on chart signals alone.',
+      },
     ]
   },
   {
@@ -4525,6 +5035,18 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Company X: Gross Profit = $500M − $200M = $300M. GP/Employee = $300M ÷ 1,500 = $200,000. Company Y: Gross Profit = $500M − $350M = $150M. GP/Employee = $150M ÷ 800 = $187,500. Despite having fewer employees, Company Y\'s much higher cost of revenue (70% vs 40%) results in lower gross profit per employee. Company X\'s business model is more efficient.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Gross Profit and Margin Gross profit',
+        text: '— revenue minus cost of goods sold — and the gross margin percentage derived from it reveal the fundamental economics of the core business before any consideration of overhead costs, research, or selling expenses. A high gross margin indicates that the business has pricing power over its inputs — that customers value the product sufficiently to pay a significant premium above the direct cost of producing it. This pricing power is the foundation of all sustainable competitive advantage. Gross margin trends over time are more informative than the absolute level. A business whose gross margin is expanding as it scales is demonstrating operational leverage — its revenues are growing faster than its variable costs, which is the signature of a business with genuine competitive advantages.',
+      },
     ]
   },
   {
@@ -4597,6 +5119,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'SSS Growth = ($840M − $800M) ÷ $800M × 100 = $40M ÷ $800M × 100 = 5.0%. The 20 new stores and their $60M contribution are completely excluded from the calculation. Total revenue grew from $800M to $900M (12.5%), but that headline number flatters performance. The true organic growth of the established business is 5.0%.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Same-Store Sales, Traffic, and Ticket Same-store sales growth',
+        text: '— the revenue change in stores or locations that have been open for at least twelve months, excluding the revenue impact of new store openings — is the primary operational metric for retail businesses because it measures the organic health of the existing store portfolio independent of the expansion programme. A retailer growing total revenue at 10% while same-store sales are declining at 2% is masking fundamental operational weakness with new store openings that are temporarily inflating the aggregate revenue trend — a pattern that is unsustainable when the store count reaches market saturation. Decomposing same-store sales into traffic and average ticket provides additional diagnostic insight.',
+      },
     ]
   },
 {
@@ -4670,6 +5204,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'In 2022, revenue per employee was $100,000 ($2B / 20,000). In 2024, it fell to about $85,700 ($2.4B / 28,000). Even though revenue grew 20%, headcount grew 40%, so each employee is generating less revenue — a sign of declining operational efficiency.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Operational Efficiency as Advantage Operational efficiency',
+        text: '— the ability to produce goods or deliver services at lower cost per unit than competitors through better processes, technology, and organisation — is a source of durable competitive advantage that is particularly important in industries where products are undifferentiated and price is the primary basis of competition. Manufacturers with superior production processes, logistics operators with better route optimisation, and service companies with more effective automation all generate structural cost advantages that persist as long as the operational excellence is maintained and not replicated by competitors. Operational efficiency advantages are most reliably identified by comparing unit cost metrics — cost per unit produced, cost per transaction processed, cost per customer served — across competitors in the same industry over time.',
+      },
     ]
   },
   {
@@ -4757,6 +5303,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'DOL = 24% / 8% = 3x. This means operating income is growing three times faster than revenue, which is the hallmark of a high fixed-cost structure. Once fixed costs are covered, incremental revenue flows rapidly to profit.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Operating Income and Leverage Operating income',
+        text: '— gross profit minus operating expenses including selling, general and administrative costs, and research and development — measures the profitability of the business before the effects of financing and taxation. The operating margin (operating income as a percentage of revenue) is the central measure of business profitability used in most valuation multiples and is the primary focus of normalisation analysis when earnings quality is assessed. Operating leverage describes the sensitivity of operating income to revenue changes: businesses with high fixed costs and low variable costs exhibit high operating leverage, meaning that revenue growth produces disproportionately large operating income growth, and revenue decline produces disproportionately large operating income decline.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Why Leverage Magnifies Losses More Than Gains Leverage has an asymmetric impact due to the mathematics of compounding. A',
+        text: '50% loss followed by a 50% gain does not return you to break-even — it leaves you with 75% of your starting capital. With 2:1 leverage, a 25% market decline creates a 50% loss in your equity. A subsequent 25% market recovery only creates a 33% gain on your diminished equity, leaving you significantly underwater. The more leverage you use, the more devastating this asymmetry becomes. Professional traders who use leverage have sophisticated risk management systems, hedging strategies, and years of experience. Beginners have none of these.',
+      },
     ]
   },
   {
@@ -4928,6 +5492,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Under ASC 842, operating leases recognize a single straight-line lease expense within operating costs — it sits above EBIT and reduces operating income. Finance leases (not operating leases) are split between amortization above EBIT and interest below EBIT. This difference has significant implications for EBIT and EBITDA comparisons.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Operating Leases Post-ASC',
+        text: '842 The adoption of ASC 842 and IFRS 16 brought most operating leases onto the balance sheet as right-of-use assets and lease liabilities, making the financial statements of lease-intensive businesses significantly more transparent. Despite this improved transparency, significant off-balance-sheet lease exposure remains: short-term leases that companies may elect not to capitalise, variable lease payments based on usage or sales not included in the recognised liability, and leases not yet commenced but signed. The footnote disclosures on these items provide the information needed to assess the full economics of a company\'s leasing commitments. For valuation purposes, operating lease liabilities should generally be treated as debt-equivalent obligations — they represent future cash payment commitments that are economically similar to financial debt even though their legal form differs.',
+      },
     ]
   },
   {
@@ -5016,6 +5592,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Start with $2.00 GAAP EPS. Add back the restructuring charge after tax: $1.50 × (1 − 0.25) = $1.125. Remove the asset sale gain after tax: $0.50 × (1 − 0.25) = $0.375. Normalized EPS = $2.00 + $1.125 − $0.375 = $2.75. Both items are non-recurring and must be treated symmetrically.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Earnings Power Value Earnings power value',
+        text: '— developed by Bruce Greenwald — values a business based on its current normalised earnings with zero growth: EPV = Adjusted EBIT x (1 - tax rate) / WACC. EPV provides the most conservative going-concern valuation because it attributes zero value to growth. When EPV exceeds market capitalisation, the business is priced below its current earnings capacity even with no growth credit — the most robust form of margin of safety available. Decomposing market price into EPV (current earnings value) and growth value (the remainder) reveals how much depends on growth materialising. A stock trading at $50 with EPV of $45 has only $5 of growth value at risk. One trading at $50 with EPV of $20 has $30 of growth value that must be validated — a much riskier proposition if growth disappoints.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Earnings-Driven Strategies',
+        text: '(Sector ETF) Mega-cap earnings drive NQ movements that can be anticipated via option-implied moves. The options market prices expected earnings move; if the actual move exceeds implied, NQ often extends; if it falls short, potential reversal. Trading NQ specifically around NVDA, AAPL, MSFT, GOOGL, AMZN reports requires knowing which company reports on which date, understanding sector weight in NQ, and monitoring options pricing to assess consensus expectations. Retail access to individual earnings is through NQ positioning rather than stock options.',
+      },
     ]
   },
 {
@@ -5107,6 +5701,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Core EPS removes both the one-time asset sale gain ($0.80) and the actuarial pension credit ($0.30), which are transitory items unrelated to ongoing operations. $3.50 − $0.80 − $0.30 = $2.40. Pension actuarial credits are not recurring and should always be stripped out of core earnings.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Cyclical Normalisation For businesses with earnings that are highly sensitive to economic or industry cycles',
+        text: '— commodity producers, financial institutions, housing-related businesses, consumer discretionary — the reported earnings at any given point in the cycle may be far from the mid-cycle level that represents the business\'s sustainable earning power. Valuing these businesses at peak multiples on peak earnings, or at trough multiples on trough earnings, produces systematic overvaluation or undervaluation respectively. Cyclical normalisation begins with identifying the major drivers of cyclical earnings variation: for a copper miner, copper prices; for a bank, credit losses; for an auto manufacturer, vehicle pricing and volume. For each driver, the analyst estimates the mid-cycle level — typically using a long-run average weighted by the probability distribution of future outcomes — and constructs the income statement corresponding to those mid-cycle inputs.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Earnings Cycle: Single-Stock Options\' Defining Event Every public company reports quarterly earnings',
+        text: '— four times per year, on a schedule that is announced weeks in advance. The options market\'s pricing of these earnings events follows the lifecycle described in Chapter 64: pre-earnings IV expansion, the IV crush immediately after the announcement, and the potential for post-earnings directional drift. For single-stock options traders, the earnings calendar is the most important scheduling input in the entire trading framework — it determines which positions can be held through a specific date without binary event risk and which must be closed or structured specifically as earnings trades.',
+      },
     ]
   },
   {
@@ -5295,6 +5907,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'A single year of 0.70 CFO/NI can have innocent timing explanations. But four consecutive years of the same pattern signals structural accrual accumulation — the company is persistently recognizing income before collecting cash. Capex does not affect operating cash flow (it lives in investing activities), and non-cash stock comp would actually increase CFO relative to net income, not decrease it.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: OCF-to-Net-Income Ratio The ratio of operating cash flow to net income',
+        text: '— sometimes called the cash conversion ratio — provides a quick and powerful indicator of earnings quality over time. In a high-quality business with genuine earnings, the ratio should average above 1.0 over multiple years: operating cash flow should exceed net income because depreciation (a non-cash charge) is added back to earnings in the cash flow statement. A ratio consistently below 0.8 over multiple years warrants serious investigation. A declining OCF-to-net-income ratio over time is more concerning than a low level in any single period. A single year of weak cash conversion can reflect timing differences in working capital or large one-time tax payments.',
+      },
     ]
   },
   {
@@ -5390,6 +6014,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: '$300M capex / $200M depreciation = 1.5x. This means the company is spending 50% more than assets are depreciating — a sign of moderate growth investment. The asset base is expanding, not contracting. Values significantly above 2.0x would indicate aggressive expansion; below 0.8x would suggest underinvestment. 1.5x sits at the boundary of moderate reinvestment.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Maintenance vs. Growth Capex The division of capital expenditure into maintenance',
+        text: '(required to sustain existing capacity) and growth (creating new capacity) is the most analytically important distinction in capital expenditure analysis. Maintenance capex is an unavoidable cost of running the business — equivalent economically to an operating expense — and should be treated as such when computing genuine free cash flow. Growth capex is discretionary investment that should be evaluated on the basis of the returns it is expected to generate. Most companies do not explicitly disclose the maintenance-growth split in their capital expenditure.',
+      },
     ]
   },
   {
@@ -5653,6 +6289,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Context is everything. Company A\'s 65% intangible ratio is consistent with a software business whose value resides in IP, customer relationships, and proprietary technology — especially validated by strong revenue growth. Company B is alarming: steel manufacturing creates value through physical assets and operational efficiency, not intangibles. A high intangible ratio there almost certainly means goodwill from acquisitions paid at premium prices, with impairment risk lurking if those deals underperform.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Why Accounting Understates Intangible Value Accounting standards require that internally generated intangible assets',
+        text: '— brands built through advertising, customer relationships developed through sales effort, software developed for internal use, and intellectual property created through R&D — be expensed as incurred rather than capitalised and amortised. This accounting treatment creates a systematic misrepresentation of the asset base for businesses whose value derives primarily from intangible assets: the assets that generate the most important and most durable competitive advantages are simultaneously the most valuable to the business and the most completely absent from the balance sheet. The practical consequence is that businesses with large intangible asset bases appear to earn extraordinarily high returns on the accounting-measured asset base, creating the apparent paradox of businesses that generate well above-cost-of-capital returns indefinitely without attracting competitive entry.',
+      },
     ]
   },
   {
@@ -5819,6 +6467,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Total adjusted obligations = $8B reported debt + $4B pension deficit ($14B PBO minus $10B assets) + $2B unfunded OPEB = $14 billion. The funded status — not the gross PBO — is the net liability, since plan assets exist to offset the obligation. OPEB with zero funding adds its full amount. Adding both underfunded pension and OPEB to reported debt gives a complete picture of the company\'s total obligations, which is critical for accurate leverage and EV calculations.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Liabilities: Visible and Hidden Reported financial debt',
+        text: '— the sum of short-term borrowings and long-term debt appearing on the balance sheet — is the most visible liability but not necessarily the most important one. Businesses accumulate a range of other obligations that can represent significant economic burdens: operating leases that were previously kept off-balance-sheet (though now mostly capitalised under ASC 842 and IFRS 16), pension obligations in defined benefit plans, and take-or-pay contracts that commit the business to future expenditures regardless of operational need. Contingent liabilities — obligations that arise only if a specified future event occurs — are disclosed in footnotes rather than recognised on the balance sheet. Legal settlements, warranty claims, tax disputes, and environmental obligations are common contingent liabilities that can be material in magnitude.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
+      },
     ]
   },
   {
@@ -5988,6 +6654,18 @@ export const articles: Article[] = [
         explanation:
           'Using the accounting equation: Equity = Assets - Liabilities = $500M - $300M = $200M. The balance sheet must always balance.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Reading the Balance of Aggression Watch the tape: are more prints going off at the ask',
+        text: '(aggressive buys) or at the bid (aggressive sells)? The ratio over a rolling window is the balance of aggression. Sustained imbalance reveals direction; balanced aggression suggests consolidation. The balance of aggression over rolling time windows reveals directional pressure. Sustained imbalance reveals direction; balanced aggression suggests consolidation. Reading this balance is a core daily skill.',
+      },
     ],
   },
   {
@@ -6151,6 +6829,18 @@ export const articles: Article[] = [
         explanation:
           'Interest Coverage Ratio = EBIT / Interest Expense = $50M / $10M = 5.0x. This means the company earns 5 times enough to cover its interest payments, which is generally considered healthy.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Liabilities: Visible and Hidden Reported financial debt',
+        text: '— the sum of short-term borrowings and long-term debt appearing on the balance sheet — is the most visible liability but not necessarily the most important one. Businesses accumulate a range of other obligations that can represent significant economic burdens: operating leases that were previously kept off-balance-sheet (though now mostly capitalised under ASC 842 and IFRS 16), pension obligations in defined benefit plans, and take-or-pay contracts that commit the business to future expenditures regardless of operational need. Contingent liabilities — obligations that arise only if a specified future event occurs — are disclosed in footnotes rather than recognised on the balance sheet. Legal settlements, warranty claims, tax disputes, and environmental obligations are common contingent liabilities that can be material in magnitude.',
+      },
     ],
   },
   {
@@ -6236,6 +6926,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Book Value Per Share = $2B / 100M = $20. Price-to-Book = $30 / $20 = 1.5x. The stock trades at a 50% premium to its book value.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Equity and Book Value Book value of equity',
+        text: '— total assets minus total liabilities — is the accounting measure of shareholders\' net worth in a business. For most businesses in most industries, book value has limited relevance to intrinsic value because it reflects historical cost accounting rather than current economic value. A business that has earned high returns on its invested capital for many years may have created far more economic value than book value reflects, because the intangible assets created by that value creation — brand, customer relationships, technology — are not captured in the accounting records.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Screen for Value Stocks Basic value screens: P/E ratio below the industry average. Price-to-book below',
+        text: '2.0. Dividend yield above the market average. Debt-to-equity below 1.0. Free cash flow yield above 5%. These filters identify statistically cheap stocks, but the screen is just the starting point. You must investigate why the stock is cheap. Is it cheap because the market is irrationally fearful, or because the business is genuinely deteriorating? The former is a buying opportunity. The latter is a value trap.',
       },
     ],
   },
@@ -6336,6 +7044,24 @@ export const articles: Article[] = [
         explanation:
           'Quick Ratio = (Current Assets - Inventory) / Current Liabilities = ($80M - $20M) / $50M = $60M / $50M = 1.2x. This means the company has $1.20 in liquid assets for every $1 of short-term obligations.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Balance Sheet Trend Analysis A balance sheet becoming cleaner',
+        text: '— declining goodwill, receivables, inventory — is positive. One becoming dirtier — growing intangibles, deferred costs, capitalised expenses — warrants investigation into whether growth reflects genuine value or accounting accumulation.',
+      },
     ],
   },,
 {
@@ -6424,6 +7150,24 @@ export const articles: Article[] = [
         explanation:
           'Quick Ratio = (Current Assets - Inventory) / Current Liabilities = ($90M - $25M) / $60M = $65M / $60M = 1.08x. The company has $1.08 in liquid assets for every dollar of short-term obligations.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Long Vol / Short Vol Balance: Finding the Right Ratio Most options portfolios are net short volatility',
+        text: '— they generate more income from premium selling than they pay in long volatility protection costs. This net short vol position is economically rational (because the VRP provides a systematic positive return to short vol) but creates specific crisis-period risk (because net short vol positions lose money when volatility spikes). The ratio between the short and long volatility components determines the portfolio\'s volatility regime sensitivity. Three Volatility Balance Points Three Volatility Balance Regimes A fully hedged volatility book (equal dollar amounts of long and short volatility) has near-zero net vega and is essentially indifferent to changes in the overall level of implied volatility — it profits only from specific relative value relationships within the volatility surface (the term structure slope, the index-component correlation differential).',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: The Put/Call Ratio as an Entry and Exit Timing Tool The',
+        text: '10-day moving average of the CBOE equity put/call ratio smooths daily noise into a reliable sentiment trend. Readings above 0.90 indicate excessive fear and historically correspond to short-term market bottoms. Readings below 0.55 indicate excessive complacency and often precede corrections. The ratio is most useful as a timing filter: add to long positions when the ratio is above 0.85, reduce longs when below 0.55. Extreme sentiment readings are contrarian signals, not trading signals. AAII bears above 50% historically precedes advances; bulls above 55% precedes declines. The sentiment extreme adjusts your timing posture; the price action provides the specific entry.',
+      },
     ],
   },
   {
@@ -6502,6 +7246,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'D/E Ratio = Total Debt / Shareholders\' Equity = $400M / $200M = 2.0x. For every dollar of equity, the company has two dollars of debt.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Coverage Ratios and Debt Capacity Interest coverage ratio',
+        text: '— EBIT or EBITDA divided by interest expense — measures the business\'s ability to service its debt from current earnings. An interest coverage ratio above 3x provides a reasonable cushion for earnings volatility; below 2x suggests that a meaningful earnings decline could challenge the ability to service debt; below 1x indicates that current earnings are insufficient to cover interest — a pre-distress situation. The appropriate minimum coverage ratio depends on earnings volatility: stable businesses can operate safely at lower coverage than volatile ones. Debt capacity — the maximum sustainable leverage for a specific business given its cash flow stability, asset base, and competitive position — should be estimated conservatively using trough rather than average or peak cash flows.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: LEAPS for Retirement Accounts In IRAs, LEAPS provide leverage without margin debt',
+        text: '(which is prohibited). The timing considerations are identical to taxable accounts without the tax complexity, making LEAPS in retirement accounts particularly attractive for long-term bullish positioning.',
       },
     ],
   },
@@ -6587,6 +7349,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Retailers like Amazon and Walmart often collect from customers immediately while paying suppliers on 30-60 day terms. This means suppliers temporarily finance the business, resulting in negative working capital that is a sign of operational strength.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Working Capital and Cash Conversion Working capital',
+        text: '— current assets minus current liabilities — measures the near-term liquidity of the business. But beyond the simple liquidity question, working capital analysis reveals something more important about competitive position: the terms on which a business transacts with its customers and suppliers. A business with very low or negative working capital — one that collects cash from customers before paying suppliers — has a structural financing advantage that reflects its competitive strength relative to counterparties. The cash conversion cycle — the number of days between paying for inventory and collecting cash from customers — quantifies this competitive position precisely. Days sales outstanding measures how long customers take to pay. Days inventory outstanding measures how long inventory sits before being sold.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
       },
     ],
   },
@@ -6674,6 +7454,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Cash equivalents must have original maturities of three months or less. A 3-year corporate bond does not qualify because it has a long maturity and its value can fluctuate significantly.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Earnings Quality Framework A systematic earnings quality assessment examines five dimensions: cash conversion',
+        text: '(does cash generation track earnings?), accrual quality (are non-cash accruals declining over time?), revenue quality (are revenue recognition policies conservative and consistently applied?), expense quality (are all recurring costs included in normalised earnings?), and management credibility (does management\'s description of business performance match the financial statement reality?). Scoring each dimension from high to low quality and combining the assessments produces an overall earnings quality rating that should directly influence the valuation approach. High-quality earnings in all five dimensions can be capitalised at a low earnings yield (high P/E multiple), because the risk that the reported earnings are misleading is low.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Cash Settlement vs. Physical Delivery Some futures settle physically',
+        text: '(the long takes delivery of the actual commodity); others settle in cash (the contract pays the difference between the contract price and the final settlement price). Equity index futures, VIX, and financial rate futures cash-settle; most commodity futures physically settle. The distinction is operationally enormous: a physically settled contract held to expiration by a retail trader means literal barrels of oil or bushels of corn arriving at a delivery location, which is why brokers aggressively liquidate retail positions approaching first notice day.',
       },
     ],
   },
@@ -6932,6 +7730,24 @@ export const articles: Article[] = [
         explanation:
           'Asset Age Ratio = Accumulated Depreciation / Gross PP&E = $150M / $200M = 75%. The company\'s assets are 75% depreciated, suggesting they are aging and may need replacement soon.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Systematic vs. Discretionary Systematic covered call programs sell calls on a fixed schedule',
+        text: '(every monthly expiration, at a fixed delta) regardless of market conditions. Discretionary programs sell calls only when technical and IV conditions are favorable. Research shows that systematic programs produce more consistent income but sacrifice more upside, while discretionary programs capture more upside but produce less regular income. The choice depends on whether income consistency or total return is the priority. Chapter 89 — Premium Selling Cycle Timing This chapter integrates all premium-selling strategies into a unified timing cycle that optimizes entry, management, and exit across the monthly options calendar.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: What DCA Is: Investing the Same Amount on a Schedule With dollar-cost averaging, you invest a fixed amount',
+        text: '— say $500 — on the same day every month. When prices are high, your $500 buys fewer shares. When prices are low, your $500 buys more shares. Over time, this produces an average purchase price that is lower than the average market price during the same period. The mathematical reason is simple: by investing a fixed dollar amount, you automatically buy more shares when they are cheap and fewer when they are expensive.',
+      },
     ],
   },
   {
@@ -7010,6 +7826,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Goodwill = Purchase Price - Fair Value of Net Identifiable Assets = $500M - $300M = $200M. This $200M represents the premium paid for intangible qualities like brand and customer relationships.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Balance Sheet Trend Analysis A balance sheet becoming cleaner',
+        text: '— declining goodwill, receivables, inventory — is positive. One becoming dirtier — growing intangibles, deferred costs, capitalised expenses — warrants investigation into whether growth reflects genuine value or accounting accumulation.',
       },
     ],
   },
@@ -7091,6 +7925,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Revenue Recognized = Beginning Deferred Revenue + Cash Collected - Ending Deferred Revenue = $10M + $40M - $15M = $35M. The company earned $35M this period and deferred an additional $5M for future recognition.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Revenue Deferrals and Deferred Revenue Deferred revenue',
+        text: '— cash received from customers before the corresponding revenue is recognised — is an analytically attractive balance sheet liability because it represents a genuine asset: future revenue that has already been paid for. Businesses with large and growing deferred revenue balances — subscription software companies, maintenance contract providers, gift card issuers — have a structural earnings visibility advantage because a portion of next year\'s revenue is already in hand. The quality of deferred revenue depends on whether it represents genuinely earned economic obligations or creative accounting classification. When deferred revenue balances are growing faster than revenue, the business is collecting cash before recognising revenue — a strong cash quality indicator.',
       },
     ],
   },
@@ -7187,6 +8033,24 @@ export const articles: Article[] = [
         explanation:
           'A maintenance covenant requires the borrower to continuously satisfy a financial metric — such as a minimum interest coverage ratio or maximum leverage ratio — at every measurement date. Failure constitutes a default and can give lenders the right to demand immediate repayment.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Maturity Structure and Refinancing Risk The maturity structure of debt',
+        text: '— the schedule of principal repayment dates — determines when the business must return to capital markets for refinancing. A business with all its debt maturing in the next two years faces significant refinancing risk: if credit market conditions deteriorate, or if the business\'s own credit quality has declined, the refinancing may be available only at much higher rates or on restrictive terms that impair operational flexibility. A business with debt spread evenly over ten years has a much more manageable refinancing requirement in any given year. Refinancing risk is most dangerous for highly leveraged businesses in capital-intensive industries with cyclical revenues.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: When to Stop Selling Premium Suspend premium selling when: VIX term structure inverts into backwardation',
+        text: '(indicating acute near-term risk), the S&P 500 breaks below its 200-day SMA (indicating a regime change to bearish), or a major geopolitical or financial crisis is developing. Premium selling during these conditions exposes the seller to tail risk that the collected premium cannot compensate for. Chapter 90 — Wheel Strategy Timing: The Complete Put-to-Stock-to-Call Cycle The wheel integrates put selling, stock ownership, and covered call writing into a continuous income-generating cycle.',
+      },
     ],
   },
   {
@@ -7269,6 +8133,24 @@ export const articles: Article[] = [
         explanation:
           'BVPS = (Total Equity - Preferred Equity) / Shares Outstanding = ($1,000M - $100M) / 180M = $900M / 180M = $5.00. Preferred equity is subtracted first because preferred shareholders have a senior claim; only the residual belongs to common shareholders.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Equity and Book Value Book value of equity',
+        text: '— total assets minus total liabilities — is the accounting measure of shareholders\' net worth in a business. For most businesses in most industries, book value has limited relevance to intrinsic value because it reflects historical cost accounting rather than current economic value. A business that has earned high returns on its invested capital for many years may have created far more economic value than book value reflects, because the intangible assets created by that value creation — brand, customer relationships, technology — are not captured in the accounting records.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Screen for Value Stocks Basic value screens: P/E ratio below the industry average. Price-to-book below',
+        text: '2.0. Dividend yield above the market average. Debt-to-equity below 1.0. Free cash flow yield above 5%. These filters identify statistically cheap stocks, but the screen is just the starting point. You must investigate why the stock is cheap. Is it cheap because the market is irrationally fearful, or because the business is genuinely deteriorating? The former is a buying opportunity. The latter is a value trap.',
+      },
     ],
   },
   {
@@ -7348,6 +8230,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Ending Retained Earnings = Beginning + Net Income - Dividends = $500M + $80M - $30M = $550M. The company retained $50M of its $80M earnings, growing its cumulative reinvestment base.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Balance Sheet Trend Analysis A balance sheet becoming cleaner',
+        text: '— declining goodwill, receivables, inventory — is positive. One becoming dirtier — growing intangibles, deferred costs, capitalised expenses — warrants investigation into whether growth reflects genuine value or accounting accumulation.',
       },
     ],
   },
@@ -7447,6 +8347,24 @@ export const articles: Article[] = [
         explanation:
           'Take-or-pay contracts create a fixed obligation to pay for minimum volumes regardless of actual usage, but they typically do not appear as liabilities on the balance sheet — only in the commitments footnote. Bonds, accounts payable, and drawn credit facilities all appear directly on the balance sheet.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Balance Sheet Strength Assessment The balance sheet strength assessment examines five dimensions: liquidity',
+        text: '(can the business meet its near-term obligations without distress?), leverage (is the total financial burden — including hidden liabilities — appropriate for the cyclicality and stability of the business?), asset quality (are the carrying values of the major asset categories consistent with their economic value?), working capital efficiency (are receivables, inventory, and payables at levels appropriate for the business model and competitive position?), and off-balance-sheet obligations (are the footnote-disclosed commitments material relative to reported debt and equity?). The balance sheet assessment for each dimension produces a qualitative rating — strong, adequate, or concerning — that collectively determines the overall balance sheet quality rating.',
+      },
     ],
   },
   {
@@ -7531,6 +8449,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Common size balance sheet analysis expresses each line item as a percentage of total assets. This allows comparison of asset composition across different time periods or across companies of different sizes.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Balance Sheet Trend Analysis A balance sheet becoming cleaner',
+        text: '— declining goodwill, receivables, inventory — is positive. One becoming dirtier — growing intangibles, deferred costs, capitalised expenses — warrants investigation into whether growth reflects genuine value or accounting accumulation.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Identifying Multi-Month and Multi-Year Trends Multi-year trends are best identified by the',
+        text: '50-week and 200-week moving averages. A stock above both averages in ascending order is in a confirmed long-term uptrend. The slope and separation of these long-term averages measure the trend’s strength and maturity.',
       },
     ],
   },
@@ -7700,6 +8636,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'Organic revenue increase is $80M - $50M = $30M. Organic growth rate = $30M / $400M = 7.5%. The headline 20% figure significantly overstates the underlying business momentum.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Identify Growth Companies Look for revenue growth above',
+        text: '15% year-over-year for at least the last three years. Check that the company is gaining market share in a large and expanding market. Verify that gross margins are stable or expanding, indicating pricing power. Evaluate whether the company has a strong competitive position that can sustain growth. Look at the total addressable market — is it large enough to support years of continued expansion? The best growth companies combine rapid revenue growth with improving unit economics, meaning they become more efficient as they scale.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: ARR, NRR, and Contracted Revenue Annual recurring revenue',
+        text: '(ARR) — the annualised value of subscription contracts currently in force — is the primary business metric for SaaS companies because it measures the contracted revenue base that will be recognised over the next 12 months independent of any new customer acquisition. ARR growth reflects both the addition of new customers (new ARR) and the expansion or contraction of existing customer relationships (net expansion or net churn). The trajectory of ARR growth — and its decomposition into new ARR and net expansion ARR — is the most informative leading indicator of future revenue and earnings growth. Net revenue retention (NRR) — the percentage of ARR from the previous period\'s customer cohort that is retained in the current period, including expansions and upgrades — is the most important single metric for assessing the durability and quality of a SaaS business\'s revenue base.',
       },
     ],
   },
@@ -7892,6 +8846,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'While all three adjustments deserve scrutiny, recurring "restructuring" charges year after year suggests these are normal operating costs the company is excluding to inflate adjusted EPS. Stock-based compensation is also a real economic cost, but the recurring restructuring is the biggest red flag because it indicates the adjustment is misleading.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Earnings Quality Framework A systematic earnings quality assessment examines five dimensions: cash conversion',
+        text: '(does cash generation track earnings?), accrual quality (are non-cash accruals declining over time?), revenue quality (are revenue recognition policies conservative and consistently applied?), expense quality (are all recurring costs included in normalised earnings?), and management credibility (does management\'s description of business performance match the financial statement reality?). Scoring each dimension from high to low quality and combining the assessments produces an overall earnings quality rating that should directly influence the valuation approach. High-quality earnings in all five dimensions can be capitalised at a low earnings yield (high P/E multiple), because the risk that the reported earnings are misleading is low.',
+      },
     ],
   },
   {
@@ -7979,6 +8945,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The restructuring charges have appeared in three of four years, making them a recurring cost of doing business — they should be included in normalized earnings. The asset impairment may be genuinely one-time if it reflects a specific event (like writing down a failed acquisition), though it still warrants investigation. The key principle: frequency determines whether an item is truly non-recurring.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Removing Non-Recurring Items The discipline of independently identifying non-recurring items',
+        text: '— rather than accepting management\'s characterisation — requires applying a simple test: would this cost or gain arise in most years of normal operations? If yes, it is recurring. If no, it may be genuinely non- recurring. Management\'s adjusted earnings presentations fail this test systematically because they exclude items that do recur, just not always in the same form in every year. The analytical approach is to examine five to seven years of "adjusted" earnings and add back all excluded items to reconstruct GAAP-equivalent adjusted earnings. The resulting trend reveals whether the business is actually improving as the adjusted figures suggest, or whether the improvement is partly an artefact of expanding and shifting non-GAAP adjustments.',
+      },
     ],
   },,
 {
@@ -8065,6 +9043,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'There are two performance obligations: the SaaS subscription ($24,000 recognized at $1,000/month over 24 months) and the training ($6,000 recognized at completion in month 1). Month 1 recognition = $1,000 + $6,000 = $7,000. The remaining $23,000 of SaaS revenue is deferred and recognized over months 2-24.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Spectrum of Revenue Recognition Revenue recognition exists on a spectrum from highly conservative',
+        text: '— recognising revenue only when all uncertainty about collection and performance is resolved — to highly aggressive — recognising revenue at the earliest technically defensible moment even when significant uncertainty remains. Most businesses operate somewhere in the middle of this spectrum, and the analyst\'s task is to identify where each business sits and whether its position is appropriate given the nature of its contractual arrangements with customers. The position on the spectrum is determined by the specifics of the business model and the accounting policies adopted. A company that recognises revenue on delivery, with a 30-day return policy and no extended payment terms, is operating conservatively — the revenue recognised is almost certainly collected and the obligation to the customer is nearly complete.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Short Sale Volume Reports FINRA and exchanges also publish daily short sale volume reports',
+        text: '— what percentage of trading volume was short-initiated. High short sale volume on an up day can signal aggressive short-covering; low short sale volume on a down day can signal long liquidation rather than new shorting. This data complements dark pool analysis. Short sale volume reports from FINRA and exchanges complement dark pool data. High short sale volume on an up day suggests aggressive short covering; low short sale volume on a down day suggests long liquidation. Reading both together refines institutional-flow analysis. Chapter 53 — Tape Reading: The Essential Skill Tape reading is the oldest and most direct form of order flow analysis. Before Level 2, before footprint charts, traders read the tape — and the best still do. This chapter synthesizes Part VII into a practical tape-reading discipline you can build through deliberate practice.',
+      },
     ]
   },
   {
@@ -8237,6 +9233,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Revenue grew 25% while volume grew 30%, meaning average selling price (ASP) actually declined. Despite lower ASP, gross margin expanded — which means cost of revenue per unit fell even faster than price, pointing to a price effect (or more precisely, a cost efficiency effect improving unit economics). A pure volume effect wouldn\'t change margin percentage. The ASP decline rules out a simple price increase story — this is likely cost reduction driving the margin expansion.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Gross Profit and Margin Gross profit',
+        text: '— revenue minus cost of goods sold — and the gross margin percentage derived from it reveal the fundamental economics of the core business before any consideration of overhead costs, research, or selling expenses. A high gross margin indicates that the business has pricing power over its inputs — that customers value the product sufficiently to pay a significant premium above the direct cost of producing it. This pricing power is the foundation of all sustainable competitive advantage. Gross margin trends over time are more informative than the absolute level. A business whose gross margin is expanding as it scales is demonstrating operational leverage — its revenues are growing faster than its variable costs, which is the signature of a business with genuine competitive advantages.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Speed: The Rate of Change of Gamma Speed measures how gamma changes when the underlying price moves',
+        text: '— it is the third derivative of option value with respect to the underlying price: ∂Γ/∂S = ∂³V/∂S³. Its name is intuitive: if gamma measures how fast delta is changing (the acceleration of the position\'s directional exposure), then speed measures how fast gamma itself is changing (the jerk, in physics terminology — the rate of change of acceleration). In the Black-Scholes framework, speed has the expression: Speed = −Γ × (d₁ / ( σ√T ) + 1) / S. This is typically negative for call options, meaning that as the underlying price rises, gamma decreases. Gamma is highest ATM and falls on both sides — and speed quantifies how fast it falls as the stock moves away from the ATM level in either direction. Practical Relevance of Speed Speed is most relevant for understanding how gamma hedges degrade as the market moves.',
+      },
     ]
   },
   {
@@ -8324,6 +9338,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'When you capitalize R&D and amortize it over 10 years, the annual amortization charge = R&D spend / 10 (in steady state). For Company A: amortization ≈ $300M vs the $3B expense charged to GAAP — a $2.7B add-back. For Company B: amortization ≈ $100M vs $1B expense — a $900M add-back. Company A\'s adjusted earnings are ~$3.7B vs Company B\'s ~$1.9B. The company investing more in R&D appears far cheaper on adjusted earnings than GAAP earnings suggest.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Income Statement: How Much Did They Make? The income statement',
+        text: '(also called the profit and loss statement) shows how much money the company earned and how much it spent over a period, typically a quarter or a year. Start at the top with revenue (total sales), then watch as costs are subtracted: cost of goods sold, operating expenses, interest, and taxes. The bottom line is net income — the profit. The key ratios to check: gross margin (revenue minus cost of goods sold, divided by revenue), operating margin (operating income divided by revenue), and net margin (net income divided by revenue). Higher margins generally indicate a stronger business.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Income Tracking and Financial Planning Full-time trading income tracking: monthly P&L statement',
+        text: '(gross trading income, broker fees, data subscriptions, other business expenses, net trading income); quarterly comparison to plan and estimated tax payments; annual comprehensive financial review. Track specifically: months where trading income covered all expenses vs. required reserves drawdown; year-to-date profitability vs. plan; reserve level vs. required minimum. This financial monitoring catches sustainability issues early rather than discovering them when reserves are depleted.',
+      },
     ]
   },
   {
@@ -8492,6 +9524,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'EBIT = Revenue − COGS − Operating Expenses = $500M − $200M − $150M = $150M. Interest expense and taxes are excluded from EBIT by definition. Net income would be ($150M − $30M) × (1 − 0.25) = $90M, but the question asks only for EBIT.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Operating Income and Leverage Operating income',
+        text: '— gross profit minus operating expenses including selling, general and administrative costs, and research and development — measures the profitability of the business before the effects of financing and taxation. The operating margin (operating income as a percentage of revenue) is the central measure of business profitability used in most valuation multiples and is the primary focus of normalisation analysis when earnings quality is assessed. Operating leverage describes the sensitivity of operating income to revenue changes: businesses with high fixed costs and low variable costs exhibit high operating leverage, meaning that revenue growth produces disproportionately large operating income growth, and revenue decline produces disproportionately large operating income decline.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: UBIT: The Hidden Tax Risk in Retirement Account Options Unrelated Business Income Tax',
+        text: '(UBIT) is a tax that applies to income from \'unrelated business activities\' within tax-exempt entities — including IRAs and Roth IRAs. While standard investment activities (buying stocks, selling covered calls, collecting dividends) are exempt from UBIT, certain options strategies that involve leverage or certain types of income can trigger UBIT liability — effectively creating a taxable event inside what is supposed to be a tax-exempt account. The UBIT risk from options strategies is primarily relevant for Solo 401(k) plans that engage in margin trading or certain leveraged derivative strategies.',
+      },
     ]
   },
   {
@@ -8578,6 +9628,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'ICR = $80M ÷ $45M = 1.78x. This is below the 2x danger threshold. A ~12% decline in EBIT would push ICR below 1.6x and a 44% decline would make interest expense exceed EBIT. Credit analysts and lenders would view this as a high-risk profile, and debt covenants are frequently set at 2x or above.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Coverage Ratios and Debt Capacity Interest coverage ratio',
+        text: '— EBIT or EBITDA divided by interest expense — measures the business\'s ability to service its debt from current earnings. An interest coverage ratio above 3x provides a reasonable cushion for earnings volatility; below 2x suggests that a meaningful earnings decline could challenge the ability to service debt; below 1x indicates that current earnings are insufficient to cover interest — a pre-distress situation. The appropriate minimum coverage ratio depends on earnings volatility: stable businesses can operate safely at lower coverage than volatile ones. Debt capacity — the maximum sustainable leverage for a specific business given its cash flow stability, asset base, and competitive position — should be estimated conservatively using trough rather than average or peak cash flows.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Debt vs. Investing: Which Comes First? If you have high-interest debt',
+        text: '(credit cards at 18–24% interest), paying it off is the best guaranteed return available. No stock market investment reliably earns 18–24% per year. Pay off high-interest debt first. For moderate-interest debt (student loans at 5–7%), the decision is closer: you can reasonably do both simultaneously, especially if your employer matches 401(k) contributions. For low-interest debt (mortgage at 3–4%), investing usually wins because stock market returns have historically exceeded 3–4% over long periods. The key principle: always capture the employer 401(k) match, regardless of debt, because the match is free money with an immediate 50–100% return.',
+      },
     ]
   },
   {
@@ -8665,6 +9733,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Pre-tax income fell by $200M but net income rose by $20M. This means the tax provision must have dropped by ~$220M. Implied ETR fell from 30% to ~10% ($80M tax on $800M pre-tax). A drop this large almost certainly reflects a one-time tax benefit (valuation allowance release, tax settlement, or rate remeasurement). The net income improvement is not indicative of improved operations.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Tax Rate Normalisation The effective tax rate',
+        text: '— the total income tax expense divided by pre-tax income — can differ significantly from the statutory marginal tax rate due to tax credits, deferred tax assets, international tax strategies, and timing differences between book and tax accounting. For DCF purposes, the analyst must decide whether to use the historical effective rate or the statutory marginal rate, and the choice matters: a business with a temporarily low effective rate due to non-recurring tax benefits will revert to a higher rate, reducing after-tax cash flows. The most conservative and generally most reliable approach is to use a normalised tax rate that represents the steady-state effective rate the business will pay over the forecast period, excluding non-recurring tax benefits and accounting for the expected evolution of the international tax structure.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Calendar Spreads in Rates Calendar spreads in rate futures',
+        text: '— long one expiration while short another of the same contract — capture changes in the term structure of rates. A long March 2026 SR3 / short June 2026 SR3 profits if Q1 2026 rate expectations rise faster than Q2 expectations. These spreads typically have tight bid-ask (because the curve relationships are closely tracked by market makers) and receive substantial SPAN credits. Useful for expressing views on specific timing of Fed decisions.',
+      },
     ]
   },
   {
@@ -8836,6 +9922,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Comprehensive Income = Net Income + OCI. If comprehensive income is -$3B and net income is +$5B, then OCI = -$8B. For a bank, this almost certainly reflects unrealised losses on AFS securities (e.g., a bond portfolio declining in value as rates rose) or large pension actuarial losses. These losses are economically real — they reduce book value — but are deferred from the income statement. If the bank were forced to liquidate its bond portfolio, these losses would immediately transfer to net income, potentially turning profitable years into loss years.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: UBIT: The Hidden Tax Risk in Retirement Account Options Unrelated Business Income Tax',
+        text: '(UBIT) is a tax that applies to income from \'unrelated business activities\' within tax-exempt entities — including IRAs and Roth IRAs. While standard investment activities (buying stocks, selling covered calls, collecting dividends) are exempt from UBIT, certain options strategies that involve leverage or certain types of income can trigger UBIT liability — effectively creating a taxable event inside what is supposed to be a tax-exempt account. The UBIT risk from options strategies is primarily relevant for Solo 401(k) plans that engage in margin trading or certain leveraged derivative strategies.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Income Tracking and Financial Planning Full-time trading income tracking: monthly P&L statement',
+        text: '(gross trading income, broker fees, data subscriptions, other business expenses, net trading income); quarterly comparison to plan and estimated tax payments; annual comprehensive financial review. Track specifically: months where trading income covered all expenses vs. required reserves drawdown; year-to-date profitability vs. plan; reserve level vs. required minimum. This financial monitoring catches sustainability issues early rather than discovering them when reserves are depleted.',
+      },
     ]
   },
 {
@@ -8931,6 +10035,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'EBITDA = $50M + $10M + $20M + $40M = $120M. The red flag is that capex of $60M exceeds D&A of $40M, meaning the business is investing more than it is depreciating — a sign that EBITDA materially overstates free cash flow. Free cash flow is closer to $120M minus $60M capex = $60M, only half of EBITDA.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Building a Currency Fundamental View Currency fundamental view construction:',
+        text: '(1) compare central bank policy (which direction is each central bank moving?); (2) compare economic momentum (which country\'s economy is stronger?); (3) compare yield differentials (what\'s the interest rate advantage?); (4) assess political stability and risk premium; (5) check positioning (COT, implied volatility skew); (6) identify current macro regime (RORO, carry, growth divergence). When multiple factors align in the same direction, the trade has fundamental backing; when factors conflict, wait for clarity. Chapter 77 — Energy Futures Fundamental Analysis Energy fundamental analysis integrates supply-demand balance, geopolitics, weather, and storage data. This chapter builds the systematic framework for oil and gas futures.',
+      },
     ]
   },
   {
@@ -9118,6 +10234,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The faster growth in the low-margin hardware segment (25%) relative to the high-margin software segment (5%) represents a negative mix shift. Over time, hardware will represent a larger share of revenue, pulling the blended gross margin lower even if both segments maintain their individual margins. A thoughtful analyst would model declining blended gross margins and scrutinize whether management has a strategy to rebalance growth back toward software.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Identify Growth Companies Look for revenue growth above',
+        text: '15% year-over-year for at least the last three years. Check that the company is gaining market share in a large and expanding market. Verify that gross margins are stable or expanding, indicating pricing power. Evaluate whether the company has a strong competitive position that can sustain growth. Look at the total addressable market — is it large enough to support years of continued expansion? The best growth companies combine rapid revenue growth with improving unit economics, meaning they become more efficient as they scale.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Subscription and SaaS Revenue Subscription businesses',
+        text: '— particularly SaaS software companies — present distinct revenue recognition challenges because the value delivered to customers accumulates over the subscription period rather than at a single point in time. Under ASC 606, subscription revenue is recognised ratably over the subscription term as the performance obligation is satisfied, which should produce a close relationship between deferred revenue (advance billings) and current revenue (recognised from prior advance billings). The most important analytical metrics for subscription businesses are annual recurring revenue (ARR) and net revenue retention (NRR). ARR is the annualised value of subscription contracts in force, which may differ from GAAP-recognised revenue due to recognition timing.',
+      },
     ]
   },
   {
@@ -9204,6 +10338,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A $150M gain on sale of a subsidiary is a one-time, non-recurring event that masked a 25% decline in operating income. This is the most concerning scenario because the core business is clearly deteriorating, and the net income improvement is entirely unsustainable. Interest expense reduction and higher interest income at least reflect improved balance sheet positioning. FX gains are volatile but smaller in this case. The asset sale gain will not repeat, meaning next year\'s net income will likely fall sharply unless operating income recovers.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Leverage vs. Genuine Returns Financial leverage amplifies both gains and losses: a business earning',
+        text: '10% ROA with 50% equity financing will report 20% ROE in good years, but will suffer catastrophic equity losses in bad years because the same losses are borne by a smaller equity base. The business that earns 15% ROE with no leverage is therefore genuinely superior to one that earns 20% ROE through a leverage ratio that amplifies a much lower underlying return on assets — even though the ROE comparison favours the leveraged business. Adjusting for leverage in ROE comparisons requires either normalising to the same leverage level (comparing ROAs rather than ROEs) or using ROIC as the primary metric (which is capital-structure-neutral by construction). For most industrial and consumer businesses, ROIC provides the most reliable cross-company comparison.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: The Myth of Unlimited Upside Leverage amplifies losses and gains symmetrically. There is no asymmetric benefit',
+        text: '— a trader who makes 30% on a $10,000 account at 10x leverage could have made 60% at 20x, but would also have been wiped out twice as fast by the same losing streak. Over long time horizons, the mathematics of leverage strongly favor lower leverage: volatility drag on leveraged returns compounds negatively, making high-leverage strategies often underperform lower-leverage approaches even before accounting for blow-up risk.',
+      },
     ]
   },
   {
@@ -9375,6 +10527,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Ski resorts earn the vast majority of their revenue during winter months (Q1 for most U.S. calendar-year filers). A steep sequential drop into Q2 reflects seasonal patterns, not business deterioration. The correct analysis compares Q2 of this year to Q2 of last year.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Income Statement: How Much Did They Make? The income statement',
+        text: '(also called the profit and loss statement) shows how much money the company earned and how much it spent over a period, typically a quarter or a year. Start at the top with revenue (total sales), then watch as costs are subtracted: cost of goods sold, operating expenses, interest, and taxes. The bottom line is net income — the profit. The key ratios to check: gross margin (revenue minus cost of goods sold, divided by revenue), operating margin (operating income divided by revenue), and net margin (net income divided by revenue). Higher margins generally indicate a stronger business.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Income Tracking and Financial Planning Full-time trading income tracking: monthly P&L statement',
+        text: '(gross trading income, broker fees, data subscriptions, other business expenses, net trading income); quarterly comparison to plan and estimated tax payments; annual comprehensive financial review. Track specifically: months where trading income covered all expenses vs. required reserves drawdown; year-to-date profitability vs. plan; reserve level vs. required minimum. This financial monitoring catches sustainability issues early rather than discovering them when reserves are depleted.',
+      },
     ]
   },
   {
@@ -9462,6 +10632,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'With 75% ownership, the minority shareholders own 25% of the subsidiary. Their $25M share (25% × $100M) is deducted as non-controlling interest expense after consolidated net income. The parent\'s net income attributable to its own shareholders would reflect only the $75M belonging to it.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Income Statement: How Much Did They Make? The income statement',
+        text: '(also called the profit and loss statement) shows how much money the company earned and how much it spent over a period, typically a quarter or a year. Start at the top with revenue (total sales), then watch as costs are subtracted: cost of goods sold, operating expenses, interest, and taxes. The bottom line is net income — the profit. The key ratios to check: gross margin (revenue minus cost of goods sold, divided by revenue), operating margin (operating income divided by revenue), and net margin (net income divided by revenue). Higher margins generally indicate a stronger business.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Income Tracking and Financial Planning Full-time trading income tracking: monthly P&L statement',
+        text: '(gross trading income, broker fees, data subscriptions, other business expenses, net trading income); quarterly comparison to plan and estimated tax payments; annual comprehensive financial review. Track specifically: months where trading income covered all expenses vs. required reserves drawdown; year-to-date profitability vs. plan; reserve level vs. required minimum. This financial monitoring catches sustainability issues early rather than discovering them when reserves are depleted.',
+      },
     ]
   },
   {
@@ -9555,6 +10743,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'When operating income grows faster than revenue (60% vs. 30%), the company exhibits positive operating leverage. The degree of operating leverage is 60% / 30% = 2.0x, meaning each 1% of revenue growth produced 2% of operating income growth. This is the hallmark of a fixed-cost business scaling efficiently.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Operating Income and Leverage Operating income',
+        text: '— gross profit minus operating expenses including selling, general and administrative costs, and research and development — measures the profitability of the business before the effects of financing and taxation. The operating margin (operating income as a percentage of revenue) is the central measure of business profitability used in most valuation multiples and is the primary focus of normalisation analysis when earnings quality is assessed. Operating leverage describes the sensitivity of operating income to revenue changes: businesses with high fixed costs and low variable costs exhibit high operating leverage, meaning that revenue growth produces disproportionately large operating income growth, and revenue decline produces disproportionately large operating income decline.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Fee Audit: What Did You Pay in Total Costs? Calculate your total investment costs for the year: fund expense ratios',
+        text: '(weighted by position size), any trading commissions, advisory fees, and account fees. Compare the total to the alternative of a pure index fund portfolio. If your costs exceed 0.25% of your portfolio, evaluate whether the services or products generating those costs are providing value above what a simple index fund approach would deliver.',
+      },
     ]
   },
   {
@@ -9649,6 +10855,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'When accounts receivable grow three times faster than revenue and cash flow does not follow reported profit growth, the most likely explanation is that revenue is being recognized before it is actually earned or collected. This pattern — high reported income, surging receivables, weak cash conversion — is a classic earnings quality red flag and a hallmark of channel stuffing or premature revenue recognition.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Income Statement: How Much Did They Make? The income statement',
+        text: '(also called the profit and loss statement) shows how much money the company earned and how much it spent over a period, typically a quarter or a year. Start at the top with revenue (total sales), then watch as costs are subtracted: cost of goods sold, operating expenses, interest, and taxes. The bottom line is net income — the profit. The key ratios to check: gross margin (revenue minus cost of goods sold, divided by revenue), operating margin (operating income divided by revenue), and net margin (net income divided by revenue). Higher margins generally indicate a stronger business.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Income Tracking and Financial Planning Full-time trading income tracking: monthly P&L statement',
+        text: '(gross trading income, broker fees, data subscriptions, other business expenses, net trading income); quarterly comparison to plan and estimated tax payments; annual comprehensive financial review. Track specifically: months where trading income covered all expenses vs. required reserves drawdown; year-to-date profitability vs. plan; reserve level vs. required minimum. This financial monitoring catches sustainability issues early rather than discovering them when reserves are depleted.',
+      },
     ]
   },
   {
@@ -9744,6 +10968,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A combined ratio above 100% means the insurer\'s underwriting operations are unprofitable — it is paying out more in claims and expenses than it collects in premiums. Many insurers tolerate modest underwriting losses because investment income on their float (premiums collected but not yet paid out as claims) can more than compensate. Warren Buffett\'s Berkshire Hathaway has famously used insurance float as cheap capital precisely by maintaining combined ratios at or below 100%.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Full System Backtesting Results Across Market Regimes Backtesting the complete iron condor income system',
+        text: '(30-45 DTE entry, 0.20-0.25 delta strikes, 50% profit target, 200% loss maximum) across the 2006-2024 period on SPX options produces consistent results that reveal both the strategy\'s strengths and its specific vulnerabilities. Bull market periods (2013-2019, 2021): win rates of 70-75%, average profit per trade of 35-45% of maximum credit (capturing profit before the 50% target in many trades due to rapid decay in low-volatility environments), minimal losses from the 200% limit triggers. Annual returns of 15-20% on capital committed to the strategy. Crisis periods (2008-2009, March 2020): win rates of 40-50%, frequent 200% loss limit triggers, annual return of negative 20-40% on capital committed.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Average Volume: What’s Normal for This Stock? Average daily volume varies enormously across stocks. Apple trades over',
+        text: '50 million shares per day. A small-cap biotech might trade 100,000. To determine whether today’s volume is noteworthy, compare it to the stock’s own average, not to the market as a whole. Most charting platforms display the average volume as a horizontal line on the volume chart or as a number in the quote data. As a general rule, any day with volume more than double the average deserves a closer look at what drove the activity. Chapter 31 — Five Chart Patterns Every Beginner Should Recognize Chart patterns are recurring formations that appear on price charts and suggest what is likely to happen next. You do not need to memorize dozens of patterns. Five is enough to start, and recognizing them will develop naturally as you spend more time looking at charts. This chapter introduces the five most common and most reliable patterns in their simplest form.',
+      },
     ]
   },
 {
@@ -9826,6 +11068,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'This is the classic pattern of a healthy, mature company. It generates enough cash from operations (positive CFO) to fund its investments (negative CFI) and still have enough left over to pay dividends or buy back shares (negative CFF). This is the most sustainable and desirable cash flow profile.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Cash from Operations Operating cash flow',
+        text: '— cash generated by the business from its core activities, before capital expenditure and financing decisions — is the least manipulable of the three major financial performance measures. While revenue and earnings can be influenced through accounting choices, operating cash flow requires actual cash to change hands and is therefore closer to economic reality. A business reporting strong earnings but generating weak operating cash flow over extended periods is communicating a significant analytical warning. The reconciliation between net income and operating cash flow reveals the non-cash items and working capital movements that create the difference between the two measures. Depreciation and amortisation, stock-based compensation, and deferred taxes are added back to net income because they reduce accounting earnings without consuming cash.',
       },
     ],
   },
@@ -9924,6 +11178,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Free Cash Flow = Operating Cash Flow ($500M) minus Capital Expenditures ($200M) = $300M. This $300M represents the cash truly available for discretionary uses — dividends, buybacks, debt paydown, or acquisitions — after the company has spent what it needs to maintain and grow its asset base.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: EV/FCF Enterprise value to free cash flow',
+        text: '(EV/FCF) is the capital-structure-neutral equivalent of P/FCF. It relates the total business value to the free cash flow available to all capital providers, removing the effect of leverage on the per-share metrics. This makes it particularly useful for comparing businesses with different capital structures or for assessing whether the equity value implied by the EV/FCF multiple appropriately reflects the financial leverage of the business. EV/FCF and EV/EBITDA will differ substantially for businesses with high capital expenditure requirements or significant working capital investment needs. The difference between the two multiples is a direct reflection of the capital intensity of the business — the more cash the business must reinvest simply to maintain its competitive position, the larger the gap between its EBITDA-based and FCF-based enterprise multiples.',
       },
     ],
   },
@@ -10100,6 +11366,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A $40M rise in AR is a $40M cash drain (cash not yet collected), while a $20M rise in AP is a $20M cash source (suppliers are effectively lending to you). Net impact: -$40M + $20M = -$20M drag on CFO. Working capital movements absolutely affect CFO under the indirect method.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: OCF-to-Net-Income Ratio The ratio of operating cash flow to net income',
+        text: '— sometimes called the cash conversion ratio — provides a quick and powerful indicator of earnings quality over time. In a high-quality business with genuine earnings, the ratio should average above 1.0 over multiple years: operating cash flow should exceed net income because depreciation (a non-cash charge) is added back to earnings in the cash flow statement. A ratio consistently below 0.8 over multiple years warrants serious investigation. A declining OCF-to-net-income ratio over time is more concerning than a low level in any single period. A single year of weak cash conversion can reflect timing differences in working capital or large one-time tax payments.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Cash as a Position Holding cash during confirmed bear markets is not “missing the market”',
+        text: '— it is the highest-conviction position available when the evidence says equity risk exceeds equity reward. Cash preserves capital, eliminates the stress of watching positions decline, and provides the ammunition to deploy aggressively when the bottom signals arrive.',
+      },
     ],
   },
   {
@@ -10192,6 +11476,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Goodwill impairment is a non-cash charge — no cash leaves the company when an impairment is recorded. In the indirect method, it reduces net income, and then it is added back in the operating section as a non-cash item. Net effect on CFO: zero. However, it signals that a past acquisition destroyed value.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: OCF-to-Net-Income Ratio The ratio of operating cash flow to net income',
+        text: '— sometimes called the cash conversion ratio — provides a quick and powerful indicator of earnings quality over time. In a high-quality business with genuine earnings, the ratio should average above 1.0 over multiple years: operating cash flow should exceed net income because depreciation (a non-cash charge) is added back to earnings in the cash flow statement. A ratio consistently below 0.8 over multiple years warrants serious investigation. A declining OCF-to-net-income ratio over time is more concerning than a low level in any single period. A single year of weak cash conversion can reflect timing differences in working capital or large one-time tax payments.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Full Mechanics: From Cash-Secured Put Through Covered Call The wheel begins with Phase',
+        text: '1: selling a cash-secured put on a stock the trader is willing to own at the put strike price. The strike is chosen to be below the current market price — typically 5-10% OTM — ensuring that assignment occurs only after a meaningful decline in the stock. The cash-secured put collects premium (income) while waiting for either of two outcomes: the put expires worthless (the stock stays above the strike, the premium is kept, and Phase 1 is repeated with a new put in the next expiration cycle), or the put is assigned (the stock has fallen to or below the strike, the trader purchases 100 shares at the strike price). If assigned, the wheel transitions to Phase 2: selling covered calls against the 100 shares now owned. The covered call strike is chosen above the current market price — typically 5-10% OTM — to allow for some stock appreciation before the shares are called away.',
+      },
     ],
   },
   {
@@ -10275,6 +11577,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'Economic FCF for Company A is $2B − $400M − $600M = $1.0B. For Company B it is $2B − $400M − $100M = $1.5B. Company B delivers 50% more economic free cash flow to shareholders. The identical reported FCF figures obscure this difference, which is exactly why adding SBC back to the FCF bridge misleads investors.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: OCF-to-Net-Income Ratio The ratio of operating cash flow to net income',
+        text: '— sometimes called the cash conversion ratio — provides a quick and powerful indicator of earnings quality over time. In a high-quality business with genuine earnings, the ratio should average above 1.0 over multiple years: operating cash flow should exceed net income because depreciation (a non-cash charge) is added back to earnings in the cash flow statement. A ratio consistently below 0.8 over multiple years warrants serious investigation. A declining OCF-to-net-income ratio over time is more concerning than a low level in any single period. A single year of weak cash conversion can reflect timing differences in working capital or large one-time tax payments.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Volume-Based Order Flow Signals Volume analysis extends to order flow: watching whether bid volume',
+        text: '(trades at the bid, initiated by sellers) or ask volume (trades at the ask, initiated by buyers) dominates at key levels. When price is testing resistance with predominantly bid-side volume (selling into resistance), a reversal is more probable. When testing resistance with ask-side buying, the break is more probable. Delta (ask volume minus bid volume) measures this directional pressure. Platforms like Bookmap and Jigsaw provide this analysis.',
       },
     ],
   },
@@ -10361,6 +11681,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Maintenance capex ≈ $500M × (1 − 0.20) = $500M × 0.80 = $400M. Growth capex = $700M − $400M = $300M. The logic is that a growing business needs proportionally less capex just to maintain current revenues because new assets are also being depreciated — D&A overstates replacement cost for a shrinking revenue base but understates it for a growing one.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Maintenance vs. Growth Capex The division of capital expenditure into maintenance',
+        text: '(required to sustain existing capacity) and growth (creating new capacity) is the most analytically important distinction in capital expenditure analysis. Maintenance capex is an unavoidable cost of running the business — equivalent economically to an operating expense — and should be treated as such when computing genuine free cash flow. Growth capex is discretionary investment that should be evaluated on the basis of the returns it is expected to generate. Most companies do not explicitly disclose the maintenance-growth split in their capital expenditure.',
+      },
     ],
   },
   {
@@ -10446,6 +11778,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Acquisitions are reported net of cash acquired. Company X effectively paid $3B but received $300M of cash from Company Y\'s balance sheet, so the net cash outflow recorded in investing activities is $3B − $300M = $2.7B. This netting convention can make large deals appear slightly smaller in the cash flow statement than the headline deal price suggests.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: OCF-to-Net-Income Ratio The ratio of operating cash flow to net income',
+        text: '— sometimes called the cash conversion ratio — provides a quick and powerful indicator of earnings quality over time. In a high-quality business with genuine earnings, the ratio should average above 1.0 over multiple years: operating cash flow should exceed net income because depreciation (a non-cash charge) is added back to earnings in the cash flow statement. A ratio consistently below 0.8 over multiple years warrants serious investigation. A declining OCF-to-net-income ratio over time is more concerning than a low level in any single period. A single year of weak cash conversion can reflect timing differences in working capital or large one-time tax payments.',
+      },
     ],
   },,
 {
@@ -10527,6 +11871,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Adjusted FCF = $500M − $200M − $150M = $150M. The asset sale proceeds are excluded because they are non-recurring. Using the unadjusted figure of $300M would overstate the company\'s sustainable cash generation by $150M.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: The Time and Sales Window: Reading the Tape The time and sales window',
+        text: '(the modern equivalent of the ticker tape) displays every trade as it occurs: the price, the quantity, and whether the trade occurred at the bid (selling pressure) or the ask (buying pressure). Skilled tape readers identify patterns of aggressive buying or selling, absorption, and exhaustion directly from this raw transaction data.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: What the Tape Records Time and Sales',
+        text: '— the tape — is a real-time feed of every executed trade: the price, the size, and the time. Unlike Level 2 which shows intent, the tape shows completed transactions. These prints are indisputable evidence of what actually happened in the market. The tape records every executed trade in real time. Unlike the order book (which shows intent), the tape shows completed transactions — indisputable evidence of what actually happened.',
+      },
     ]
   },
   {
@@ -10695,6 +12057,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Debt-funded buybacks with minimal operating cash flow ($50M vs $500M in new debt) are a red flag. The company is increasing financial risk by levering up its balance sheet. If business conditions worsen, it faces debt service obligations it cannot comfortably cover from operations. EPS increases mechanically from fewer shares, but the risk-adjusted value per remaining share may have declined.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: EV/FCF Enterprise value to free cash flow',
+        text: '(EV/FCF) is the capital-structure-neutral equivalent of P/FCF. It relates the total business value to the free cash flow available to all capital providers, removing the effect of leverage on the per-share metrics. This makes it particularly useful for comparing businesses with different capital structures or for assessing whether the equity value implied by the EV/FCF multiple appropriately reflects the financial leverage of the business. EV/FCF and EV/EBITDA will differ substantially for businesses with high capital expenditure requirements or significant working capital investment needs. The difference between the two multiples is a direct reflection of the capital intensity of the business — the more cash the business must reinvest simply to maintain its competitive position, the larger the gap between its EBITDA-based and FCF-based enterprise multiples.',
+      },
     ]
   },
   {
@@ -10777,6 +12151,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'FCF = $300M − $150M = $150M. FCF Coverage = $150M ÷ $200M = 0.75x. A ratio below 1.0x means the company is paying out more in dividends than it generates in free cash flow. It must cover the $50M shortfall by drawing on cash reserves, selling assets, or borrowing — none of which are sustainable long-term solutions.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Dividend Sustainability and Coverage Dividend sustainability analysis begins with the free cash flow payout ratio',
+        text: '— dividends paid divided by free cash flow generated — rather than the earnings payout ratio that most financial media reports. A business paying out 60% of earnings as dividends but generating free cash flow equal to only 80% of earnings has an effective free cash flow payout ratio of 75% — still manageable but providing less buffer than the earnings-based ratio suggests. A business where dividends equal 90% of reported earnings but 150% of free cash flow is running an unsustainable dividend programme regardless of the earnings coverage metric. Dividend cuts are among the most significant negative signals in equity markets because they reveal both deteriorating business performance and management overconfidence — management maintained the dividend longer than the business could support, creating a larger cut than if the dividend had been reduced proactively.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Growth vs. Income: Why Not Every Stock Pays a Dividend Many of the most successful stocks',
+        text: '— Amazon, Google, Tesla, Meta — pay no dividend at all. These companies reinvest every dollar of profit into growing the business because they believe the return on reinvested capital is higher than what shareholders could earn on their own. For young investors with a long time horizon, growth stocks that reinvest profits may generate higher total returns than dividend payers. For retirees who need current income, dividend stocks provide the cash flow necessary to cover living expenses. Your stage of life determines which matters more. Chapter 22 — Earnings Season: The Quarterly Report Card Four times a year, every public company releases its financial results for the previous quarter. This period, known as earnings season, is the most important recurring event for individual stock prices.',
+      },
     ]
   },
   {
@@ -10875,6 +12267,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'LFCF = UFCF − After-Tax Interest + Net Borrowing = $500M − ($100M × 0.75) + $50M = $500M − $75M + $50M = $475M. The interest tax shield reduces the effective cost of debt from $100M to $75M. Net borrowing is added because new debt provides additional cash available to equity holders (though it also increases future obligations).'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Free Cash Flow Free cash flow',
+        text: '— operating cash flow minus capital expenditure, or equivalently net income plus depreciation minus capex minus changes in working capital — is the fundamental measure of the cash available to the equity holders after all necessary reinvestment in the business. It is the cash flow that could theoretically be distributed to shareholders, used to pay down debt, reinvested at attractive returns, or returned through buybacks. For most valuation purposes, free cash flow is the most directly relevant financial metric. The most common error in free cash flow analysis is using total capex rather than maintenance capex, which produces a free cash flow figure that penalises businesses investing heavily for growth. A business investing $500 million in growth capex that will earn 20% returns is not "less free cash flow" — it is creating value.',
+      },
     ]
   },
 {
@@ -11063,6 +12467,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'FCF Conversion = $380M / $500M = 76%. For a consumer goods company, the typical benchmark is 70–90%, so 76% falls comfortably within normal range. Context matters enormously — the same 76% would be concerning for a software company (expected 80–110%) but above average for an airline or heavy industrial. Always benchmark conversion against sector peers, not an absolute threshold.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Earnings Quality Framework A systematic earnings quality assessment examines five dimensions: cash conversion',
+        text: '(does cash generation track earnings?), accrual quality (are non-cash accruals declining over time?), revenue quality (are revenue recognition policies conservative and consistently applied?), expense quality (are all recurring costs included in normalised earnings?), and management credibility (does management\'s description of business performance match the financial statement reality?). Scoring each dimension from high to low quality and combining the assessments produces an overall earnings quality rating that should directly influence the valuation approach. High-quality earnings in all five dimensions can be capitalised at a low earnings yield (high P/E multiple), because the risk that the reported earnings are misleading is low.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Win Rate, Profit Factor, and Expectancy Win rate alone is meaningless without the payoff ratio. Profit factor',
+        text: '(gross profit divided by gross loss) provides a single number that captures the system’s overall profitability: values above 1.5 indicate a robust system; values between 1.0 and 1.5 indicate a marginal system that is vulnerable to cost erosion; values below 1.0 indicate a losing system.',
+      },
     ]
   },
   {
@@ -11146,6 +12568,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'FCF = $1.2B − $0.4B = $0.8B. FCF per share = $0.8B / 500M shares = $1.60. Operating CF per share would be $1.2B / 500M = $2.40, but that doesn\'t subtract the capex required to sustain the business. The $1.60 FCF per share is the more conservative and more meaningful figure for assessing true per-share value creation.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Why Per-Share Metrics Matter Aggregate business metrics',
+        text: '— total revenue, total EBITDA, total free cash flow — measure the performance of the business as an enterprise. Per-share metrics — revenue per share, earnings per share, free cash flow per share — measure the performance that accrues to each unit of ownership. For long-term investors holding a fixed number of shares, only per-share metrics matter: an aggregate that grows while share count grows proportionally delivers no improvement in per-share economics and no per-share value creation. The distinction between aggregate and per-share growth is most material in businesses with significant and persistent share issuance. A technology company growing total revenues at 25% while issuing 8% net new shares annually is delivering only 17% per-share revenue growth.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Earnings Per Share',
+        text: '(EPS): The Number Everyone Watches Earnings per share is the company’s total net income divided by the number of shares outstanding. If a company earns $10 billion with 5 billion shares outstanding, EPS is $2.00. Analysts publish consensus EPS estimates before the report, and the stock’s reaction depends heavily on whether the reported EPS beats, meets, or misses that consensus. A one-cent miss can cause a 5–10% stock decline. A significant beat can cause a similar rally. The absolute number matters less than the number relative to expectations.',
+      },
     ]
   },
   {
@@ -11232,6 +12672,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'CFO / (Capex + Debt Repayments + Dividends) = $2.1B / ($1.2B + $0.4B + $0.6B) = $2.1B / $2.2B = 0.955. This rounds to approximately 0.95, meaning option B is actually the correct interpretation. The utility is slightly below self-sufficiency and requires modest external funding annually. For a regulated utility with predictable cash flows, 0.95 is a borderline adequate ratio — below 0.90 over multiple years would be genuinely concerning. The correct answer is B: 0.95, slightly below self-sufficiency.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Dividend Sustainability and Coverage Dividend sustainability analysis begins with the free cash flow payout ratio',
+        text: '— dividends paid divided by free cash flow generated — rather than the earnings payout ratio that most financial media reports. A business paying out 60% of earnings as dividends but generating free cash flow equal to only 80% of earnings has an effective free cash flow payout ratio of 75% — still manageable but providing less buffer than the earnings-based ratio suggests. A business where dividends equal 90% of reported earnings but 150% of free cash flow is running an unsustainable dividend programme regardless of the earnings coverage metric. Dividend cuts are among the most significant negative signals in equity markets because they reveal both deteriorating business performance and management overconfidence — management maintained the dividend longer than the business could support, creating a larger cut than if the dividend had been reduced proactively.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Fund Flow Data: When Money Movement Confirms',
+        text: '(or Contradicts) Price Sustained mutual fund and ETF inflows during a market decline indicate that buy-the-dip demand remains strong — a bullish undercurrent. Sustained outflows during a market advance indicate that participants are selling into strength — distribution. The timing value of fund flows is as a confirmation or contradiction of price signals: a breakout confirmed by inflows has higher conviction than a breakout accompanied by outflows.',
+      },
     ]
   },
   {
@@ -11329,6 +12787,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A persistent and large gap between net income ($800M) and CFO ($120M) — an implied conversion rate of just 15% — over three consecutive years is a serious red flag that demands investigation, not acceptance. The correct response is to quantify the accrual buildup (accrual ratio), measure DSO trends, and examine receivable aging disclosures. Using EBITDA to sidestep the problem ignores it entirely. Three consecutive years of the same pattern is precisely the threshold at which academic research shows fraud probability rises sharply.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: OCF-to-Net-Income Ratio The ratio of operating cash flow to net income',
+        text: '— sometimes called the cash conversion ratio — provides a quick and powerful indicator of earnings quality over time. In a high-quality business with genuine earnings, the ratio should average above 1.0 over multiple years: operating cash flow should exceed net income because depreciation (a non-cash charge) is added back to earnings in the cash flow statement. A ratio consistently below 0.8 over multiple years warrants serious investigation. A declining OCF-to-net-income ratio over time is more concerning than a low level in any single period. A single year of weak cash conversion can reflect timing differences in working capital or large one-time tax payments.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Full Mechanics: From Cash-Secured Put Through Covered Call The wheel begins with Phase',
+        text: '1: selling a cash-secured put on a stock the trader is willing to own at the put strike price. The strike is chosen to be below the current market price — typically 5-10% OTM — ensuring that assignment occurs only after a meaningful decline in the stock. The cash-secured put collects premium (income) while waiting for either of two outcomes: the put expires worthless (the stock stays above the strike, the premium is kept, and Phase 1 is repeated with a new put in the next expiration cycle), or the put is assigned (the stock has fallen to or below the strike, the trader purchases 100 shares at the strike price). If assigned, the wheel transitions to Phase 2: selling covered calls against the 100 shares now owned. The covered call strike is chosen above the current market price — typically 5-10% OTM — to allow for some stock appreciation before the shares are called away.',
+      },
     ]
   },
 {
@@ -11400,6 +12876,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'SGR = ROE × Retention Ratio = 18% × (1 − 0.40) = 18% × 0.60 = 10.8%. The company can grow equity and, theoretically, revenue at 10.8% per year without needing external capital.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Reinvestment Rate Formula Sustainable growth = reinvestment rate × ROIC. A business earning',
+        text: '20% ROIC retaining 50% sustains 10% growth. One earning 8% retaining 100% sustains only 8% while returning nothing to shareholders. This quantitative link between quality and growth underpins the entire framework.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Rate Curve Fundamental Drivers Curve steepening fundamental drivers: growth acceleration',
+        text: '(long rates rise faster), Fed easing beginning (short rates fall faster), inflation uncertainty (term premium rises). Curve flattening fundamental drivers: growth deceleration (long rates fall), Fed tightening (short rates rise faster), global safe-haven demand for long bonds. Each regime favors specific curve trades. Identifying which driver is operating requires integrating economic data, Fed signals, and global conditions simultaneously.',
+      },
     ]
   },
   {
@@ -11479,6 +12973,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'CROIC = $800M / $2,400M = 33.3%. This is a high figure by any standard and is consistent with a business that has a durable competitive advantage — strong pricing power, low incremental capital needs, or a dominant network effect. It is not inherently suspicious; many capital-light businesses sustain CROICs in this range for decades.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Capital Intensity and the Cash Flow Cycle Capital-intensive cyclical businesses',
+        text: '— steel, mining, chemicals, oil and gas — have a particularly complex relationship between earnings and cash flow because capital expenditure requirements are themselves cyclical. During downturns, maintenance capital requirements decline as asset utilisation falls and discretionary investment is deferred. During recoveries, the combination of operating leverage and deferred maintenance creates periods of very high free cash flow generation that are as cyclically inflated as the earnings they accompany. Normalising free cash flow for a capital-intensive cyclical requires normalising both the earnings and the capital expenditure simultaneously. The working capital cycle in capital-intensive cyclicals adds a further layer of cash flow volatility. During commodity price upswings, rising inventory values and receivables consume cash as the business scales up.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: The Capital Efficiency Advantage Futures offer',
+        text: '10–33x leverage on posted capital compared to 2x for stock margin and far less for most options strategies. A $10,000 futures account can control $100,000–$300,000 of notional exposure, which means that a 1% move in the underlying produces 10–30% returns on capital. This capital efficiency is why futures are attractive to sophisticated traders who would rather allocate capital to several different strategies than tie it up in lower-leveraged instruments. Of course, the same leverage magnifies losses equally — which is why Part III covers risk management in depth. 8.2 24-Hour Market Access Most major futures contracts trade nearly 23 hours per day via electronic platforms, compared to 6.5 hours for US cash equities. This access matters for traders who want to react to overnight news, for non-US traders in different time zones, and for strategies that profit from session transitions.',
+      },
     ]
   },
   {
@@ -11571,6 +13083,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Cash collected from customers ≈ Revenue − Increase in Accounts Receivable = $200M − $30M = $170M. The $30M increase in receivables means that portion of revenue was earned but not yet collected as cash. This is the core insight the direct method surfaces directly; under the indirect method, it appears buried as a working capital adjustment.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Cash from Operations Operating cash flow',
+        text: '— cash generated by the business from its core activities, before capital expenditure and financing decisions — is the least manipulable of the three major financial performance measures. While revenue and earnings can be influenced through accounting choices, operating cash flow requires actual cash to change hands and is therefore closer to economic reality. A business reporting strong earnings but generating weak operating cash flow over extended periods is communicating a significant analytical warning. The reconciliation between net income and operating cash flow reveals the non-cash items and working capital movements that create the difference between the two measures. Depreciation and amortisation, stock-based compensation, and deferred taxes are added back to net income because they reduce accounting earnings without consuming cash.',
+      },
     ]
   },
   {
@@ -11644,6 +13168,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'For seasonal businesses, only the full fiscal year operating cash flow gives a meaningful picture of annual cash generation. Annualizing any individual quarter — whether the strong Q4 or the cash-consuming Q1 — produces wildly distorted estimates. The full year naturally nets out the inventory build against the sell-through cash inflows.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Capital Intensity and the Cash Flow Cycle Capital-intensive cyclical businesses',
+        text: '— steel, mining, chemicals, oil and gas — have a particularly complex relationship between earnings and cash flow because capital expenditure requirements are themselves cyclical. During downturns, maintenance capital requirements decline as asset utilisation falls and discretionary investment is deferred. During recoveries, the combination of operating leverage and deferred maintenance creates periods of very high free cash flow generation that are as cyclically inflated as the earnings they accompany. Normalising free cash flow for a capital-intensive cyclical requires normalising both the earnings and the capital expenditure simultaneously. The working capital cycle in capital-intensive cyclicals adds a further layer of cash flow volatility. During commodity price upswings, rising inventory values and receivables consume cash as the business scales up.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: YM Seasonality The Dow has some historical seasonal patterns: stronger late-year performance',
+        text: '("Santa rally"), weaker summer periods, and positive pre-election returns during election years. These patterns are well-documented but too weak to serve as standalone trading signals — they provide context rather than edge. Seasonal patterns in YM should be combined with technical and fundamental analysis rather than relied on alone; a seasonal tailwind can be overwhelmed by a strong opposing fundamental catalyst.',
+      },
     ]
   },
   {
@@ -11814,6 +13356,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Terminal value represents the present value of all cash flows from the end of the projection period into infinity. Since the projection period is typically only 5-10 years, the vast majority of a company\'s lifetime value is captured in the terminal value.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: EV/FCF Enterprise value to free cash flow',
+        text: '(EV/FCF) is the capital-structure-neutral equivalent of P/FCF. It relates the total business value to the free cash flow available to all capital providers, removing the effect of leverage on the per-share metrics. This makes it particularly useful for comparing businesses with different capital structures or for assessing whether the equity value implied by the EV/FCF multiple appropriately reflects the financial leverage of the business. EV/FCF and EV/EBITDA will differ substantially for businesses with high capital expenditure requirements or significant working capital investment needs. The difference between the two multiples is a direct reflection of the capital intensity of the business — the more cash the business must reinvest simply to maintain its competitive position, the larger the gap between its EBITDA-based and FCF-based enterprise multiples.',
+      },
     ],
   },
   {
@@ -11904,6 +13458,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Cyclical companies often show deceptively low P/E ratios at earnings peaks because the market anticipates that profits will fall. Buying cyclicals at low P/E (peak earnings) is a classic value trap. Paradoxically, the best time to buy cyclicals is often when P/E is high or negative (trough earnings).',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Stocks-to-Use Ratio as Price Driver Ending stocks divided by total use = stocks-to-use',
+        text: '(S/U) ratio. This single metric explains the majority of corn, wheat, and soybean price variation historically. Low S/U (under 10% for corn) = tight supply, high price risk = prices typically elevated. High S/U (above 18%) = ample supply = prices typically lower. The price-S/U relationship is well-documented for each grain: specific S/U percentages correspond historically to specific price ranges. Building a model that projects S/U from planting, yield, and demand assumptions directly projects price. In agricultural markets, the most powerful word in fundamental analysis is \'deficit.\' When ending stocks drop below 10% of use, prices don\'t just rise — they spike. History shows that supply deficits produce non-linear price responses, rewarding those who identify them before the USDA makes them official.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Screen for Value Stocks Basic value screens: P/E ratio below the industry average. Price-to-book below',
+        text: '2.0. Dividend yield above the market average. Debt-to-equity below 1.0. Free cash flow yield above 5%. These filters identify statistically cheap stocks, but the screen is just the starting point. You must investigate why the stock is cheap. Is it cheap because the market is irrationally fearful, or because the business is genuinely deteriorating? The former is a buying opportunity. The latter is a value trap.',
+      },
     ],
   },
   {
@@ -11978,6 +13550,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Banks\' balance sheets consist primarily of financial assets and liabilities that are regularly valued at or near market prices. This makes their book value a more accurate reflection of actual economic value compared to, say, a tech company whose most valuable assets (IP, brand, talent) do not appear on the balance sheet.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Screen for Value Stocks Basic value screens: P/E ratio below the industry average. Price-to-book below',
+        text: '2.0. Dividend yield above the market average. Debt-to-equity below 1.0. Free cash flow yield above 5%. These filters identify statistically cheap stocks, but the screen is just the starting point. You must investigate why the stock is cheap. Is it cheap because the market is irrationally fearful, or because the business is genuinely deteriorating? The former is a buying opportunity. The latter is a value trap.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Book Value and Price-to-Book Book value of equity',
+        text: '— total assets minus total liabilities — is the primary valuation anchor for banks because the assets and liabilities are predominantly financial instruments measured at or near market value, making the book value a reasonable approximation of the economic net worth of the business. Price-to-book multiples — the ratio of market capitalisation to book value of equity — are therefore more meaningful for banks than for most other businesses, where book value reflects historical cost accounting that diverges significantly from economic value. Tangible book value — book value minus goodwill and intangible assets from acquisitions — is a stricter measure of the economic equity base that excludes the intangible assets whose value is most uncertain.',
       },
     ],
   },
@@ -12234,6 +13824,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'First, calculate D₁ = $2.00 * (1 + 0.04) = $2.08. Then, P₀ = D₁ / (r - g) = $2.08 / (0.10 - 0.04) = $2.08 / 0.06 = $34.67. The most common mistake is using the current dividend ($2.00) instead of next year\'s dividend ($2.08), which would incorrectly give $33.33.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Multi-Stage DDM The multi-stage dividend discount model allows the analyst to model distinct phases of dividend growth',
+        text: '— a high-growth phase reflecting the current investment cycle, a transition phase representing slowing growth as the business matures, and a terminal phase representing sustainable steady-state growth. This structure accommodates the realistic trajectory of most businesses more accurately than the single-stage GGM while remaining tractable to build and interpret. The most common two-stage DDM projects dividends explicitly for a 5-10 year high-growth period and then applies a GGM terminal value. A three-stage model adds a middle transition period where growth decelerates smoothly from the high initial rate to the sustainable terminal rate, which better reflects the gradual maturation of business models.',
+      },
     ],
   },,
 {
@@ -12314,6 +13916,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'P/S Ratio = Market Capitalization / Annual Revenue = $6B / $2B = 3.0x. Investors are paying $3 for every $1 of annual revenue the company generates.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Screen for Value Stocks Basic value screens: P/E ratio below the industry average. Price-to-book below',
+        text: '2.0. Dividend yield above the market average. Debt-to-equity below 1.0. Free cash flow yield above 5%. These filters identify statistically cheap stocks, but the screen is just the starting point. You must investigate why the stock is cheap. Is it cheap because the market is irrationally fearful, or because the business is genuinely deteriorating? The former is a buying opportunity. The latter is a value trap.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Price-to-Sales Price-to-sales is most appropriate for businesses that are either pre-profit',
+        text: '(where no earnings metric exists to anchor the multiple) or businesses where profitability is temporarily or structurally depressed below normalised levels (where earnings multiples would produce extremely high or negative numbers that are uninformative). For high-growth SaaS businesses that are loss-making while investing in customer acquisition, P/S is often the primary valuation metric used by analysts and investors. The key analytical requirement for using P/S meaningfully is an independent view on what normalised profit margin the business will eventually achieve — because a P/S multiple is only meaningfully comparable to other businesses if those businesses have similar ultimate margin profiles. A business with 5% normalised operating margins trading at 3x sales is priced at 60x normalised operating income.',
       },
     ],
   },
@@ -12405,6 +14025,24 @@ export const articles: Article[] = [
         explanation:
           'Standard FCF = Operating Cash Flow - Total Capex = $500M - ($150M + $100M) = $500M - $250M = $250M. Note: the standard definition subtracts all capex. Owner earnings would use only the $100M maintenance capex, giving $400M.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Free Cash Flow Yield Screens Free cash flow yield',
+        text: '— normalised free cash flow divided by market capitalisation — is the most direct measure of the return the investor is purchasing per dollar of market price. Screens that identify businesses trading above a specified FCF yield threshold produce candidates where the investor is receiving substantial cash generation relative to price, with the potential for capital appreciation if the multiple re-rates toward fair value. This starting screen is superior to earnings yield screens because free cash flow is less susceptible to accrual distortion. The critical refinement of any FCF yield screen is to use normalised rather than reported free cash flow in the numerator. Businesses at cyclical troughs, businesses with temporarily elevated maintenance capital requirements, and businesses with large one-time cash outflows will show artificially depressed FCF yields in any given year.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: The Three Pillars: Price, Volume, Order Flow Everything in this book builds on three inputs: price',
+        text: '(what was paid), volume (how much was traded), and order flow (who was the aggressor). Master all three together and you will understand any market move you encounter. These three dimensions capture the complete record of every auction transaction — there is nothing else to know about what happened. Most traders focus on price alone and wonder why their results are mediocre. Add volume and you see twice as much; add order flow and you see everything available to be seen through public market data.',
+      },
     ],
   },
   {
@@ -12491,6 +14129,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Steel plants and other heavy industrial assets depreciate rapidly and must be replaced, making depreciation a real ongoing economic cost rather than a mere accounting entry. EV/EBIT captures this cost; EV/EBITDA ignores it, overstating true profitability.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Negative Working Capital as Competitive Signal Businesses with structurally negative working capital',
+        text: '— where customer prepayments and supplier credit terms provide more cash than the inventory and receivable investment requires — are using other people money to fund their operations. Insurance companies collect premiums before paying claims. Subscription businesses collect annual fees before delivering services. Retailers collect cash from customers days before paying suppliers. The negative working capital businesses are the most capital-efficient and generate the highest free cash flow relative to earnings because growth actually releases cash rather than consuming it. Chapter 19 — Beneish M-Score, Piotroski F-Score, and Forensic Frameworks',
       },
     ],
   },
@@ -12585,6 +14235,24 @@ export const articles: Article[] = [
         explanation:
           'A reverse DCF takes the current market price as given and solves for the implied growth rate. This tells you what growth performance the company must deliver to justify its current valuation, which is more practically testable than a forward DCF\'s output.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Reverse Engineering Market Assumptions Reverse engineering',
+        text: '— also called implied value analysis or reverse DCF — works backward from the current market price to identify the combination of assumptions that would make the current price equal to the DCF intrinsic value. This approach is particularly powerful for well-covered large-cap companies where the analyst does not believe they have an information advantage in forecasting near-term earnings. Rather than claiming to know future earnings better than the market, the analyst asks: what must the market be assuming about growth, margins, and competitive durability, and are those assumptions reasonable? The practical implementation of reverse DCF requires solving for the revenue growth rate (or operating margin, or terminal growth rate) that makes the DCF equal to the current price, holding all other assumptions at the base case.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Roth IRA: No Deduction Now, Tax-Free Growth Forever A Roth IRA works in reverse: you contribute after-tax dollars',
+        text: '(no deduction), but your investments grow completely tax-free and withdrawals in retirement are tax-free. This is arguably the most powerful retirement account available because decades of compound growth are never taxed. The same contribution limits apply. There are income limits for Roth IRA eligibility, but the backdoor Roth conversion provides a workaround for higher earners. If you are young and expect your income to grow over time, the Roth IRA is almost certainly the better choice because you pay taxes now at your lowest lifetime rate. 11.4 401(k) and 403(b): What Your Employer Offers A 401(k) is an employer-sponsored retirement plan that allows you to contribute up to $23,500 per year from your paycheck. Many employers match a portion of your contribution — typically 50–100% of the first 3–6% of your salary.',
+      },
     ],
   },
   {
@@ -12666,6 +14334,18 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation:
           'SOTP Enterprise Value = $4B + $6B + $2B = $12B. Equity Value = SOTP EV + Corporate Cash - Corporate Debt = $12B + $0.5B - $3B = $9.5B.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Sum-of-Parts for Healthcare Conglomerates Large diversified healthcare conglomerates',
+        text: '— companies combining pharmaceutical operations, medical device businesses, consumer health products, and sometimes contract manufacturing — are appropriately valued using sum-of-parts analysis that separately values each business segment with the methodology appropriate to its economics. The pharmaceutical segment deserves the pipeline-adjusted DCF framework capturing both current product cash flows and future pipeline value. The medical device segment deserves a multiple based on comparable stand-alone device companies. The consumer health segment deserves a consumer staples framework emphasising brand value and pricing power. The sum-of-parts value for healthcare conglomerates often significantly exceeds the conglomerate trading multiple, creating persistent structural discounts that have repeatedly attracted activist investor attention and driven major portfolio restructuring.',
       },
     ],
   },
@@ -12755,6 +14435,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Median is preferred because it is resistant to outliers. A single company trading at 50x EBITDA would dramatically skew the mean upward, making it unrepresentative. The median multiple reflects the central tendency of the peer group without this distortion.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Wall Street: From Buttonwood Tree to Global Powerhouse In',
+        text: '1792, twenty-four stockbrokers signed the Buttonwood Agreement under a tree on Wall Street in lower Manhattan, creating what would eventually become the New York Stock Exchange. For more than two centuries, the NYSE has been the center of American capitalism. It survived the Civil War, two World Wars, the Great Depression, multiple panics, and the rise of electronic trading. The physical trading floor — once crowded with shouting traders in colorful jackets — is now largely symbolic, as most trading is electronic. But the institution remains the world’s largest stock exchange by market capitalization.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Tick Values in Short-End Contracts Despite their shorter duration, ZT and ZF have tick values comparable to ZN',
+        text: '($7.8125 vs. $15.625 for ZN) because of their larger face values and finer tick increments. This means dollar P&L per basis point of yield movement is roughly similar across ZT, ZF, ZN — though yield movement itself varies across the curve. Short-end contracts typically show smaller yield moves per session but can be leveraged for meaningful P&L on large Fed policy shifts.',
       },
     ],
   },
@@ -12849,6 +14547,18 @@ export const articles: Article[] = [
         explanation:
           'Control Premium = (Acquisition Price - Pre-Announcement Price) / Pre-Announcement Price = ($56 - $40) / $40 = $16 / $40 = 40%. The acquirer paid a 40% premium to gain control of the business.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Synthesising Transaction Analysis Precedent transaction analysis is most valuable when used in conjunction with',
+        text: '— not instead of — comparable company analysis and DCF. The three methods provide different perspectives: DCF provides the intrinsic economic value based on estimated future cash flows; comparable company analysis provides the current market value based on how similar businesses are currently priced; and transaction analysis provides the full private market value including the control premium that strategic and financial buyers have historically been willing to pay. A valuation that uses all three approaches and produces consistent ranges provides high analytical confidence.',
+      },
     ],
   },
   {
@@ -12939,6 +14649,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Residual Income = Net Income - (Equity Capital × Cost of Equity) = $120M - ($800M × 10%) = $120M - $80M = $40M. The company earned $40M above the minimum return shareholders required.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Limitations of DDM The residual income model',
+        text: '— an alternative to both DDM and enterprise-level DCF — values equity as the current book value plus the present value of future residual income, where residual income in each period equals net income minus the equity charge (book equity multiplied by the cost of equity). The intuition is straightforward: a business is worth its current book value plus the present value of all future earnings in excess of the return shareholders require on the capital already invested. The residual income model is particularly useful for financial institutions — where book value is economically meaningful and cash flows are difficult to define — and for businesses where the dividend policy does not reflect the underlying economics.',
       },
     ],
   },
@@ -13035,6 +14757,24 @@ export const articles: Article[] = [
         explanation:
           'A Tobin\'s Q of 0.6 means the market values the company at 60 cents for every dollar it would cost to replace its assets. This suggests the market expects the business to generate poor returns on assets — or that the assets can be acquired more cheaply through the public market than by building from scratch.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Asset Replacement Cost Replacement cost valuation',
+        text: '— estimating what it would cost to recreate the productive assets of an existing business from scratch at current construction costs — provides a useful cross-check for capital-intensive industrials. When a business trades at a significant discount to its replacement cost, potential acquirers or new entrants face a structural disincentive to invest in new capacity because they can acquire existing capacity more cheaply by purchasing the business. This dynamic supports the floor value and provides downside protection that income-based valuation alone cannot capture. EV per unit of productive capacity — EV per tonne of steel capacity, EV per barrel of refining capacity, EV per megawatt of generation capacity — provides a physical asset comparison that cuts through accounting differences to compare businesses on the basis of what their productive infrastructure is worth in the market.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Tactical Allocation Timing Monthly signal-based allocation ranks asset classes',
+        text: '(US equity, international equity, bonds, REITs, commodities) by their 10-month SMA status. Assets above their 10-month SMA receive allocation; those below receive zero. Monthly rebalancing captures the rotation. This approach has matched endowment-level returns with dramatically lower drawdowns.',
+      },
     ],
   },
   {
@@ -13115,6 +14855,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Dividend Yield = Annual Dividends Per Share / Stock Price = $2.40 / $40 = 6.0%. The investor receives 6 cents in dividends for every dollar invested at the current price.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Dividend Yield as Signal Dividend yield',
+        text: '— the annualised dividend per share divided by the stock price — provides a direct measure of the cash income component of the total return. For income-oriented investors and in market environments where the yield spread between equities and bonds is compressed, dividend yield is an important valuation consideration. Historically, periods when the dividend yield on the broad equity market has been materially below the risk-free rate have been associated with subsequent below-average equity market returns.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Building a Dividend Portfolio: Quality Over Yield The temptation is to buy the highest-yielding stocks. Resist it. A',
+        text: '10% yield often indicates a stock in distress whose dividend is about to be cut. Focus instead on companies with moderate yields (2–4%), strong earnings coverage (payout ratio below 60%), consistent dividend growth history (10+ years of increases), and competitive advantages that protect future earnings. A portfolio of 15–20 dividend growth stocks across diverse sectors provides a growing income stream with lower risk than a concentrated portfolio of high-yield stocks.',
       },
     ],
   },
@@ -13278,6 +15036,18 @@ export const articles: Article[] = [
         explanation:
           'Gross Profit = Revenue × Gross Margin = $400M × 75% = $300M. EV/Gross Profit = Enterprise Value / Gross Profit = $5B / $300M = 16.7x.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Gross Profit and Margin Gross profit',
+        text: '— revenue minus cost of goods sold — and the gross margin percentage derived from it reveal the fundamental economics of the core business before any consideration of overhead costs, research, or selling expenses. A high gross margin indicates that the business has pricing power over its inputs — that customers value the product sufficiently to pay a significant premium above the direct cost of producing it. This pricing power is the foundation of all sustainable competitive advantage. Gross margin trends over time are more informative than the absolute level. A business whose gross margin is expanding as it scales is demonstrating operational leverage — its revenues are growing faster than its variable costs, which is the signature of a business with genuine competitive advantages.',
+      },
     ],
   },
   {
@@ -13360,6 +15130,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Property Value = NOI / Cap Rate = $200M / 5% = $200M / 0.05 = $4.0B. The cap rate translates an income stream into an asset value, similar to a P/E multiple in equities.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Real Estate and Infrastructure Real estate asset valuation uses three primary approaches: the income approach',
+        text: '(capitalising net operating income at a market cap rate to produce asset value), the comparable sales approach (comparing recent sales of similar properties), and the replacement cost approach (estimating the cost to build an equivalent property new, adjusted for depreciation). For stabilised income-producing properties, the income approach — dividing annual net operating income by the prevailing market cap rate — is the primary method and is most directly comparable to a perpetuity DCF. Infrastructure assets — toll roads, ports, airports, utilities, pipelines — are typically valued using a DCF of contracted or regulated cash flows, with the terminal value grounded in the assumed remaining useful life and terminal NAV of the physical assets.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Real Estate Investment Trusts',
+        text: '(REITs) and Property Indices REITs trade like equities but are fundamentally driven by interest rates, rental income, and property values. Technical analysis of REIT ETFs requires awareness of their high sensitivity to bond yields: a breakout in the 10-year yield often triggers a breakdown in REIT charts, even when the equity market is otherwise healthy.',
       },
     ],
   },
@@ -13464,6 +15252,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'The terminal value at the end of year 5 uses the Gordon Growth Model with the terminal growth rate: TV = FCF_5 × (1 + g) / (WACC - g) = FCF_5 × (1 + 0.03) / (0.10 - 0.03). This is then discounted back to today using (1 + WACC)^5.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Multi-Stage DDM The multi-stage dividend discount model allows the analyst to model distinct phases of dividend growth',
+        text: '— a high-growth phase reflecting the current investment cycle, a transition phase representing slowing growth as the business matures, and a terminal phase representing sustainable steady-state growth. This structure accommodates the realistic trajectory of most businesses more accurately than the single-stage GGM while remaining tractable to build and interpret. The most common two-stage DDM projects dividends explicitly for a 5-10 year high-growth period and then applies a GGM terminal value. A three-stage model adds a middle transition period where growth decelerates smoothly from the high initial rate to the sustainable terminal rate, which better reflects the gradual maturation of business models.',
       },
     ],
   },,
@@ -13629,6 +15429,24 @@ export const articles: Article[] = [
         options: ['Earnings per share', 'Price-to-book ratio', 'Free cash flow yield', 'Dividend yield'],
         correctIndex: 2,
         explanation: 'Free cash flow is harder to manipulate than reported earnings because it tracks actual cash entering and leaving the business. Earnings can be inflated through accounting choices like revenue recognition timing or depreciation methods, but cash flow is more concrete.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Screen for Value Stocks Basic value screens: P/E ratio below the industry average. Price-to-book below',
+        text: '2.0. Dividend yield above the market average. Debt-to-equity below 1.0. Free cash flow yield above 5%. These filters identify statistically cheap stocks, but the screen is just the starting point. You must investigate why the stock is cheap. Is it cheap because the market is irrationally fearful, or because the business is genuinely deteriorating? The former is a buying opportunity. The latter is a value trap.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Identifying Value Creators and Destroyers Screening by EVA identifies businesses with genuine competitive advantages',
+        text: '(persistent positive EVA) versus value destroyers (persistent negative EVA). The EVA trend — growing, stable, or declining — is as important as the level. Growing EVA indicates improving competitive position or profitable reinvestment. Declining EVA warns of moat erosion that may appear in the EVA calculation before it shows in reported earnings.',
       },
     ],
   },
@@ -14199,6 +16017,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Three board members independently purchasing $300,000 each on the open market is cluster buying — the strongest insider signal. Restricted stock awards, option exercises followed by sales, and performance share grants are all compensation-related transactions that do not require a bullish view on the stock.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Insider Trading as Forensic Signal Systematic insider selling',
+        text: '— particularly when multiple executives sell simultaneously, when the selling occurs shortly before negative announcements, or when the volume of selling is large relative to the insider total holdings — is one of the strongest non-financial forensic signals available. SEC Form 4 filings disclose all insider transactions within two business days. Monitoring these filings for portfolio holdings provides early warning of management confidence changes that precede financial deterioration.',
+      },
     ],
   },
   {
@@ -14288,6 +16118,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: "The fair value of the stake is 40% × $3B = $1.2B. The company carries it at $400M. The difference — $800M — is the understated value not reflected in the book value. An investor who notices this has identified $800M in value the market may be ignoring.",
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Balance Sheet Strength Assessment The balance sheet strength assessment examines five dimensions: liquidity',
+        text: '(can the business meet its near-term obligations without distress?), leverage (is the total financial burden — including hidden liabilities — appropriate for the cyclicality and stability of the business?), asset quality (are the carrying values of the major asset categories consistent with their economic value?), working capital efficiency (are receivables, inventory, and payables at levels appropriate for the business model and competitive position?), and off-balance-sheet obligations (are the footnote-disclosed commitments material relative to reported debt and equity?). The balance sheet assessment for each dimension produces a qualitative rating — strong, adequate, or concerning — that collectively determines the overall balance sheet quality rating.',
       },
     ],
   },
@@ -14851,6 +16699,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A low P/E relative to historical averages is only meaningful if historical earnings are a valid guide to future earnings. When a business faces secular demand destruction from technology substitution, the historical P/E becomes an irrelevant anchor — the multiple is compressing because the market is correctly pricing in structurally lower earnings power. This is the classic value trap: cheap on historical multiples, but not cheap on forward fundamentals.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Screen for Value Stocks Basic value screens: P/E ratio below the industry average. Price-to-book below',
+        text: '2.0. Dividend yield above the market average. Debt-to-equity below 1.0. Free cash flow yield above 5%. These filters identify statistically cheap stocks, but the screen is just the starting point. You must investigate why the stock is cheap. Is it cheap because the market is irrationally fearful, or because the business is genuinely deteriorating? The former is a buying opportunity. The latter is a value trap.',
+      },
     ],
   },
   {
@@ -14951,6 +16811,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'In the Magic Formula, lower combined rank is better. Company A: rank 2 (earnings yield) + rank 8 (ROIC) = 10. Company B: rank 6 (earnings yield) + rank 1 (ROIC) = 7. Company B wins with a combined rank of 7 vs Company A\'s 10. Company B offers a more attractive blend of quality and value, even though Company A is individually cheaper. This illustrates how the formula avoids pure value traps by requiring quality to co-exist with cheapness.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Building a Value-Quality Composite Joel Greenblatt popularised the value-quality composite as the "magic formula"',
+        text: '— ranking all stocks by earnings yield and return on capital simultaneously. Securities ranking highly on both dimensions have historically outperformed those ranking highly on either alone. Academic research confirms that the magic formula and its variants produce significant excess returns across multiple markets, though returns have been more modest in recent years as the approach has become widely known.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: The Post-Loss Cooldown Protocol After a loss, a specific protocol: step away from the screen for',
+        text: '10 minutes, journal the loss (what happened, what you learned), return only when emotionally neutral. This cooldown prevents revenge trading. If you cannot become emotionally neutral, stop trading for the day. The cooldown is non-negotiable.',
+      },
     ],
   },
   {
@@ -15035,6 +16913,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'When the fairness opinion values the business at a 35% premium to the stock but management is only offering 15%, there is a 20-percentage-point gap that flows from public shareholders to management. This is a red flag suggesting the MBO is extracting value from public investors. In this scenario, shareholders should push for a higher offer through board pressure or by seeking a competing strategic bid during the go-shop period.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: The Pivot Point The pivot point is the specific price level where the buy signal fires',
+        text: '— typically the handle’s high plus $0.10. This is not a general zone; it is an exact price. The timing discipline: do not enter before the pivot is reached, and do not chase more than 5% above the pivot. Buying at the pivot ensures that every element of the pattern has confirmed before capital is committed.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Pitchfork Break as a Trend Change Signal When price breaks decisively below the lower parallel of a rising pitchfork',
+        text: '(or above the upper parallel of a falling one), the trend’s structure has changed and a reversal or significant correction is likely. This pitchfork break provides an earlier trend-change signal than a moving average cross because the parallel is drawn from the trend’s structure rather than from a lagging average of price.',
       },
     ],
   },
@@ -15123,6 +17019,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'NRR of 110% is an encouraging signal that existing customers are expanding, suggesting product-market fit remains intact. However, 18 months of cash runway means a potential equity raise is likely before cash flow turns positive, which could dilute existing shareholders. The balanced conclusion is that the business quality signal (NRR) is positive, but the balance sheet risk is real — price accordingly with a margin of safety that accounts for potential dilution, and monitor the progress toward profitability milestones closely.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Counterparty and Infrastructure Risk Beyond market price risk, tail risks include: broker failure',
+        text: '(manage via using well-capitalized FCMs with segregated accounts); exchange failure (effectively impossible at CME Group scale but manage via using central clearing); technology failure (have backup order-entry methods including direct broker phone lines); data feed failure (have backup data sources); internet connection failure (have mobile backup for emergency exits). These operational tail risks are manageable with specific preparations that most retail traders delay until they\'ve experienced one.',
+      },
     ],
   },
   {
@@ -15210,6 +17118,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Adjusted NAV = Real estate ($600M) + Equity portfolio ($700M) − Net debt ($200M) = $1,100M. NAV discount = Market cap / NAV = $800M / $1,100M = 72.7%, meaning the company is trading at roughly 73% of NAV — or at a 27% discount to NAV. Option A (62%) is slightly below this; the correct answer is closest to 73% (option B). However, working backwards: $800M / $1,100M = 0.727 = ~73% of NAV. The correct closest option is B (73%).',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Balance Sheet Strength Assessment The balance sheet strength assessment examines five dimensions: liquidity',
+        text: '(can the business meet its near-term obligations without distress?), leverage (is the total financial burden — including hidden liabilities — appropriate for the cyclicality and stability of the business?), asset quality (are the carrying values of the major asset categories consistent with their economic value?), working capital efficiency (are receivables, inventory, and payables at levels appropriate for the business model and competitive position?), and off-balance-sheet obligations (are the footnote-disclosed commitments material relative to reported debt and equity?). The balance sheet assessment for each dimension produces a qualitative rating — strong, adequate, or concerning — that collectively determines the overall balance sheet quality rating.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
+      },
     ],
   },
   {
@@ -15296,6 +17222,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The primary risk in any contrarian setup is that the crowd is right. High short interest, near-universal sell ratings, and persistent downward estimate revisions are also consistent with a business that is structurally deteriorating — not just cyclically weak. The contrarian thesis requires you to believe the pessimism is excessive relative to fundamentals. The most important due diligence question is: has something permanently changed in the competitive landscape, technology, or demand structure that makes the historical earnings level unachievable going forward?',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Screen for Value Stocks Basic value screens: P/E ratio below the industry average. Price-to-book below',
+        text: '2.0. Dividend yield above the market average. Debt-to-equity below 1.0. Free cash flow yield above 5%. These filters identify statistically cheap stocks, but the screen is just the starting point. You must investigate why the stock is cheap. Is it cheap because the market is irrationally fearful, or because the business is genuinely deteriorating? The former is a buying opportunity. The latter is a value trap.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Squeeze Scanners Scan for stocks where Bollinger Bandwidth is at its lowest level in',
+        text: '6 months. This identifies securities with compressed volatility that are primed for expansion. Combining the squeeze scan with a relative strength filter (above the market) and a trend filter (above the 50-day SMA) produces a watchlist of high-probability breakout timing candidates.',
+      },
     ],
   },,
 {
@@ -15377,6 +17321,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'The margin of safety is the discount between what you believe a stock is worth (intrinsic value) and what the market charges for it. A larger margin of safety means more room for error in your analysis.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
       },
     ],
   },
@@ -15467,6 +17429,18 @@ export const articles: Article[] = [
           'The primary risk is overpaying for growth that fails to materialize.',
         ],
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Neglect Screens The growth of passive investing',
+        text: '— index funds and ETFs that mechanically buy and sell securities based on index inclusion rather than fundamental analysis — has created a structural source of mispricing that active fundamental investors can exploit. When a company is added to a major index, passive funds must buy the stock regardless of its valuation, creating temporary demand-driven price inflation. When a company is removed from an index or falls below the market capitalisation threshold for inclusion, passive funds must sell regardless of valuation, creating temporary supply-driven price depression. These mechanical flows, which represent no fundamental information about the business, create predictable mispricings around index reconstitution dates that fundamental analysts can identify and exploit.',
+      },
     ],
   },
   {
@@ -15553,6 +17527,18 @@ export const articles: Article[] = [
           'Always verify that earnings growth is driven by genuine business improvement, not financial engineering.',
           'GARP works best for investors comfortable with moderate valuations and moderate growth rates.',
         ],
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Growth at a Reasonable Price',
+        text: '(GARP) GARP is a hybrid approach that seeks growth stocks trading at reasonable valuations rather than at any price. The PEG ratio (P/E divided by earnings growth rate) is the key GARP metric. A PEG below 1.0 suggests the stock’s growth rate justifies or exceeds its valuation. A PEG above 2.0 suggests the stock is expensive even accounting for its growth. GARP investors avoid both overpriced growth stocks and cheap but stagnant value stocks, seeking the middle ground where growth is genuine and the price is fair.',
       },
     ],
   },
@@ -15826,6 +17812,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'NCAV = Current Assets ($120M) − Total Liabilities ($90M) = $30M. Per share: $30M ÷ 10M = $3.00. Graham\'s rule requires buying at or below two-thirds of NCAV per share: $3.00 × 0.667 = $2.00. Non-current assets are excluded entirely from the NCAV calculation.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Value vs. Timing The most common error in catalyst-based investing is conflating value with timing',
+        text: '— assuming that because the fundamental thesis is correct, the catalyst will occur on the analyst\'s preferred timeline. A business genuinely undervalued by 40% will eventually re-rate to fair value, but that process could take 18 months or five years depending on when and whether the specific catalysts materialise. During the intervening period, the opportunity cost of capital committed to a static-price investment can be substantial, particularly in strong market environments where alternatives compound rapidly.',
+      },
     ]
   },
   {
@@ -15910,6 +17914,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'NOPAT = $500M × (1 − 0.20) = $400M. ROIC = $400M / $2,000M = 20%. This exceeds the common 15% quality threshold, indicating the business earns meaningfully above its cost of capital and has a genuine competitive advantage.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
+      },
     ]
   },
   {
@@ -15992,6 +18008,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'There is a well-documented short-term reversal effect (1-month lookback) that runs counter to the longer-horizon momentum effect. Excluding the most recent month\'s return prevents this reversal from contaminating the momentum signal, improving the predictive accuracy of the 12-month measure.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
     ]
   },
   {
@@ -16074,6 +18108,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The SEC\'s 13D/13G reporting requirement is triggered only when beneficial ownership crosses 5%. At 4.8%, no Schedule 13D or 13G obligation exists regardless of intent. The activist can accumulate up to just below 5% without public disclosure, which is precisely why activists do so to avoid moving the price before their position is fully built.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Investing Alongside Activists The event-driven strategy of investing alongside activist investors',
+        text: '— buying shares after the 13D filing at the disclosure premium, holding through the campaign, and selling when the proposed changes are implemented or the activist exits — has produced consistent risk-adjusted returns historically. The strategy works because the 13D premium does not fully capture the probability-weighted value of all possible outcomes, leaving room for subsequent appreciation as the thesis unfolds. The risk is that the activist fails to effect the proposed changes, or the proposed changes do not create the value claimed. The most important analytical discipline for investing alongside activists is independent assessment of the underlying business quality, independent of the activist thesis.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
     ]
   },
   {
@@ -16158,6 +18210,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Gross spread = ($50 − $48.50) / $48.50 = 3.09% over 90 days. Annualised: 3.09% × (365 / 90) ≈ 12.5%. This gross return must then be weighed against the probability-weighted cost of a deal break, which would likely push the stock back toward its pre-announcement level (often 20–30% below $48.50).'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Special Dividends and Return Events Special dividends',
+        text: '— one-time capital returns funded by asset sales, insurance proceeds, or accumulated excess cash — carry different analytical significance from regular dividends. Unlike regular dividends, which create an expectation of continuation, special dividends are explicitly non-recurring and carry no implication about future regular dividend levels. The investment signal from a special dividend depends critically on its source: funded by a non-core business sale at a premium is a positive capital allocation signal; funded by debt issuance is a negative governance signal; funded by accumulated excess cash is neutral. Return-of-capital events — distributions that return previously invested capital to shareholders rather than distributing earnings — have specific tax treatment in many jurisdictions that makes them more efficient than regular dividends for tax-sensitive investors.',
+      },
     ]
   },
 {
@@ -16311,6 +18375,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Dividend yield = $3.00 / $40 = 7.5%. FCF coverage = $2.50 / $3.00 = 83%. The REIT is paying out more in dividends than it generates in free cash flow, which is unsustainable without asset sales or additional debt. A FCF payout ratio above 100% is a red flag requiring further investigation into whether AFFO (Adjusted Funds From Operations) gives a different picture.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Dividend Builder: Income-Focused From Day One Portfolio:',
+        text: '40% VTI, 20% SCHD (Schwab US Dividend Equity), 15% VYM (Vanguard High Dividend Yield), 15% VXUS, 10% BND. Time commitment: 30 minutes per quarter. This portfolio emphasizes dividend-paying stocks while maintaining broad diversification. The dividend ETFs focus on quality companies with sustainable and growing dividends. Current income is reinvested through DRIPs. Over decades, this portfolio generates an increasingly meaningful income stream while still participating in market growth.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Theta Targets: The Central Planning Variable The daily theta target is the income portfolio\'s central planning variable',
+        text: '— the number from which all position sizing decisions flow. Professional income portfolio managers express their theta target as a percentage of total portfolio capital: targeting 0.10-0.20% daily theta means $100-$200 per day for every $100,000 of capital deployed. This percentage-based targeting ensures that the income objective scales appropriately as the portfolio grows from premium reinvestment. The theta target must be set in relation to the portfolio\'s gamma risk tolerance. As established throughout Part II (the Greeks chapters), theta and gamma are mathematically linked — a portfolio cannot have large positive theta without accepting proportionally large negative gamma. A $300,000 portfolio targeting $300 daily theta (0.10%) will have a specific negative gamma amount that translates into a specific dollar loss per 1% market move.',
+      },
     ]
   },
   {
@@ -16394,6 +18476,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Fair ADR value = €50 × 1.05 (EUR/USD) = $52.50. The ADR is trading at $54, which is $1.50 above fair value. Premium = $1.50 / $52.50 ≈ 2.9%. ADR premiums and discounts do exist and can persist due to liquidity differences, timing of corporate actions, and arbitrage constraints — especially for smaller company ADRs with lower trading volumes.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
     ]
   },
   {
@@ -16472,6 +18572,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The 10-day rule of thumb suggests limiting total position size to 10 times the average daily trading volume to avoid significant market impact when building or exiting the position. At $300,000 average daily volume × 10 days = $3,000,000 maximum position. Exceeding this forces you to move the price against yourself when accumulating or liquidating, which can substantially erode the investment\'s return.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Biggest Risk of All: Not Investing PART VIII',
+        text: '— INVESTMENT STRATEGIES FOR BEGINNERS Proven approaches to growing your money, from simple to slightly less simple. ── Long-Term Strategies ── Chapter 55 — Buy and Hold: The Strategy That Beats Almost Everything -',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Higher Volatility, Wider Gaps: Adjusting Your Framework Small-cap ATR as a percentage of price is typically',
+        text: '2–3× that of large-caps. Overnight gaps of 5–10% are common after earnings or news. The timing adjustment: use ATR-based stops (2× ATR minimum), reduce position sizes proportionally (if a large-cap position is 5% of the portfolio, the equivalent small-cap position should be 2–3%), and avoid holding through known binary events unless the position is sized for a worst-case gap. Small-cap ATR as a percentage of price is typically 2–3x that of large-caps. The automatic position sizing adjustment — same dollar risk, fewer shares — is the portfolio’s defense mechanism against small-cap volatility.',
+      },
     ]
   },
   {
@@ -16741,6 +18859,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Energy benefits from the inflationary commodity price environment that often accompanies rate hike cycles, as seen in 2022 when XLE gained 65.7%. Financials benefit from wider net interest margins as the spread between their lending rates and deposit costs expands. Utilities and REITs are actually hurt by rising rates as their dividend yields become less attractive relative to risk-free Treasury yields.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Stocks-to-Use Ratio as Price Driver Ending stocks divided by total use = stocks-to-use',
+        text: '(S/U) ratio. This single metric explains the majority of corn, wheat, and soybean price variation historically. Low S/U (under 10% for corn) = tight supply, high price risk = prices typically elevated. High S/U (above 18%) = ample supply = prices typically lower. The price-S/U relationship is well-documented for each grain: specific S/U percentages correspond historically to specific price ranges. Building a model that projects S/U from planting, yield, and demand assumptions directly projects price. In agricultural markets, the most powerful word in fundamental analysis is \'deficit.\' When ending stocks drop below 10% of use, prices don\'t just rise — they spike. History shows that supply deficits produce non-linear price responses, rewarding those who identify them before the USDA makes them official.',
+      },
     ]
   },
   {
@@ -16915,6 +19045,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Gross spread = ($52.00 − $48.00) / $48.00 = 8.33%. Annualized = 8.33% × (365 / 180) = approximately 16.9%. Wait — the correct calculation gives ~16.9%, which is closest to option C. However, the standard professional calculation annualizes as: 8.33% × (365/180) ≈ 16.9%. The answer is ~16.7% annualized, making option C correct. This gross return must then be risk-adjusted for the probability the deal breaks.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Managing Vega Risk Around Events Event-driven vega risk',
+        text: '— the risk that an upcoming known event will cause implied volatility to move sharply — requires specific management techniques that differ from normal volatility risk management. Pre-Event Vega Build In the days and weeks before a significant scheduled event (earnings, FOMC, FDA decision), implied volatility on options spanning the event typically rises — the market prices in an increasing probability of a large post-event move. Options sellers who are short vega face increasing paper losses as their short options become more expensive. The key management question is whether to close before the event (taking the loss) or hold through it (hoping the subsequent IV crush will be favorable). For earnings events in particular, the historical pattern is clear: IV rises into earnings, then collapses sharply after the announcement regardless of whether the stock moves significantly.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Investing Alongside Activists The event-driven strategy of investing alongside activist investors',
+        text: '— buying shares after the 13D filing at the disclosure premium, holding through the campaign, and selling when the proposed changes are implemented or the activist exits — has produced consistent risk-adjusted returns historically. The strategy works because the 13D premium does not fully capture the probability-weighted value of all possible outcomes, leaving room for subsequent appreciation as the thesis unfolds. The risk is that the activist fails to effect the proposed changes, or the proposed changes do not create the value claimed. The most important analytical discipline for investing alongside activists is independent assessment of the underlying business quality, independent of the activist thesis.',
+      },
     ]
   },
   {
@@ -17002,6 +19150,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'EBIT (Earnings Before Interest and Taxes) neutralizes two major distortions: (1) interest expense, which varies based on how much debt a company has chosen to carry — a capital structure decision, not an operating quality signal; and (2) tax rates, which vary by jurisdiction and tax-planning strategy. By using EBIT, the Magic Formula compares the pure operating earnings power of businesses on an apples-to-apples basis regardless of their financing choices.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Building a Value-Quality Composite Joel Greenblatt popularised the value-quality composite as the "magic formula"',
+        text: '— ranking all stocks by earnings yield and return on capital simultaneously. Securities ranking highly on both dimensions have historically outperformed those ranking highly on either alone. Academic research confirms that the magic formula and its variants produce significant excess returns across multiple markets, though returns have been more modest in recent years as the approach has become widely known.',
+      },
     ]
   },
 {
@@ -17085,6 +19245,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Value investing is inherently contrarian — it buys stocks that the market has sold off (low price relative to fundamentals). Momentum investing is inherently trend-following — it buys stocks that the market has bid up recently. These are structurally opposite behavioral stances. When a macro shock causes a momentum crash (winners suddenly sell off), the same shock often creates the deep value opportunities that value investors seek. This structural opposition produces a naturally negative factor correlation that reduces portfolio drawdowns when the two are combined.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
+      },
     ]
   },
   {
@@ -17251,6 +19429,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The correct framework is to evaluate the position as if you were encountering it fresh today. Your $80 purchase price is a sunk cost — psychologically real but economically irrelevant. The CEO whose turnaround you were betting on has left, which directly breaks the original thesis. The question is not "how do I get back to even?" but "is this stock at $40 the best use of my capital given what I know today?" If the answer is no, you sell and redeploy — regardless of the loss. Waiting to break even is anchoring bias in action and can cost years of opportunity cost.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Power of Not Selling The decision not to sell a compounding business',
+        text: '— one that is earning above-cost-of-capital returns on growing capital and reinvesting those returns in further above-cost-of-capital opportunities — may be the single highest-return decision available in investment management. The tax deferral from avoiding realisation of capital gains, combined with the continued compounding of intrinsic value in the business, produces returns that compound at the pre-tax rate of the business for as long as the position is held. The investor who holds a 20%-compounding business for 30 years without selling earns a return dramatically higher than one who sells and reinvests at 20% annually, because each sale event resets the tax clock and forfeits the deferred-tax compounding benefit.',
+      },
     ]
   },
   {
@@ -17334,6 +19524,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Rebalancing requires selling stocks (now 75% of the portfolio, above the 60% target) and buying bonds (now 25%, below the 40% target) to restore the 60/40 split. This is behaviorally counterintuitive because stocks have been the recent winner — most investors\' instinct is to hold or add to winners and avoid recent losers. Rebalancing forces the opposite: systematically selling what has risen and buying what has fallen. Over time, this discipline is the mechanical expression of "buy low, sell high" applied to asset classes rather than individual securities.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Dynamic Hedging Alternative: Rebalancing as Portfolio Insurance The original portfolio insurance programs of the',
+        text: '1980s did not use options at all — they used dynamic rebalancing between equities and bonds to replicate the payoff of a protective put. As equities declined, the program sold equities and bought bonds (reducing equity exposure and therefore reducing further loss); as equities rose, the program bought equities and sold bonds (increasing equity exposure and participating in the rally). This mechanical, price-signal-driven rebalancing was designed to replicate the payoff of an equity put option. The 1987 crash demonstrated the fatal flaw in this approach: when enough investors implement the same mechanical sell-equity program simultaneously, their collective selling destabilizes the market. The selling triggers further price declines, which trigger more mechanical selling, which triggers further declines in a self-reinforcing cascade.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Rebalancing Open Positions As market prices move, portfolio allocations drift from original targets. A position that was',
+        text: '10% of portfolio risk becomes 15% after a favorable move. Regular rebalancing — trimming outperformers and rebuilding underperformers back to target weights — maintains intended risk allocation. Monthly rebalancing is typical for swing-trading portfolios; weekly for active portfolios. Rebalancing also forces systematic profit-taking on winners and position re-evaluation on underperformers.',
+      },
     ]
   },
   {
@@ -17606,6 +19814,24 @@ export const articles: Article[] = [
         explanation:
           'The Kelly criterion assumes you know the exact probabilities and payoffs, which is almost never true in real markets. Using half-Kelly (or less) provides a buffer against estimation error and reduces the volatility of portfolio returns, making it a more practical choice.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Tier-Based Position Sizing Tiered sizing uses different position sizes for different conviction levels: standard setups =',
+        text: '0.5%; high-conviction A+ setups = 1%; exceptional setups = 2%. This lets you capture more when setups are unusually attractive while staying conservative on standard trades. The risk is that conviction feels subjective and inflates in hindsight — "this felt like an A+ setup" after the fact. Documented, objective conviction criteria (specific confluences, specific levels) prevent this rationalization.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Risk Per Trade as a Constant Professional position sizing starts with a fixed percentage risk per trade',
+        text: '— typically 0.5% to 2% of account equity. This percentage is constant; what varies is position size, based on stop distance. The risk amount stays predictable; the share count (or contract count) adjusts to fit.',
+      },
     ],
   },
   {
@@ -17714,6 +19940,24 @@ export const articles: Article[] = [
         explanation:
           'The Sharpe ratio is calculated as (Rp - Rf) / σp = (15% - 5%) / 20% = 10% / 20% = 0.50. This means the portfolio earned 0.50 units of excess return for every unit of risk taken.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Advanced Risk-Adjusted Metrics for Options Portfolios The Sharpe ratio\'s limitation for options strategies',
+        text: '— its use of total standard deviation as the denominator, which treats upside volatility identically to downside volatility — makes it an imperfect risk-adjusted metric for systematic premium selling programs that have many small positive returns and occasional large negative returns. Three alternative metrics provide more meaningful risk-adjusted performance assessment for these skewed return distributions. The Sortino ratio addresses the Sharpe ratio\'s symmetry problem by using only downside volatility (the standard deviation of negative monthly returns) as the denominator: Sortino = (Annualized Return − Risk-Free Rate) / Downside Deviation.',
+      },
     ],
   },,
 {
@@ -17786,6 +20030,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'A correlation of -1.0 means the assets move in perfect opposition. With equal weights, each up-move in one is exactly cancelled by a down-move in the other, resulting in zero portfolio volatility. This is the theoretical maximum diversification benefit — rarely achievable in practice, but it illustrates why low correlation is so powerful.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Correlation and True Diversification Apparent diversification across',
+        text: '20 positions in different companies frequently conceals genuine concentration risk. A portfolio of 20 different companies that are all highly cyclical, all heavily leveraged, and all sensitive to the same macroeconomic variable will behave in a correlated manner in a stress scenario — all declining simultaneously and significantly when conditions deteriorate. This correlation reduces the effective number of independent bets in the portfolio far below the nominal count. True portfolio diversification requires thinking about factor exposures rather than counting positions. A portfolio that is diversified by sector, by economic sensitivity, by balance sheet risk, and by business model type will experience lower correlated drawdowns than one diversified only by company.',
+      },
     ]
   },
   {
@@ -17861,6 +20117,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The covariance term (2 × w_A × w_B × Cov(A,B)) grows as correlation increases. A higher correlation means assets move more in tandem, reducing the offsetting effect and increasing portfolio variance. At correlation = +1, the portfolio variance equals the weighted average of individual variances with no diversification benefit.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Cost-Benefit Analysis of Portfolio Protection Portfolio protection through options is not free. The VRP',
+        text: '— the systematic tendency for implied volatility to exceed realized volatility — means that hedges purchased at market prices will, on average, cost more than the losses they prevent. This is not a reason to avoid hedging; it is a reason to understand the true economic cost of hedging and to evaluate whether that cost is justified by the specific risks being managed. The insurance analogy is precise: fire insurance costs more than the expected value of fire losses because insurers must earn a profit and policyholders value certainty. Portfolio protection through options costs more than the expected value of portfolio losses because options sellers must earn the VRP and portfolio managers value the certainty of having protection in place.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Growth Seeker: Tech-Tilted With Index Core Portfolio:',
+        text: '50% VTI, 20% QQQ (Nasdaq-100), 15% VXUS, 10% individual growth stocks, 5% BND. Time commitment: 1 hour per week for individual stock research. This portfolio overweights technology and growth stocks through QQQ while maintaining a broad index core. The individual stock allocation allows you to invest in specific growth companies you have researched. This is a higher-volatility approach that will outperform in bull markets and underperform in bear markets relative to a pure index approach.',
+      },
     ]
   },
   {
@@ -17931,6 +20205,24 @@ export const articles: Article[] = [
         correctIndex: 3,
         explanation: 'After a 60% loss, the portfolio is worth $40,000. To get back to $100,000, it must gain $60,000 on a base of $40,000. That is $60,000 / $40,000 = 150%. This illustrates the asymmetry of losses: a 60% loss requires a 150% gain to recover, not 60%.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: The Asymmetric Risk of Shorts A long position’s maximum loss is',
+        text: '100% (the stock goes to zero). A short position’s maximum loss is theoretically unlimited. This asymmetry means that short timing errors are more costly than long timing errors. The practical implication: short positions should be half the size of comparable long positions, stops should be tighter, and the threshold for covering should be lower than the threshold for selling a long. Chapter 86 — Timing Bearish Options Strategies Options provide defined-risk alternatives to short selling that eliminate the unlimited-loss risk while maintaining the ability to profit from declining prices.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
+      },
     ]
   },
   {
@@ -18000,6 +20292,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Sortino Ratio = (R_p - R_f) / σ_d = (12% - 4%) / 6% = 8% / 6% = 1.33. This is a reasonable Sortino ratio, indicating the fund earns 1.33 units of excess return per unit of downside risk. Compare this to a fund with the same return and the same total volatility of 6% but with more upside skew — its Sortino ratio would be higher because downside deviation would be less than 6%.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Advanced Risk-Adjusted Metrics for Options Portfolios The Sharpe ratio\'s limitation for options strategies',
+        text: '— its use of total standard deviation as the denominator, which treats upside volatility identically to downside volatility — makes it an imperfect risk-adjusted metric for systematic premium selling programs that have many small positive returns and occasional large negative returns. Three alternative metrics provide more meaningful risk-adjusted performance assessment for these skewed return distributions. The Sortino ratio addresses the Sharpe ratio\'s symmetry problem by using only downside volatility (the standard deviation of negative monthly returns) as the denominator: Sortino = (Annualized Return − Risk-Free Rate) / Downside Deviation.',
+      },
     ]
   },
   {
@@ -18086,6 +20396,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A 99% VaR of $5 million means that 99% of the time, tomorrow\'s loss will be less than $5 million. Equivalently, on 1% of days (roughly 2-3 trading days per year), losses are expected to exceed $5 million. VaR says nothing about the magnitude of losses when it is breached — those tail losses could be far larger, which is the key limitation CVaR addresses.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Why Standard VaR Misses Tail Risk Value at Risk models typically assume returns follow a normal',
+        text: '(bell-curve) distribution. Real futures returns have fat tails — extreme moves occur far more frequently than normal distribution predicts. A move that normal distribution assigns 0.1% probability actually occurs every few years in active futures markets. This "fat tail" reality means VaR consistently underestimates extreme losses. Alternatives: CVaR (Conditional VaR) measures average loss beyond the VaR threshold; Extreme Value Theory models specifically fit to tail behavior; stress testing against historical extremes rather than relying on distribution assumptions.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Risk Controls for Fading Strong Moves Contrarian positions must have tight stop-losses because the worst-case scenario',
+        text: '— a move that continues far beyond the expected reversal point — can produce catastrophic losses. The stop is placed beyond the next structural level. If that level breaks, the contrarian thesis is definitively wrong and the position must be closed without hesitation. Chapter 112 — Hedging & Portfolio Protection with Technical Signals Technical analysis provides timing signals for implementing and removing portfolio hedges. Rather than maintaining expensive permanent protection, the technically informed investor activates hedges when the chart signals deterioration and removes them when the chart signals recovery.',
+      },
     ]
   },
 {
@@ -18165,6 +20493,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Deep out-of-the-money put options expire worthless the vast majority of the time because the market must fall significantly (30% in this case) just for the option to reach break-even. In calm or rising markets, the premium is simply lost. This is the "insurance cost" of tail hedging — small, frequent losses in exchange for explosive payoffs during crashes. This is why permanent tail hedging requires conviction about its long-term portfolio benefit.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Tail Risk Hedging: Strategies for Catastrophic Protection Tail risk hedging',
+        text: '— protection against extreme, low-probability loss events that exceed the scope of standard portfolio insurance — has become a specialized sub-discipline of options portfolio management, particularly after the experiences of 2008, 2020, and the periodic severe market dislocations that occur with greater frequency than standard distribution models predict. Pure tail risk hedges focus on far OTM options — typically 20-35% OTM put spreads or back spreads — that have minimal cost in normal market conditions but deliver large payoffs during catastrophic market events. The challenge is the ongoing cost: far OTM SPX put spreads expiring in 3 months might cost only 0.1-0.3% of notional per quarter in calm markets, but this 0.4-1.2% annual cost compound over years of non-crisis conditions creates a significant performance drag.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Tail Risk Hedge Activation: When Your Insurance Policy Pays Off Tail risk hedges',
+        text: '(far OTM put options, VIX calls) purchased during calm periods explode in value during crashes. The timing decision: when should the hedge be closed? If the hedge was purchased as portfolio insurance, sell a portion during the crash to lock in the insurance payout and reduce the equity loss. Retain a portion in case the crash continues. The goal is not to time the bottom perfectly but to monetize the hedge when it has provided the protection it was purchased for.',
+      },
     ]
   },
   {
@@ -18241,6 +20587,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Industry diversification does not equal factor diversification. All growth-oriented technology stocks — regardless of whether they are in cloud, social media, or gaming — share a high growth-factor loading and a negative value-factor loading. When interest rates rise, the growth factor is systematically punished because future cash flows are discounted at a higher rate. This systemic factor exposure explains why all 20 stocks fell together despite industry differences.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Managing Leverage Risk in the Growth Portfolio The growth portfolio\'s leverage',
+        text: '— its defining feature — is also its primary risk. Managing leverage risk requires specific disciplines that income-focused premium sellers do not need because their positions have defined, limited loss characteristics that LEAPS call buyers do not have in the same way (though LEAPS calls do have defined maximum losses, those losses represent 100% of the premium invested — potentially the entire capital allocated to each growth position). Position sizing for the growth portfolio: allocate no more than 10-15% of total growth capital to any single LEAPS position. For a $200,000 growth portfolio, this means a maximum of $20,000-$30,000 per LEAPS position.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio VaR Calculation Value at Risk',
+        text: '(VaR) estimates the maximum portfolio loss over a given time horizon at a specified confidence level. Simple method: calculate the daily standard deviation of returns for each position, account for correlations between positions (correlated positions don\'t fully diversify), and calculate the portfolio-level standard deviation. At 95% confidence, 1-day VaR is approximately 1.65 times portfolio daily standard deviation. This number provides a daily "probable maximum loss" for proactive position management. Most retail traders can approximate this with simpler calculations.',
+      },
     ]
   },
   {
@@ -18310,6 +20674,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: '10% of $200,000 ADV = $20,000. At this position size, selling the entire position would represent only 10% of a normal day\'s trading — minimising market impact. A larger position would require multiple days to exit, during which price movement against the seller (market impact) would erode returns. In a crisis, even this position could become difficult to exit at fair value.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Liquidity Risk Timing Entering a small-cap position when daily volume is below',
+        text: '200,000 shares creates the risk of being unable to exit at a reasonable price during a decline. The timing rule: only enter small-cap positions when recent volume demonstrates sufficient liquidity (average daily volume above 300,000 shares or recent sessions showing unusual volume expansion that suggests growing institutional interest).',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Liquidity Risk in Tail Events During tail events, liquidity can vanish suddenly. Bid-ask spreads widen from',
+        text: '1-2 ticks to 20-50 ticks. Market depth collapses. Market orders fill at prices far from quoted best. In the 2010 Flash Crash, some ES trades executed at prices 10% from theoretical fair value because algorithms withdrew liquidity simultaneously. Planning for liquidity risk means: using limit orders rather than market orders for position exits wherever possible, accepting that extreme events may prevent execution at planned stop prices, and sizing positions so that worst-case execution is survivable.',
+      },
     ]
   },
   {
@@ -18375,6 +20757,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'HHI = Σ(w_i²) × 10,000 = 10 × (0.10²) × 10,000 = 10 × 0.01 × 10,000 = 1,000. This represents a moderately concentrated portfolio. A perfectly equal-weight portfolio of 100 stocks would have an HHI of 100, while a single-stock portfolio has an HHI of 10,000. An HHI of 1,000 for a 10-stock equal-weight portfolio is mathematically the minimum possible for that number of holdings.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Sector Concentration Limits Define maximum exposure to any single sector or asset class. Example limits: no more than',
+        text: '30% of portfolio risk in equity indices, no more than 25% in energy, no more than 20% in rate futures, no more than 15% in any individual commodity. These limits prevent the common mistake of running 80% of portfolio risk in one correlated sector. During regime shifts (2022\'s energy spike, 2020\'s equity collapse), concentrated portfolios suffer catastrophically while diversified portfolios maintain capital. Sector limits enforce the diversification that many traders intend but fail to execute.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Concentration Risk and Conviction Management When conviction is highest, size is largest',
+        text: '— but this concentrates risk. Manage it carefully: ensure your largest positions have the clearest invalidation and the most monitoring. A single outsized loss from your largest position can undo weeks of smaller wins. Size for conviction, but with awareness of the concentration that creates. Part XII — Trade Execution & Management Reading the market is only half the skill. This section covers the other half — how to actually enter, manage, and exit trades with precision using order flow and price action. Chapter 83 — Entry Timing Using Order Flow A valid setup at a good level is necessary but not sufficient. The exact moment you enter matters enormously for risk and reward. This chapter teaches how to time entries using order flow signals — aggressor flips, absorption, delta confirmation — rather than entering on chart signals alone.',
+      },
     ]
   },
   {
@@ -18541,6 +20941,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The 1986 Brinson-Hood-Beebower study found that asset allocation policy explains approximately 91.5% of the variation in quarterly portfolio returns across pension funds. This finding was later confirmed in a 2000 follow-up study, cementing asset allocation as the dominant driver of investment outcomes.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Tactical Allocation Timing Monthly signal-based allocation ranks asset classes',
+        text: '(US equity, international equity, bonds, REITs, commodities) by their 10-month SMA status. Assets above their 10-month SMA receive allocation; those below receive zero. Monthly rebalancing captures the rotation. This approach has matched endowment-level returns with dramatically lower drawdowns.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Tactical Asset Allocation Using Moving Average Rules The simplest tactical asset allocation model uses a',
+        text: '10-month (approximately 200-day) SMA for each asset class: hold the asset when price is above the SMA, sell when price is below. Applied across a global portfolio of stocks, bonds, and commodities, this model has historically matched buy-and-hold equity returns with dramatically lower drawdowns.',
+      },
     ]
   },
   {
@@ -18646,6 +21064,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Research by Elton and Gruber (1977) demonstrated that a randomly selected 20-stock portfolio eliminates approximately 87% of idiosyncratic risk compared to holding a single stock. The remaining risk after full diversification is systematic (market) risk, which cannot be diversified away and must be managed through asset allocation and hedging.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Building a Dividend Portfolio: Quality Over Yield The temptation is to buy the highest-yielding stocks. Resist it. A',
+        text: '10% yield often indicates a stock in distress whose dividend is about to be cut. Focus instead on companies with moderate yields (2–4%), strong earnings coverage (payout ratio below 60%), consistent dividend growth history (10+ years of increases), and competitive advantages that protect future earnings. A portfolio of 15–20 dividend growth stocks across diverse sectors provides a growing income stream with lower risk than a concentrated portfolio of high-yield stocks.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Rebalancing Open Positions As market prices move, portfolio allocations drift from original targets. A position that was',
+        text: '10% of portfolio risk becomes 15% after a favorable move. Regular rebalancing — trimming outperformers and rebuilding underperformers back to target weights — maintains intended risk allocation. Monthly rebalancing is typical for swing-trading portfolios; weekly for active portfolios. Rebalancing also forces systematic profit-taking on winners and position re-evaluation on underperformers.',
+      },
     ]
   },
   {
@@ -18747,6 +21183,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Sharpe Ratio = (Rp − Rf) / σp = (18% − 3%) / 12% = 15% / 12% = 1.25. This is a strong Sharpe Ratio, well above the 0.4–0.5 typical for the S&P 500 over long periods. A Sharpe above 1.0 indicates the portfolio earned more than one unit of excess return for each unit of volatility risk taken.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Fundamental Problem: Risk-Adjusted Returns A portfolio that generates',
+        text: '25% annual returns while taking on enormous risk is not performing well — it is being paid appropriately for extraordinary risk. A portfolio that generates 12% annual returns with minimal risk may be performing better on a risk-adjusted basis than the 25% return portfolio. This distinction — between absolute returns and risk-adjusted returns — is the foundation of all meaningful performance measurement. The Sharpe ratio — the most widely used risk-adjusted return measure — captures this distinction: Sharpe = (Return − Risk-Free Rate) / Annualized Return Volatility. A Sharpe ratio above 1.0 indicates that the portfolio is generating more than one unit of excess return for each unit of volatility it accepts. Above 2.0 is exceptional.',
+      },
     ]
   },
   {
@@ -18846,6 +21300,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'A 50% loss (from $100,000 to $50,000) requires a 100% gain on the remaining capital to recover. $50,000 × (1 + 1.00) = $100,000. Using the formula: Recovery Gain = 1/(1−0.50) − 1 = 1/0.50 − 1 = 2 − 1 = 100%. This illustrates the fundamental asymmetry of losses — the denominator shrinks, requiring proportionally larger percentage gains to recoup.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: The Recovery Math Drawdown recovery math is mathematically asymmetric and works against you: a',
+        text: '20% loss requires a 25% gain to recover; a 30% loss requires a 43% gain; a 50% loss requires a 100% gain. This asymmetry means that progressively larger losses become progressively harder to recover from. Protecting against moderate drawdowns is dramatically more valuable than it appears: avoiding a 50% drawdown doesn\'t just prevent the loss — it avoids the need to double your money just to get back to even. Drawdown prevention is worth more than equivalent gain opportunity.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Mathematics of Drawdown: Why Losses Hurt More Than Gains Help The fundamental mathematics of drawdown',
+        text: '— why it is so much harder to recover from losses than to generate equivalent gains — is one of the most important concepts in all of investing and is directly relevant to options position sizing. A portfolio that declines 20% must subsequently gain 25% just to return to its starting value: $100,000 × (1 − 0.20) × (1 + 0.25) = $100,000 × 0.80 × 1.25 = $100,000. A portfolio that declines 50% must subsequently gain 100% to return to its starting value. A portfolio that declines 75% must subsequently gain 300% — an extraordinary performance requirement that demonstrates why large drawdowns can be functionally terminal for a trading strategy. For options strategies, this mathematics creates a specific sizing constraint: the maximum expected drawdown of any position sizing approach must be well within the level at which recovery becomes unreasonably difficult or unreasonably slow.',
+      },
     ]
   },
   {
@@ -18942,6 +21414,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Using the approximation: Real Return ≈ Nominal Return − Inflation Rate = 6% − 4% = 2%. The precise Fisher equation gives: (1.06/1.04) − 1 = 1.0192 − 1 = 1.92% ≈ 2%. This illustrates how inflation silently erodes returns — a seemingly reasonable 6% nominal return becomes a modest 2% real gain, and if that investor\'s portfolio has costs and taxes, the real after-tax, after-fee return may be near zero.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Fundamental Problem: Risk-Adjusted Returns A portfolio that generates',
+        text: '25% annual returns while taking on enormous risk is not performing well — it is being paid appropriately for extraordinary risk. A portfolio that generates 12% annual returns with minimal risk may be performing better on a risk-adjusted basis than the 25% return portfolio. This distinction — between absolute returns and risk-adjusted returns — is the foundation of all meaningful performance measurement. The Sharpe ratio — the most widely used risk-adjusted return measure — captures this distinction: Sharpe = (Return − Risk-Free Rate) / Annualized Return Volatility. A Sharpe ratio above 1.0 indicates that the portfolio is generating more than one unit of excess return for each unit of volatility it accepts. Above 2.0 is exceptional.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio VaR Calculation Value at Risk',
+        text: '(VaR) estimates the maximum portfolio loss over a given time horizon at a specified confidence level. Simple method: calculate the daily standard deviation of returns for each position, account for correlations between positions (correlated positions don\'t fully diversify), and calculate the portfolio-level standard deviation. At 95% confidence, 1-day VaR is approximately 1.65 times portfolio daily standard deviation. This number provides a daily "probable maximum loss" for proactive position management. Most retail traders can approximate this with simpler calculations.',
+      },
     ]
   },
 {
@@ -19036,6 +21526,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Price Change % ≈ −Modified Duration × ΔYield = −7 × 0.015 = −0.105 = −10.5%. The negative sign indicates bond prices move inversely to interest rates. A bond with 7-year modified duration loses approximately 10.5% of its price when rates rise 1.5 percentage points. This approximation works well for small rate changes; for large rate changes, convexity adjustments improve accuracy.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Duration and Interest Rate Sensitivity Duration measures how sensitive a bond\'s price is to interest rate changes. A',
+        text: '10-year Treasury with duration 8 years loses approximately 8% if yields rise 1% (100 basis points). Longer-dated bonds have higher duration: a 30-year bond might have 18+ year duration. For futures, this means ZB (30-year) moves much more than ZN (10-year) for equivalent yield changes — explaining why ZB has higher tick value despite similar tick points. Duration is the mathematical foundation for comparing rate futures.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Rho Defined: The Interest Rate Sensitivity Rho',
+        text: '(ρ) measures the change in an option\'s price for a 1 percentage point increase in the risk-free interest rate, with all other variables held constant. In the Black-Scholes framework, the formulas for call and put rho are: For a call: ρ_call = K × T × e^(− rT ) × N(d₂). For a put: ρ_put = −K × T × e^(− rT ) × N(−d₂). Several properties emerge immediately from these expressions. First, call rho is always positive — rising interest rates increase call values. Second, put rho is always negative — rising interest rates decrease put values. Third, rho is proportional to T (time to expiration) — longer-dated options are far more sensitive to rate changes than shorter-dated ones. Fourth, rho is proportional to K × e^(− rT ), the present value of the strike — higher strike options have higher rho magnitude.',
+      },
     ]
   },
   {
@@ -19131,6 +21639,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Using the formula: Unhedged Return = (1 + 0.10) × (1 + (−0.08)) − 1 = 1.10 × 0.92 − 1 = 1.012 − 1 = 1.2%. The currency depreciation nearly wiped out the entire equity gain. The approximation (10% − 8% = 2%) overstates the return slightly because it ignores the multiplicative interaction. This illustrates how currency headwinds can dramatically reduce returns from international investments even when the local market performs well.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Currency-Adjusted Timing An international stock rising',
+        text: '15% in local currency while the local currency falls 10% against the dollar produces only a 5% return for the US investor. The timing protocol: when taking international positions, check both the equity chart (in local currency) and the currency chart (DXY for broad dollar, specific pairs for country-specific exposure). Enter when both the equity and currency trends are favorable; avoid when they are conflicting.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Exchange-Traded vs. OTC Markets Currency futures trade on centralized exchanges',
+        text: '(primarily CME) with published order books, while spot forex trades over-the-counter (OTC) through dealer networks without centralized price discovery. This distinction has practical consequences: futures have transparent pricing visible to all participants; spot forex has dealer-quoted prices that can differ between providers. Futures counterparty risk is eliminated by clearinghouse; spot forex counterparty risk depends on broker. For traders valuing transparency and regulation, futures are structurally preferable.',
+      },
     ]
   },
   {
@@ -19226,6 +21752,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Weak returns early in retirement are far more damaging because withdrawals are made from a depreciating portfolio, locking in losses by selling shares at low prices. Those shares can\'t participate in the eventual recovery. Strong early returns build a larger cushion that absorbs later weakness. Option D is incorrect: the sequence matters enormously when cash flows (withdrawals) interact with returns — the average return alone does not determine the outcome.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Why Standard VaR Misses Tail Risk Value at Risk models typically assume returns follow a normal',
+        text: '(bell-curve) distribution. Real futures returns have fat tails — extreme moves occur far more frequently than normal distribution predicts. A move that normal distribution assigns 0.1% probability actually occurs every few years in active futures markets. This "fat tail" reality means VaR consistently underestimates extreme losses. Alternatives: CVaR (Conditional VaR) measures average loss beyond the VaR threshold; Extreme Value Theory models specifically fit to tail behavior; stress testing against historical extremes rather than relying on distribution assumptions.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Fundamental Problem: Risk-Adjusted Returns A portfolio that generates',
+        text: '25% annual returns while taking on enormous risk is not performing well — it is being paid appropriately for extraordinary risk. A portfolio that generates 12% annual returns with minimal risk may be performing better on a risk-adjusted basis than the 25% return portfolio. This distinction — between absolute returns and risk-adjusted returns — is the foundation of all meaningful performance measurement. The Sharpe ratio — the most widely used risk-adjusted return measure — captures this distinction: Sharpe = (Return − Risk-Free Rate) / Annualized Return Volatility. A Sharpe ratio above 1.0 indicates that the portfolio is generating more than one unit of excess return for each unit of volatility it accepts. Above 2.0 is exceptional.',
+      },
     ]
   },
   {
@@ -19316,6 +21860,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'DALBAR\'s research specifically compares time-weighted fund returns (what the funds earned) to dollar-weighted investor returns (what investors actually received). The funds themselves often performed reasonably well. The gap comes entirely from investors\' behavioral mistakes: buying after strong performance and redeeming after poor performance. This timing problem — not fund costs or diversification — accounts for the 3–4% annual underperformance gap documented consistently over 20+ years of data.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Fundamental Problem: Risk-Adjusted Returns A portfolio that generates',
+        text: '25% annual returns while taking on enormous risk is not performing well — it is being paid appropriately for extraordinary risk. A portfolio that generates 12% annual returns with minimal risk may be performing better on a risk-adjusted basis than the 25% return portfolio. This distinction — between absolute returns and risk-adjusted returns — is the foundation of all meaningful performance measurement. The Sharpe ratio — the most widely used risk-adjusted return measure — captures this distinction: Sharpe = (Return − Risk-Free Rate) / Annualized Return Volatility. A Sharpe ratio above 1.0 indicates that the portfolio is generating more than one unit of excess return for each unit of volatility it accepts. Above 2.0 is exceptional.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio VaR Calculation Value at Risk',
+        text: '(VaR) estimates the maximum portfolio loss over a given time horizon at a specified confidence level. Simple method: calculate the daily standard deviation of returns for each position, account for correlations between positions (correlated positions don\'t fully diversify), and calculate the portfolio-level standard deviation. At 95% confidence, 1-day VaR is approximately 1.65 times portfolio daily standard deviation. This number provides a daily "probable maximum loss" for proactive position management. Most retail traders can approximate this with simpler calculations.',
+      },
     ]
   },
   {
@@ -19416,6 +21978,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Index: $100 × 1.10 × 0.90 = $99.00 (−1% over two days). The 3x ETF: Day 1: $100 × (1 + 3×0.10) = $100 × 1.30 = $130. Day 2: $130 × (1 + 3×(−0.10)) = $130 × 0.70 = $91.00. The 3x ETF loses 9% while the index loses only 1% — an 8 percentage point underperformance. This is volatility decay: the daily rebalancing causes path-dependent losses. Over time, in volatile markets, this decay compounds and can be severe even when the long-run index trend is upward.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Leverage vs. Genuine Returns Financial leverage amplifies both gains and losses: a business earning',
+        text: '10% ROA with 50% equity financing will report 20% ROE in good years, but will suffer catastrophic equity losses in bad years because the same losses are borne by a smaller equity base. The business that earns 15% ROE with no leverage is therefore genuinely superior to one that earns 20% ROE through a leverage ratio that amplifies a much lower underlying return on assets — even though the ROE comparison favours the leveraged business. Adjusting for leverage in ROE comparisons requires either normalising to the same leverage level (comparing ROAs rather than ROEs) or using ROIC as the primary metric (which is capital-structure-neutral by construction). For most industrial and consumer businesses, ROIC provides the most reliable cross-company comparison.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Risk Management for Market-Neutral Portfolios Market-neutral portfolios face several unique risks: beta drift',
+        text: '(the long and short legs develop different sensitivities to the market), liquidity asymmetry (the short leg may be harder to exit during stress), and correlation breakdown (historically correlated pairs can decouple permanently). Monitoring these risks requires daily rebalancing of the dollar-neutral and beta-neutral exposures.',
+      },
     ]
   },
 {
@@ -19574,6 +22154,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Research consistently shows that the average investor underperforms the market because emotional decision-making leads them to buy when prices are high and sell when prices are low — the exact opposite of what market timing requires.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Timing Order Execution by Time of Day Market orders at the open receive the worst fills',
+        text: '(widest spreads, most slippage). Limit orders during the midday lull receive the best fills (tightest spreads, patient execution). The practical timing: use market orders only when speed is essential (breakouts that may not return). Use limit orders during the midday lull for non-urgent entries. Avoid market orders in the first and last 5 minutes of the session. Chapter 64 — Options Expiration Cycle Timing Options expirations create predictable patterns in equity markets through dealer hedging mechanics, pin risk, and the release of positioning pressure. Understanding these patterns provides a timing edge that is invisible to traders who ignore options market structure.',
+      },
     ],
   },
   {
@@ -19663,6 +22255,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The core-and-satellite strategy uses a broad index fund as the stable foundation (core) of your portfolio, with a smaller allocation to individual stock picks (satellites) for potential outperformance. It balances reliability with opportunity.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Total Market Funds: Owning Everything A total stock market index fund goes even broader than the S&P',
+        text: '500, owning every publicly traded US company — roughly 4,000 stocks. This includes small and mid-cap companies that are not in the S&P 500. Total market funds like VTI (Vanguard Total Stock Market ETF) provide the most complete diversification available in a single fund. Historically, the returns of total market funds and S&P 500 funds have been nearly identical because the largest companies dominate both. Either choice is excellent for a beginner.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Accumulation Day Timing An accumulation day is a session where the index or stock advances by at least',
+        text: '0.2% on volume above the prior session’s level. Clusters of accumulation days (three or more within a two-week period) signal genuine institutional buying that supports higher prices. The timing implication: when accumulation day count is rising, the market’s internal demand is strong and pullback entries are more likely to succeed.',
+      },
     ],
   },
   {
@@ -19749,6 +22359,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The difference between 0.05% and 1.00% in annual fees costs roughly $23,000 over 30 years on a $10,000 investment. Fees compound just like returns do, which is why low-cost index funds have such a powerful advantage over time.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Long Call: Full Mechanics, Ideal Conditions, and Common Mistakes Buying a call option conveys the right to purchase',
+        text: '100 shares at the strike price before expiration. Maximum loss is limited to the premium paid. Maximum profit is theoretically unlimited. The position profits if the underlying rises above the breakeven (strike plus premium paid) before expiration. Long calls make the most economic sense under three conditions: the trader has a specific time-bounded directional thesis with a catalyst within the option\'s lifespan; implied volatility is low relative to the stock\'s historical volatility (IV rank below 25) ensuring the option is not expensive relative to the expected move; and the trader genuinely accepts the realistic probability of losing the entire premium if the thesis does not materialize within the option\'s lifespan. Common Long Call Mistakes Buying ATM or near-the-money calls with high implied volatility on a stock with an imminent catalyst is the classic trap in options form.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Common Heatmap Reading Mistakes Common errors: treating every bright zone as real',
+        text: '(spoofs exist in heatmaps too); reading instantaneous snapshots instead of patterns across time; assuming heatmap data is complete (hidden orders don\'t show); over-relying on heatmap without chart context. Heatmaps are one input among many. Common heatmap mistakes include treating every bright zone as real, reading snapshots instead of time patterns, assuming heatmap data is complete, and over-relying on heatmap without chart context. Heatmaps are one input among many.',
       },
     ],
   },,
@@ -19838,6 +22466,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The employer match is a guaranteed 100% return on the contributed dollars — nothing in investing can match that. Raise your 401(k) to 4% to capture the full match immediately. Then direct all additional free cash flow toward eliminating the 19% credit card debt. Once the debt is gone, continue increasing the 401(k) contribution. The only scenario where not capturing the full employer match makes sense is if you have debt at a rate higher than the match rate — which is essentially impossible when the match is 100%.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Savings Rate: The Number That Matters More Than Returns In the early years of investing, your savings rate',
+        text: '(the percentage of income you invest) matters far more than your investment returns. If you earn $60,000 and save 15%, you are adding $9,000 per year to your portfolio. On a $20,000 portfolio, an extra 5% in investment returns adds only $1,000. The savings rate dominates. As your portfolio grows larger, investment returns begin to dominate because they are applied to a much larger base. But for the first decade, increasing your savings rate by 5% will do more for your wealth than any stock-picking skill.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Building a Rate Trading System PART VI',
+        text: '— CURRENCY FUTURES Currency futures are often overlooked by retail traders who default to spot forex, but they offer transparency, standardization, and regulatory clarity spot markets cannot match. This part covers the major FX futures contracts and their distinct characteristics as regulated, exchange-traded instruments. Chapter 36 — How FX Futures Differ from Spot Forex •',
+      },
     ],
   },
   {
@@ -19918,6 +22564,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Sibling A invested only $24,000 but their early contributions had 30-40 years to compound before age 62. Sibling B invested $72,000 — three times as much — but their later contributions had far less time to grow. The math works out strongly in Sibling A\'s favor: $24,000 invested from age 22-32 at 8% produces approximately $317,000 by age 62. Sibling B\'s $72,000 invested from age 32-62 at 8% produces approximately $272,000. Time beats contribution size.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Why It’s Never Too Late to Start If you are starting at',
+        text: '50 and have never invested, you still have 15–20 years until typical retirement. $1,000 per month invested at 8% for 15 years grows to approximately $346,000. It is not too late to build meaningful wealth, but the urgency is higher. Maximize contributions, take advantage of catch-up provisions, and avoid unnecessary risk. Every year of compounding matters. Starting at 50 is infinitely better than never starting at all. Chapter 89 — Goal-Based Investing: What Are You Investing For? Different goals require different investment approaches. A retirement nest egg, a house down payment, and a child’s college fund all have different time horizons and risk tolerances. This chapter helps you match your investments to your specific goals.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Choosing Your Starting Size For most new futures traders: start in Micros',
+        text: '(MES, MNQ, MCL, MGC) with $5,000–$15,000 of account capital, risking $100–$300 per trade for the first 90 days. If profitable after 90 days, scale gradually. If not profitable, identify specific issues before scaling up. The mistake is scaling up size while still losing money; the leverage that accelerates learning in Micros accelerates losses equally quickly in E-minis and Standards. PART III — MARGIN, LEVERAGE, AND CAPITAL Futures are leveraged instruments, and leverage is a tool that can build wealth or destroy accounts with equal efficiency. This part covers the mechanical realities of margin, the mathematics of leverage, and the capital management principles that separate survivors from those who do not last a year. Chapter 16 — Initial Margin and Maintenance Margin Margin is the mechanical heart of futures risk management.',
       },
     ],
   },
@@ -20083,6 +22747,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Stock prices move on the gap between results and expectations. A 20% profit increase is excellent in absolute terms, but if investors expected 30% growth and positioned accordingly, the 20% result is a disappointment relative to expectations. The stock falls because the reality did not meet the bar that had been priced in. This concept — buying on expectations, selling when reality diverges — is one of the most fundamental dynamics of how equity markets work.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Price vs. Intrinsic Value Price is the number printed on a stock ticker',
+        text: '— the output of supply and demand among participants with varying information and emotional discipline. Intrinsic value is what the underlying business is actually worth, determined by the cash flows it will generate over its economic life, discounted at a rate reflecting the risk of those cash flows. The two numbers are almost never identical, and the discipline of investing is fundamentally the study of when and why they diverge. Benjamin Graham articulated this with the metaphor of Mr. Market — a business partner who arrives each day with a new price determined by his emotional state rather than consistent analysis. On some days he is euphoric and offers far more than the business is worth; on others he is despairing and offers far less. The intelligent investor exploits his irrationality when the gap between price and value is large enough to provide a margin of safety.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Price Above the Moving Average = Generally Bullish When a stock’s price is above its',
+        text: '50-day and 200-day moving averages, both the intermediate and long-term trends are bullish. This is the most favorable condition for buying and holding. When the price is below both moving averages, both trends are bearish, and buying carries higher risk. When the price is between the two, the trend is mixed and requires more careful analysis. This simple framework — checking whether the stock is above or below its key moving averages — takes five seconds and provides more useful trend information than hours of fundamental analysis.',
+      },
     ],
   },
   {
@@ -20169,6 +22851,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Holding a diversified index fund through a bear market is the historically optimal strategy for long-term investors. Selling at a 25% decline locks in a $12,500 loss and creates the nearly impossible challenge of deciding when to re-enter — a decision most investors get wrong, missing the recovery. The empirical record is clear: every bear market has been followed by recovery to new highs. The loss is real only if you sell. Continued investment in a diversified fund simply requires patience.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Bull Market vs. Bear Market A bull market is a sustained period of rising stock prices, typically defined as a gain of',
+        text: '20% or more from a recent low. A bear market is a sustained decline of 20% or more from a recent high. Between these extremes, a decline of 10–19% is called a correction. Bull markets tend to last much longer than bear markets. Since 1945, the average bull market has lasted about five years and gained roughly 180%. The average bear market has lasted about one year and declined roughly 30%. Understanding this asymmetry is important: the market spends far more time going up than going down, which is why long-term investors almost always come out ahead.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Post-Bubble Price Behavior: Crashes, Bear Markets, and Recovery Patterns Post-bubble declines typically retrace',
+        text: '50–80% of the entire advance, with the crash phase retracing the final parabolic move quickly and the subsequent bear market grinding lower over months. Recovery from a major bubble usually takes longer than the bubble took to inflate. The Nasdaq took 15 years to recover its 2000 high. Some bubble victims never recover.',
+      },
     ],
   },
   {
@@ -20245,6 +22945,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Approach A wins on every structural dimension. It incurs minimal transaction costs, qualifies for the lower long-term capital gains tax rate (0-20% vs up to 37% for short-term gains), eliminates the behavioral risk of mistimed trades, and requires almost no time. Approach B incurs 50 bid-ask spreads per year, pays ordinary income tax on most profits, and introduces significant timing risk. Even if gross returns are identical, Approach A produces better net returns — and in practice, the index has historically outperformed most active strategies on a gross basis too.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Calendar Spreads for Term Structure Trading Normal contango calendar: sell the',
+        text: '30-day ATM option, buy the 60-day ATM option at the same strike. Entry when VIX term structure is in moderate contango, near-term IV is below the longer-term trend, no near-term binary events. Exit at 21 DTE on the short leg or at 50-70% of initial net theta potential. Stress regime calendar: when the curve inverts into backwardation, the crisis calendar (selling elevated near-term IV, buying cheaper longer-term IV) generates positive theta from the rapid decay of the expensive near-term option, positive vega-term-structure exposure from the normalization of the inverted curve, and limited maximum loss equal to the net debit paid.',
       },
     ],
   },
@@ -20409,6 +23121,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'This is the most common and costly mistake after a panic sale: waiting for a second pullback before re-entering. Markets can continue rising for months or years after a recovery begins. An investor waiting for the market to return to crash-bottom levels may wait years or decades. During that time, the market compounding continues without them. The "wait for another pullback" strategy feels rational but has historically cost enormous wealth — the market often runs 50-100% before the investor\'s threshold for re-entry is met.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: The Anatomy of a Market Crash on the Charts Market crashes typically follow a recognizable pattern: a distribution phase',
+        text: '(topping pattern visible on the weekly chart), an initial decline that breaks key support, a brief relief rally that fails at the broken support (now resistance), and then an accelerating decline driven by margin calls, fund redemptions, and panic selling. This sequence was visible in 2008, 2020, and numerous individual stock crashes.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Historical Record: Markets Have Always Recovered In the history of the US stock market',
+        text: '— spanning the Great Depression, two World Wars, the Cold War, multiple recessions, a global pandemic, and countless geopolitical crises — the market has always recovered and gone on to reach new all-time highs. There has never been a 20-year period in which the S&P 500 delivered a negative total return. This does not guarantee future results, but it provides powerful context when the next crisis arrives and the temptation to sell everything feels overwhelming. The investors who stayed invested through every crisis in history were rewarded. The investors who sold at the bottom were not. Chapter 50 — Position Sizing: How Much to Put in Any Single Stock Position sizing is the decision of how many dollars to allocate to each investment. It is one of the most overlooked aspects of investing, yet it often determines whether a good stock pick becomes a good portfolio outcome.',
+      },
     ],
   },
   {
@@ -20565,6 +23295,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Both options have merit, but for a new investor who explicitly describes discomfort with short-term losses, Option B is the better practical choice. The statistical advantage of lump-sum investing is real but modest — and it disappears entirely if the new investor panics and sells after a market decline following a large lump-sum investment. The best investment plan is the one you can actually follow through volatility. DCA provides a structured path to full investment that does not depend on experiencing a large immediate loss.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Scheduled Entries: Dollar-Cost Averaging and Value Averaging Dollar-cost averaging',
+        text: '(DCA) eliminates timing entirely by investing a fixed dollar amount at regular intervals regardless of price. This approach is optimal for investors who lack the time, knowledge, or temperament for active timing. Value averaging, a more sophisticated variant, adjusts the investment amount each period to ensure that the portfolio’s value grows by a target amount: investing more when prices are low (automatically buying more shares cheaply) and less when prices are high (automatically reducing purchases when stocks are expensive). Value averaging has been shown to produce modestly higher returns than DCA because it systematically exploits price fluctuations.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: What DCA Is: Investing the Same Amount on a Schedule With dollar-cost averaging, you invest a fixed amount',
+        text: '— say $500 — on the same day every month. When prices are high, your $500 buys fewer shares. When prices are low, your $500 buys more shares. Over time, this produces an average purchase price that is lower than the average market price during the same period. The mathematical reason is simple: by investing a fixed dollar amount, you automatically buy more shares when they are cheap and fewer when they are expensive.',
       },
     ],
   },
@@ -20745,6 +23493,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Daily portfolio checking exposes you to losses approximately 46% of trading days. Each perceived loss triggers loss aversion — a hardwired emotional response that the brain interprets as a genuine threat. After three consecutive losses, the availability heuristic makes continued decline feel inevitable. The combination almost guarantees emotionally driven decisions. The research solution is straightforward: check less often. Quarterly or semi-annual reviews eliminate most of the psychological noise while keeping you appropriately informed about your investments.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How Often to Check Your Portfolio',
+        text: '(Less Than You Think) Research by Shlomo Benartzi and Richard Thaler showed that investors who check their portfolios most frequently make the worst decisions because they experience more temporary losses, which triggers loss aversion and leads to excessive selling. Check your portfolio once per week or, better yet, once per month. Set automatic investments so the portfolio grows without requiring your attention. Reserve detailed portfolio reviews for quarterly intervals. Your portfolio does not need you to watch it. It needs you to leave it alone.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Portfolio Review Discipline A systematic portfolio review process',
+        text: '— examining every position in the portfolio on a regular schedule against its current thesis, updated intrinsic value, and alternative opportunities — prevents the accumulation of stale positions that have been held beyond their analytical sell signal and the neglect of positions that deserve more capital based on thesis confirmation. The review should be conducted at minimum quarterly, immediately following each portfolio company\'s earnings report, and at any time a significant corporate event occurs that is material to the investment thesis. The portfolio review should produce explicit decisions for every position: add, hold, trim, or exit — with specific analytical justifications for each decision that are documented and can be reviewed in subsequent periods.',
+      },
     ],
   },
   {
@@ -20822,6 +23588,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'A 0.97% annual cost difference compounds dramatically over time. On a $50,000 investment over 30 years at 8% gross returns: the 0.03% ETF grows to approximately $490,000; the 1.0% mutual fund grows to approximately $390,000 — a $100,000 difference from the cost gap alone. Beyond the math, SPIVA research consistently shows that over 80% of actively managed US equity funds underperform their benchmark index after fees over 15-year periods. The ETF is the clearly superior choice on both cost and evidence-based grounds.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: ETFs Trade Like Stocks; Mutual Funds Don’t An ETF',
+        text: '(exchange-traded fund) trades on a stock exchange just like a stock. You can buy and sell it throughout the trading day at the current market price. A mutual fund, by contrast, only processes buy and sell orders once per day, at the closing net asset value (NAV). You cannot set a limit price or trade intraday with a mutual fund. For most long-term investors, this difference is academic — if you are buying and holding for years, the ability to trade intraday does not matter. But if you want real-time pricing and order control, ETFs are the better choice.',
       },
     ],
   },
@@ -21071,6 +23849,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'This is one of the most persistent and costly investing myths. Historical data shows that the S&P 500 at all-time highs does not produce below-average subsequent returns. Waiting for a 10% pullback means you may wait months or years while the market continues rising — costing you significant compounding returns during the wait. In bull markets, 10% pullbacks may not occur for 2-3 years. Investors who waited through the 2013-2019 bull market for a "dip to buy" missed one of the great wealth-building periods in market history. Invest per your regular plan regardless of whether the market is at highs.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Common Myths About Order Flow Trading Three myths are worth dispelling up front. First, order flow is not a Holy Grail',
+        text: '— no technique wins every trade. Second, you do not need a million-dollar institutional terminal; retail platforms now offer professional-grade order flow tools. Third, order flow is not only for scalpers; swing and position traders benefit from reading the underlying auction just as much. Order flow is a lens, not a strategy. The three most damaging myths have cost countless traders real money: expecting order flow to predict every move, assuming institutional-grade tools are required, and believing scalping is the only application. Dispelling these up front prevents wasted years.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Value vs. Timing The most common error in catalyst-based investing is conflating value with timing',
+        text: '— assuming that because the fundamental thesis is correct, the catalyst will occur on the analyst\'s preferred timeline. A business genuinely undervalued by 40% will eventually re-rate to fair value, but that process could take 18 months or five years depending on when and whether the specific catalysts materialise. During the intervening period, the opportunity cost of capital committed to a static-price investment can be substantial, particularly in strong market environments where alternatives compound rapidly.',
+      },
     ],
   },,
 {
@@ -21245,6 +24041,24 @@ export const articles: Article[] = [
         explanation:
           'IOC (Immediate Or Cancel) fills whatever portion can be executed at the limit price right away and cancels the unfilled remainder instantly. It does not leave a resting order in the book. FOK would have cancelled the entire order since the full 1,000 shares were not available.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Executing Calendar Spread Orders Calendar spreads execute via exchange-supported spread order types',
+        text: '(available on CME, ICE) or via legged execution (separate orders). Exchange spread orders typically fill at better net prices because market makers quote them specifically as spreads, with competitive pricing at the spread level rather than leg-by-leg. The CME Group Globex spread order book is separate from the outright order books and often has tighter markets than you could achieve by trading both legs independently.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Practical Relevance for Different Trader Types The deep Greeks',
+        text: '— speed, color, zomma , ultima, DvegaDtime — occupy a specific position in the options practitioner\'s toolkit: essential for institutional desks, useful conceptually for sophisticated retail traders, and largely unnecessary to calculate explicitly for most retail options strategies. For Retail Options Traders The practical value of understanding the deep Greeks for retail traders is primarily conceptual. Knowing that color exists and is negative for long options explains why gamma risk increases through the life of a position — not just because the market is moving, but because time itself is increasing gamma. Knowing that zomma exists explains why a volatility spike makes your short OTM options more dangerous than your current gamma suggests. Knowing that DvegaDtime exists explains why the vega profile of your calendar spread drifts over time.',
+      },
     ],
   },
   {
@@ -21336,6 +24150,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Spreads reflect the risk and cost of market making. In small-cap stocks, low trading volume means market makers hold inventory longer, increasing the chance of adverse price moves. Fewer competing market makers also reduces pressure to narrow spreads. Both factors result in wider bid-ask spreads compared to heavily traded large-caps.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Liquidity Provision Around News Around scheduled news, market makers typically pull or widen quotes',
+        text: '— provision collapses. Post-news, provision resumes as uncertainty resolves. Understanding this cycle explains why spreads widen before news and tighten after; it also explains why news-driven initial moves are often extreme — there is no liquidity to absorb the initial flow. Around scheduled news, market makers pull or widen quotes — provision collapses. Post-news, provision resumes as uncertainty resolves. This cycle explains why spreads widen before news and tighten after.',
       },
     ],
   },
@@ -21437,6 +24263,24 @@ export const articles: Article[] = [
         explanation:
           'Days to cover (short ratio) = Total Short Interest / Average Daily Volume. It estimates how many trading days it would take for all short sellers to simultaneously close their positions at current volume. A high reading (above 5–10 days) indicates crowded short positioning that could amplify a squeeze if the stock starts rising.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Short Selling: Simpler in Futures Shorting stocks involves borrowing shares from a broker, paying borrowing costs',
+        text: '(which can be extreme for hard-to-borrow names), and accepting risk that the broker recalls the shares. Shorting futures is mechanically identical to going long — you simply sell a contract to open a position. No borrowing, no locate, no recall risk. This symmetry means futures markets respond to downside catalysts as readily as upside, without the structural frictions that suppress shorting in equities. For bearish strategies, futures are often more practical than equity shorts.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Economics and Risks of Short Selling Short interest',
+        text: '— the total number of shares currently sold short, expressed as a percentage of the float or as the number of days of average trading volume required to cover all short positions (days to cover) — is one of the most useful publicly available analytical signals for fundamental investors on both the long and short side. Short interest data is published bi-monthly in the United States by exchanges and is available from financial data services. A short interest ratio above 10% of float, or days-to-cover above 10 days, indicates that a significant fraction of sophisticated market participants have committed capital to a negative thesis — a signal that warrants investigation regardless of whether the investor agrees with the short thesis.',
+      },
     ],
   },
   {
@@ -21530,6 +24374,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'The approximate USD return equals the local return plus the currency effect: 15% + (−10%) = 5%. This is why currency moves are described as a hidden return driver — they can dramatically alter the dollar-denominated outcome of a foreign investment, even when the underlying stock performs well in its home market.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: When US Markets Lead and When They Follow During global risk-off events, US markets typically lead',
+        text: '(US selling spreads to Asian and European markets the following day). During global reflation and recovery periods, emerging markets often lead (EM breakouts precede US breakouts by 1–4 weeks). Understanding this lead-lag relationship improves the timing of both US and international equity positions. PART XIII — TIMING WITH VOLUME AND ORDER FLOW Dedicated treatment of volume and order flow as timing tools. Chapter 57 — Volume Pattern Timing Volume is the fuel that drives price. Moves on heavy volume are sustainable; moves on light volume are suspect. This chapter examines volume patterns as timing signals.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Exchange-Traded vs. OTC Markets Currency futures trade on centralized exchanges',
+        text: '(primarily CME) with published order books, while spot forex trades over-the-counter (OTC) through dealer networks without centralized price discovery. This distinction has practical consequences: futures have transparent pricing visible to all participants; spot forex has dealer-quoted prices that can differ between providers. Futures counterparty risk is eliminated by clearinghouse; spot forex counterparty risk depends on broker. For traders valuing transparency and regulation, futures are structurally preferable.',
       },
     ],
   },,
@@ -21627,6 +24489,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The investor buys at the ask ($50.10) but the fair value (midpoint) is $50.00. The cost of crossing the spread is $0.10 per share × 200 shares = $20. The full round-trip cost (buy and sell) would be $40, but only the buy-side cost of $20 applies to the purchase. This $20 does not appear on the brokerage statement — it simply means the investor is immediately down $20 relative to fair value the moment the order fills.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Fixed Dollar Risk Per Trade Fixed-dollar sizing risks the same absolute amount on every trade regardless of account size',
+        text: '(e.g., always $200 per trade). This is simpler than percentage sizing and works well for small accounts where 1% is too small for meaningful stops on any futures contract. As the account grows, fixed-dollar risk becomes a shrinking percentage — requiring periodic recalibration. Many traders start with fixed-dollar and transition to percentage as accounts grow past $50,000.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Why Every Trade Needs a Predetermined Stop A trade without a stop is not a trade',
+        text: '— it is a gamble. The stop serves three functions: it limits the maximum loss to a predefined amount, it enables the position size calculation (risk per share = entry minus stop), and it provides the emotional anchor that makes it possible to hold the position through normal fluctuations without panic. Determining the stop before entry ensures that the worst-case scenario is known and accepted before any capital is committed. A trade without a stop is not a trade — it is a gamble. The stop limits maximum loss to a predefined amount, enables position sizing, and provides the emotional anchor that makes it possible to hold through normal fluctuations without panic.',
+      },
     ],
   },
   {
@@ -21705,6 +24585,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'When a large order on the ask side (a "wall" of apparent resistance) is absorbed and cleared by buyers, it is bullish. It demonstrates that demand is strong enough to overcome significant supply at that price level. The supply has been exhausted, removing a potential ceiling. This is a classic market microstructure signal — the clearing of a significant ask wall on high volume often precedes further price appreciation as the next resistance level is typically higher and less well-populated.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Level II / Depth of Market',
+        text: '(DOM) Interpretation The Level II display shows all resting limit orders on both the bid and ask sides of the order book. The relative depth (total quantity) on each side indicates the market’s current directional bias. Large resting orders that persist through multiple price changes indicate genuine institutional interest; large orders that disappear when price approaches them indicate spoofing or fleeting liquidity.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Market Orders A market order executes immediately at the best available price. For liquid futures during regular hours',
+        text: '(ES, CL, ZN), market orders typically fill at or within 1 tick of the quoted price. For thin contracts or during fast markets, market orders can fill significantly away from quoted prices. Best uses: emergency exits when you need to be out of a position immediately regardless of price. Worst uses: entries into specific positions where price level matters; exits during thin overnight sessions; during volatility events when bid-ask spreads widen.',
       },
     ],
   },
@@ -21794,6 +24692,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The trading halt followed by a gap open is price discovery working efficiently under the circumstances. Because the trial results are genuinely new, material information that was not previously known, they warrant a large price adjustment. The halt prevents a chaotic real-time scramble and allows all participants to read the same data and form views before trading resumes. The 60% gap reflects the collective revision of all market participants\' estimates of the company\'s value based on the new clinical data. This is price discovery functioning as designed.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Options in Price Discovery: The Growing Dominance The traditional model of options as derivative markets',
+        text: '— instruments that derive their value from the equity market — is increasingly obsolete. Sophisticated institutional participants frequently express views through options rather than equity, because options provide leverage, defined risk, and the ability to express views about volatility and timing that equity cannot replicate. When these participants establish large options positions, the resulting dealer delta-hedging creates buying or selling in the underlying equity that shifts its price — making the equity follow the options positioning. This options-leads-equity dynamic is most pronounced in mega-cap stocks with large options open interest (AAPL, NVDA, TSLA, AMZN), in index products (SPX, SPY) where options are the primary institutional hedging vehicle, and during periods of significant institutional repositioning (quarter-end, OPEX week, post-earnings).',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: How Markets Reject Prices to Find Value Sometimes the market tests a price and rejects it swiftly',
+        text: '— a wick extending beyond recent range and returning in minutes. This rejection is the market\'s way of saying "not fair value." Recognizing rejections as they happen, not afterwards, is one of the core skills this book will teach. Markets reject prices through specific mechanisms: wicks forming on candles, quick retracements, and volume surges at the rejection point. Each of these is the visible signature of the auction rejecting a trial balloon at a price that did not attract real activity.',
+      },
     ],
   },
   {
@@ -21878,6 +24794,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 3,
         explanation: 'Known anomalies like PEAD do not necessarily disprove EMH. There are two interpretations: (1) it is a genuine inefficiency — markets are slow to incorporate earnings information, creating exploitable opportunity; or (2) it reflects a risk premium — stocks that have beaten estimates are riskier in some way, and the subsequent drift is compensation for that risk. Additionally, the anomaly is public knowledge, and once identified and widely traded, it tends to shrink. Markets are not perfectly efficient, but known anomalies face arbitrage pressure that gradually reduces their magnitude.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: When to Use Futures vs. Spot Use currency futures when: tax efficiency matters',
+        text: '(US residents), you value transparency and regulation, you\'re trading major pairs, you want standardized contract sizes for portfolio management. Use spot forex when: you need exotic pair exposure, very small position sizes (micro-lots), specific broker features you prefer. Many professional FX traders use futures for US-related trading and spot for specific situations — the choice isn\'t exclusive. Chapter 37 — Euro FX Futures (6E) 6E is the largest currency futures contract and the cleanest instrument for trading the US dollar against the Euro. This chapter covers 6E specifications and strategies. 37.1 6E Contract Specifications 6E (Euro FX futures) specifications: symbol 6E; underlying EUR/USD; contract size 125,000 EUR; minimum tick 0.00005 ($6.25 per tick); quarterly expiration (H, M, U, Z); cash settlement; initial margin typically $2,000–$3,500.',
       },
     ],
   },
@@ -22035,6 +24963,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The inclusion arbitrage is a competitive strategy, and many sophisticated participants are monitoring S&P announcements simultaneously. By the time any individual trader acts, dozens of others have already bought, and the announcement-day price jump already incorporates much of the expected forced-buying premium. The remaining 5-day opportunity is therefore smaller than the naive analysis suggests. The risk is paying too much for the trade, such that the actual forced buying on the effective date does not produce enough additional price appreciation to generate a profit after transaction costs.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Total Market Funds: Owning Everything A total stock market index fund goes even broader than the S&P',
+        text: '500, owning every publicly traded US company — roughly 4,000 stocks. This includes small and mid-cap companies that are not in the S&P 500. Total market funds like VTI (Vanguard Total Stock Market ETF) provide the most complete diversification available in a single fund. Historically, the returns of total market funds and S&P 500 funds have been nearly identical because the largest companies dominate both. Either choice is excellent for a beginner.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Accumulation Day Timing An accumulation day is a session where the index or stock advances by at least',
+        text: '0.2% on volume above the prior session’s level. Clusters of accumulation days (three or more within a two-week period) signal genuine institutional buying that supports higher prices. The timing implication: when accumulation day count is rising, the market’s internal demand is strong and pullback entries are more likely to succeed.',
+      },
     ],
   },
   {
@@ -22108,6 +25054,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'Two structural factors explain the decline: (1) The retail investor paid $90 — a 80% premium to the $50 IPO price that insiders and early investors received. This premium likely reflected peak enthusiasm that was not supported by fundamentals. (2) At 180 days, the lock-up expires and insiders, venture capitalists, and early employees who have been unable to sell can now exit. This creates a large, predictable supply of shares entering the market, often depressing prices. Both are structural, predictable features of the IPO process, not random bad luck.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: When Options Become Available on Newly Public Companies Listed options on a newly public company typically begin trading',
+        text: '2-5 weeks after the IPO date, once the OCC and the listing exchange have verified that the company meets the requirements for options listing: minimum stock price (generally $3 or above, though most option-eligible companies trade well above this threshold), minimum number of shares outstanding, minimum float requirements, and sufficient market capitalization. The exact timing varies depending on the company\'s stock price stability in the first weeks of trading — exchanges prefer to list options on newly public companies only after some initial price discovery has occurred, reducing the likelihood that extreme intraday price moves in the options\' first trading days create market-making challenges. The implied volatility regime at initial options listing is almost always dramatically elevated relative to where IV will settle once the company has established a trading history.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Altman Z-Score The Altman Z-Score for public manufacturing companies is calculated as: Z =',
+        text: '1.2(Working Capital / Total Assets) + 1.4(Retained Earnings / Total Assets) + 3.3(EBIT / Total Assets) + 0.6(Market Value of Equity / Book Value of Total Liabilities) + 1.0(Sales / Total Assets). A Z-Score below 1.81 places the company in the distress zone with high probability of bankruptcy within two years. A Z-Score above 2.99 places it in the safe zone. Scores between 1.81 and 2.99 fall in the grey zone where additional analysis is required. For non-manufacturing and private companies, modified versions with different coefficients and variables should be used — the original manufacturing formula should not be applied mechanically to service businesses or financial institutions.',
       },
     ],
   },
@@ -22272,6 +25236,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The reverse split is a mechanical action that did nothing to fix whatever drove the stock to $0.50. A stock that has lost 95%+ of its value typically has serious fundamental problems: declining revenue, mounting losses, debt crises, or competitive disruption. The reverse split only changes the nominal price to avoid delisting — it does not change the earnings power, balance sheet, or competitive position of the business. Historical research shows that reverse-split stocks dramatically underperform the market on average, because the fundamental problems that caused the decline typically persist.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Profit Splits and Withdrawals Standard prop firm profit splits:',
+        text: '70-90% to trader, 10-30% to firm. Minimum payout periods (usually monthly or bi-weekly). Minimum payout amounts ($500-$1,000 typical). Payment methods vary (PayPal, bank transfer, crypto at some firms). Track your payout history carefully; maintain records of all funded account P&L and payouts for tax purposes. Prop firm payouts are typically self-employment income for US tax purposes (not Section 1256 treatment, since you don\'t own the account capital).',
+      },
     ],
   },
   {
@@ -22352,6 +25328,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'To receive the dividend, the investor must own the stock before the ex-dividend date — meaning they must purchase it by end of day on Monday. Under T+1 settlement, a trade executed on Monday settles on Tuesday, placing the investor\'s name on the shareholder records by the record date (which is Tuesday, the same as the ex-date under T+1 rules). If they buy on Tuesday (the ex-date itself) or later, their trade settles after the record date, and they are not eligible for the dividend. This is the most common dividend mechanics error retail investors make.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: The IPO Timing Framework Three key dates define IPO timing: the listing date',
+        text: '(when trading begins), the first earnings report (when fundamental data becomes available), and the lockup expiration (when insiders can sell). Each date creates a specific timing opportunity. The listing date offers the most volatile but least predictable timing. The first earnings report offers the most informative catalyst. The lockup expiration often creates a selling pressure event that produces a buyable dip if the company’s fundamentals are strong. Do not buy IPOs on day one. Wait for the initial excitement to fade, a base to form, and the first constructive pattern to develop. The exception: IPOs that close on their day-one high on massive volume, showing genuine institutional demand.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: When High Dividend Yields Are a Warning Sign A stock with a',
+        text: '10% dividend yield is not necessarily a great investment. In many cases, the yield is high because the stock price has crashed due to deteriorating fundamentals, and the market expects the company to cut or eliminate the dividend. A company paying out more than 80–90% of its earnings as dividends may not be able to sustain the payment. Before buying a high-yield stock, check the payout ratio, the trend in earnings, and whether the company has ever cut its dividend in the past. A sustainable 3% yield is far better than an unsustainable 10% yield that gets cut to zero.',
+      },
     ],
   },
   {
@@ -22431,6 +25425,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Level 2 circuit breakers (and Level 1) only apply if triggered before 3:25 PM ET. After 3:25 PM, markets are allowed to trade through the closing period to avoid the disruption of a halt near the close, which could prevent traders from closing positions or executing end-of-day index rebalancing. Since the -13% threshold was reached at 3:30 PM — after the 3:25 PM cutoff — no Level 2 halt is triggered. The market would continue trading until the normal 4:00 PM close.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Circuit Breakers and Trading Halts Exchanges have circuit breakers that pause trading during extreme moves',
+        text: '— 5%, 10%, 20% moves can trigger halts. Individual stocks also halt for news or volatility. When a halt ends, the reopening auction can produce enormous gaps. Knowing when halts are possible is part of professional risk management. Circuit breakers and halts are safety mechanisms that occasionally catch traders off guard. Being aware of which instruments are subject to what halting rules prevents you from being surprised when a fast-moving position suddenly stops trading.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Circuit Breaker and Halt Scenarios: What to Do When Trading Stops When market-wide circuit breakers halt trading',
+        text: '(at 7% decline, 13% decline, and 20% decline for US markets), the trader cannot execute. The pre-planned response: use the halt period to review positions, adjust stop levels if appropriate, and prepare conditional orders for the reopening. Do not let the halt create panic that leads to market sell orders at the reopening — these orders fill at the worst possible prices.',
+      },
     ],
   },
   {
@@ -22502,6 +25514,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The extended hours volume (150,000 shares) is only 7.5% of the regular daily average — a tiny, unrepresentative sample. The 15% after-hours gain could be too high (regular-hours sellers show up) or too low (institutional buyers confirm the enthusiasm). Trading during this illiquid session means crossing a wide spread and potentially moving the price against yourself. Waiting for the regular-hours open sacrifices the ability to transact at the after-hours price but gains meaningful liquidity, tighter spreads, and a more accurate price signal. For most retail investors, this trade-off strongly favors waiting.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Trading Hours: When You Can and Can’t Trade The US stock market is open from',
+        text: '9:30 AM to 4:00 PM Eastern Time, Monday through Friday, excluding holidays. These are called regular trading hours. During this window, all market participants — retail investors, institutions, algorithms — are active, and prices are determined by full market competition. Orders placed outside these hours will not be executed until the market opens, unless you specifically use extended-hours trading.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Pre-Market and After-Hours Data Considerations Extended-hours trading',
+        text: '— pre-market (typically 4:00 AM to 9:30 AM ET) and after-hours (4:00 PM to 8:00 PM ET) sessions — presents unique challenges for technical analysis. Liquidity during extended hours is dramatically lower than during the regular session, making prices more volatile and less representative of genuine supply and demand. Bid-ask spreads are wider, volume is thinner, and large orders can move prices far more than they would during regular hours. For most technical analysis purposes, extended-hours data should be excluded from indicator calculations and chart analysis. Support and resistance levels established during the regular session are more significant than those established in illiquid pre-market trading.',
       },
     ],
   },
@@ -22580,6 +25610,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Under T+1 rules (effective May 2024 in the U.S.), a trade executed on Monday settles on Tuesday — one business day later. The cash proceeds from the sale are available to the investor on Tuesday. Most brokerages, however, allow "unsettled funds" to be used for new purchases immediately (the trade will settle against the new purchase simultaneously), which is why in practice you can often reinvest immediately. However, withdrawing the cash to a bank account must wait until settlement on Tuesday.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Cash Settlement vs. Physical Delivery Some futures settle physically',
+        text: '(the long takes delivery of the actual commodity); others settle in cash (the contract pays the difference between the contract price and the final settlement price). Equity index futures, VIX, and financial rate futures cash-settle; most commodity futures physically settle. The distinction is operationally enormous: a physically settled contract held to expiration by a retail trader means literal barrels of oil or bushels of corn arriving at a delivery location, which is why brokers aggressively liquidate retail positions approaching first notice day.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Settlement Prices and Contract Expiration Each trading day, futures contracts settle at specific official prices',
+        text: '(typically a volume-weighted average of the closing minutes). Settlement prices matter — they determine margin requirements and serve as reference prices. Contract expiration produces specific flow patterns: open interest shifts, volume concentrates in the new front month, and expiring contracts see position squaring. Chapter 91 — Forex: The Decentralized Challenge Forex is the world\'s largest market by volume, but its decentralized structure denies traders the consolidated volume data available in futures and equities. This chapter covers forex\'s unique challenges, the workarounds (tick volume, futures volume proxies, COT reports), and the methodologies that work best despite the limitations.',
       },
     ],
   },
@@ -22660,6 +25708,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Days to cover of 10 means that if all short sellers tried to close their positions simultaneously, it would take 10 full days of average trading volume — an enormous amount of buying pressure. When positive news emerges and the stock starts rising, shorts who were betting on a decline face growing losses. As some begin covering (buying to close their short positions), this buying pushes the price higher, triggering more stop-loss orders for other shorts, creating a feedback loop. A days-to-cover ratio above 5-7 is generally considered territory where short squeeze risk is material.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Short Squeeze Timing in High Short Interest Small Caps When short interest exceeds',
+        text: '20% of float and the stock approaches a key resistance level, a squeeze becomes increasingly probable. The timing entry: buy when the stock breaks above resistance on heavy volume, with the expectation that forced short covering will amplify the advance. Days to cover above 5 indicates that the squeeze will take nearly a full week to play out, providing sustained buying pressure.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Economics and Risks of Short Selling Short interest',
+        text: '— the total number of shares currently sold short, expressed as a percentage of the float or as the number of days of average trading volume required to cover all short positions (days to cover) — is one of the most useful publicly available analytical signals for fundamental investors on both the long and short side. Short interest data is published bi-monthly in the United States by exchanges and is available from financial data services. A short interest ratio above 10% of float, or days-to-cover above 10 days, indicates that a significant fraction of sophisticated market participants have committed capital to a negative thesis — a signal that warrants investigation regardless of whether the investor agrees with the short thesis.',
       },
     ],
   },
@@ -22764,6 +25830,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Initial delta hedge: 0.40 delta × 1,000 contracts × 100 shares/contract = 40,000 shares purchased. When the stock rises to $110 and delta increases to 0.65, the market maker\'s short calls now have a delta of 0.65, requiring a hedge of 0.65 × 1,000 × 100 = 65,000 shares. The market maker already owns 40,000 shares, so they must buy an additional 25,000 shares to remain delta-neutral. This forced buying — buying more stock as it rises — is the gamma hedging dynamic that can amplify upward stock moves when large options positions are outstanding.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Payment for Order Flow: The Hidden Cost Retail brokers route customer options orders to wholesale market makers',
+        text: '(Citadel Securities, Susquehanna, Virtu) in exchange for payment of $0.30 to $0.60 per contract. The wholesaler provides \'price improvement\' over the NBBO — genuine but limited. Academic research shows the price improvement provided falls substantially short of the economic value of the retail order flow to the wholesaler, who profits from the systematic overpricing of implied volatility by retail option buyers and from the information embedded in aggregate retail flow. For options traders: minimize PFOF cost by selecting brokers with genuine price competition (IBKR routes to the best exchange rather than to a wholesale market maker) and developing excellent limit-order execution discipline that captures mid-price fills rather than relying on wholesaler price improvement. Chapter 36 Options Order Types & Execution Tactics Knowing which strategy to trade is only half the battle.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Major Options on Futures Contracts The most liquid options on futures: ES options',
+        text: '(ticker ES, American-style, monthly and weekly expirations) and SPX options (cash-settled, European-style on CME); CL options (crude oil, monthly and weekly); GC options (gold); ZC, ZS, ZW options (grain); ZN options (10-year note); 6E options (Euro currency). CME\'s micro contracts also have options (MES options). VX options on VIX futures are a specialized category. Each options market has different liquidity characteristics, implied volatility levels, and strategy considerations.',
+      },
     ],
   },,
 {
@@ -22852,6 +25936,24 @@ export const articles: Article[] = [
         explanation:
           'w = σ_target / σ_asset = 8% / 20% = 0.40, or 40% of a position unit before normalisation across all holdings. This means the high-volatility asset gets only 40% of the capital a 8%-volatility asset would receive, keeping its risk contribution equal.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Capital Allocation: Defined vs. Undefined Risk The split between defined-risk strategies',
+        text: '(iron condors, credit spreads, debit spreads) and undefined-risk strategies (naked short strangles, short puts, short calls) is one of the most consequential portfolio-level decisions in options trading. It determines the portfolio\'s maximum drawdown potential, its capital efficiency, and its appropriate size relative to total account value. A conservative capital allocation framework: 60-70% of options capital in defined-risk structures (spreads, condors, butterflies), 20-30% in cash-secured or cash-backed undefined-risk structures (cash-secured puts, covered calls), and 0-10% in naked undefined-risk structures (naked strangles, naked puts without full cash coverage) — with the undefined-risk allocation available only to accounts with portfolio margin or Regulation T Level 4 approval.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Target Calculation in Ticks The same tick-based thinking applies to targets and reward-to-risk calculations. A',
+        text: '2:1 reward-to-risk trade with a 20-tick stop has a 40-tick target — not a 2-point target on a contract that ticks at 0.25. This becomes obvious with practice, but early in your futures trading, explicitly calculate both stop and target in ticks, verify the R:R is what you want, and only then send the order. The tick is the fundamental unit; thinking in it prevents sizing mistakes. Chapter 12 — Settlement: Physical Delivery vs. Cash Settlement The settlement method of a contract determines what happens when you hold it to expiration — simple cash adjustment or the beginning of a physical delivery process most retail traders cannot handle. This chapter covers both mechanisms in detail.',
+      },
     ],
   },
   {
@@ -22937,6 +26039,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'A 5% drift rule means you allow the allocation to float within a band of target ± 5 percentage points. With a 60% equity target, you would rebalance only if equities rose above 65% or fell below 55%. This reduces unnecessary trading while keeping the portfolio close to its intended risk profile.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Tactical Asset Allocation Using Moving Average Rules The simplest tactical asset allocation model uses a',
+        text: '10-month (approximately 200-day) SMA for each asset class: hold the asset when price is above the SMA, sell when price is below. Applied across a global portfolio of stocks, bonds, and commodities, this model has historically matched buy-and-hold equity returns with dramatically lower drawdowns.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Tactical Allocation Timing Monthly signal-based allocation ranks asset classes',
+        text: '(US equity, international equity, bonds, REITs, commodities) by their 10-month SMA status. Assets above their 10-month SMA receive allocation; those below receive zero. Monthly rebalancing captures the rotation. This approach has matched endowment-level returns with dramatically lower drawdowns.',
       },
     ],
   },
@@ -23293,6 +26413,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The IPS\'s most important function is behavioral governance. By writing down your rules (target allocation, rebalancing triggers, permitted investments) during calm periods, you create a commitment mechanism that helps you follow the plan when markets crash and emotional pressure to deviate is strongest. Research consistently shows that disciplined adherence to an investment plan — avoiding panic selling and performance chasing — is one of the largest sources of investment return improvement available to retail investors.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Valuing the Investment Portfolio The investment portfolio of an insurance company',
+        text: '— the assets held against future claim obligations and shareholder equity — is a critical component of total value and a primary driver of investment income. For most insurers, the investment portfolio is dominated by fixed income securities whose value is sensitive to changes in interest rates. Rising interest rates reduce the market value of existing fixed income holdings (creating unrealised losses in accumulated other comprehensive income) but improve the reinvestment rate on maturing bonds and new premium inflows (improving future investment income). Understanding the interest rate sensitivity of both the asset portfolio and the liability structure is essential to assessing the net interest rate exposure.',
+      },
     ]
   },
   {
@@ -23362,6 +26494,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Target-date funds\' primary advantage is radical simplicity and automation: they diversify globally, rebalance automatically, and shift allocation as you age — all with a single fund choice. This eliminates the most common investor mistakes (failing to rebalance, not diversifying, staying too aggressive or too conservative at the wrong life stage). The primary trade-off is that a one-size-fits-all glide path may not perfectly match your individual circumstances.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: What a Target-Date Fund Does: Auto-Adjusts as You Age A target-date fund',
+        text: '(also called a lifecycle fund) contains a mix of stocks and bonds that automatically becomes more conservative as the target date approaches. A 2060 target-date fund, designed for someone planning to retire around 2060, currently holds roughly 90% stocks and 10% bonds. As the years pass, the fund gradually shifts to 60% stocks and 40% bonds, and eventually to 40% stocks and 60% bonds. You choose the target date closest to your expected retirement year, invest your money, and the fund handles everything else.',
+      },
     ]
   },
   {
@@ -23585,6 +26729,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The 60/40 portfolio\'s protective mechanism relies on bonds rising when stocks fall. This works in growth-driven recessions (central banks cut rates, bonds rally). It fails in inflationary environments where central banks raise rates: rising rates cause bond prices to fall (the 40% bond allocation becomes a loss center) while simultaneously compressing equity multiples (the 60% stock allocation also falls). 2022 was the clearest example: inflation + rate hikes caused both legs to fall at once.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Portfolio-Level Technical Allocation Models The',
+        text: '200-day moving average applied to asset class ETFs provides a simple but effective tactical allocation model: hold the asset when price is above its 200-day average; move to cash or bonds when price is below. Applied across equities, bonds, commodities, and real estate, this model has historically produced equity-like returns with significantly lower drawdowns.',
+      },
     ]
   },
   {
@@ -23659,6 +26815,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Bond funds like BND distribute interest income that is taxed as ordinary income — the same rate as wages — which can be up to 37% federally for high earners. Equity index funds like VTI produce mostly qualified dividends taxed at the lower 0–20% capital gains rate and generate minimal taxable events due to low turnover. Sheltering the highest-taxed asset (bonds) in tax-advantaged accounts and holding the lower-taxed asset (equity index funds) in taxable accounts is the core of tax location strategy.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Three-Fund Portfolio: All You May Ever Need The three-fund portfolio consists of a US total stock market fund',
+        text: '(VTI), an international total stock market fund (VXUS), and a total bond market fund (BND). A common allocation for a young investor is 60% VTI, 25% VXUS, and 15% BND. This portfolio provides exposure to over 15,000 stocks and thousands of bonds across the globe with total annual fees under 0.07%. It requires no research, no stock picking, and minimal maintenance. It has been endorsed by Jack Bogle, Burton Malkiel, and every major personal finance authority. For most investors, it is genuinely all they will ever need. Chapter 43 — Dollar-Cost Averaging: The Beginner’s Secret Weapon Dollar-cost averaging is the practice of investing a fixed dollar amount at regular intervals, regardless of what the market is doing.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Inter-Commodity Spread Portfolio A diversified inter-commodity spread portfolio might include:',
+        text: '1–2 rate curve positions (NOB or TUT), 1 equity index relative spread (ES-NQ or ES-RTY), 1–2 commodity relative value positions (gold-silver ratio, corn-wheat), and possibly 1 cross-asset position (commodity-currency or copper-gold). This portfolio expresses views on multiple independent themes while maintaining low directional exposure to any single market. Each spread has different SPAN margin implications, and total portfolio capital usage should be monitored. Chapter 63 — Intermarket Analysis The four major futures asset classes interact systematically. Understanding intermarket relationships helps confirm individual trade ideas and identify macro regime shifts.',
+      },
     ]
   },
   {
@@ -23820,6 +26994,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A 9% yield is unusually high and almost always signals either a recent sharp price decline (distressed company) or an unsustainably high payout. The payout ratio (dividends / earnings) reveals whether the company can afford the dividend: above 75–80% for stocks means earnings barely cover dividends and any shortfall will cause a cut. Free cash flow coverage confirms dividends are funded by actual cash, not accounting earnings. High yield without high free cash flow coverage is the income investor\'s primary trap.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Building a Dividend Portfolio: Quality Over Yield The temptation is to buy the highest-yielding stocks. Resist it. A',
+        text: '10% yield often indicates a stock in distress whose dividend is about to be cut. Focus instead on companies with moderate yields (2–4%), strong earnings coverage (payout ratio below 60%), consistent dividend growth history (10+ years of increases), and competitive advantages that protect future earnings. A portfolio of 15–20 dividend growth stocks across diverse sectors provides a growing income stream with lower risk than a concentrated portfolio of high-yield stocks.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Roll Yield: Quantifying Structural Income VIX call spread budget: the',
+        text: '20/35 VIX call spread at 45-60 DTE costs approximately $1.50-2.50 in calm markets and pays up to $15 when VIX spikes above 35. Budget 2% of portfolio value annually for this structure — it is insurance that enables you to hold more equity risk with a known worst-case cost. For short front-month VIX futures positions in contango, the daily roll yield is approximately (Second-Month Futures − Front-Month Futures) / Days Until Front-Month Expiration. With front-month at 17.50 and second-month at 19.00 with 20 days until expiration: Roll Yield per day = (19.00 − 17.50) / 20 = $75 per contract per day — independent of the VIX level remaining constant. Over 20 days, the total expected roll yield from this contango is approximately $1,500 per short contract.',
+      },
     ]
   },
   {
@@ -23914,6 +27106,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The Fama-French small-cap value premium (approximately 3–4% annually over 97 years) represents the best-documented and longest-running return premium in academic finance. While the premium is volatile and can underperform for extended periods (including a decade from 2010–2020), over 20–30 year horizons this consistent annual advantage compounds into dramatically higher terminal wealth — up to 10x the long-run S&P 500 terminal value in historical data. For a growth-focused investor with genuine time horizon, the premium justifies the additional volatility.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Compound Growth Mathematics Account compounding mathematics: at',
+        text: '2% monthly return (achievable for skilled futures traders), $25,000 becomes $50,000 in 3 years, $100,000 in 6 years, $200,000 in 9 years. At 3% monthly, $25,000 becomes $100,000 in 4 years. These rates, while appearing modest compared to marketing promises, represent substantial lifetime wealth if compounded from a young starting point. The traders who achieve these rates sustainably are the professionals; the traders chasing 20%/month are almost all destroyed by variance.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Growth Seeker: Tech-Tilted With Index Core Portfolio:',
+        text: '50% VTI, 20% QQQ (Nasdaq-100), 15% VXUS, 10% individual growth stocks, 5% BND. Time commitment: 1 hour per week for individual stock research. This portfolio overweights technology and growth stocks through QQQ while maintaining a broad index core. The individual stock allocation allows you to invest in specific growth companies you have researched. This is a higher-volatility approach that will outperform in bull markets and underperform in bear markets relative to a pure index approach.',
+      },
     ]
   },
   {
@@ -24071,6 +27281,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Bond funds like BND distribute interest income monthly that is taxed as ordinary income — the same rate as salary, up to 37% federally for high earners. Equity index ETFs predominantly produce qualified dividends taxed at the lower 15–20% capital gains rate and generate minimal taxable events due to low turnover. Sheltering the highest ordinary-income-generating asset (bonds) in tax-deferred accounts and holding the most tax-efficient asset (equity index ETFs) in taxable accounts is the core of asset location strategy.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Fundamental Problem: Risk-Adjusted Returns A portfolio that generates',
+        text: '25% annual returns while taking on enormous risk is not performing well — it is being paid appropriately for extraordinary risk. A portfolio that generates 12% annual returns with minimal risk may be performing better on a risk-adjusted basis than the 25% return portfolio. This distinction — between absolute returns and risk-adjusted returns — is the foundation of all meaningful performance measurement. The Sharpe ratio — the most widely used risk-adjusted return measure — captures this distinction: Sharpe = (Return − Risk-Free Rate) / Annualized Return Volatility. A Sharpe ratio above 1.0 indicates that the portfolio is generating more than one unit of excess return for each unit of volatility it accepts. Above 2.0 is exceptional.',
+      },
     ]
   },
   {
@@ -24150,6 +27372,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The performance of ESG funds relative to conventional indices is primarily driven by sector concentration differences, not by any inherent ESG return premium. Excluding energy (~4% of S&P 500) and overweighting technology means ESG funds outperform when tech leads (2018–2020) and underperform when energy leads (2022). Once you control for sector exposures, the ESG-specific contribution to returns is negligible in most studies. Understanding this is essential to evaluating ESG fund performance honestly.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Savings Rate: The Number That Matters More Than Returns In the early years of investing, your savings rate',
+        text: '(the percentage of income you invest) matters far more than your investment returns. If you earn $60,000 and save 15%, you are adding $9,000 per year to your portfolio. On a $20,000 portfolio, an extra 5% in investment returns adds only $1,000. The savings rate dominates. As your portfolio grows larger, investment returns begin to dominate because they are applied to a much larger base. But for the first decade, increasing your savings rate by 5% will do more for your wealth than any stock-picking skill.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Fundamental Problem: Risk-Adjusted Returns A portfolio that generates',
+        text: '25% annual returns while taking on enormous risk is not performing well — it is being paid appropriately for extraordinary risk. A portfolio that generates 12% annual returns with minimal risk may be performing better on a risk-adjusted basis than the 25% return portfolio. This distinction — between absolute returns and risk-adjusted returns — is the foundation of all meaningful performance measurement. The Sharpe ratio — the most widely used risk-adjusted return measure — captures this distinction: Sharpe = (Return − Risk-Free Rate) / Annualized Return Volatility. A Sharpe ratio above 1.0 indicates that the portfolio is generating more than one unit of excess return for each unit of volatility it accepts. Above 2.0 is exceptional.',
+      },
     ]
   },
   {
@@ -24226,6 +27466,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The employer 401(k) match is a guaranteed 50% return on contributed dollars — far higher than any investment can reliably provide. Contributing 6% ($3,600/year) to receive $1,800 in free employer matching money is the highest-priority financial action available to this investor. Not capturing the full match is equivalent to leaving part of your salary on the table. After capturing the full match, the next priority is maxing out a Roth IRA for tax-free growth.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Start Watching Your Portfolio',
+        text: '— But Not Too Often Check your portfolio once per day at most, ideally after market close rather than during trading hours. Note the day’s change without emotional attachment. Record any strong emotional reactions in your journal. If you find yourself checking more than twice per day, delete the app from your phone’s home screen and access it only through the browser. The goal is awareness without obsession. Chapter 95 — Month 3: Building Discipline By month three, the initial excitement has faded and the real work of building discipline begins. This is the month where most beginners either establish habits that will serve them for decades or begin the pattern of emotional decision-making that undermines most investors.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Tape Reading Exercises for Beginners For beginners: start by watching just one stock during its most active hour',
+        text: '(usually the open). Narrate what you see — "Big buyer just stepped in, 10k shares at the ask." "Seller at 4501, keeps reloading." This forced verbalization accelerates pattern recognition enormously. Tape reading exercises for beginners start simple: narrate what you see out loud for one instrument during its most active hour. The forced verbalization accelerates pattern recognition dramatically in a short time.',
+      },
     ]
   },
   {
@@ -24309,6 +27567,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'The 5% threshold rule triggers rebalancing when any asset class drifts more than 5 percentage points from its target weight. With a 70% equity target and an actual weight of 78%, the drift is 8 percentage points — exceeding the 5% threshold. The correct action is to sell equities (or direct new contributions to bonds) to restore the 70% equity target. The threshold exists to allow minor drift without constant trading while preventing large allocation deviations.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Rebalancing Timing: Calendar vs. Threshold vs. Signal-Based Calendar rebalancing',
+        text: '(quarterly or annually) is simple but may rebalance into declining assets. Threshold rebalancing (rebalance when any position deviates by more than 5% from target) responds to market movements. Signal-based rebalancing (rebalance when technical signals indicate regime change) aligns the portfolio with the current market environment. The hybrid approach: calendar rebalancing as the default with signal-based overrides when significant technical events occur.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Rebalancing Timing: Calendar vs. Signal-Based Approaches Calendar rebalancing',
+        text: '(quarterly or annually) is simple but may rebalance into falling assets during bear markets. Signal-based rebalancing adjusts allocation when technical signals change, avoiding the pro-cyclical tendency of calendar rebalancing. A hybrid approach uses calendar rebalancing as the default but overrides it when significant technical signals fire.',
+      },
     ]
   },
   {
@@ -24472,6 +27748,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'USD Total Return ≈ Local Return + Currency Change = 8% + (-5%) = approximately 3%. Currency drag directly reduces the return for an unhedged foreign investor.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Currency and Commodity Country Correlations Australia and Canada are commodity-exporting countries; their currencies',
+        text: '(AUD, CAD) move with commodity prices. Divergences between AUD and copper, or between CAD and crude oil, can signal which instrument is currently mispriced. When copper rallies but AUD lags, either copper is extended or AUD has specific headwinds — information that helps position in one or the other. These cross-market divergences are systematically exploitable by traders monitoring them.',
+      },
     ]
   },
   {
@@ -24641,6 +27929,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'In the early cycle phase, Financials benefit from bottoming interest rates and rising credit demand, while Consumer Discretionary benefits from pent-up consumer spending. Utilities and Consumer Staples are defensive and tend to lag in recoveries. Energy typically outperforms in the late cycle when inflation is rising.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Sector Rotation for Dividend Timing Defensive dividend sectors',
+        text: '(utilities, REITs, staples) outperform during late-cycle and contraction phases when investors seek income and safety. The timing: rotate dividend allocation toward these sectors when leading indicators deteriorate and the yield curve flattens or inverts. Rotate toward cyclical dividend payers (financials, industrials) during early recovery when growth resumes.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Timing Sector Entry and Exit with RRGs Enter sectors when they cross from Improving into Leading',
+        text: '(relative strength is now positive and accelerating). Exit or underweight sectors when they cross from Weakening into Lagging (relative strength has turned negative and is decelerating). The crossing points provide the specific timing signals for sector rotation decisions. Sectors in the Leading quadrant deserve maximum allocation; sectors in the Lagging quadrant should be avoided or shorted.',
+      },
     ]
   },
   {
@@ -24813,6 +28119,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Cash equitization involves buying index futures on newly received cash (e.g., pension contributions) to achieve immediate equity market exposure without cash drag, while the underlying stocks are purchased gradually over days or weeks. It solves the problem of being unintentionally underweight the market while building a physical position.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Split-Strike Synthetic: Capital-Efficient Long Exposure The split-strike synthetic',
+        text: '— buying an OTM call at a higher strike and selling an OTM put at a lower strike — creates a position with positive delta that behaves similarly to owning stock, but at a fraction of the capital cost. Unlike the traditional synthetic long stock (ATM call + short ATM put at the same strike), the split-strike synthetic uses different strikes to create a defined profit zone below the short put strike while retaining participation in upside moves above the long call. Example: stock at $100. Buy the $105 call for $2.50. Sell the $95 put for $2.50. Net cost = zero (the premium from the short put exactly funds the long call).',
+      },
     ]
   },
 {
@@ -24903,6 +28221,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'σ_p² = 0.5²×0.04 + 0.5²×0.04 + 2×0.5×0.5×0.2×0.2×0 = 0.01 + 0.01 = 0.02. σ_p = √0.02 ≈ 14.1%. The cross-term drops to zero with ρ = 0, so portfolio volatility equals √(weighted average variance) = 20% × √0.5 ≈ 14.1%. This is the square root benefit of diversification.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Correlation and True Diversification Apparent diversification across',
+        text: '20 positions in different companies frequently conceals genuine concentration risk. A portfolio of 20 different companies that are all highly cyclical, all heavily leveraged, and all sensitive to the same macroeconomic variable will behave in a correlated manner in a stress scenario — all declining simultaneously and significantly when conditions deteriorate. This correlation reduces the effective number of independent bets in the portfolio far below the nominal count. True portfolio diversification requires thinking about factor exposures rather than counting positions. A portfolio that is diversified by sector, by economic sensitivity, by balance sheet risk, and by business model type will experience lower correlated drawdowns than one diversified only by company.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Correlation-Adjusted Sizing Multiple correlated positions multiply effective risk. Two long positions with',
+        text: '0.9 correlation and $200 of risk each aren\'t $400 of total risk — they\'re more like $380, and in crisis correlations can spike to near 1.0, making them $400 of actual risk. Adjust total portfolio risk for correlations by treating highly correlated positions as one larger position when summing risk. Holding long ES + long NQ + long RTY shouldn\'t be three independent 1% risks — it\'s closer to one 2.5% risk.',
+      },
     ]
   },
   {
@@ -24987,6 +28323,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Real assets — commodities, real estate, and infrastructure — have prices that are directly or indirectly linked to inflation. Commodity prices rise when inflation rises. Real estate rents and values tend to keep pace with inflation over time. Long-duration bonds are the worst inflation performers because rising inflation erodes their fixed cash flows and causes prices to fall sharply.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Leverage and Refinancing Real estate is a highly leveraged asset class',
+        text: '— most REITs maintain loan-to-value ratios of 30-60% — which amplifies both returns and risk relative to unlevered property ownership. The appropriate leverage level depends on the stability of the underlying NOI: apartment and industrial REITs with long-term leases and diverse tenant bases can sustain higher leverage than office and retail REITs with shorter leases and more concentrated tenant credit risk. Stress testing the debt coverage ratio — NOI divided by interest expense — at both current and stressed NOI levels provides the primary leverage risk assessment. The maturity structure of the debt portfolio is as important as its absolute level. A REIT that has concentrated debt maturities in a narrow window faces refinancing risk that could impair financial flexibility precisely when market conditions are most adverse.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Sector Concentration Limits Define maximum exposure to any single sector or asset class. Example limits: no more than',
+        text: '30% of portfolio risk in equity indices, no more than 25% in energy, no more than 20% in rate futures, no more than 15% in any individual commodity. These limits prevent the common mistake of running 80% of portfolio risk in one correlated sector. During regime shifts (2022\'s energy spike, 2020\'s equity collapse), concentrated portfolios suffer catastrophically while diversified portfolios maintain capital. Sector limits enforce the diversification that many traders intend but fail to execute.',
+      },
     ]
   },
   {
@@ -25071,6 +28425,24 @@ export const articles: Article[] = [
         correctIndex: 3,
         explanation: '0.6 × (-20%) + 0.4 × (5%) = -12% + 2% = -10%. The globally diversified investor still lost money, but suffered -10% rather than -20% — a 10-percentage-point reduction in the loss. This illustrates that geographic diversification does not eliminate losses but meaningfully reduces them when countries diverge.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Add International Diversification If your portfolio has been',
+        text: '100% US, add an international index fund (VXUS or equivalent). A 20–30% allocation to international stocks provides meaningful diversification that reduces your dependence on the US economy alone. This single addition makes your portfolio more globally balanced than the portfolios of most American investors.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Case Study: Building a Three-Strategy Portfolio A practical example: Strategy A is a',
+        text: '50/200-day moving average crossover on global equity indices (trend-following, weekly, equities). Strategy B is an RSI mean reversion system on S&P 500 stocks (mean reversion, daily, equities). Strategy C is a Donchian breakout system on commodity futures (trend-following, daily, commodities). The three strategies differ in type, time frame, and market, providing robust diversification. Machine learning, statistical methods, quantitative screening, and data science. Chapter 98 — Elder’s Triple Screen & Multi-System Integration Alexander Elder’s Triple Screen system is the most influential multi-time-frame trading methodology. This chapter provides the complete system specification plus frameworks for integrating multiple systems into a unified portfolio approach.',
+      },
     ]
   },
   {
@@ -25158,6 +28530,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'σ_annualised = σ_annual / √N = 20% / √25 = 20% / 5 = 4%. The annualised volatility falls dramatically over 25 years, which is why long-term investors can tolerate high short-term volatility assets. Note: this only measures annualised return variability — total dollar uncertainty still increases over time.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Managing Risk in Compressed Time Frames Day trading risk management requires: a maximum daily loss limit',
+        text: '(typically 2–3% of account equity), individual trade risk limits (typically 0.25–0.50% of equity), a maximum position size relative to average volume (to ensure exit liquidity), and a rule to stop trading after reaching the daily loss limit. These hard limits prevent a single bad day from causing irreversible damage.',
+      },
     ]
   },
   {
@@ -25248,6 +28632,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Commodities provide the strongest near-term inflation hedge because commodity prices — oil, food, metals — are a direct component of the CPI basket. When inflation spikes, commodity prices are often the cause. REITs and infrastructure also hedge inflation but with a lag (rent contracts reset periodically; regulatory reviews happen every few years). Private equity is too illiquid and heterogeneous to serve as a reliable inflation hedge.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Alternative Managers and Carried Interest Private equity, private credit, and real assets managers earn carried interest',
+        text: '— typically 20% of investment profits above a preferred return hurdle — that represents the most valuable but most variable component of their economics. The carried interest pipeline — the unrealised gains in the investment portfolio that are above the hurdle rate and therefore constitute accrued but unpaid carried interest — provides insight into the future performance fee revenue that will be recognised as investments are realised. The size of the pipeline relative to the management company\'s market capitalisation is one of the key valuation inputs for alternative asset managers. The GP stakes market — where investors purchase minority interests in alternative asset management businesses — provides an observable market for the value of management company economics at privately negotiated prices.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: REITs for Income: Real Estate Without the Landlord Headaches REITs distribute at least',
+        text: '90% of their taxable income as dividends, resulting in yields typically between 3–6%. Unlike dividend stocks, REIT income is generated from rent payments on real estate properties, providing a different income source that is less correlated with the broader stock market. REIT dividends are generally taxed as ordinary income rather than at the qualified dividend rate, making them most tax-efficient inside retirement accounts. VNQ provides broad REIT exposure in a single ETF.',
+      },
     ]
   },
   {
@@ -25327,6 +28729,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Real interest rates (nominal rates minus inflation expectations) are gold\'s dominant driver. Gold pays no income, so its opportunity cost is the real return on holding safe assets like TIPS. When real rates fall to zero or negative (as in 2020), gold\'s opportunity cost falls and it rallies strongly. When real rates rise sharply (as in 2022), gold struggles even as nominal inflation is high.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio Insurance Strategies Systematic portfolio insurance approaches:',
+        text: '(1) VIX calls as portfolio tail hedge (cheap when VIX is low; pay off when equity markets crash); (2) gold as portfolio stabilizer (typically rises during equity tail events); (3) long bond position as equity hedge (works in deflationary crises, less well in inflationary crises); (4) systematic drawdown triggers (reduce portfolio size automatically when portfolio falls 5% in any 20-day period). These structured approaches to tail risk provide automatic protection without requiring real-time decisions during crisis moments when emotional decision-making is most compromised.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Tail Risk Hedge Activation: When Your Insurance Policy Pays Off Tail risk hedges',
+        text: '(far OTM put options, VIX calls) purchased during calm periods explode in value during crashes. The timing decision: when should the hedge be closed? If the hedge was purchased as portfolio insurance, sell a portion during the crash to lock in the insurance payout and reduce the equity loss. Retain a portion in case the crash continues. The goal is not to time the bottom perfectly but to monetize the hedge when it has provided the protection it was purchased for.',
+      },
     ]
   },
   {
@@ -25405,6 +28825,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'During a severe recession, two forces push government bond prices up: (1) "flight to quality" demand as investors sell stocks and buy safe government bonds, and (2) central bank rate cuts to stimulate the economy, which directly push existing bond prices higher. These two mechanisms together explain why bonds have historically been the best portfolio cushion during growth-driven downturns.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Bonds and Equities Bonds and equities historically had negative correlation',
+        text: '— when one rose, the other fell. This relationship dominated 1998–2021 and made bonds useful portfolio diversifiers. Post-2022, the correlation shifted positive in some periods — both falling during inflation-driven rate increases. Understanding which regime is current determines whether bond-equity strategies are working as expected. Inflation regimes tend to produce positive correlation; deflationary or disinflationary regimes produce the traditional negative correlation.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Three-Fund Portfolio: US Stocks + International + Bonds Portfolio:',
+        text: '60% VTI, 25% VXUS, 15% BND. Time commitment: 15 minutes per quarter for rebalancing. This is the most widely recommended portfolio structure in personal finance. It provides US equity exposure, international diversification, and bond stabilization in three funds with a blended expense ratio under 0.07%. Adjust the percentages based on your age: younger investors can reduce bonds to 5–10%, older investors can increase bonds to 30–40%.',
+      },
     ]
   },
   {
@@ -25489,6 +28927,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'REITs receive a special tax structure: they pay no corporate income tax on distributed earnings, provided they distribute at least 90% of taxable income to shareholders. This pass-through structure avoids the double taxation (corporate tax + individual dividend tax) that applies to normal C-corporations, making REITs efficient vehicles for real estate income. The 90% distribution requirement is the price of that tax benefit.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: REITs for Income: Real Estate Without the Landlord Headaches REITs distribute at least',
+        text: '90% of their taxable income as dividends, resulting in yields typically between 3–6%. Unlike dividend stocks, REIT income is generated from rent payments on real estate properties, providing a different income source that is less correlated with the broader stock market. REIT dividends are generally taxed as ordinary income rather than at the qualified dividend rate, making them most tax-efficient inside retirement accounts. VNQ provides broad REIT exposure in a single ETF.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Real Estate Investment Trusts',
+        text: '(REITs) and Property Indices REITs trade like equities but are fundamentally driven by interest rates, rental income, and property values. Technical analysis of REIT ETFs requires awareness of their high sensitivity to bond yields: a breakout in the 10-year yield often triggers a breakdown in REIT charts, even when the equity market is otherwise healthy.',
+      },
     ]
   },
   {
@@ -25653,6 +29109,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The 2000s (2000–2009) were the most striking recent example: the S&P 500 returned approximately -1% annualised due to the dot-com crash and 2008 financial crisis, while EAFE returned approximately +4.5% annualised. Investors who held only US equities missed this divergence entirely. This decade is the most-cited evidence for geographic diversification\'s importance.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Market Profile: TPO Charts and Initial Balance Market Profile, developed by Peter Steidlmayer, assigns letters to each',
+        text: '30-minute period and stacks them horizontally at the prices traded during that period. The resulting Time Price Opportunity (TPO) chart reveals where the market spent the most time. The Initial Balance — the range established during the first hour of trading — sets the day’s reference framework. Price remaining within the initial balance suggests a rotational day; price breaking outside suggests a directional day.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Three-Fund Portfolio: US Stocks + International + Bonds Portfolio:',
+        text: '60% VTI, 25% VXUS, 15% BND. Time commitment: 15 minutes per quarter for rebalancing. This is the most widely recommended portfolio structure in personal finance. It provides US equity exposure, international diversification, and bond stabilization in three funds with a blended expense ratio under 0.07%. Adjust the percentages based on your age: younger investors can reduce bonds to 5–10%, older investors can increase bonds to 30–40%.',
+      },
     ]
   },
   {
@@ -25739,6 +29213,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Correlation is ultimately driven by the similarity of economic forces affecting returns. EM economies are at different development stages, driven by domestic consumption growth, commodity exports, and early-stage industrialisation — these factors are less tightly linked to the US cycle (dominated by technology, services, and consumption). As EM markets mature and integrate with global capital flows, their correlation to the US tends to rise.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Developed Markets vs. Emerging Markets Developed markets',
+        text: '(UK, Japan, Germany, Canada, Australia) offer stability, transparent regulations, and established legal systems. Emerging markets (China, India, Brazil, South Korea, Mexico) offer higher growth potential but also higher political, regulatory, and currency risk. A balanced international allocation might include 70–80% developed markets and 20–30% emerging markets. ETFs like VXUS provide both in a single fund.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Governance Risk in Emerging Markets Governance risk',
+        text: '— the risk that controlling shareholders, management, or governments will use their power to extract value from minority shareholders — is systematically higher in emerging markets due to weaker legal protections for minority investors, less robust accounting standards enforcement, and institutional norms that may be less shareholder-friendly than those in mature market economies. The specific governance risks most prevalent in emerging markets include related-party transactions at non-arm\'s-length prices, accounting irregularities less likely to be detected, government interference in business operations, and limitations on dividends and share buybacks. Quantifying the governance risk discount requires assessing the specific mechanisms by which value could be extracted from minority shareholders in the specific company and jurisdiction.',
+      },
     ]
   },
   {
@@ -25914,6 +29406,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The optimizer finds the portfolio with the highest expected Sharpe ratio. If an asset\'s expected return is even slightly overestimated (which is common given return estimation uncertainty), the optimizer concentrates heavily in that asset. Small errors in the input create large, concentrated output positions — the optimizer amplifies estimation errors rather than diversifying them away. This is why constrained or return-agnostic approaches (minimum variance) tend to work better in practice.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Easiest Way to Diversify: One or Two Index Funds The simplest path to optimal diversification: buy VTI',
+        text: '(total US market) and VXUS (total international market). Two funds, two clicks, and you own over 12,000 stocks across the entire globe. Add BND (total bond market) for a three-fund portfolio that covers every major asset class. This three-fund portfolio has been endorsed by investment legends, academics, and financial advisors for decades. It requires no research, no stock picking, and no market timing. It is the diversification gold standard. Chapter 42 — Asset Allocation: The Most Important Decision You’ll Make Studies show that asset allocation — how you divide your money among stocks, bonds, and cash — explains over 90% of the variation in a portfolio’s returns over time. Which specific stocks or bonds you choose matters far less than the overall mix. This chapter helps you determine the right allocation for your age, goals, and risk tolerance.',
+      },
     ]
   },
   {
@@ -26093,6 +29597,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The entire logic of portable alpha is: beta comes from the futures overlay, and alpha comes from the uncorrelated active strategy. If the alpha source has positive equity beta, then in a market downturn both the futures overlay AND the alpha strategy fall together — creating doubled (or more) equity exposure at the worst moment. CalPERS experienced exactly this: their "alpha" strategies fell alongside equities in 2008, combining with falling equity futures for devastating losses. The alpha source must be independent of market direction.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The SABR Model: The Practitioner\'s Framework The Stochastic Alpha Beta Rho',
+        text: '(SABR) model, introduced by Hagan, Kumar, Lesniewski, and Woodward in 2002, became the standard model for interest rate options and is widely used in equity options for its ability to generate flexible volatility surface shapes from a small number of parameters. The SABR model parameterizes the implied volatility surface through four parameters: α (the initial volatility level), β (the elasticity parameter that determines how volatility changes with the forward price, ranging from 0 for pure stochastic volatility to 1 for log-normal), ρ (the correlation between the forward price and volatility processes), and ν (the volatility of volatility). The model\'s key advantage is that it provides an approximate closed-form solution for the implied volatility as a function of strike and forward price, making it computationally efficient for real-time pricing.',
+      },
     ]
   },
 {
@@ -26181,6 +29697,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: '4% × 1.0 × 5 = 20% ROE. With a net margin of only 4% and asset turnover of 1.0x, the company would generate only 4% ROE without leverage. The equity multiplier of 5x is multiplying a thin margin — this is leverage-driven ROE and carries significant risk if earnings or asset values decline.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: DuPont decomposition of ROE reveals whether return changes come from margins, PART III',
+        text: '— EARNINGS QUALITY AND FORENSIC ACCOUNTING How to detect manipulation, assess earnings durability, identify accrual distortions, use the Beneish M-Score and Piotroski F-Score, and normalise financials so that valuation models are built on economic reality rather than accounting artifice. ── Earnings Quality Fundamentals ── Chapter 14 — Earnings Quality',
+      },
     ]
   },
   {
@@ -26276,6 +29804,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Accruals Ratio = ($100M - $40M) / $1,000M = 6%. This is above the 5% yellow-flag threshold, meaning net income is exceeding cash generation by a meaningful margin. It warrants monitoring — specifically looking at accounts receivable growth, inventory trends, and whether the gap persists across multiple years. It is not automatically a fraud signal, but it merits investigation.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Earnings Quality Framework A systematic earnings quality assessment examines five dimensions: cash conversion',
+        text: '(does cash generation track earnings?), accrual quality (are non-cash accruals declining over time?), revenue quality (are revenue recognition policies conservative and consistently applied?), expense quality (are all recurring costs included in normalised earnings?), and management credibility (does management\'s description of business performance match the financial statement reality?). Scoring each dimension from high to low quality and combining the assessments produces an overall earnings quality rating that should directly influence the valuation approach. High-quality earnings in all five dimensions can be capitalised at a low earnings yield (high P/E multiple), because the risk that the reported earnings are misleading is low.',
+      },
     ]
   },
   {
@@ -26369,6 +29909,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Under the new lease standards, what was previously a single operating lease expense line (which reduces EBITDA) is split into depreciation of the right-of-use asset and interest expense on the lease liability. Since EBITDA adds back both depreciation and interest, the net effect is that EBITDA increases relative to pre-capitalization reporting. This makes lease-adjusted EBITDA comparisons across time periods tricky.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Balance Sheet Strength Assessment The balance sheet strength assessment examines five dimensions: liquidity',
+        text: '(can the business meet its near-term obligations without distress?), leverage (is the total financial burden — including hidden liabilities — appropriate for the cyclicality and stability of the business?), asset quality (are the carrying values of the major asset categories consistent with their economic value?), working capital efficiency (are receivables, inventory, and payables at levels appropriate for the business model and competitive position?), and off-balance-sheet obligations (are the footnote-disclosed commitments material relative to reported debt and equity?). The balance sheet assessment for each dimension produces a qualitative rating — strong, adequate, or concerning — that collectively determines the overall balance sheet quality rating.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Balance Sheet: What Do They Own and Owe? The balance sheet is a snapshot of everything the company owns',
+        text: '(assets) and everything it owes (liabilities) at a specific point in time. The difference between assets and liabilities is shareholders’ equity — the book value of the owners’ stake. Key items to check: total cash and investments (the company’s war chest), total debt (how much it owes), and the ratio of debt to equity. A company with more cash than debt is in a strong financial position. A company with high debt relative to equity is more vulnerable to economic downturns because it must continue making interest payments regardless of revenue.',
+      },
     ]
   },
   {
@@ -26463,6 +30021,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'When ROIC (8%) is below WACC (12%), the company earns less on each dollar invested than investors require. Growing rapidly in this state destroys economic value — each new dollar of growth costs more in capital than it returns. EPS can still grow during this period due to leverage or accounting effects, but EVA (Economic Value Added) is negative. The stock will eventually re-rate lower as the market recognizes the capital destruction.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Management Quality as a Value Driver Management quality is not a soft, unquantifiable attribute',
+        text: '— it is a genuine and measurable driver of long-run equity value visible in the multi-year trajectory of per-share intrinsic value, the returns earned on capital allocation decisions, and the gap between a business\'s potential competitive advantages and the degree to which management has actually realised them. High-quality management teams consistently convert competitive advantages into economic profit. Mediocre teams allow those advantages to atrophy while consuming capital in value-destructive ways. The challenge is distinguishing outcomes driven by management decisions from those driven by industry conditions and macroeconomic tailwinds that would have benefited any team. A business prospering in a secular growth industry with limited competition demonstrates favourable conditions as much as management excellence.',
+      },
     ]
   },
   {
@@ -26691,6 +30261,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Channel check data from customers is valuable but imperfect — it may reflect seasonal ordering patterns, temporary destocking, or isolated regional trends rather than a broad demand deterioration. The correct process is to model the revenue impact of the observed reorder reduction, flag it as a leading risk indicator, and look for corroborating evidence (inventory data in 10-Q, competitor commentary, other customer checks) before making a high-conviction decision. Selling immediately on one data point risks overreacting to noise.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Channel Checks and Expert Networks Channel checks',
+        text: '— conversations with distributors, retailers, competitors, and former employees of the business being analysed — provide ground-truth information about business conditions that financial statements reveal only with a one-to-three quarter lag. An investor who knows that channel inventory is building, that pricing pressure is increasing, or that a key customer is evaluating alternatives has a significant analytical advantage over investors relying solely on published financials. Expert networks and industry consultants provide access to former executives and functional specialists who understand industry dynamics from the inside. Used responsibly — with strict adherence to material non-public information rules — these conversations can illuminate business model nuances, competitive dynamics, and customer behaviour that is genuinely unavailable from public sources.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Building a Business Cycle Timing Dashboard for Active Investors PART XV',
+        text: '— CASE STUDIES: GREAT TIMING DECISIONS IN MARKET HISTORY Real-world case studies of outstanding and catastrophic timing decisions — what the charts showed, what the smart money did, and the lessons that apply to your next trade. Chapter 67 — Case Studies: Perfectly Timed Entries –',
+      },
     ],
   },
   {
@@ -26865,6 +30453,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Market share is calculated relative to total market growth. Company A grew 10% versus a 15% market — it is losing share. Company B grew 12% versus a 9% market — it is gaining share. This distinction matters enormously for long-term competitive positioning: share losers tend to compound into structural underperformers as competitor scale advantages accumulate.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Industry Context Forensic accounting analysis is most powerful when conducted in the context of industry dynamics',
+        text: '— when the question of whether a financial result is plausible is answered in comparison to the experience of competitors in the same market, subject to the same demand conditions, input cost pressures, and competitive dynamics. A company reporting gross margin expansion in a period when every competitor is reporting margin compression deserves a specific and convincing explanation for why its experience diverged from the industry. When the explanation is accounting-related rather than operational, the forensic conclusion is clear. Industry context also provides the benchmark for assessing whether specific financial metrics are reasonable. A retailer reporting DSO of 120 days in an industry where standard payment terms are 30 days has either a large receivables problem or a very unusual revenue mix that requires explanation.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: What Is a Volatility Regime? A volatility regime is a persistent state of the market\'s volatility dynamics',
+        text: '— a period during which the statistical properties of volatility (its level, its rate of mean reversion, its clustering behavior) remain relatively stable. Markets do not transition smoothly between volatility levels; they exhibit regime-switching behavior where they can be in a low-volatility regime for months before abruptly transitioning to a high-volatility regime and then back again. The practical importance of regime identification: the same options strategy that generates consistent positive returns in one regime can generate catastrophic losses in another. A short straddle book on the SPX generates reliable income in a low-volatility, mean-reverting regime. The same book, sized identically, can produce losses equivalent to 12-18 months of income in a single week during a high-volatility trending regime.',
+      },
     ],
   },
   {
@@ -26969,6 +30575,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'This setup describes a highly destructive competitive environment. Undifferentiated products mean customers buy purely on price. High fixed costs incentivize each player to maximize volume to cover those costs, even if that requires price cuts. Slow market growth means there is no new demand to absorb capacity. The result is aggressive price competition driving margins down. This is the classic pattern in commodity chemicals, airlines (historically), and basic steel.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Industry Analysis as a Foundation Understanding the industry structure in which a business operates',
+        text: '— the competitive dynamics, the barriers to entry, the pricing power characteristics, the capital intensity, and the growth drivers — is a prerequisite to accurately assessing what kind of returns the business can sustain over time. A business with apparently strong ROIC in an industry characterised by low barriers, commodity products, and intense competition is likely to see those returns erode rapidly. A business in an industry with genuine barriers and switching costs is more likely to sustain them. Porter\'s Five Forces framework — the threat of new entrants, the bargaining power of suppliers and customers, the threat of substitutes, and the intensity of competitive rivalry — provides a structured approach to industry analysis that directly informs return sustainability assumptions.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Lessons: How Options Timing Differs from Stock Timing in Practice PART XVI',
+        text: '— BUILDING AND TESTING YOUR TIMING SYSTEM The quantitative infrastructure for developing, backtesting, validating, and deploying a personalized timing system that fits your market, time frame, and risk tolerance. Chapter 71 — Defining Your Timing Edge: From Hypothesis to Testable Rules –',
+      },
     ],
   },
   {
@@ -27064,6 +30688,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Falling ROIC during a period of strong revenue growth is a warning sign. If the ROIC decline were due to heavy reinvestment (large capex or R&D), it would be accompanied by slower near-term FCF but eventual ROIC recovery as investments mature. Declining ROIC with high revenue growth more often indicates rising competitive costs (more sales spend to acquire each dollar of revenue), pricing pressure, or margin erosion from competition — all signs of potential moat narrowing despite strong top-line growth.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Valuing Durability To illustrate the value of an extra five years of competitive advantage, consider a business earning',
+        text: '20% ROIC on $1 billion of invested capital with a 10% cost of capital. Each year of above-cost returns creates approximately $100 million of economic profit. The present value of $100 million per year for five additional years at a 10% discount rate is approximately $380 million. For a business with a $2 billion enterprise value, five additional years of competitive advantage represents approximately 19% of total enterprise value. This quantification of durability premium explains why disciplined long-term investors pay significant premiums above short-cycle intrinsic value for businesses with demonstrably durable moats. The premium is not irrational exuberance but rational discounting of a quantifiably longer stream of above-cost economic profits.',
       },
     ],
   },
@@ -27163,6 +30799,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'NRR = (Beginning ARR + Expansion − Churn) / Beginning ARR = ($100M + $20M − $15M) / $100M = $105M / $100M = 105%. The company retained 105% of its existing revenue base — meaning existing customers grew their spend net of churn. At 105%, the business can grow slightly even without any new customer acquisition, though elite SaaS companies target 120%+.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: SOTP as a Catalyst Framework When SOTP analysis reveals a material discount to intrinsic value',
+        text: '— when the market is valuing the whole at significantly less than the sum of the parts — this discount creates a natural catalyst thesis: corporate restructuring through spin-off, partial sale, or strategic separation of the highest-quality divisions will unlock the value that the conglomerate structure is obscuring. This catalyst thesis is one of the most reliable in equity investing, because it does not require the market to re-rate the entire business but only to recognise the value of parts that are clearly visible. The timing and form of the catalyst are critical to the investment thesis. A conglomerate management team that is actively pursuing a restructuring — divesting non-core businesses, articulating a path to sum-of-parts value realisation — provides a near-term catalyst that reduces the holding period required for value realisation.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Government Data Sources Primary government data for futures fundamental analysis: USDA reports for agriculture',
+        text: '(WASDE, Crop Progress, prospective plantings, export sales); EIA for energy (weekly petroleum, natural gas storage); CFTC COT for positioning; Fed for monetary data; BLS for CPI and NFP; Commerce Department for GDP and trade data. These government publications provide the authoritative data points that move futures prices most reliably on release day. Building a calendar of these releases is a prerequisite for fundamental trading.',
+      },
     ],
   },,
 {
@@ -27249,6 +30903,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'A very low P/E in a cyclical industry at the peak of a commodity cycle is a classic value trap. The market is pricing in an earnings decline. The normalized P/E of 14x is a more reliable valuation anchor and suggests the stock is not as cheap as it first appears.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Cyclical Normalisation For businesses with earnings that are highly sensitive to economic or industry cycles',
+        text: '— commodity producers, financial institutions, housing-related businesses, consumer discretionary — the reported earnings at any given point in the cycle may be far from the mid-cycle level that represents the business\'s sustainable earning power. Valuing these businesses at peak multiples on peak earnings, or at trough multiples on trough earnings, produces systematic overvaluation or undervaluation respectively. Cyclical normalisation begins with identifying the major drivers of cyclical earnings variation: for a copper miner, copper prices; for a bank, credit losses; for an auto manufacturer, vehicle pricing and volume. For each driver, the analyst estimates the mid-cycle level — typically using a long-run average weighted by the probability distribution of future outcomes — and constructs the income statement corresponding to those mid-cycle inputs.',
       },
     ],
   },
@@ -27420,6 +31086,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'A large divergence between intrinsic and relative valuation is a signal, not a problem to average away. It could mean your DCF is too conservative, your peer group includes overvalued companies, or there is genuine information asymmetry. Understanding the source of the gap is where real analytical insight is created.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Relative vs. Absolute Valuation Relative valuation',
+        text: '— comparing a company\'s multiples to those of peers and the broader market — is fast, intuitive, and widely used. It answers the question of whether a business is cheap or expensive relative to comparable companies. Absolute valuation — estimating intrinsic value from the ground up using discounted cash flow analysis — answers the more fundamental question of what the business is worth on its own terms, independent of how the market is valuing comparable businesses. The critical weakness of relative valuation is that it embeds the market\'s errors. If an entire sector is overvalued — if all comparable companies trade at multiples that are high relative to their intrinsic values — then a company that is "cheap relative to peers" may still be significantly overvalued in absolute terms. The relative cheapness is real but it is relative to a bad benchmark.',
+      },
     ],
   },
   {
@@ -27522,6 +31200,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'TV = FCF × (1 + g) / (WACC − g) = $1B × 1.03 / (0.09 − 0.03) = $1.03B / 0.06 = $17.17B. Note that you must use next period\'s FCF (terminal FCF × (1 + g)), not the current year\'s FCF, and the denominator is WACC minus the perpetuity growth rate.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Stress-Testing Terminal Value The most important terminal value stress test is the ROIC fade assumption',
+        text: '— the rate at which the business\'s return on invested capital is assumed to converge toward the cost of capital over time as competition erodes the competitive advantage. A business currently earning 25% ROIC that is assumed to maintain 25% ROIC in perpetuity is being valued with an implicitly infinite competitive advantage period — an assumption that is almost never justified by economic evidence, because even the strongest competitive positions face erosion from technological change, new entry, and shifting customer preferences over multi-decade horizons. The more analytically honest approach models a gradual fade in ROIC toward the cost of capital over a specified convergence period — say 10 to 20 years — which produces a lower but more defensible terminal value than the zero-fade perpetuity assumption.',
       },
     ],
   },
@@ -27717,6 +31407,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'UFCF = $500M × (1 − 0.25) + $80M − $30M − $120M = $375M + $80M − $30M − $120M = $305M. The working capital increase consumes cash (so it is subtracted), and capex is a cash outflow. NOPAT of $375M is the starting point after tax.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: EV/FCF Enterprise value to free cash flow',
+        text: '(EV/FCF) is the capital-structure-neutral equivalent of P/FCF. It relates the total business value to the free cash flow available to all capital providers, removing the effect of leverage on the per-share metrics. This makes it particularly useful for comparing businesses with different capital structures or for assessing whether the equity value implied by the EV/FCF multiple appropriately reflects the financial leverage of the business. EV/FCF and EV/EBITDA will differ substantially for businesses with high capital expenditure requirements or significant working capital investment needs. The difference between the two multiples is a direct reflection of the capital intensity of the business — the more cash the business must reinvest simply to maintain its competitive position, the larger the gap between its EBITDA-based and FCF-based enterprise multiples.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: The Complete Divergence Timing Protocol Step',
+        text: '1: Identify divergence. Step 2: Classify it (classic or hidden, single or triple, which indicators). Step 3: Check higher time frame alignment. Step 4: Wait for price confirmation (structural break, candle signal, or MA violation). Step 5: Enter with stop beyond the divergence extreme. Step 6: Target the next major support or resistance level. Never act on Step 1 alone. PART XII — TIMING ACROSS SECURITY TYPES How timing mechanics change for different equity and options instruments. Chapter 51 — Timing Large-Cap and Blue-Chip Stocks Large-cap stocks move differently than small-caps because institutional ownership creates deeper liquidity, smoother patterns, and slower turning points. Timing large-caps requires patience and respect for the massive capital flows that drive these securities.',
+      },
     ],
   },
   {
@@ -27827,6 +31535,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Re-levered β = Unlevered β × [1 + (1 − Tax Rate) × (D/E)] = 0.9 × [1 + (1 − 0.25) × 1.0] = 0.9 × [1 + 0.75] = 0.9 × 1.75 = 1.575. The Hamada equation scales up beta to reflect the additional equity risk created by financial leverage.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: WACC Construction The weighted average cost of capital is calculated as: WACC =',
+        text: '(E / (D + E)) x Ke + (D / (D + E)) x Kd x (1 - t), where E is the market value of equity, D is the market value of debt, Ke is the cost of equity (typically derived from CAPM), Kd is the pre-tax cost of debt, and t is the marginal corporate tax rate. The tax shield on debt — the (1 - t) term applied to the cost of debt — reflects the tax deductibility of interest expense, which reduces the effective after-tax cost of debt financing below the stated interest rate. This formula assumes a stable target capital structure; for companies undergoing significant leverage changes, the adjusted present value (APV) approach — which values the unlevered business separately from the tax shields — may produce more accurate results.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Rate Futures for Equity Hedging Long equity positions can be partially hedged with short rate futures: if rates rise',
+        text: '(ZN falls), equity valuations typically compress, so losing on ZN shorts partially offsets gains, and vice versa. This imperfect hedge works in normal regimes but can fail during stagflation (rates up, equity down together) or during flight-to-quality (rates down, equity down together). Use rate hedges as context-aware tools, not as automatic portfolio insurance.',
+      },
     ],
   },
   {
@@ -27920,6 +31646,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Changing g from 4% to 5% changes the cap rate from (10% − 4%) = 6% to (10% − 5%) = 5%. TV is inversely proportional to the cap rate, so TV increases by 6%/5% − 1 = 20%. However the increase in the numerator (FCF × 1.05 vs FCF × 1.04) adds roughly another 1%, bringing the total increase to approximately 17-21% depending on rounding. The correct answer bracket is approximately 20% — option C is also defensible, but 17% is the closest to the pure denominator effect.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Stress-Testing Terminal Value The most important terminal value stress test is the ROIC fade assumption',
+        text: '— the rate at which the business\'s return on invested capital is assumed to converge toward the cost of capital over time as competition erodes the competitive advantage. A business currently earning 25% ROIC that is assumed to maintain 25% ROIC in perpetuity is being valued with an implicitly infinite competitive advantage period — an assumption that is almost never justified by economic evidence, because even the strongest competitive positions face erosion from technological change, new entry, and shifting customer preferences over multi-decade horizons. The more analytically honest approach models a gradual fade in ROIC toward the cost of capital over a specified convergence period — say 10 to 20 years — which produces a lower but more defensible terminal value than the zero-fade perpetuity assumption.',
       },
     ],
   },
@@ -28118,6 +31856,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'EV includes the market value of debt, so two companies with identical operations but different leverage will have different EVs that reflect their true total cost to acquire. P/E only looks at equity value, so the heavily levered company will appear cheaper on P/E even though its total cost (including debt assumption) is the same. EV/EBITDA neutralizes this capital structure difference.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Comparing Ratios Within an Industry Valuation ratios are most useful when compared within the same industry. A P/E of',
+        text: '25 is cheap for a fast-growing technology company but expensive for a slow-growing utility. A price-to-book of 3.0 is normal for a software company with few physical assets but high for a bank. Always compare a stock’s valuation to its industry peers and to its own historical average. If a stock’s P/E is significantly higher than its peers with no clear justification, proceed with caution.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Experienced practitioners applying choosing the right valuation method PART V',
+        text: '— COMPETITIVE ADVANTAGE AND BUSINESS QUALITY What makes a business genuinely valuable: the sources and durability of competitive moats, network effects, customer economics, returns on capital, reinvestment runway, management quality, operating leverage, and the detection of real pricing power. ── Moats and Competitive Dynamics ── Chapter 36 — Sources and Types of Competitive Advantage',
+      },
     ],
   },
   {
@@ -28205,6 +31961,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'The current price of $58 falls within both the DCF range ($50-$70) and near the bottom of trading comps ($60-$75), suggesting modest standalone undervaluation. The transaction comps range ($80-$95) is only relevant if an actual deal materializes. The overlap of DCF and trading comps around $60-$70 is the highest-conviction standalone range.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Football Field Approach The football field valuation',
+        text: '— presenting the value ranges derived from multiple methods on a single chart, with the current stock price overlaid — is the standard presentation format for investment banking and research analysis because it communicates both the central estimate and the range of uncertainty from different methods in a single visual. The methods are stacked vertically, with their value ranges shown as bars; the current price intersects the bars at positions that immediately communicate whether each method suggests the stock is cheap, fairly valued, or expensive. The most informative football fields are those where the ranges from different methods are broadly consistent — overlapping significantly — because this consistency provides high analytical confidence.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: The Statistical Basis of the Value Area The value area is the price range containing',
+        text: '70% of the session\'s traded volume, centered on the POC. The 70% threshold comes from statistics — it approximates one standard deviation on a normal distribution. In practice, it captures the bulk of "agreed value" for the session, excluding the extremes where price was rejected. The 70% threshold that defines the value area approximates one standard deviation on a normal distribution. This statistical basis captures where the bulk of fair-value trading occurred, excluding the extremes where rejection happened.',
       },
     ],
   },
@@ -28300,6 +32074,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Start with the public comparable multiple (10x) applied to normalized EBITDA to get enterprise value ($50M). The 40% minority equity stake is worth roughly $20M before adjustments (assuming minimal net debt). Apply a DLOM of 20-30% to reflect the illiquidity of a minority private interest, bringing the minority stake value to approximately $14-$16M. A control premium would apply only to a majority or controlling stake, not here.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Liquidity and Control Discounts Private company equity is subject to liquidity discounts',
+        text: '— reductions in value relative to otherwise comparable publicly-traded equity — because the investor cannot exit the position by selling shares in an organised market. The magnitude of the liquidity discount depends on the likely time to liquidity, the probability of achieving a successful exit at or near the estimated intrinsic value, and the alternative investments available to the investor during the illiquidity period. Academic studies and market practice suggest liquidity discounts of 15-35% relative to comparable public company values, with the higher end of the range appropriate for smaller businesses with fewer potential acquirers. Control premiums — the additional value that a buyer with control over the company\'s operations and capital allocation decisions is willing to pay relative to a minority interest price — are the mirror image of minority discounts.',
       },
     ],
   },
@@ -28399,6 +32185,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'At Series A, the VC owns $3M / $12M = 25% of the company. In Series B, 20% new shares are issued, which dilutes all existing shareholders by 20%. The VC\'s new ownership = 25% × (1 − 0.20) = 25% × 0.80 = 20%. The VC\'s percentage stake falls but the value of that stake increases because the company\'s total valuation rose from $12M to $30M+ (pre-money).',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How Companies Make Money: Business Models Explained Simply Every company has a business model',
+        text: '— a description of how it makes money. Apple sells hardware (iPhones, Macs) and services (App Store, iCloud, Apple Music). Visa takes a small percentage of every credit card transaction. Coca-Cola sells sugary drinks through bottlers worldwide. Netflix charges a monthly subscription fee. Understanding the business model tells you where the money comes from and what could disrupt it. If you cannot explain how a company makes money in one sentence, you do not understand it well enough to invest in it.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Gold as Monetary Asset Gold has served as money and store of value for',
+        text: '5,000+ years. Unlike fiat currencies, gold supply grows slowly (roughly 1.5% annually from mining) and cannot be printed or diluted by policy decisions. This scarcity gives gold its enduring monetary status. Modern gold demand divides into jewelry (~50%), investment (ETFs, bars, coins, ~30%), and industrial/technology (~10%), with central bank demand as a variable but increasingly significant share. Understanding gold\'s monetary role is foundational for trading GC futures.',
+      },
     ],
   },
   {
@@ -28487,6 +32291,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'Property Value = NOI / Cap Rate = $2M / 0.06 = $33.3M. The cap rate acts as the denominator; lower cap rates imply higher values for the same NOI. At a 5% cap rate, the same property would be worth $40M. At an 8% cap rate, it would be worth only $25M.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Real Estate and Infrastructure Real estate asset valuation uses three primary approaches: the income approach',
+        text: '(capitalising net operating income at a market cap rate to produce asset value), the comparable sales approach (comparing recent sales of similar properties), and the replacement cost approach (estimating the cost to build an equivalent property new, adjusted for depreciation). For stabilised income-producing properties, the income approach — dividing annual net operating income by the prevailing market cap rate — is the primary method and is most directly comparable to a perpetuity DCF. Infrastructure assets — toll roads, ports, airports, utilities, pipelines — are typically valued using a DCF of contracted or regulated cash flows, with the terminal value grounded in the assumed remaining useful life and terminal NAV of the physical assets.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: REITs for Income: Real Estate Without the Landlord Headaches REITs distribute at least',
+        text: '90% of their taxable income as dividends, resulting in yields typically between 3–6%. Unlike dividend stocks, REIT income is generated from rent payments on real estate properties, providing a different income source that is less correlated with the broader stock market. REIT dividends are generally taxed as ordinary income rather than at the qualified dividend rate, making them most tax-efficient inside retirement accounts. VNQ provides broad REIT exposure in a single ETF.',
       },
     ],
   },
@@ -28690,6 +32512,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Combined ratio = 68% + 29% = 97%. Since 97% < 100%, the company earns an underwriting profit — for every $100 of premiums, it pays out only $97 in claims and expenses, retaining $3. This means the float is effectively free (or even negatively priced), making investment returns on the float pure profit layered on top of the underwriting gain.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Combined Ratio as Primary Metric The combined ratio',
+        text: '— (losses and loss adjustment expenses + operating expenses) / earned premiums — is the primary measure of underwriting profitability. A combined ratio below 100% indicates that premiums exceeded claims and expenses, generating an underwriting profit. A combined ratio above 100% indicates an underwriting loss that must be offset by investment income for the insurer to be profitable overall. The combined ratio is therefore the most direct measure of the quality of the insurance business independently of the financial markets environment. Decomposing the combined ratio into its loss ratio and expense ratio components reveals the specific drivers of underwriting performance.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Screen for Value Stocks Basic value screens: P/E ratio below the industry average. Price-to-book below',
+        text: '2.0. Dividend yield above the market average. Debt-to-equity below 1.0. Free cash flow yield above 5%. These filters identify statistically cheap stocks, but the screen is just the starting point. You must investigate why the stock is cheap. Is it cheap because the market is irrationally fearful, or because the business is genuinely deteriorating? The former is a buying opportunity. The latter is a value trap.',
+      },
     ],
   },
   {
@@ -28779,6 +32619,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 0,
         explanation: 'Maximum Buy Price = Intrinsic Value × (1 − Margin of Safety) = $100 × (1 − 0.30) = $100 × 0.70 = $70. A 30% margin of safety on a $100 intrinsic value means you should not pay more than $70. This 30% buffer protects you if your base-case DCF assumptions turn out to be modestly optimistic, which is typical for cyclical businesses.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Selling at Intrinsic Value Selling when the stock price reaches the estimated intrinsic value',
+        text: '— when the margin of safety has been fully consumed — is the most disciplined and most frequently violated sell rule in value investing. The temptation at this point is to let winners run: the thesis has been confirmed, the management has executed as expected, the business is performing well, and optimism about the future is naturally at its highest when the current performance is at its best. But the analytical discipline of value investing requires that the decision to sell be grounded in the price-to-value relationship rather than in the narrative momentum that typically surrounds a fully-valued successful business. The practical implementation of value-based selling requires maintaining an updated intrinsic value estimate throughout the investment holding period and establishing in advance the conditions under which trimming and full sale will occur.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Concept of Intrinsic Value',
+        text: '(Simplified) Intrinsic value is an estimate of what a company is truly worth based on its future cash flows, discounted back to today’s dollars. Professional investors use discounted cash flow models to calculate intrinsic value, but even a rough estimate is useful. If you believe a stock is worth $100 per share based on its earnings power and growth prospects, and it is currently trading at $70, you have a margin of safety of 30%. The bigger the gap between your estimated intrinsic value and the current price, the more room you have for error. This concept — buying at a significant discount to what you believe the business is worth — is the foundation of all value investing. Chapter 21 — Dividends: Getting Paid to Own Stocks Dividends are cash payments that companies make to their shareholders, typically every quarter.',
       },
     ],
   },
@@ -28874,6 +32732,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'The 7-year average EPS of $4 is the mid-cycle normalized earnings estimate, the most relevant anchor for long-term value assessment. At a $32 price, the stock trades at $32 / $4 = 8x normalized earnings. This is the only P/E that reflects the business\'s sustainable profitability across the cycle. Peak P/E of 4x looks cheap but overstates earning power. Trough losses create an undefined or negative P/E that understates it.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Capital Intensity and the Cash Flow Cycle Capital-intensive cyclical businesses',
+        text: '— steel, mining, chemicals, oil and gas — have a particularly complex relationship between earnings and cash flow because capital expenditure requirements are themselves cyclical. During downturns, maintenance capital requirements decline as asset utilisation falls and discretionary investment is deferred. During recoveries, the combination of operating leverage and deferred maintenance creates periods of very high free cash flow generation that are as cyclically inflated as the earnings they accompany. Normalising free cash flow for a capital-intensive cyclical requires normalising both the earnings and the capital expenditure simultaneously. The working capital cycle in capital-intensive cyclicals adds a further layer of cash flow volatility. During commodity price upswings, rising inventory values and receivables consume cash as the business scales up.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Earnings Cycle: Single-Stock Options\' Defining Event Every public company reports quarterly earnings',
+        text: '— four times per year, on a schedule that is announced weeks in advance. The options market\'s pricing of these earnings events follows the lifecycle described in Chapter 64: pre-earnings IV expansion, the IV crush immediately after the announcement, and the potential for post-earnings directional drift. For single-stock options traders, the earnings calendar is the most important scheduling input in the entire trading framework — it determines which positions can be held through a specific date without binary event risk and which must be closed or structured specifically as earnings trades.',
       },
     ],
   },
@@ -28976,6 +32852,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Sustainable Growth Rate = Reinvestment Rate × ROIC = 40% × 20% = 8%. This means the company grows its invested capital and earnings at 8% per year by reinvesting 40% of after-tax operating profit at a 20% return on that capital. If ROIC is above WACC, this growth is value-creating. If ROIC is below WACC, growing faster would actually destroy value.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Reinvestment Rate Formula Sustainable growth = reinvestment rate × ROIC. A business earning',
+        text: '20% ROIC retaining 50% sustains 10% growth. One earning 8% retaining 100% sustains only 8% while returning nothing to shareholders. This quantitative link between quality and growth underpins the entire framework.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Risks: High Expectations Mean Big Drops on Bad News Growth stocks are priced for perfection. A company trading at',
+        text: '50 times earnings is priced with the assumption that earnings will grow dramatically for years. If growth disappoints even slightly, the stock can drop 20–40% in a single day as the market reprices its expectations. During the 2022 growth stock correction, many high-flying technology stocks fell 50–80% from their peaks. Growth investing requires a strong stomach and conviction that the long-term trajectory remains intact despite short-term volatility.',
       },
     ],
   },,
@@ -29134,6 +33028,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'You defined the sell condition when you were thinking clearly, before emotion was involved. The purpose of a pre-commitment rule is precisely to override the instinct to hold when the facts change. Waiting to "see if it recovers" is the disposition effect at work. The thesis is broken; exit the position.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Strategy Switching Rules: When to Fade vs. Follow A simple regime-based framework: when ADX is below',
+        text: '20 and Bandwidth is in the lower quartile of its 6-month range, deploy mean reversion strategies (fade moves to Bollinger Band extremes, sell overbought RSI, buy oversold RSI). When ADX is above 25 and Bandwidth is expanding, deploy momentum strategies (buy breakouts, follow trend, use trailing stops). When neither condition is clearly met, reduce position size or stand aside.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Flash Crash Response: Rules-Based vs. Discretionary Reactions During flash crashes',
+        text: '(sudden, extreme declines of 5–10%+ within minutes), the rules-based response is: do not sell, do not place market orders, and do not make any timing decisions until the market has stabilized for at least 30 minutes. The discretionary response for experienced traders: place limit buy orders at major support levels during the crash to capture extreme dislocations. These limit orders should be placed at levels 10–20% below the pre-crash price, representing the extreme fear discount.',
       },
     ],
   },
@@ -29312,6 +33224,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'Testing 200 strategies and presenting the best is a classic multiple-comparison problem. By chance alone, roughly 10 strategies (5%) will appear significant at the 95% level on any dataset. Finding one outstanding performer among 200 candidates is almost certainly data mining, not a real edge. Out-of-sample validation on a held-out period is the minimum standard to take any backtest result seriously.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Statistical Edge in',
+        text: '0DTE: What the 2024-2025 Data Shows The rapid growth of 0DTE trading has generated a large and growing database of actual 0DTE trade outcomes that allows for empirical assessment of which strategies produce genuine edge and which do not. Research from multiple independent teams analyzing 2023-2025 SPX 0DTE data consistently shows: For 0DTE iron condors entered at market open (9:30-9:45 AM) with short strikes placed 0.5% from the opening price: win rate of approximately 68-72% (consistent with the theoretical probability of profit at those delta levels), average profit on winning trades of approximately 45% of maximum credit, average loss on losing trades of approximately 90-95% of maximum loss.',
       },
     ],
   },
@@ -29500,6 +33424,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Prospect Theory establishes that losses loom larger than gains of equal magnitude. Losing $500 outright causes approximately twice the psychological impact of not gaining $500. The gain-then-loss scenario also ends in pain because the loss from $500 back to zero is felt intensely even though the net financial position is unchanged. This is why investors irrationally prefer not to have experienced a gain-and-loss cycle even when the financial outcome is identical.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Loss Aversion Loss aversion',
+        text: '(Kahneman and Tversky\'s finding that losses feel twice as painful as equivalent gains feel good) distorts futures decision-making profoundly. Loss-averse traders: hold losers too long (avoiding the pain of realizing the loss); take profits too quickly (booking gains before they can turn into losses); deviate from defined strategies to avoid a loss; accept larger long-term losses to avoid smaller immediate ones. Recognizing that your brain physiologically overweights potential losses relative to equivalent gains allows you to counteract the bias with deliberate rule-following.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Anchoring, Recency Bias, and Loss Aversion Anchoring to a previous price',
+        text: '(“the stock was at $150 last month, so $120 is cheap”) ignores the possibility that fundamental or technical conditions have changed. Recency bias causes the trader to overreact to the last few trades: a string of losses leads to paralysis, while a string of wins leads to reckless overconfidence. Loss aversion — the tendency to feel losses twice as intensely as equivalent gains — makes traders hold losers too long and cut winners too short.',
+      },
     ],
   },
   {
@@ -29583,6 +33525,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'You gave instant credence to bullish news (biased interpretation) and dismissed bearish research with a weak rationalization (motivated short-sellers are sometimes wrong, but they also sometimes identify the most important risks). The pattern of selectively engaging with confirming information while rejecting disconfirming information across multiple instances is the hallmark of all three layers of confirmation bias operating simultaneously.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Cognitive Biases in Trading Key cognitive biases affecting futures traders: confirmation bias',
+        text: '(seeking information that confirms existing positions); availability bias (overweighting recent dramatic events in probability assessment); anchoring (fixating on original entry price as a reference point for decisions); disposition effect (selling winners too early, holding losers too long); gambler\'s fallacy (believing a losing streak "has to" end soon). Each bias has specific manifestations in trading decisions. Studying your own journal for bias patterns is more valuable than studying any external market analysis.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: ADX Trend Confirmation Before Entry ADX provides a binary filter for systematic entries: if ADX is above',
+        text: '25, the market is trending and trend-following entries (breakouts, moving average crosses) are activated. If ADX is below 20, the market is range-bound and trend-following entries are suspended. This simple filter dramatically reduces the whipsaw cost of systematic trend-following systems by avoiding entries during the market environments where they consistently fail. The filter can be applied to any systematic entry methodology: moving average crossovers, Donchian breakouts, momentum signals, or any other trend-following approach.',
       },
     ],
   },
@@ -29742,6 +33702,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Expected returns and actual forward returns are negatively correlated with recent market performance at the aggregate level. After strong multi-year bull runs, starting valuations are typically elevated, which means future expected returns are lower than average — not higher. Recency bias causes investors to extrapolate the recent trend and form overly optimistic return expectations at exactly the wrong time.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Anchoring, Recency Bias, and Loss Aversion Anchoring to a previous price',
+        text: '(“the stock was at $150 last month, so $120 is cheap”) ignores the possibility that fundamental or technical conditions have changed. Recency bias causes the trader to overreact to the last few trades: a string of losses leads to paralysis, while a string of wins leads to reckless overconfidence. Loss aversion — the tendency to feel losses twice as intensely as equivalent gains — makes traders hold losers too long and cut winners too short.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Wick Extensions That Collect Liquidity Wicks that extend past recent swing highs or lows are often liquidity sweeps',
+        text: '— price reaching up to grab stops before reversing. These sweep wicks are distinctive: they are long, they go past obvious levels, and they are quickly reclaimed. Learn to spot them as they happen. Wicks that extend meaningfully beyond recent swing highs or lows are usually liquidity sweeps. Recognizing these as they happen changes how you interpret the subsequent action, since the stops have just been taken. Chapter 10 — Pin Bars: The Most Reliable Single-Candle Signal If you can only learn one candlestick pattern, make it the pin bar. Correctly identified and correctly located, pin bars are among the highest-probability single-candle signals in any market. This chapter teaches what makes a true pin bar, where they work, and how to trade them without being fooled by lookalikes.',
+      },
     ],
   },
   {
@@ -29821,6 +33799,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Your $90 purchase price is an anchor that has no economic relevance. If your independent analysis says fair value is $50, then the stock at $55 is slightly above fair value. The correct action is to compare current price ($55) to intrinsic value ($50) — and if the stock is at or above fair value with limited upside, sell and redeploy capital. Waiting for $90 is holding out for the anchor, not for the economics.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: The Anatomy of a Speculative Bubble on the Charts Every bubble follows a recognizable progression: stealth phase',
+        text: '(smart money accumulates while prices are depressed), awareness phase (institutional investors and early adopters drive a gradual advance), mania phase (retail participation surges, media attention intensifies, and prices accelerate parabolically), blow-off phase (vertical advance on extreme volume, euphoric sentiment, and daily price moves that exceed entire months from the earlier phases), and crash (a rapid collapse that erases months or years of gains in weeks).',
       },
     ],
   },
@@ -29980,6 +33970,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 0,
         explanation: 'The disposition effect predicts you will sell Stock A (the winner) to lock in the gain and hold Stock B (the loser) to avoid realizing the loss. But the correct decision is the reverse: if Stock A\'s thesis is intact with further upside, hold it. If Stock B\'s thesis has weakened, it should be the first candidate for liquidation. Sell the investment with the weakest forward outlook, regardless of whether it shows a gain or loss.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Loss Aversion and the Disposition Effect Loss aversion',
+        text: '— the asymmetric psychological impact of losses relative to equivalent gains — creates two systematic investment errors: holding losing positions too long (to avoid crystallising the psychological loss of selling at a loss) and selling winning positions too early (to lock in the psychological gain of a realised profit). The disposition effect, as this pattern is called in academic literature, produces portfolios that accumulate unrealised losses in deteriorating businesses and realise gains prematurely in improving ones — exactly the opposite of the value-maximising approach. The discipline required to overcome loss aversion is to evaluate each position on the basis of its prospective future return relative to its current price — not relative to the purchase price. The purchase price is irrelevant to the future return.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Staying in Winners Longer Beginners exit winners too early',
+        text: '— one of the most common and costly mistakes. Professionals let winners run with trailing stops. If the thesis is intact and flow continues favoring you, stay in. Trailing discipline and runner positions let you capture the occasional outsized winner that pays for many small losses.',
       },
     ],
   },
@@ -30145,6 +34153,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The $6,000 loss is a sunk cost. It has already happened and cannot be recovered by holding. The only relevant question is: what does this stock return from $4,000 going forward? If the fundamental basis for the investment (the patent) has been eliminated and your analysis suggests further decline, the rational action is to sell and redeploy the $4,000 into the best alternative available. Holding to avoid "making the loss permanent" is the sunk cost fallacy in action.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Accepting Losses as Cost of Business Losses are not failures',
+        text: '— they are the cost of trading. Every professional trader takes losses. The difference between amateurs and pros is the pro accepts losses as a known cost, while the amateur treats each loss as personal failure. Your goal is not to avoid losses; it is to keep losses smaller than wins over time. A small loss managed well is part of professional trading. A small loss mismanaged is how large losses are born. Every loss is a test of discipline; pass each one, and the large-loss scenarios rarely appear.',
       },
     ],
   },
@@ -30574,6 +34594,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Post-earnings announcement drift (PEAD) is one of the most replicated findings in empirical finance. After a large positive earnings surprise, prices tend to continue drifting upward over the following 30-90 days as the market slowly incorporates the information. This is most pronounced for small-cap stocks with limited analyst coverage — consistent with the underreaction being driven by slow information diffusion and anchoring to prior price levels. The effect is largest for the most extreme earnings surprises.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: News and Intermarket Cascades Major news events cascade across markets in predictable sequences. A surprise NFP',
+        text: '(employment) beat: initially moves bonds (selling), then equity index futures (buying), then dollar (buying), then commodity currencies (strengthening), then commodities (mixed). Understanding the typical cascade sequence for specific news types helps enter markets in the second or third reaction while they\'re still developing, rather than chasing the first market to react.',
+      },
     ],
   },
   {
@@ -30773,6 +34805,24 @@ export const articles: Article[] = [
         explanation:
           'When the stock price ($50) is below the strike price ($55), the call is out-of-the-money and has zero intrinsic value. Intrinsic value for a call is max(0, S - K) = max(0, 50 - 55) = 0. The option may still have time value if expiration is not imminent, but it has no intrinsic value.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Deep ITM Options and Rho Magnification Rho is not uniformly distributed across moneyness',
+        text: '— deep ITM options have significantly higher rho than ATM or OTM options. This makes intuitive sense from the formulas: the rho of a call is proportional to N(d₂), which is the probability of expiring ITM. A deep ITM call has N(d₂) approaching 1.0, while a deep OTM call has N(d₂) approaching 0.0. Therefore, deep ITM calls have approximately K × T × e^(− rT ) in rho sensitivity — the maximum possible for that strike and expiration. This rho magnification for deep ITM options has important practical consequences for LEAPS stock replacement strategies. When a trader uses a deep ITM LEAPS call (with delta of 0.85 or higher) as a substitute for owning the stock, the rho exposure of that call can be substantial — several dollars of rho per contract for a 2-year LEAPS.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Wheel Strategy Timing: Cycling Between Puts and Calls The wheel alternates between selling puts',
+        text: '(to acquire shares cheaply) and selling calls (to generate income and exit at higher prices). Put phase timing: sell when the stock is at support. Call phase timing: sell when the stock rallies to resistance after assignment. The cycle repeats, generating income from both legs while buying low and selling high within the natural oscillation.',
+      },
     ],
   },
   {
@@ -30870,6 +34920,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Theta accrues on all calendar days, not just trading days. Over a 3-day weekend (Friday close to Monday open), a contract with theta of -0.06 loses 0.06 × 3 days × 100 shares = $18. However, some brokers price in weekend theta on Fridays, so the option may appear to lose all 3 days\' worth at Friday\'s close. The $30 answer covers 5 days total (e.g., including the prior 2 weekdays), which is the full period asked about.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Greeks-Based Technical Strategies Options Greeks',
+        text: '— particularly delta and gamma — create aggregate market-level forces that influence underlying prices. Understanding GEX (gamma exposure), DEX (delta exposure), and VEX (vanna exposure) at the aggregate market level allows the technician to anticipate whether dealer hedging will amplify or dampen price movements.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Index Options Greeks: Cash-Settled Unique Dynamics Index options',
+        text: '— SPX, NDX, RUT, and their weekly/0DTE variants — exhibit specific Greek dynamics that differ from individual equity options in ways beyond just the exercise style and settlement mechanism. No Early Assignment: A Cleaner Greek Interpretation Because index options are European-style, the put-call parity relationship holds exactly at all times (adjusted for dividends and interest rates). This means that the delta of an SPX put is exactly equal to the delta of the corresponding SPX call minus 1.0 — the relationship is theoretically clean in a way that American-style options (where early exercise possibilities introduce deviations from put-call parity) are not. For precise hedging and relative value trading, this clean put-call parity makes index options the preferred instrument. Index Volatility Skew vs.',
       },
     ],
   },
@@ -30969,6 +35037,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'When assigned on a short put, you buy 100 shares at the strike price ($45). But you already collected $2.00 in premium, which reduces your effective cost to $45.00 - $2.00 = $43.00 per share. Your position is now showing an unrealized loss of $3.00 per share versus the $40 market price, but your actual cost is $43, not $45.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Tax-Efficient Options Strategies for High-Income Investors For investors in the highest federal income tax brackets',
+        text: '(37% ordinary income, 20% long-term capital gains plus 3.8% NIIT = 23.8% LTCG effective rate), tax efficiency in options strategy design is not an afterthought — it is a primary return driver. The difference between an options strategy generating ordinary income (taxed at 37%) and the same strategy structured to generate long-term capital gains (taxed at 23.8%) is 13.2 percentage points of after-tax return — equivalent to more than one year of average options income in after-tax savings. The SPX/Section 1256 systematic migration: HNW investors who are currently trading equity options (SPY, individual stocks) in systematic premium selling programs should evaluate whether migrating to SPX options provides sufficient tax savings to justify any differences in liquidity, execution, or strategy design.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Greeks-Based Technical Strategies Options Greeks',
+        text: '— particularly delta and gamma — create aggregate market-level forces that influence underlying prices. Understanding GEX (gamma exposure), DEX (delta exposure), and VEX (vanna exposure) at the aggregate market level allows the technician to anticipate whether dealer hedging will amplify or dampen price movements.',
       },
     ],
   },
@@ -31071,6 +35157,24 @@ export const articles: Article[] = [
         explanation:
           'An IV rank of 85 means current IV is in the top 15% of its one-year range. Options are statistically expensive relative to their own history. Selling premium through a defined-risk structure like a credit spread takes advantage of elevated IV by collecting rich premiums while capping the maximum loss. Buying options when IV is this high means paying a large premium that needs an unusually large move to profit.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Measuring the Volatility Risk Premium: Implied vs. Realized The volatility risk premium',
+        text: '(VRP) is not a static constant that can be simply assumed to be 2-4 percentage points. It varies substantially over time, across underlyings , and across market regimes. Measuring it precisely is essential for determining whether current conditions favor premium selling or premium buying. The Rolling VRP Calculation The most direct VRP measurement approach compares the 30-day IV on day t to the 30-day realized volatility from day t to day t+30. The difference ( IV_t − RV_{t to t+30}) is the VRP realized for that particular 30-day period. Rolling this calculation across all available historical dates produces a time series of VRP observations.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: The VIX and Implied Volatility Indices The CBOE Volatility Index',
+        text: '(VIX) measures the market’s expectation of 30-day forward volatility derived from S&P 500 option prices. The VIX is often called the “fear index” because it tends to spike during market declines and decline during market advances. For the technical analyst, the VIX serves as both a sentiment gauge and a volatility measurement, providing context that pure price analysis cannot supply.',
+      },
     ],
   },
   {
@@ -31153,6 +35257,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'When a deep ITM call is worth less in time value than the upcoming dividend, a rational call holder will exercise early to receive the dividend on the ex-date. If you are short the call, you face assignment tonight and will be short 100 shares before the ex-dividend date. You will then owe the dividend on those short shares. Always check ex-dividend dates when managing short call positions on dividend-paying stocks.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Margin for Short Options on Futures Short options on futures require margin because they carry unlimited risk',
+        text: '(short calls) or substantial risk (short puts). Margin is calculated via SPAN, which evaluates worst-case scenario across price and volatility moves. A naked short ES call requires similar margin to a long ES futures position — typically $10,000–$15,000 per contract. Short option margin can increase sharply during volatility events. This margin requirement distinguishes futures options from equity options, where short options in a cash account require full strike coverage.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: UBIT: The Hidden Tax Risk in Retirement Account Options Unrelated Business Income Tax',
+        text: '(UBIT) is a tax that applies to income from \'unrelated business activities\' within tax-exempt entities — including IRAs and Roth IRAs. While standard investment activities (buying stocks, selling covered calls, collecting dividends) are exempt from UBIT, certain options strategies that involve leverage or certain types of income can trigger UBIT liability — effectively creating a taxable event inside what is supposed to be a tax-exempt account. The UBIT risk from options strategies is primarily relevant for Solo 401(k) plans that engage in margin trading or certain leveraged derivative strategies.',
       },
     ],
   },,
@@ -31264,6 +35386,24 @@ export const articles: Article[] = [
         explanation:
           'At expiration the call is worth its intrinsic value: $54 - $50 = $4.00. You paid $3.00 in premium, so your net profit is $4.00 - $3.00 = $1.00 per share. Breakeven was $53 ($50 strike + $3 premium), so the $54 close produces a $1 per share profit, or $100 per contract.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Long Call: Full Mechanics, Ideal Conditions, and Common Mistakes Buying a call option conveys the right to purchase',
+        text: '100 shares at the strike price before expiration. Maximum loss is limited to the premium paid. Maximum profit is theoretically unlimited. The position profits if the underlying rises above the breakeven (strike plus premium paid) before expiration. Long calls make the most economic sense under three conditions: the trader has a specific time-bounded directional thesis with a catalyst within the option\'s lifespan; implied volatility is low relative to the stock\'s historical volatility (IV rank below 25) ensuring the option is not expensive relative to the expected move; and the trader genuinely accepts the realistic probability of losing the entire premium if the thesis does not materialize within the option\'s lifespan. Common Long Call Mistakes Buying ATM or near-the-money calls with high implied volatility on a stock with an imminent catalyst is the classic trap in options form.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: How to Cover a Margin Call Options to meet a margin call:',
+        text: '(1) wire additional funds to the account; (2) close positions to reduce margin requirement; (3) liquidate other securities (if you have stock positions in the same account that can be sold); (4) deposit eligible collateral (Treasury bills, certain other securities). Wiring funds is most common but takes hours. Closing positions is instant. Most active traders meet calls by closing positions, accepting the realized loss, and reassessing rather than adding capital to defend a losing position.',
+      },
     ],
   },
   {
@@ -31367,6 +35507,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'The put gives you the right to sell at $75, so your shares are effectively worth $75 at expiration regardless of the $50 market price. Your cost basis was $80, and you paid $2 for the put. Total loss: ($80 - $75) + $2 premium = $7.00 per share. Without the put you would have lost $30. The put insurance limited your downside to $7 per share.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Long Put: Directional vs. Protective Applications A long put grants the right to sell',
+        text: '100 shares at the strike price before expiration. It profits if the underlying falls below the breakeven (strike minus premium paid). The same conditions that favor directional long calls favor directional long puts in the other direction: specific bearish catalyst within the option\'s life, low IV relative to historical norms, and a clear time-bounded thesis. Protective puts — long puts on positions already held in the portfolio — convert a long stock position into a synthetic long call: unlimited upside participation, limited downside risk at the put strike. The annual cost of rolling protective puts is typically 2-4% of the protected position value depending on strike selection and IV levels. For concentrated single-stock positions this annual insurance cost is rational.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: How Options on Futures Differ From Equity Options Options on futures grant the right',
+        text: '— not the obligation — to buy (call) or sell (put) a specific futures contract at a specific price before expiration. Unlike equity options (which settle into shares), options on futures settle into a futures position. A long ES call at 5100 gives the right to buy one ES contract at 5100; if exercised, you hold a long ES position, not shares of stock. This settlement-into-futures creates distinctive delta dynamics: in-the-money options exercise into leveraged positions, requiring immediate margin management.',
       },
     ],
   },
@@ -31482,6 +35640,24 @@ export const articles: Article[] = [
         explanation:
           'Vega, the sensitivity of option price to volatility, is always positive for long options. Higher implied volatility increases the expected range of outcomes, making it more likely the option expires in-the-money. The premium rises. While the relationship is not linear (the new price will be higher but not necessarily exactly $8.00 due to non-linearities), the direction is always up for long options when volatility increases.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Black-Scholes: The Formula That Changed Everything By extraordinary coincidence',
+        text: '— or perhaps by design of the universe — the same year the CBOE opened, Fischer Black and Myron Scholes published \'The Pricing of Options and Corporate Liabilities\' in the Journal of Political Economy, and Robert Merton published his complementary extension. The Black-Scholes-Merton model provided, for the first time, a mathematical framework for calculating the theoretically fair value of a European call option. The model\'s core insight was that an option could be perfectly hedged in continuous time by dynamically adjusting a position in the underlying asset. If this dynamic hedging could be executed costlessly and continuously, the option\'s price was uniquely determined by five inputs: the current stock price, the strike price, time to expiration, the risk-free interest rate, and — crucially — the volatility of the underlying asset. The first four inputs are observable.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Price vs. Intrinsic Value Price is the number printed on a stock ticker',
+        text: '— the output of supply and demand among participants with varying information and emotional discipline. Intrinsic value is what the underlying business is actually worth, determined by the cash flows it will generate over its economic life, discounted at a rate reflecting the risk of those cash flows. The two numbers are almost never identical, and the discipline of investing is fundamentally the study of when and why they diverge. Benjamin Graham articulated this with the metaphor of Mr. Market — a business partner who arrives each day with a new price determined by his emotional state rather than consistent analysis. On some days he is euphoric and offers far more than the business is worth; on others he is despairing and offers far less. The intelligent investor exploits his irrationality when the gap between price and value is large enough to provide a margin of safety.',
+      },
     ],
   },
   {
@@ -31585,6 +35761,24 @@ export const articles: Article[] = [
         explanation:
           'Your shares are called away at $110. Gain from stock appreciation: $110 - $100 = $10. Plus premium collected: $3.00. Total profit: $13.00 per share. You miss the $10 gain above $110 (from $110 to $120). This is the capped upside tradeoff of covered calls.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Covered Call: Full Depth, Strike Selection, and Rolling Discipline The covered call',
+        text: '— selling a call option against 100 shares owned — creates a position where the maximum profit is capped at the strike price plus premium received regardless of how high the stock moves. If the stock closes below the short call strike at expiration the call expires worthless and the writer keeps the premium, reducing the stock\'s effective cost basis. This trade-off — capping upside in exchange for premium income — makes covered calls systematically underperform buy-and-hold in strong bull markets while outperforming in flat or moderately declining markets.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Systematic vs. Discretionary Systematic covered call programs sell calls on a fixed schedule',
+        text: '(every monthly expiration, at a fixed delta) regardless of market conditions. Discretionary programs sell calls only when technical and IV conditions are favorable. Research shows that systematic programs produce more consistent income but sacrifice more upside, while discretionary programs capture more upside but produce less regular income. The choice depends on whether income consistency or total return is the priority. Chapter 89 — Premium Selling Cycle Timing This chapter integrates all premium-selling strategies into a unified timing cycle that optimizes entry, management, and exit across the monthly options calendar.',
+      },
     ],
   },
   {
@@ -31684,6 +35878,24 @@ export const articles: Article[] = [
         explanation:
           'You are assigned shares at the $60 strike price. Your effective cost basis is $60 - $2.50 premium = $57.50. The stock is at $55, so your unrealized loss is $57.50 - $55.00 = $2.50 per share. The premium reduced what would have been a $5 paper loss (buying at $60 vs. $55 market) to just $2.50.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Full Mechanics: From Cash-Secured Put Through Covered Call The wheel begins with Phase',
+        text: '1: selling a cash-secured put on a stock the trader is willing to own at the put strike price. The strike is chosen to be below the current market price — typically 5-10% OTM — ensuring that assignment occurs only after a meaningful decline in the stock. The cash-secured put collects premium (income) while waiting for either of two outcomes: the put expires worthless (the stock stays above the strike, the premium is kept, and Phase 1 is repeated with a new put in the next expiration cycle), or the put is assigned (the stock has fallen to or below the strike, the trader purchases 100 shares at the strike price). If assigned, the wheel transitions to Phase 2: selling covered calls against the 100 shares now owned. The covered call strike is chosen above the current market price — typically 5-10% OTM — to allow for some stock appreciation before the shares are called away.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Cash-Secured Put Entry Timing Enter the put sale when the stock is at technical support, IV Rank is above',
+        text: '40, and the broad market regime is not bearish. The strike should be at or below the support level. The expiration should be 30–45 DTE. If the stock rallies away from the strike, the put expires worthless and the process restarts. If the stock declines to the strike, take assignment and transition to the call phase.',
+      },
     ],
   },
   {
@@ -31777,6 +35989,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'The put lets you sell at $85 regardless of the $60 market price. Loss on stock: $90 - $85 = $5. Add $4 premium cost. Total loss: $9 per share. Without the put, you would have lost $30. The protective put limited a catastrophic loss to a manageable $9.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Timing Protective Puts Buy protective puts when the portfolio is profitable and early technical warnings appear',
+        text: '(divergence, distribution, breadth deterioration) but the trend has not confirmed a reversal. The timing is BEFORE the decline, when puts are cheap (VIX below 15). Waiting until the decline is underway means paying elevated IV premiums that reduce the hedge’s effectiveness. The best time to buy insurance is when everything appears calm.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Portfolio Insurance and Hedging Techniques Portfolio insurance uses options',
+        text: '(protective puts, put spreads, collars) or systematic rules (reducing exposure when the 200-day SMA is broken) to limit downside exposure. The cost of insurance must be weighed against the cost of uninsured drawdowns, both financially (years of recovery) and psychologically (impaired decision-making during deep losses).',
       },
     ],
   },
@@ -31899,6 +36129,24 @@ export const articles: Article[] = [
         explanation:
           'At $57, the $50 call is worth $7 (intrinsic value: $57 - $50) and the $60 call you sold is worth $0 (still OTM). The spread is worth $7. You paid $3 debit. Net profit: $7 - $3 = $4 per share. The maximum gain of $7 (spread width minus debit = $10 - $3) would require the stock to be at or above $60.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Spreads Using Futures Options Options spreads',
+        text: '(bull call spreads, bear put spreads, calendar spreads, iron condors) work identically on futures as on equities. A bull call spread on ES: buy lower strike call, sell higher strike call, both same expiration. This reduces premium cost while capping maximum profit at the short strike. For defined-risk directional trades on futures, call or put spreads are often preferable to naked long options (reducing premium cost and theta drag) and to futures themselves (providing absolute loss cap).',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Bear Call Spreads: Bearish Income with Defined Risk The bear call spread',
+        text: '— selling an OTM call and buying a further OTM call — is the bearish premium seller\'s primary structure. It profits when the underlying stays below the short call strike, collecting the credit received as the maximum profit. Unlike outright put buying (which requires a downward move to profit), the bear call spread profits from three scenarios: the underlying declines, the underlying stays flat, and the underlying rises modestly ( as long as it stays below the short call strike). This triple-profit-path characteristic makes the bear call spread dramatically more forgiving than long puts for traders with a bearish-to-neutral view. A long put requires the underlying to fall below the breakeven (strike minus premium paid) within the option\'s life.',
+      },
     ],
   },
   {
@@ -32000,6 +36248,24 @@ export const articles: Article[] = [
         explanation:
           'An IV rank of 85 means current IV is 85% of the way from its 52-week low to its 52-week high. Options are among the most expensive they have been over the past year. This is statistically favorable for option sellers, who collect elevated premiums and benefit from the subsequent IV mean-reversion. It does not tell you the absolute level of IV or the expected stock move in percentage terms.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Historical vs. Implied Volatility Historical volatility',
+        text: '(HV) measures past price movement. Implied volatility (IV) measures the market’s expectation of future movement, derived from option prices. The relationship between HV and IV — particularly when IV significantly exceeds HV (indicating that options are expensive relative to recent movement) or when HV exceeds IV (indicating options are cheap) — provides valuable information for strategy selection.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: VIX Options: Volatility of Volatility Trading VIX options are options on VIX futures',
+        text: '— specifically options on the VIX settlement price at the options\' expiration date. Because VIX futures prices and the corresponding VIX options settlement prices are both calculated from SPX options, VIX options are effectively options on SPX volatility — they allow traders to take leveraged positions on whether SPX implied volatility will be high or low at a specific future date, with defined risk from the purchased options premium. The VVIX — the CBOE\'s measure of the implied volatility of VIX options (the volatility of volatility) — provides critical context for evaluating the cost of VIX options. When VVIX is low (below 85-90), VIX options are cheap relative to historical norms — the market is pricing in a stable, low-volatility VIX environment.',
+      },
     ],
   },
   {
@@ -32094,6 +36360,18 @@ export const articles: Article[] = [
         explanation:
           'The VIX is a measure of expected (implied) volatility extracted from option prices, not a prediction of a specific price decline. A spike from 18 to 45 means the market is pricing in about 2.5 times more expected volatility than before, and put options have become much more expensive. The actual outcome — whether the market does in fact move that much — can differ significantly from what the VIX implies.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Wall Street: From Buttonwood Tree to Global Powerhouse In',
+        text: '1792, twenty-four stockbrokers signed the Buttonwood Agreement under a tree on Wall Street in lower Manhattan, creating what would eventually become the New York Stock Exchange. For more than two centuries, the NYSE has been the center of American capitalism. It survived the Civil War, two World Wars, the Great Depression, multiple panics, and the rise of electronic trading. The physical trading floor — once crowded with shouting traders in colorful jackets — is now largely symbolic, as most trading is electronic. But the institution remains the world’s largest stock exchange by market capitalization.',
+      },
     ],
   },
   {
@@ -32185,6 +36463,24 @@ export const articles: Article[] = [
         explanation:
           'A short put that closes $0.01 ITM ($49.99 stock vs. $50 strike) is automatically exercised by the OCC. You are assigned and must purchase 100 shares at $50, regardless of the current $49.99 market price. This is auto-exercise — you have no choice once expiration passes unless you gave your broker a "do not exercise" instruction before the cutoff, which is only available to long option holders, not short option sellers.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Max Pain and Pinning: Timing Around Options Expiration Max pain',
+        text: '(the strike where expiring options have minimum total intrinsic value) acts as a gravitational center during the final 2–3 days before expiration. Timing entries away from expiration when the stock is free from pinning effects, and avoiding directional bets during the final days of expiration week when pin risk is highest, improves overall timing accuracy.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Idiosyncratic Risk: The Defining Characteristic of Single-Stock Options Idiosyncratic risk',
+        text: '— the risk of events specific to a single company that are independent of the overall market — is the essential feature that distinguishes single-stock options from index options. A well-constructed iron condor on SPY might lose 20% of its maximum loss in a week where the S&P 500 moves 1.5% — a normal market oscillation that the condor\'s strikes easily absorb. The same structural iron condor on an individual stock can lose 100% of its maximum loss in a single day if the company reports an earnings miss, announces a product recall, receives an adverse FDA ruling, or reveals accounting irregularities — events that have zero bearing on the S&P 500 but catastrophic bearing on the specific stock. The idiosyncratic risk premium in single-stock options is the additional implied volatility that options on individual stocks carry relative to index options at equivalent delta levels.',
+      },
     ],
   },
   {
@@ -32273,6 +36569,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Delta of 0.90 means the option gains approximately $0.90 for every $1 move in the stock. A $20 move × 0.90 delta ≈ $18 gain on the LEAPS per share. The LEAPS went from $25 to approximately $43. On a $2,500 investment per contract, this is a 72% gain versus a 10% gain on the stock — demonstrating LEAPS leverage. Note that delta is not fixed and changes as the stock moves, so the actual gain may differ slightly.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: LEAPS as Stock Replacement: When to Substitute Deep ITM LEAPS calls',
+        text: '(delta 0.80+) replicate approximately 80% of the stock’s movement at a fraction of the capital cost. Substitute when: capital efficiency matters, you want defined downside risk, or the opportunity cost of tying up full capital in shares is high. Hold shares instead when: the dividend yield is significant, the LEAPS bid-ask is wide, or IV is elevated making the LEAPS expensive. LEAPS entries should coincide with low IV and a favorable position in the business cycle, ensuring the 12–24 month holding period coincides with economic expansion rather than contraction.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Poor Man\'s Covered Call: Capital-Efficient LEAPS Alternative The Poor Man\'s Covered Call',
+        text: '(PMCC) replaces the 100 shares of stock with a deep ITM long-term call (LEAPS call with 6-12+ months remaining). Example: stock at $100, buy the $80-strike 12-month LEAPS call for $23.00 (delta approximately 0.82) instead of buying 100 shares for $10,000. Against the LEAPS position sell the 30-day $105 call for $1.50. Net capital deployed: $2,150 versus $10,000 for shares. Three critical PMCC rules: Rule 1 — the short call strike must never exceed the long LEAPS call strike. Selling a short call above the LEAPS strike creates a naked call component with undefined risk. Rule 2 — the LEAPS call must have delta of 0.75 or higher to function as adequate stock replacement. Lower-delta LEAPS do not gain enough from stock appreciation to offset losses on the short call if the stock rises sharply through the short strike.',
       },
     ],
   },
@@ -32377,6 +36691,24 @@ export const articles: Article[] = [
         explanation:
           'Futures are marked to market daily. A 100-point drop in the S&P 500 × $50 multiplier = $5,000 loss per contract, debited from your account that evening. If this takes your account below the maintenance margin level, you will receive a margin call requiring additional funds. This is fundamentally different from stocks, where unrealized losses are not cash-settled until you close the position.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Settlement Prices and Contract Expiration Each trading day, futures contracts settle at specific official prices',
+        text: '(typically a volume-weighted average of the closing minutes). Settlement prices matter — they determine margin requirements and serve as reference prices. Contract expiration produces specific flow patterns: open interest shifts, volume concentrates in the new front month, and expiring contracts see position squaring. Chapter 91 — Forex: The Decentralized Challenge Forex is the world\'s largest market by volume, but its decentralized structure denies traders the consolidated volume data available in futures and equities. This chapter covers forex\'s unique challenges, the workarounds (tick volume, futures volume proxies, COT reports), and the methodologies that work best despite the limitations.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Which Pairs Have Futures Contracts CME offers futures on major currency pairs',
+        text: '(EUR/USD, USD/JPY, GBP/USD, AUD/USD, USD/CAD, USD/CHF, NZD/USD, MXN/USD) and some cross pairs (EUR/JPY, EUR/GBP). Exotic pairs (emerging market currencies beyond MXN) generally don\'t have liquid futures contracts. Spot forex offers dozens of pairs including exotics. For major pair trading, futures work well; for exotic pair strategies, spot is often the only practical option.',
+      },
     ],
   },
   {
@@ -32472,6 +36804,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'By paying fixed and receiving floating on the swap, the company offsets its floating-rate debt. The floating rate received on the swap nets against the floating rate paid on the debt. The net result is the fixed rate paid on the swap plus any credit spread — a fixed total borrowing cost regardless of where market rates go. This is the fundamental purpose of a pay-fixed interest rate swap for a floating-rate borrower.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Institutional Options: Variance Swaps, Collars at Scale, and OTC Structures Large institutional investors',
+        text: '— pension funds, endowments — use options primarily for liability management and downside risk control rather than for income generation. The liability management application is specific to institutions with defined future payment obligations: a pension fund that must pay $50 million in benefits next year has a liability that is economically equivalent to short positions in the underlying investments — any decline in investment value reduces the funding ratio. Options-based liability hedging matches the fund\'s options portfolio to its specific liability structure, protecting the funding ratio rather than the nominal portfolio value.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Why Eurodollars Were Discontinued Eurodollar futures were the world\'s most successful interest rate contract for',
+        text: '40 years, trading billions of contracts annually and serving as the benchmark for trillions of dollars of swaps and loans. Eurodollars were based on LIBOR (London Interbank Offered Rate), but LIBOR was revealed to be systematically manipulated during the 2008–2012 banking scandals. Regulators mandated LIBOR be phased out by mid-2023, which required replacement benchmarks. CME and ICE transitioned futures markets from Eurodollars to SOFR-based contracts during 2022–2023.',
       },
     ],
   },
@@ -32683,6 +37033,24 @@ export const articles: Article[] = [
         explanation:
           'When fuel falls to $1.20, the airline\'s futures contracts lose money (it locked in at $2.00 but the market price is $1.20). The futures loss of $0.80 per gallon offsets any benefit from buying fuel cheaply. The net effective cost remains approximately $2.00 per gallon — the locked-in rate. Competitors without hedges pay $1.20. The hedge protected against a spike but prevented participation in the decline. This is the fundamental two-sided tradeoff of all commodity hedging.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Duration Risk Management Rate positions carry duration risk',
+        text: '— the sensitivity of P&L to yield changes. Duration-neutral positions (through hedging with other rate contracts) can profit on curve shape changes without exposure to parallel yield shifts. Duration-managed positions explicitly manage to target duration exposure. For retail traders with directional rate views, duration management matters less than position sizing — a directional trade is explicitly accepting duration risk as the thesis.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Forward Guidance: What Management Says About the Future Many companies provide forward guidance',
+        text: '— their estimate of next quarter’s or next year’s revenue and earnings. Guidance often matters more than the current quarter’s results because the stock market is forward-looking. A company that reports strong current earnings but guides lower for next quarter may see its stock decline despite the good results. A company that misses current estimates but raises guidance may see its stock rise. Pay close attention to what management says about the future, not just what happened in the past.',
+      },
     ],
   },,
 {
@@ -32767,6 +37135,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Under Regulation T, the initial margin requirement is 50%, meaning you must contribute at least half the purchase price. With $15,000 in cash, you can borrow another $15,000 and purchase up to $30,000 in stock. This is 2x leverage. The 4x intraday leverage figure applies only to pattern day traders, not standard margin accounts.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Regulation T and Portfolio Margin The margin framework governing options accounts has two distinct regimes: Regulation T',
+        text: '(Reg T) margin, which applies to most retail accounts, and portfolio margin (PM), which applies to larger accounts that meet eligibility requirements. The difference between these two regimes in terms of capital requirements and trading flexibility is enormous. Regulation T Margin Reg T margin is the standard Federal Reserve requirement applied to securities trading. For options, Reg T margin requirements are calculated on a position-by-position basis using standardized formulas that do not consider the offsetting effects of correlated positions across an account. For a naked short put, the Reg T margin requirement is typically the greater of: (1) 20% of the underlying stock price plus the option premium minus any OTM amount, or (2) 10% of the underlying stock price plus the option premium. For a naked short call, similar formulas apply.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Day Trading Margin for Small Accounts For small accounts',
+        text: '(under $10,000), day-trading margin makes futures trading feasible when overnight futures trading would be impossible. A $5,000 account can day-trade 1–2 MES contracts with reasonable margin efficiency. The trade-off is stricter time discipline: every position must close before cutoff. Small-account day traders should set their own mental cutoff 30–60 minutes before broker cutoff to avoid rushed end-of-session decisions.',
       },
     ],
   },
@@ -32869,6 +37255,24 @@ export const articles: Article[] = [
         explanation:
           'After the 30% drop, the stock is worth $28,000. The margin loan is still $20,000 (it does not shrink with the stock price). Your equity is $28,000 - $20,000 = $8,000. Your equity percentage is $8,000 / $28,000 = 28.6%. This is near the typical 25-30% maintenance margin threshold, putting you at high risk of a margin call.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: End-of-Day Margin Calls End-of-session margin calls give you until the next session to meet the deficiency',
+        text: '(typically by wire transfer or by closing positions in the interim). Some brokers require funds received in the account within specific hours the next day; failure to comply triggers forced liquidation. The timing matters: a margin call at 4:00 PM Friday may give you until Monday morning, or it may require Sunday night resolution, depending on broker and market. Know your specific broker\'s rules before you need them.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Wheel Strategy Timing: Cycling Between Puts and Calls The wheel alternates between selling puts',
+        text: '(to acquire shares cheaply) and selling calls (to generate income and exit at higher prices). Put phase timing: sell when the stock is at support. Call phase timing: sell when the stock rallies to resistance after assignment. The cycle repeats, generating income from both legs while buying low and selling high within the natural oscillation.',
+      },
     ],
   },
   {
@@ -32958,6 +37362,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Portfolio margin calculates the worst-case loss across a range of price and volatility scenarios. When stock declines are largely offset by gains on the put, the maximum net loss across scenarios is small. The margin requirement equals that maximum loss — which is much lower than 50% of the stock value because the put has eliminated most of the downside risk that Reg T assumes exists for unhedged stock.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Concentration Margin Requirements If you hold multiple correlated positions, some brokers assess concentration margin',
+        text: '— additional requirements beyond the sum of individual SPAN margins. Holding 10 ES longs + 10 NQ longs exposes you to correlated risk that exceeds what SPAN calculates for the two positions in isolation. Not all brokers apply concentration margin rigorously, but position-level margin calculations can understate true portfolio risk. Monitoring total dollar exposure, not just total margin used, is a better risk discipline.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Regulation T and Portfolio Margin The margin framework governing options accounts has two distinct regimes: Regulation T',
+        text: '(Reg T) margin, which applies to most retail accounts, and portfolio margin (PM), which applies to larger accounts that meet eligibility requirements. The difference between these two regimes in terms of capital requirements and trading flexibility is enormous. Regulation T Margin Reg T margin is the standard Federal Reserve requirement applied to securities trading. For options, Reg T margin requirements are calculated on a position-by-position basis using standardized formulas that do not consider the offsetting effects of correlated positions across an account. For a naked short put, the Reg T margin requirement is typically the greater of: (1) 20% of the underlying stock price plus the option premium minus any OTM amount, or (2) 10% of the underlying stock price plus the option premium. For a naked short call, similar formulas apply.',
       },
     ],
   },
@@ -33171,6 +37593,24 @@ export const articles: Article[] = [
         explanation:
           'If your portfolio of $150,000 (with $100,000 equity and $50,000 loan) appreciates 20%, the total position is now $180,000 and equity is $130,000. Leverage ratio = $180,000 / $130,000 = 1.38x — below your 1.5x cap. The ratio declined because equity grew while the loan remained fixed. The risk is the reverse: if the portfolio drops, the loan stays constant and the leverage ratio rises, potentially breaching your cap.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Managing Risk in Compressed Time Frames Day trading risk management requires: a maximum daily loss limit',
+        text: '(typically 2–3% of account equity), individual trade risk limits (typically 0.25–0.50% of equity), a maximum position size relative to average volume (to ensure exit liquidity), and a rule to stop trading after reaching the daily loss limit. These hard limits prevent a single bad day from causing irreversible damage.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Risk Management for Prop Firms Prop firm accounts',
+        text: '(Topstep, Apex, FTMO) have externally imposed risk rules: maximum daily loss, maximum drawdown from evaluation start, position size limits. Treat these as your risk management system rather than as constraints to work around. The evaluation process tests whether you can operate within a defined risk framework — which is exactly what professional trading requires. Traders who consistently blow prop firm evaluations are revealing that their self-risk-management is insufficient for professional capital deployment.',
+      },
     ],
   },,
 {
@@ -33269,6 +37709,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The stock falls 30%: $10,000 × 0.70 = $7,000 remaining value. After repaying the $5,000 margin loan, you have $7,000 − $5,000 = $2,000. Your loss is $5,000 − $2,000 = $3,000 on an original investment of $5,000, which equals 60%. The 2:1 leverage doubled the 30% stock loss into a 60% equity loss. This is the fundamental danger of margin — losses are magnified proportionally to leverage.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: LEAPS for Retirement Accounts In IRAs, LEAPS provide leverage without margin debt',
+        text: '(which is prohibited). The timing considerations are identical to taxable accounts without the tax complexity, making LEAPS in retirement accounts particularly attractive for long-term bullish positioning.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Day Trading Margin for Small Accounts For small accounts',
+        text: '(under $10,000), day-trading margin makes futures trading feasible when overnight futures trading would be impossible. A $5,000 account can day-trade 1–2 MES contracts with reasonable margin efficiency. The trade-off is stricter time discipline: every position must close before cutoff. Small-account day traders should set their own mental cutoff 30–60 minutes before broker cutoff to avoid rushed end-of-session decisions.',
+      },
     ]
   },
   {
@@ -33366,6 +37824,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Annual interest = $15,000 × 10% = $1,500. For 6 months (half a year): $1,500 / 2 = $750. Your investments must return at least $750 over those 6 months — a 5% return on the borrowed amount, or 3.75% on a $20,000 total portfolio (half borrowed) — before you make any profit from using leverage. If the market is flat, you lose $750 purely from interest.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Net Interest Margin and Revenue Decomposition Net interest margin',
+        text: '— net interest income divided by average earning assets — measures the core profitability of the bank\'s lending and investment book. A higher NIM reflects either a more favourable asset mix (more high-yielding loans, fewer low-yielding investments), a lower cost of funding (more stable deposit funding, less expensive wholesale borrowing), or better pricing power in the markets where the bank operates. Tracking NIM trends over time and comparing them to peer banks reveals whether the bank is maintaining, improving, or losing competitive position in its core lending and funding activities. Non-interest income — fee income from wealth management, investment banking, payments, trading, and other activities — is the second major revenue stream for most large banks and represents a source of earnings that is not directly linked to the interest rate environment.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Bull Call Spread: Leveraged Bullish Exposure at Reduced Cost The bull call spread',
+        text: '(long call vertical) involves buying a call at a lower strike and selling a call at a higher strike at the same expiration. Net cost is a debit. The position profits if the underlying closes above the long call\'s breakeven at expiration. Example: stock at $100, buy the $100 call for $4.00, sell the $110 call for $1.50. Net debit = $2.50. Maximum profit = ($10 spread width minus $2.50 debit) = $7.50 per share or $750 per contract. Maximum loss = $2.50 debit or $250 per contract. Breakeven = $102.50. Maximum profit requires the stock to close at or above $110 at expiration. Strike selection: place the long call at-the-money (or slightly OTM for highest leverage) and the short call at the first significant technical resistance above the current price.',
+      },
     ]
   },
   {
@@ -33590,6 +38066,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Margin call trigger = Loan / (1 − Maintenance Rate) = $25,000 / (1 − 0.25) = $25,000 / 0.75 = $33,333. When the portfolio falls from $50,000 to $33,333 (a 33.3% decline), your equity is $33,333 − $25,000 = $8,333, exactly 25% of portfolio value. Below this point, a margin call is issued. Starting from $50,000 with 50% margin, a 33% decline triggers a margin call — less protection than many beginners assume.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Margin Requirements The specification sheet or your broker displays initial margin',
+        text: '(what you must post to open a position) and maintenance margin (the minimum to keep it open). These change based on SPAN risk calculations and can rise dramatically during volatile periods. Margin for ES might be $15,000 today and $25,000 next week after a volatility event. Building a buffer above minimum margin into your account sizing protects against forced liquidation during normal volatility regime changes — covered in detail in Part III. Chapter 10 — Contract Months and Expiration Every futures contract has a limited life. Expiration is not optional — every open position must be closed, rolled, or taken to settlement. This chapter covers the expiration mechanics that every futures trader must understand to avoid the operational mistakes that plague new traders.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Regulation T and Portfolio Margin The margin framework governing options accounts has two distinct regimes: Regulation T',
+        text: '(Reg T) margin, which applies to most retail accounts, and portfolio margin (PM), which applies to larger accounts that meet eligibility requirements. The difference between these two regimes in terms of capital requirements and trading flexibility is enormous. Regulation T Margin Reg T margin is the standard Federal Reserve requirement applied to securities trading. For options, Reg T margin requirements are calculated on a position-by-position basis using standardized formulas that do not consider the offsetting effects of correlated positions across an account. For a naked short put, the Reg T margin requirement is typically the greater of: (1) 20% of the underlying stock price plus the option premium minus any OTM amount, or (2) 10% of the underlying stock price plus the option premium. For a naked short call, similar formulas apply.',
+      },
     ]
   },
   {
@@ -33690,6 +38184,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Current equity = $40,000 − $30,000 = $10,000. Required equity = 30% × $40,000 = $12,000. Margin deficiency = $12,000 − $10,000 = $2,000. You must deposit $2,000 in cash (or the equivalent in securities) or sell enough of the position to restore the 30% equity ratio. Note: to avoid future calls, you\'d want to deposit more than the minimum $2,000 deficiency since any further decline would trigger another call immediately.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Gap Risk and Margin Call Risk If you hold a position overnight',
+        text: '(whether intentionally or because you missed the cutoff), you face gap risk — the price can move dramatically on overnight news, producing a margin call before you can react. Gaps exceeding your margin capacity trigger forced liquidation at the open, often at prices far worse than the prior close. This is exactly the risk day trading margin was designed to avoid, and holding positions overnight without being prepared for it is how accounts blow up quickly.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Bear Call Spread: Selling Into Strength Systematically The bear call spread',
+        text: '(short call vertical or credit call spread) involves selling a call at a lower strike and buying a call at a higher strike creating a net credit. The position profits if the underlying stays below the short call strike at expiration — the mirror image of the bull put spread. Example: stock at $100, sell the $105 call for $2.00, buy the $110 call for $0.75. Net credit = $1.25 or $125 per contract. Maximum profit = $1.25. Maximum loss = ($5.00 minus $1.25) = $3.75 or $375 per contract. Breakeven = $106.25. Bear call spreads are most appropriate when a stock has made a large rapid upward move approaching significant technical resistance with elevated IV from the move — providing generous premium on the credit spread while the resistance provides structural protection for the short call strike.',
+      },
     ]
   },
   {
@@ -33786,6 +38298,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Day 1: 2x ETF gains 2 × 25% = 50%. Starting at $100, now at $150. Day 2: 2x ETF falls 2 × 20% = 40%. $150 × (1 − 0.40) = $150 × 0.60 = $90. Net return: −10%. The index is approximately flat (100 × 1.25 × 0.80 = 100), yet the 2x ETF lost 10%. This is the volatility decay / constant leverage trap in action — the mechanism that makes leveraged ETFs unsuitable for long-term investors in volatile markets.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Leveraged ETF Timing Leveraged ETFs',
+        text: '(TQQQ, SQQQ, UPRO) suffer from daily rebalancing decay that makes them unsuitable for holding periods exceeding 1–2 weeks. The timing protocol: use leveraged ETFs only for short-duration tactical trades (1–5 days), enter only when the directional signal is strong and confirmed, and set hard time stops of one week maximum regardless of the position’s P&L. For longer holding periods, use options on the unleveraged ETF instead.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Greeks in Leveraged ETF Options: Amplification and Decay Leveraged ETFs',
+        text: '— instruments like TQQQ (3x leveraged Nasdaq), SOXL (3x leveraged semiconductors), or UVXY (1.5x leveraged VIX) — have specific structural characteristics that make their options behave differently from options on their unleveraged counterparts. Understanding these differences is essential because retail traders increasingly trade options on leveraged ETFs, often without fully grasping the implications. The Compounding Decay Problem Leveraged ETFs reset their leverage daily. A 3x leveraged ETF that rises 1% today and falls 1% tomorrow does not return to its starting value — it returns to 99.97% of its starting value because the daily compounding of the +3% and −3% moves does not net to zero. Over time, in a volatile market, this daily compounding creates a persistent decay in the value of leveraged ETFs relative to their stated multiple of the underlying index.',
+      },
     ]
   },
   {
@@ -33886,6 +38416,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Approximate gain on option = Delta × Stock Move = 0.40 × $15 = $6 per share. Return on option = $6 / $8 = 75%. Return on stock = $15 / (original stock price). If the stock was at $150, the stock returned 10%, the option returned 75% — about 7.5x leverage. More precisely, leverage = (Delta × Stock Price) / Option Premium = (0.40 × $150) / $8 = 7.5x. This shows why options provide substantial leverage at a fraction of the cost of owning shares outright.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Comparing Futures Leverage to Options Long options have defined downside',
+        text: '(the premium paid) with upside leverage from the option\'s delta. Futures have symmetric leverage — unlimited exposure in both directions. For a bullish thesis with defined risk, long calls may actually use less capital than long futures with appropriate stops. For bearish theses, long puts are often cleaner than short futures. The choice isn\'t ideological; it\'s situational. Options shine when you want defined risk; futures shine when you want efficient directional exposure without paying option premium.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Payment for Order Flow: The Hidden Cost Retail brokers route customer options orders to wholesale market makers',
+        text: '(Citadel Securities, Susquehanna, Virtu) in exchange for payment of $0.30 to $0.60 per contract. The wholesaler provides \'price improvement\' over the NBBO — genuine but limited. Academic research shows the price improvement provided falls substantially short of the economic value of the retail order flow to the wholesaler, who profits from the systematic overpricing of implied volatility by retail option buyers and from the information embedded in aggregate retail flow. For options traders: minimize PFOF cost by selecting brokers with genuine price competition (IBKR routes to the best exchange rather than to a wholesale market maker) and developing excellent limit-order execution discipline that captures mid-price fills rather than relying on wholesaler price improvement. Chapter 36 Options Order Types & Execution Tactics Knowing which strategy to trade is only half the battle.',
+      },
     ]
   },
   {
@@ -33985,6 +38533,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: '2% of 5,000 = 100 index points. Loss per contract = 100 × $50 = $5,000. Two contracts: $5,000 × 2 = $10,000 total loss. As a percentage of the $27,000 initial margin ($13,500 × 2 contracts): $10,000 / $27,000 = 37%. A single 2% market decline wiped out 37% of the initial margin — and this money is paid in cash that day, not merely an unrealized paper loss. This illustrates the intensity of futures leverage.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Leverage in Different Contracts Leverage varies by contract. Some contracts offer',
+        text: '20–30x leverage on initial margin (rate products, FX); others offer 10–15x (equity indices, metals); some offer 8–12x (energy). These ratios reflect the underlying\'s volatility — more volatile products require more margin. The practical implication: the same account can hold more rate futures than oil futures in terms of notional exposure before hitting margin limits. Not all futures are equally leveraged.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Settlement Prices and Contract Expiration Each trading day, futures contracts settle at specific official prices',
+        text: '(typically a volume-weighted average of the closing minutes). Settlement prices matter — they determine margin requirements and serve as reference prices. Contract expiration produces specific flow patterns: open interest shifts, volume concentrates in the new front month, and expiring contracts see position squaring. Chapter 91 — Forex: The Decentralized Challenge Forex is the world\'s largest market by volume, but its decentralized structure denies traders the consolidated volume data available in futures and equities. This chapter covers forex\'s unique challenges, the workarounds (tick volume, futures volume proxies, COT reports), and the methodologies that work best despite the limitations.',
+      },
     ]
   },
   {
@@ -34297,6 +38863,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Under 13F rules, institutional investors must disclose equity securities they own exceeding $100 million. With TRS, the bank legally owns the shares while Archegos only holds the economic exposure (gains and losses). Because Archegos did not legally own the equity, it had no 13F disclosure obligation. With multiple banks each holding partial positions and no centralized view of total exposure, no single party — including regulators — could see Archegos\'s true aggregate leverage until positions were being force-liquidated.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Calculate Your Portfolio’s Return At the end of month six, calculate your portfolio’s total return',
+        text: '(including dividends) and compare it to the S&P 500 total return over the same period. Do not be discouraged if you underperformed — six months is far too short a period to evaluate an investment strategy. The purpose of the calculation is to begin building the habit of performance measurement, not to judge your success or failure.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Indicators for Technical Traders The essential KPIs include: total return, risk-adjusted return',
+        text: '(Sharpe ratio), maximum drawdown, win rate, average win/loss ratio, profit factor, and expectancy per trade. These metrics should be calculated monthly and quarterly and compared to both the trader’s historical performance and relevant benchmarks.',
+      },
     ]
   },
   {
@@ -34392,6 +38976,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The 32-year-old with stable employment, long horizon, diversification, and an emergency fund is the only candidate who meets the prerequisites for modest, responsible leverage: time to recover from drawdowns, income to service interest without selling investments, diversification to avoid concentrated ruin, and a financial cushion. The 58-year-old near retirement cannot recover from a leveraged loss. The retiree depending on portfolio income cannot risk leveraged drawdowns. Concentrated single-stock leverage is inappropriate regardless of age or confidence level.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: AAII, Investors Intelligence, and Survey-Based Sentiment The American Association of Individual Investors',
+        text: '(AAII) surveys individual investor sentiment weekly, producing bullish, bearish, and neutral percentages. The Investors Intelligence survey tracks newsletter writer sentiment. Both serve as contrarian indicators: when AAII bulls exceed 55–60%, the market is vulnerable to correction. When AAII bears exceed 50%, the market is often near a bottom. These surveys measure stated intent rather than actual positioning, which limits their precision but provides useful directional context.',
+      },
     ]
   },
   {
@@ -34491,6 +39087,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'In a deleveraging spiral, Firm A\'s forced selling of Asset X drives down Asset X\'s price. If Firm B holds Asset X as collateral for any of its loans, the collateral value falls and triggers margin calls on Firm B\'s positions — even if those positions are in completely different assets (Asset Y). Firm B must then sell Asset Y to raise cash, driving down Asset Y\'s price and potentially triggering margin calls at Firm C, which holds Asset Y. This cross-asset contagion is the core mechanism of systemic deleveraging.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Capitulation Volume and Panic Selling Signatures Capitulation marks the climax of a bear market',
+        text: '— the point of maximum fear where the last holdouts surrender and sell at any price. Capitulation produces the highest volume readings of the entire decline, wide-range down bars with closes near the low, extreme VIX readings (above 40–45), and sentiment indicators at historic pessimism levels. This combination has marked every major market bottom in modern history.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: What Is a Volatility Regime? A volatility regime is a persistent state of the market\'s volatility dynamics',
+        text: '— a period during which the statistical properties of volatility (its level, its rate of mean reversion, its clustering behavior) remain relatively stable. Markets do not transition smoothly between volatility levels; they exhibit regime-switching behavior where they can be in a low-volatility regime for months before abruptly transitioning to a high-volatility regime and then back again. The practical importance of regime identification: the same options strategy that generates consistent positive returns in one regime can generate catastrophic losses in another. A short straddle book on the SPX generates reliable income in a low-volatility, mean-reverting regime. The same book, sized identically, can produce losses equivalent to 12-18 months of income in a single week during a high-volatility trending regime.',
+      },
     ]
   },
   {
@@ -34590,6 +39204,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Price gain: ($50 − $40) × 1,000 = $10,000. Subtract dividend reimbursed: $1 × 1,000 = $1,000. Subtract borrow costs: $500. Net P&L = $10,000 − $1,000 − $500 = $8,500. The dividend payment and borrow costs reduced a $10,000 gross profit to $8,500 net. In practice, these costs are significant, especially for dividend-paying stocks or hard-to-borrow names where annualized borrow rates can be substantial.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Short Selling: Simpler in Futures Shorting stocks involves borrowing shares from a broker, paying borrowing costs',
+        text: '(which can be extreme for hard-to-borrow names), and accepting risk that the broker recalls the shares. Shorting futures is mechanically identical to going long — you simply sell a contract to open a position. No borrowing, no locate, no recall risk. This symmetry means futures markets respond to downside catalysts as readily as upside, without the structural frictions that suppress shorting in equities. For bearish strategies, futures are often more practical than equity shorts.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Short Selling Risk Management The asymmetric risk of short selling',
+        text: '(unlimited loss potential) requires specific risk management: position sizes should be 50% of comparable long positions, stops should be tighter (1.5× ATR rather than 2×), and time stops should be shorter (exit if the stock hasn’t declined within 10 trading days). Never short a stock with short interest above 20% of float unless using options for defined risk. The risk of a short squeeze exceeding any possible stop placement makes heavily shorted stocks unsuitable for outright shorting.',
+      },
     ]
   },
   {
@@ -34689,6 +39321,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Days to Cover = Short Interest / Average Daily Volume = 8,000,000 / 500,000 = 16 days. Short interest of 8 million out of 10 million float = 80% of float — extremely elevated. A Days to Cover of 16 means short sellers need 16 average trading days to fully close their positions — which would require buying 16× normal daily volume, inevitably moving the price sharply higher. This combination of very high short interest as % of float (80%) and high Days to Cover (16) is a textbook squeeze setup.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: The GameStop Squeeze: Order Flow, Short Interest, and Social Sentiment The January',
+        text: '2021 GameStop squeeze demonstrated how extreme short interest, social media coordination, and options market mechanics (gamma squeeze) combined to produce a price move that was technically extreme but explainable through order flow and market structure analysis. The event highlighted the importance of monitoring short interest and options positioning as technical inputs.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Short Squeeze Timing in High Short Interest Small Caps When short interest exceeds',
+        text: '20% of float and the stock approaches a key resistance level, a squeeze becomes increasingly probable. The timing entry: buy when the stock breaks above resistance on heavy volume, with the expectation that forced short covering will amplify the advance. Days to cover above 5 indicates that the squeeze will take nearly a full week to play out, providing sustained buying pressure.',
+      },
     ]
   },
 {
@@ -34758,6 +39408,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Repurchasing within 30 days triggers the wash-sale rule. The $5,000 loss is disallowed for the current year but is not lost forever — it is added to the cost basis of the replacement shares, reducing your gain (or increasing your loss) when you eventually sell them.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Tax-Loss Harvesting with Options Tax-loss harvesting',
+        text: '— the practice of realizing losses on declining positions to offset gains elsewhere in the portfolio — is a widely practiced tax management technique for equity portfolios. Options create specific opportunities and specific complications for tax-loss harvesting that differ from simple equity-based harvesting. Options-based tax-loss harvesting opportunity: an investor holding a stock position with a large unrealized loss can purchase a put option on the same stock (creating downside exposure that offsets the long stock\'s further downside) before selling the stock to realize the loss. After the 30-day wash sale rule period expires (the investor must wait 30 days after selling the stock before repurchasing it to avoid the wash sale rule disallowing the loss), the put is sold and the stock is repurchased.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Tax-Loss Harvesting Timed by Technical Signals Tax-loss harvesting',
+        text: '— selling positions at a loss to offset gains — can be timed using technical signals. A position that is in a confirmed technical downtrend and has an unrealized loss is a candidate for harvesting because the technical analysis supports the sale independent of the tax motivation. The harvested position can be replaced with a correlated but not substantially identical security to maintain market exposure while capturing the tax benefit.',
       },
     ],
   },
@@ -34993,6 +39661,24 @@ export const articles: Article[] = [
         explanation:
           'When a wash sale is triggered by a purchase in an IRA, the loss is permanently disallowed — not merely deferred. Because IRA gains are already sheltered from tax, there is no mechanism to add the disallowed loss to the IRA cost basis in a way that provides future benefit. This is a particularly costly mistake in tax-loss harvesting.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Wash Sale Rules and Options: The Specific Traps The wash sale rule',
+        text: '(Section 1091) disallows a loss on the sale of a security if the taxpayer purchases a \'substantially identical\' security within 30 days before or after the sale. For equity options traders, the wash sale rules create specific traps that are not present for commodity or index options traders. The wash sale trap: selling stock at a loss and buying a deep ITM call on the same stock within 30 days triggers the wash sale rule and disallows the loss. The IRS treats the deep ITM call as substantially identical to the stock. The solution: either wait 31 days before re-establishing exposure, or use the Section 475 mark-to-market election which eliminates wash sale rules entirely for qualifying traders. The most common wash sale trap for options traders: selling a losing stock position to realize the loss and simultaneously (or within 30 days) purchasing a call option on the same stock.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Wash Sale Rule and Futures The wash sale rule',
+        text: '(which disallows loss deductions when you buy substantially identical securities within 30 days before or after a sale) does not apply to futures contracts. This is a significant advantage over stock and options trading. Futures traders can sell at a loss and immediately re-enter the same position without wash sale concerns. This allows end-of-year loss harvesting without the 30-day waiting requirement that equity traders must manage. Combined with mark-to-market treatment, this makes futures tax management distinctly simpler than equity trading.',
+      },
     ],
   },
   {
@@ -35075,6 +39761,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Most non-US funds qualify as PFICs under IRS rules. Without a valid QEF or MTM election, gains from a PFIC are taxed at the highest ordinary income rate plus an interest charge, completely eliminating the favorable long-term capital gains rate. This is why US investors should generally stick to US-listed ETFs for international market exposure.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: International Considerations for US Traders US citizens and permanent residents trading on foreign exchanges',
+        text: '(Eurex, ICE Europe, HKEX, SGX) have the same Section 1256 treatment for futures contracts regardless of exchange location, as long as the contract qualifies as a regulated futures contract under US tax law. Foreign futures contracts on recognized foreign exchanges typically qualify. US citizens trading from abroad still owe US taxes on worldwide income, though foreign tax credits may offset some liability. FBAR and FATCA reporting may apply for foreign financial accounts above $10,000.',
       },
     ],
   },,
@@ -35170,6 +39868,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Selling at 360 days triggers a short-term gain taxed at 22% ordinary income: $5,000 × 22% = $1,100. Waiting just 5 more days (to day 366) converts it to a long-term gain taxed at 15%: $5,000 × 15% = $750. By waiting 5 days, you save $350 in taxes. This is one of the highest "return on patience" moments in personal finance.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Qualified vs. Non-Qualified Dividends Qualified dividends are taxed at the long-term capital gains rate',
+        text: '(0%, 15%, or 20%), which is significantly lower than the ordinary income rate. To qualify, the dividend must be paid by a US corporation or a qualified foreign corporation, and you must have held the stock for at least 61 days during the 121-day period surrounding the ex-dividend date. Non-qualified dividends — from REITs, certain foreign stocks, and stocks held for fewer than 61 days — are taxed at your ordinary income rate, which can be as high as 37%.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Short-Term vs. Long-Term Capital Gains Gains on positions held less than',
+        text: '366 days are taxed at ordinary income rates (up to 37%). Gains on positions held 366+ days are taxed at long-term rates (0%, 15%, or 20%). The timing implication: if a profitable position is approaching the 366-day threshold, the tax savings from waiting a few additional days to sell can exceed 15–20% of the gain. If a profitable position is approaching the 366-day threshold for long-term capital gains treatment, the tax savings from waiting a few additional days can exceed 15–20% of the gain. Always check the holding period before selling.',
       },
     ],
   },
@@ -35356,6 +40072,18 @@ export const articles: Article[] = [
         explanation:
           'When current and retirement tax rates are identical, the pure math is a wash — you pay the same effective tax either way. However, the Roth has structural advantages: no RMDs (traditional forces withdrawals at 73), flexibility to withdraw contributions penalty-free, tax-free inheritance for heirs, and protection against future tax rate increases. When the math is equal, Roth\'s additional flexibility makes it the better choice for most people, especially younger investors.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Rebalancing Inside a Retirement Account: No Tax Impact Inside a traditional IRA, Roth IRA, or',
+        text: '401(k), buying and selling does not generate any tax consequences. This makes retirement accounts the ideal place to rebalance freely. Sell the overweight asset class, buy the underweight one, and pay no taxes. If you have both taxable and retirement accounts, do your rebalancing inside the retirement account whenever possible. This preserves the tax efficiency of your taxable account while keeping your overall allocation on target. Chapter 48 — Tracking Your Net Worth & Measuring Progress What gets measured gets improved. Tracking your net worth and portfolio performance gives you a clear picture of whether your financial plan is working and whether you are on track to meet your goals. This chapter sets up the measurement system you will use for the rest of your investing life.',
+      },
     ],
   },
   {
@@ -35457,6 +40185,18 @@ export const articles: Article[] = [
         explanation:
           'The HSA is unique in offering all three tax benefits simultaneously: (1) contributions are above-the-line deductions reducing current-year taxable income, (2) investment growth inside the account is never taxed, and (3) withdrawals for qualified medical expenses are completely tax-free. No other account in the US tax code offers this complete triple exemption. Roth accounts offer tax-free growth and withdrawals but contributions are not deductible.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Roth IRA: No Deduction Now, Tax-Free Growth Forever A Roth IRA works in reverse: you contribute after-tax dollars',
+        text: '(no deduction), but your investments grow completely tax-free and withdrawals in retirement are tax-free. This is arguably the most powerful retirement account available because decades of compound growth are never taxed. The same contribution limits apply. There are income limits for Roth IRA eligibility, but the backdoor Roth conversion provides a workaround for higher earners. If you are young and expect your income to grow over time, the Roth IRA is almost certainly the better choice because you pay taxes now at your lowest lifetime rate. 11.4 401(k) and 403(b): What Your Employer Offers A 401(k) is an employer-sponsored retirement plan that allows you to contribute up to $23,500 per year from your paycheck. Many employers match a portion of your contribution — typically 50–100% of the first 3–6% of your salary.',
+      },
     ],
   },
   {
@@ -35548,6 +40288,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'You held the stock for only 15 days (10 before + 5 after the ex-date), well short of the 61-day requirement within the 121-day window centered on the ex-date. The dividend is classified as ordinary income and taxed at your marginal rate. This "dividend capture" strategy often results in ordinary income treatment AND a short-term capital loss if the stock drops by the dividend amount on the ex-date — a tax-inefficient outcome.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Tax Implications of Dividend Income Qualified dividends',
+        text: '(from US corporations where you have held the stock for at least 61 days) are taxed at the long-term capital gains rate, which is 0%, 15%, or 20% depending on your income. Non-qualified dividends (from REITs, certain foreign stocks, and short-term holdings) are taxed as ordinary income, which can be as high as 37%. This tax differential makes holding dividend stocks in tax-advantaged accounts (Roth IRA or traditional IRA) attractive, especially for REIT dividends. In a taxable account, focus on qualified dividends from US companies to minimize your tax burden. Chapter 59 — The Power of Compounding: The Eighth Wonder of the World Albert Einstein is often credited with calling compound interest the eighth wonder of the world.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Tax-Aware Dividend Timing Qualified dividends',
+        text: '(taxed at capital gains rates) require a minimum 61-day holding period around the ex-date. The timing implication: if selling a dividend stock within 60 days of the ex-date, the dividend received will be taxed at the higher ordinary income rate. For tax optimization, plan sales at least 61 days after the ex-date when possible. Chapter 88 — Covered Call Timing: Maximizing Premium Covered call timing determines whether the strategy generates consistent income or frustrating missed opportunities from capped upside.',
       },
     ],
   },
@@ -35641,6 +40399,24 @@ export const articles: Article[] = [
         explanation:
           'Mutual fund capital gain distributions are taxable to shareholders in the year they are paid, regardless of whether you sold shares or reinvested the distribution. Your share price (NAV) typically drops by approximately the distribution amount on the ex-distribution date. If the distribution was reinvested, your share count increases but your total value stays approximately the same — you now have a tax bill and a higher cost basis in more shares, but no new wealth was created.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: ETFs Trade Like Stocks; Mutual Funds Don’t An ETF',
+        text: '(exchange-traded fund) trades on a stock exchange just like a stock. You can buy and sell it throughout the trading day at the current market price. A mutual fund, by contrast, only processes buy and sell orders once per day, at the closing net asset value (NAV). You cannot set a limit price or trade intraday with a mutual fund. For most long-term investors, this difference is academic — if you are buying and holding for years, the ability to trade intraday does not matter. But if you want real-time pricing and order control, ETFs are the better choice.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Why the Fed Controls Short Rates The Federal Reserve sets the Federal Funds rate',
+        text: '— the overnight interbank lending rate. Through this single rate, the Fed influences the entire short end of the curve (3-month to 2-year). Longer rates are influenced but not controlled by Fed policy; they also reflect inflation expectations, global capital flows, and term premium. Fed policy transmits strongly to 2-year yields (ZT), meaningfully to 5-year yields (ZF), less directly to 10-year (ZN), and weakly to 30-year (ZB). Knowing which contract reflects which segment is essential for trading rate futures intelligently.',
+      },
     ],
   },
   {
@@ -35733,6 +40509,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Even when the index rises 12%, individual stocks within it can decline significantly. A direct indexer can sell those declining holdings, realize losses, and immediately replace them with correlated substitutes. These losses offset gains elsewhere — from selling real estate, receiving a bonus, or other capital gains events — reducing tax owed. An ETF holder cannot access individual stock losses; they only see the net index return. This is the core tax advantage of direct indexing in all market conditions.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Total Market Funds: Owning Everything A total stock market index fund goes even broader than the S&P',
+        text: '500, owning every publicly traded US company — roughly 4,000 stocks. This includes small and mid-cap companies that are not in the S&P 500. Total market funds like VTI (Vanguard Total Stock Market ETF) provide the most complete diversification available in a single fund. Historically, the returns of total market funds and S&P 500 funds have been nearly identical because the largest companies dominate both. Either choice is excellent for a beginner.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Poor Man’s Covered Call Timing: The Capital-Efficient Alternative PART V',
+        text: '— OPTIONS EXIT TIMING When to close, roll, or adjust options positions — the management decisions that determine whether a correctly timed entry becomes a profitable trade. Chapter 22 — Timing Options Profit Exits –',
       },
     ],
   },
@@ -36007,6 +40801,24 @@ export const articles: Article[] = [
         explanation:
           'The original $200,000 deferred gain was due to be taxed by December 31, 2026 regardless of the QOF\'s performance. After holding the QOF for 10+ years (12 years in this case), the $400,000 of appreciation generated inside the QOF is permanently excluded from capital gains tax — you pay zero on the new growth. The two components are treated separately: the original deferred gain is taxed on the 2026 schedule, while QOF appreciation is tax-free at the 10-year mark.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Qualified vs. Non-Qualified Dividends Qualified dividends are taxed at the long-term capital gains rate',
+        text: '(0%, 15%, or 20%), which is significantly lower than the ordinary income rate. To qualify, the dividend must be paid by a US corporation or a qualified foreign corporation, and you must have held the stock for at least 61 days during the 121-day period surrounding the ex-dividend date. Non-qualified dividends — from REITs, certain foreign stocks, and stocks held for fewer than 61 days — are taxed at your ordinary income rate, which can be as high as 37%.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Reserve Capital and Opportunity Keeping reserve capital',
+        text: '(not deployed in positions) provides flexibility for exceptional opportunities: an unusual setup you\'d like to size up on, an unexpected margin increase during a volatility event, an opportunity to add to winners. Reserve capital of 20–30% of total account is reasonable for most active traders. Deploying 100% on average positions leaves no room for exceptional situations, and exceptional situations are where outsized returns come from.',
+      },
     ],
   },
   {
@@ -36094,6 +40906,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Converting $20,000 to Roth at 12% now permanently removes it from future required minimum distributions. Without conversion, that $20,000 (and its future growth) will be forced out as ordinary income via RMDs at 73+, likely at higher tax rates when combined with Social Security. Paying 12% now on the conversion is almost certainly cheaper than paying 22-24%+ later. The Roth account also has no RMDs and can be left to heirs tax-free, making this the most tax-efficient use of unused low-bracket capacity.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Tax-Efficient Options Strategies for High-Income Investors For investors in the highest federal income tax brackets',
+        text: '(37% ordinary income, 20% long-term capital gains plus 3.8% NIIT = 23.8% LTCG effective rate), tax efficiency in options strategy design is not an afterthought — it is a primary return driver. The difference between an options strategy generating ordinary income (taxed at 37%) and the same strategy structured to generate long-term capital gains (taxed at 23.8%) is 13.2 percentage points of after-tax return — equivalent to more than one year of average options income in after-tax savings. The SPX/Section 1256 systematic migration: HNW investors who are currently trading equity options (SPY, individual stocks) in systematic premium selling programs should evaluate whether migrating to SPX options provides sufficient tax savings to justify any differences in liquidity, execution, or strategy design.',
       },
     ],
   },
@@ -36369,6 +41193,24 @@ export const articles: Article[] = [
         explanation:
           'Short-term losses offset short-term gains first under IRS netting rules. But even if you had a choice, applying $10,000 of losses to short-term gains saves 37% × $10,000 = $3,700 in taxes. Applying the same $10,000 of losses to long-term gains saves only 15% × $10,000 = $1,500. The short-term gain offset is 2.47 times more valuable. This is why having a mix of short-term losses and short-term gains in a taxable portfolio — common in a volatile year — is particularly valuable for harvesting.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Tax-Loss Harvesting Timed by Technical Signals Tax-loss harvesting',
+        text: '— selling positions at a loss to offset gains — can be timed using technical signals. A position that is in a confirmed technical downtrend and has an unrealized loss is a candidate for harvesting because the technical analysis supports the sale independent of the tax motivation. The harvested position can be replaced with a correlated but not substantially identical security to maintain market exposure while capturing the tax benefit.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Tax-Loss Harvesting with Options Tax-loss harvesting',
+        text: '— the practice of realizing losses on declining positions to offset gains elsewhere in the portfolio — is a widely practiced tax management technique for equity portfolios. Options create specific opportunities and specific complications for tax-loss harvesting that differ from simple equity-based harvesting. Options-based tax-loss harvesting opportunity: an investor holding a stock position with a large unrealized loss can purchase a put option on the same stock (creating downside exposure that offsets the long stock\'s further downside) before selling the stock to realize the loss. After the 30-day wash sale rule period expires (the investor must wait 30 days after selling the stock before repurchasing it to avoid the wash sale rule disallowing the loss), the put is sold and the stock is repurchased.',
+      },
     ],
   },
   {
@@ -36465,6 +41307,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'New cash contributions have no embedded capital gains — they are fresh dollars going into new positions. Directing them to underweight bond funds does not trigger any tax event. No stock was sold, so no capital gain was realized. This is why contribution rebalancing is the most tax-efficient way to maintain target allocation: it reduces drift over time through buying, not selling, and has zero tax cost regardless of how large the allocation correction is.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: What Rebalancing Is and Why It Matters If your target allocation is',
+        text: '80% stocks and 20% bonds, and stocks outperform bonds for a year, you might end up at 88% stocks and 12% bonds. You are now taking more risk than you intended. Rebalancing sells the excess stock allocation (selling high) and buys more bonds (buying low) to restore the 80/20 target. Over time, this disciplined process forces you to systematically take profits from outperformers and reinvest in underperformers, which improves risk-adjusted returns.',
       },
     ],
   },,
@@ -36688,6 +41542,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'When you withdraw a fixed dollar amount from a portfolio that has just dropped 40%, you must sell a far greater percentage of shares than planned. Those sold shares cannot participate in the recovery, and the resulting shortfall compounds over decades. By year 15, the portfolio has likely had years of strong growth and withdrawals represent a smaller fraction of a larger base, so the same crash is far less destructive.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Why Standard VaR Misses Tail Risk Value at Risk models typically assume returns follow a normal',
+        text: '(bell-curve) distribution. Real futures returns have fat tails — extreme moves occur far more frequently than normal distribution predicts. A move that normal distribution assigns 0.1% probability actually occurs every few years in active futures markets. This "fat tail" reality means VaR consistently underestimates extreme losses. Alternatives: CVaR (Conditional VaR) measures average loss beyond the VaR threshold; Extreme Value Theory models specifically fit to tail behavior; stress testing against historical extremes rather than relying on distribution assumptions.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
       },
     ],
   },
@@ -37057,6 +41929,24 @@ export const articles: Article[] = [
         explanation:
           'Research consistently shows that retirements beginning in high-CAPE environments (above 25–30) have supported safe withdrawal rates in the 3.0–3.5% range rather than the 4% that works across all historical periods. A CAPE of 35 is materially above the historical average of ~17, suggesting below-average real returns in the coming decade — the most critical decade for sequence-of-returns risk. Dropping to 3.0–3.5% meaningfully improves survival probability without requiring extreme lifestyle adjustment.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Sequencing Timeframe Reads The order matters: start higher, work lower. Starting with the',
+        text: '5-minute and scaling up lets the noise of the small timeframe bias your analysis of the larger. Starting with weekly and scaling down ensures your LTF analysis is always contextualized. Sequence matters; discipline it. Sequence matters: start higher, work lower. Starting with 5-min and scaling up biases analysis with short-term noise. Starting with weekly ensures LTF analysis is always contextualized. Discipline the order. Chapter 72 — The Higher Timeframe: Setting the Bias The higher timeframe is where your directional bias comes from. Without HTF bias, every intraday decision is ad hoc. This chapter covers how to read HTF structure, identify HTF levels, and use the larger timeframe to set bias that constrains and guides your lower-timeframe trading.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: When Valuation Is Most Powerful Valuation is most powerful precisely when the market is least confident',
+        text: '— in periods of extreme sentiment, following sudden dislocations, and in corners of the market that are structurally neglected. When sentiment is strongly bullish, stocks tend to trade well above intrinsic value, and fundamental analysis primarily serves to quantify overvaluation rather than identify opportunity. When sentiment reverses sharply, intrinsic value estimates provide an analytical anchor that prevents panic selling of genuinely cheap businesses. Following corporate events — spin-offs, restructurings, bankruptcies — fundamental valuation identifies opportunities that exist because the market has not yet completed the analytical work required to price the new entity correctly. The forced selling by index funds and institutional holders who do not want the new security creates temporary supply-demand imbalances that produce genuine undervaluation.',
+      },
     ],
   },
 
@@ -37144,6 +42034,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'This is exactly the scenario the bucket strategy is designed for. With 2 years of expenses in cash (Bucket 1) and additional years in bonds (Bucket 2), you do not need to sell any equities during the crash. You spend from Bucket 1, allow Bucket 3 to recover, and only refill buckets after markets have recovered. Selling equities at a 40% loss to refill cash buckets destroys the entire purpose of the strategy.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Time Horizon and DTE Strategy Selection DTE Strategy Selection Guide',
+        text: '0-7 DTE (0DTE and ultra-short): SPX iron condors and SPY butterflies for systematic income. Gamma scalping for experienced practitioners managing long straddle positions through a specific volatility event. Directional call or put spreads for specific event-day directional bets. Avoid: undefined-risk naked positions (the gamma risk is too extreme for any reasonable risk management framework); opening new 30-45 DTE positions within 7 days of an existing position\'s expiration (the management timing creates complexity). 7-21 DTE (weekly): iron condors for high-IV underlyings with good weekly options liquidity (SPY, QQQ, GLD). Credit put spreads as directional income on bullish setups. Short strangles for the highest-premium-per-day income on liquid underlyings .',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Case Study: Building a Three-Strategy Portfolio A practical example: Strategy A is a',
+        text: '50/200-day moving average crossover on global equity indices (trend-following, weekly, equities). Strategy B is an RSI mean reversion system on S&P 500 stocks (mean reversion, daily, equities). Strategy C is a Donchian breakout system on commodity futures (trend-following, daily, commodities). The three strategies differ in type, time frame, and market, providing robust diversification. Machine learning, statistical methods, quantitative screening, and data science. Chapter 98 — Elder’s Triple Screen & Multi-System Integration Alexander Elder’s Triple Screen system is the most influential multi-time-frame trading methodology. This chapter provides the complete system specification plus frameworks for integrating multiple systems into a unified portfolio approach.',
       },
     ],
   },
@@ -37249,6 +42157,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           '$19,500 / $300,000 = 6.5%. This payout rate is higher than what a safe self-managed withdrawal rate produces because it combines investment return with return of principal and mortality credits — the insurer pools mortality risk, so those who die early subsidize those who live long. The "excess" payout above the risk-free rate comes from these mortality credits, which increase with age. This is why annuity payout rates are actuarially justified rather than a gimmick.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: When Scaling In Makes Sense Scaling in',
+        text: '— adding to a position as it moves in your favor — makes sense when initial edge is confirmed by continued action. Pyramiding in a confirmed trend is classic scaling in. But scaling in requires discipline: the added positions carry their own stops and never push your total risk above your planned maximum.',
       },
     ],
   },
@@ -37533,6 +42453,18 @@ export const articles: Article[] = [
         explanation:
           'Medicare IRMAA surcharges are based on MAGI from two years prior. A large Roth conversion at 68 showing $250,000 of income will trigger IRMAA two years later (at age 70), significantly increasing Part B and Part D premiums. At $250,000 MAGI (married filing jointly), Part B premiums rise from $174.70 to approximately $384.30 per person per month. This is a real and often overlooked cost of Roth conversions — it should be modeled before executing.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Retirement Planning Retirement planning for full-time traders: Solo',
+        text: '401k (US) allows contributions up to $66,000+ annually (2024) for self-employed individuals; SEP-IRA allows up to 25% of net self-employment income; defined benefit plans for high-income self-employed traders allow even higher contributions. For Canadian traders: RRSP and TFSA contributions; individual pension plans for high-income self-employed. Retirement planning that would have been automatic through employer matching now requires explicit annual action. Work with a financial advisor who understands self-employment income.',
+      },
     ],
   },
 
@@ -37633,6 +42565,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'Social Security COLAs track CPI (3% in this example). If her personal inflation rate is 4.5% due to high healthcare spending, her benefit grows 3% in nominal terms but her costs grow 4.5%. The gap is 1.5% per year — a real purchasing power loss that compounds each year. After 20 years at this gap, her Social Security covers approximately 26% less of her actual spending than it does today. This is why retirees who rely heavily on Social Security gradually find it covers less of their actual expenses.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Breakeven Inflation as Rate Signal TIPS-Treasury yield breakeven inflation',
+        text: '(nominal yield minus TIPS yield) provides the market\'s inflation expectation embedded in the yield structure. Rising breakevens signal rising inflation expectations (typically bearish for nominal bonds, ZN falls). Falling breakevens signal disinflation or deflation expectations (typically bullish for ZN). Monitoring 5-year and 10-year breakevens alongside ZN price provides context for whether rate moves are real-rate-driven or expectation-driven.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Inflation\'s Effect on Earnings and Multiples Deflationary environments',
+        text: '— sustained periods of declining general price levels — present the inverse challenge: companies with high fixed cost structures face margin compression as revenue declines while costs remain sticky, highly leveraged companies face rising real debt burdens as the real value of their nominal obligations increases, and discount rates may decline to levels where traditional valuation frameworks produce implausibly high intrinsic values. Japan\'s experience with prolonged deflation from the 1990s onward demonstrates the valuation consequences: equity multiples compressed dramatically as nominal earnings growth stagnated, dividend yields remained attractive in absolute terms but provided minimal real return, and asset-heavy businesses with significant debt suffered the most severe valuation impairment.',
       },
     ],
   },
@@ -37741,6 +42691,18 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation:
           '$50,000 / $750,000 = 6.67%. This means the lump sum must earn 6.67% per year to generate equivalent income. Whether this is achievable depends on the investor\'s skill, the investment environment, and time horizon. In a world where balanced portfolios might realistically earn 5–7%, the pension and lump sum are close — but the pension also provides longevity insurance the lump sum lacks. Neither choice is universally correct; the equivalent yield comparison frames the decision clearly.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Options Timing Review For each options trade, evaluate: was IV assessment correct',
+        text: '(did you buy cheap and sell rich)? Was strike selection appropriate? Was the expiration sufficient? Was the management discipline followed (50% profit target, 21-DTE review, 200% loss limit)? This review identifies systematic options-specific timing errors that can be corrected.',
       },
     ],
   },
@@ -37851,6 +42813,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'This is the core insight of income flooring. Because all essential expenses are guaranteed by Social Security and pension, a 50% portfolio decline does not threaten her housing, food, or healthcare. It only reduces discretionary spending from $50,000 toward whatever the portfolio generates. A retiree with no guaranteed income who depends on their portfolio for essential expenses must hold more bonds to protect those essential needs — they cannot tolerate the same equity allocation without risking their survival.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio Insurance Strategies Systematic portfolio insurance approaches:',
+        text: '(1) VIX calls as portfolio tail hedge (cheap when VIX is low; pay off when equity markets crash); (2) gold as portfolio stabilizer (typically rises during equity tail events); (3) long bond position as equity hedge (works in deflationary crises, less well in inflationary crises); (4) systematic drawdown triggers (reduce portfolio size automatically when portfolio falls 5% in any 20-day period). These structured approaches to tail risk provide automatic protection without requiring real-time decisions during crisis moments when emotional decision-making is most compromised.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Portfolio-Level Wheel Management Running',
+        text: '3–5 wheels simultaneously across uncorrelated underlyings provides diversification. Stagger the expiration dates so that assignments and call-aways are distributed across the month. Monitor aggregate delta exposure: if all wheels are in the stock phase simultaneously, the portfolio is effectively long-only and needs additional hedging. PART XXI — TIMING FOR WEALTH BUILDING AND CAPITAL PRESERVATION Long-term timing strategies for growing and protecting wealth over years and decades. Chapter 91 — Timing for the Long-Term Investor Long-term investors who add a simple timing overlay to their portfolio can reduce drawdowns by 30–50% while maintaining 85–95% of buy-and-hold returns.',
       },
     ],
   },
@@ -37963,6 +42943,24 @@ export const articles: Article[] = [
         explanation:
           '$1,200,000 × 3.3% = $39,600/year — $8,400 below her $48,000 annual spending target. At the 4% rate she would have $48,000, but 4% has historically shown meaningful failure rates over 50-year horizons. To safely withdraw $48,000/year at 3.3%, she needs $48,000 / 0.033 = approximately $1,455,000 — about $255,000 more than she has saved. She should either reduce spending, save more, or accept higher sequence-of-returns risk.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Financial Independence: The FIRE Movement Basics Financial Independence, Retire Early',
+        text: '(FIRE) is a movement centered on achieving financial independence by saving and investing aggressively, typically 50–70% of income. The goal is to accumulate a portfolio of 25–30 times annual expenses, at which point investment income replaces employment income. FIRE variants include traditional FIRE (extreme frugality), Fat FIRE (higher spending lifestyle), and Coast FIRE (saving enough early that compounding reaches the target by traditional retirement age without further contributions). Regardless of your target retirement age, the FIRE framework’s emphasis on high savings rates and low expenses produces excellent financial outcomes.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Early Warning Indicators The indicators that fire before crashes: credit spreads widening',
+        text: '(HYG declining relative to TLT), the yield curve un-inverting after extended inversion, breadth deteriorating with fewer than 40% of stocks above their 200-day SMA while the index is within 5% of highs, and the VIX term structure inverting into backwardation. Three or more of these indicators simultaneously should trigger the first level of defensive action.',
+      },
     ],
   },
 
@@ -38051,6 +43049,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'The floor requires guaranteed, lifelong income — not portfolio withdrawals, which can be disrupted by a prolonged bear market. A lifetime income annuity purchased with a lump sum from the portfolio generates guaranteed income for life, exactly filling the $16,000 gap. Bond interest is not guaranteed for life (bonds mature and interest rates change), and portfolio withdrawals depend on portfolio performance. Only guaranteed income sources count as floor income.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: UBIT: The Hidden Tax Risk in Retirement Account Options Unrelated Business Income Tax',
+        text: '(UBIT) is a tax that applies to income from \'unrelated business activities\' within tax-exempt entities — including IRAs and Roth IRAs. While standard investment activities (buying stocks, selling covered calls, collecting dividends) are exempt from UBIT, certain options strategies that involve leverage or certain types of income can trigger UBIT liability — effectively creating a taxable event inside what is supposed to be a tax-exempt account. The UBIT risk from options strategies is primarily relevant for Solo 401(k) plans that engage in margin trading or certain leveraged derivative strategies.',
       },
     ],
   },
@@ -38160,6 +43170,24 @@ export const articles: Article[] = [
         explanation:
           'At $41,000 combined income, a $10,000 Roth conversion pushes them to $51,000 — above the $44,000 threshold at which 85% of Social Security benefits become taxable. This means the conversion not only generates 12% tax on $10,000 ($1,200), but also causes previously untaxed Social Security to become taxable. The total effective marginal rate can reach 22–40% in this "torpedo zone" even though the statutory bracket rate is 12%. Timing conversions to stay below $44,000 is critical bracket management.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Retirement Planning Retirement planning for full-time traders: Solo',
+        text: '401k (US) allows contributions up to $66,000+ annually (2024) for self-employed individuals; SEP-IRA allows up to 25% of net self-employment income; defined benefit plans for high-income self-employed traders allow even higher contributions. For Canadian traders: RRSP and TFSA contributions; individual pension plans for high-income self-employed. Retirement planning that would have been automatic through employer matching now requires explicit annual action. Work with a financial advisor who understands self-employment income.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Rebalancing Inside a Retirement Account: No Tax Impact Inside a traditional IRA, Roth IRA, or',
+        text: '401(k), buying and selling does not generate any tax consequences. This makes retirement accounts the ideal place to rebalance freely. Sell the overweight asset class, buy the underweight one, and pay no taxes. If you have both taxable and retirement accounts, do your rebalancing inside the retirement account whenever possible. This preserves the tax efficiency of your taxable account while keeping your overall allocation on target. Chapter 48 — Tracking Your Net Worth & Measuring Progress What gets measured gets improved. Tracking your net worth and portfolio performance gives you a clear picture of whether your financial plan is working and whether you are on track to meet your goals. This chapter sets up the measurement system you will use for the rest of your investing life.',
+      },
     ],
   },
 
@@ -38263,6 +43291,18 @@ export const articles: Article[] = [
         explanation:
           'The step-up in basis is one of the most powerful tax provisions in the US tax code. When an heir inherits appreciated assets in a taxable account, their cost basis is stepped up to the fair market value at the date of the decedent\'s death. In this case, the basis steps from $20,000 to $200,000. If the heir sells immediately at $200,000, the capital gain is zero and no tax is owed. The entire $180,000 of appreciation that accumulated during the original owner\'s lifetime escapes capital gains tax permanently.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Theta Targets: The Central Planning Variable The daily theta target is the income portfolio\'s central planning variable',
+        text: '— the number from which all position sizing decisions flow. Professional income portfolio managers express their theta target as a percentage of total portfolio capital: targeting 0.10-0.20% daily theta means $100-$200 per day for every $100,000 of capital deployed. This percentage-based targeting ensures that the income objective scales appropriately as the portfolio grows from premium reinvestment. The theta target must be set in relation to the portfolio\'s gamma risk tolerance. As established throughout Part II (the Greeks chapters), theta and gamma are mathematically linked — a portfolio cannot have large positive theta without accepting proportionally large negative gamma. A $300,000 portfolio targeting $300 daily theta (0.10%) will have a specific negative gamma amount that translates into a specific dollar loss per 1% market move.',
+      },
     ],
   },
 
@@ -38362,6 +43402,24 @@ export const articles: Article[] = [
         explanation:
           '4.5% nominal − 3.5% CPI = 1.0% real return. While she is slightly ahead of general inflation, her portfolio will grow at 1% in real terms over 25 years — a very thin margin. Healthcare inflation running at 5%+ will consume this margin, and her actual purchasing power for healthcare costs will decline every year. Without equity exposure, she cannot generate the 4–5% real return historically needed to sustain a 30-year retirement with growing healthcare costs. A 90% cash/CD allocation feels safe but is actually quite risky over a long horizon.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Portfolio-Level Technical Allocation Models The',
+        text: '200-day moving average applied to asset class ETFs provides a simple but effective tactical allocation model: hold the asset when price is above its 200-day average; move to cash or bonds when price is below. Applied across equities, bonds, commodities, and real estate, this model has historically produced equity-like returns with significantly lower drawdowns.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Dividend Builder: Income-Focused From Day One Portfolio:',
+        text: '40% VTI, 20% SCHD (Schwab US Dividend Equity), 15% VYM (Vanguard High Dividend Yield), 15% VXUS, 10% BND. Time commitment: 30 minutes per quarter. This portfolio emphasizes dividend-paying stocks while maintaining broad diversification. The dividend ETFs focus on quality companies with sustainable and growing dividends. Current income is reinvested through DRIPs. Over decades, this portfolio generates an increasingly meaningful income stream while still participating in market growth.',
+      },
     ],
   },,
 {
@@ -38438,6 +43496,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'The behavioral explanation holds that investors anchor too heavily on recent earnings disappointments and extrapolate them too far into the future, causing them to overprice growth stocks and underprice value stocks. The value premium is the return earned by buying these irrationally cheap stocks and waiting for the mispricing to correct. This is distinct from the risk-based view, which says value stocks simply carry more fundamental risk.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Auditor Quality as Risk Factor The choice of auditor',
+        text: '— and changes in that choice — provides genuine information about the quality of the financial reporting. Companies audited by the Big Four firms (Deloitte, EY, KPMG, PwC) have historically lower rates of restatement than those audited by smaller firms. Transitions from Big Four to smaller auditors, particularly when accompanied by auditor disagreements disclosed in the 8-K filing, are among the most reliable predictive signals of subsequent accounting problems.',
       },
     ],
   },
@@ -38538,6 +43614,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Value and momentum are negatively correlated — when one does well, the other often struggles. Value stocks tend to have poor recent price performance (low momentum), while momentum stocks tend to be expensive (anti-value). Combining them diversifies return streams: when value is in a drawdown (as in the 2010s), momentum may be performing well, and vice versa. This negative correlation is rare among risky asset classes and makes value + momentum one of the most powerful multi-factor combinations.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
     ],
   },
   {
@@ -38611,6 +43705,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Cap-weighted indices mechanically increase a stock\'s weight as its price rises. This means the index ends up most concentrated in whatever has appreciated most recently — which is often (though not always) what is most expensively valued. During the 1999 tech bubble and the 2020-2021 mega-cap growth surge, cap-weighted indices became highly concentrated in the most expensive segments of the market. Smart-beta approaches break this link between price and weight.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Beta-Weighted Delta: The Universal Risk Language When a portfolio contains positions across multiple underlyings',
+        text: '— AAPL calls, SPY puts, NVDA straddles, TSLA credit spreads — the raw dollar delta of each position is not directly comparable. A $10,000 dollar delta in AAPL does not represent the same market risk as a $10,000 dollar delta in SPY, because AAPL and SPY do not move by the same amount in response to a 1% change in the overall market. Beta-weighted delta solves this problem by converting every position\'s dollar delta into its equivalent SPY exposure. The conversion is: Beta-Weighted Dollar Delta (in SPY terms) = Position Dollar Delta × (Beta of Underlying / SPY Price) Where beta is the sensitivity of the underlying to a 1% move in the S&P 500. A stock with a beta of 1.5 moves approximately 1.5% when the S&P 500 moves 1%.',
       },
     ],
   },
@@ -38691,6 +43797,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Research consistently shows that factor timing destroys rather than creates value for most investors. Eight years of value underperformance was historically followed by sharp reversals (as in 2021-2022). Investors who abandoned value strategies after the 2010s drought missed the recovery. The behavioral irony is that the decision to time factors feels most rational right at the worst moment — after a long underperformance stretch that has already been priced in.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: High-Beta Stock Timing High-beta stocks amplify market movements by a factor of',
+        text: '1.5–3×. The timing adjustment: enter high-beta positions only during confirmed trending markets (ADX above 25, breadth expanding), use ATR-based stops that account for the stock’s elevated volatility, and reduce position sizes proportionally so that each position carries the same dollar risk as a low-beta position.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: ADXR and the ADX System for Long-Term Timing ADXR',
+        text: '(the average of the current ADX and the ADX from 14 periods ago) provides a smoother trend strength reading for position traders. When ADX crosses above ADXR, the trend is strengthening. When ADX crosses below ADXR, the trend is weakening. This crossover provides the timing signal for position-level decisions about when to add to trends and when to begin tightening stops. ADX is most valuable not as a trading signal but as a strategy selector. Above 25: trend-follow. Below 20: mean-revert. This single filter prevents the most common error in technical analysis: applying the wrong strategy to the current market condition. ── Adaptive Trend-Following Tools ── Chapter 17 — Supertrend & Chandelier Indicators: Adaptive Trend Following Supertrend and Chandelier indicators provide dynamic, volatility-adjusted trend-following signals that adapt automatically to market conditions.',
       },
     ],
   },
@@ -38884,6 +44008,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Value traps are cheap stocks that remain cheap because the business is deteriorating. Adding a profitability or quality overlay — filtering for positive ROE, stable or improving gross margins, and manageable debt — eliminates most value traps while preserving the value premium. Restricting by market cap excludes the strongest part of the size premium. Using only price-to-book misses the many quality businesses with large intangible assets. Dividend history alone does not prevent buying a declining business.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
+      },
     ],
   },
   {
@@ -38982,6 +44124,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Academic research shows that the most recent month\'s return tends to exhibit short-term reversal — stocks that went up sharply last month tend to give back some of those gains next month, while stocks that fell last month tend to bounce. This short-term reversal effect is the opposite of momentum and would weaken the 12-month momentum signal if included. Excluding it by using t-12 to t-1 instead of t-12 to t isolates the cleaner intermediate-term momentum pattern.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Relative Strength Momentum Factor The academic momentum factor',
+        text: '(buying the top decile of 12-minus-1 month returns, avoiding the bottom decile) is the quantitative expression of relative strength timing. This factor has produced positive returns in virtually every market and time period studied, with the strongest effect in the 3–12 month lookback range.',
       },
     ],
   },
@@ -39082,6 +44242,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Novy-Marx chose gross profitability because it is computed before the many discretionary line items that managers can manipulate or that are heavily influenced by accounting choices: depreciation, amortization, R&D expense treatment, interest expense, and tax planning. Gross profit simply equals sales minus cost of goods sold, which is hard to distort and reflects underlying unit economics. Net income-based metrics are further down the income statement and subject to far more noise and manipulation, making them noisier quality signals.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
+      },
     ],
   },
   {
@@ -39179,6 +44351,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The primary behavioral explanation is the lottery effect: investors are attracted to high-volatility stocks because they offer the possibility of dramatic gains — similar to buying lottery tickets. This excess demand drives up their prices beyond what fundamentals justify, leaving their expected future returns lower than less-exciting low-volatility stocks. Compounding this, institutional managers avoid low-volatility tilts because they risk falling behind benchmarks in bull markets, preventing arbitrage of the mispricing.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Measuring the Volatility Risk Premium: Implied vs. Realized The volatility risk premium',
+        text: '(VRP) is not a static constant that can be simply assumed to be 2-4 percentage points. It varies substantially over time, across underlyings , and across market regimes. Measuring it precisely is essential for determining whether current conditions favor premium selling or premium buying. The Rolling VRP Calculation The most direct VRP measurement approach compares the 30-day IV on day t to the 30-day realized volatility from day t to day t+30. The difference ( IV_t − RV_{t to t+30}) is the VRP realized for that particular 30-day period. Rolling this calculation across all available historical dates produces a time series of VRP observations.',
+      },
     ],
   },
   {
@@ -39269,6 +44459,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'The "factor decay by publication" hypothesis explains the weakening of the size premium: Banz\'s 1981 publication attracted institutional and retail capital to small-cap stocks, especially after the Russell 2000 launched in 1984 and small-cap mutual funds proliferated. This influx of capital bid up small-cap prices, reducing their expected forward returns. This pattern — a factor premium weakening after academic publication and widespread adoption — has been documented for several factors and is a key concern for investors choosing factor strategies.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Selling Premium Into Extended Moves: The Statistical Case Mean reversion sizing rule: size at',
+        text: '50-60% of normal position size. Mean reversion setups fail more often than directional momentum setups, but successful ones move quickly and far. The reduced sizing creates favorable expected value even with a lower win rate. The statistical case for selling premium into extended directional moves is rooted in three complementary bodies of evidence: empirical studies of stock returns showing that extreme daily and weekly moves are followed by above-average returns in the opposite direction, the mean-reverting behavior of implied volatility (elevated IV after large moves tends to normalize lower), and the systematic overpricing of options during periods of acute volatility elevation.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
       },
     ],
   },
@@ -39466,6 +44674,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'By scaling both the long (low-beta) and short (high-beta) legs to the same total market beta exposure, the BAB strategy isolates the pricing difference between low-beta and high-beta assets at a given level of market risk. If markets priced risk efficiently, high-beta and low-beta assets leveraged to the same beta should earn the same return — and BAB should earn zero. That it earns a substantial positive return reveals that high-beta assets are priced too richly relative to low-beta assets, producing a genuine mispricing premium.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Volatility ETPs: Structure, Risk, and Practical Use VXX provides exposure to a rolling',
+        text: '30-day VIX futures position and experiences structural roll decay of 5-8% per month in contango environments — 50-70% annually during extended low-volatility periods. VXX is a poor long-term holding but a useful short-term tactical hedge around specific anticipated volatility events . UVXY provides 1.5× leveraged VXX exposure — faster decay, larger spike payoff. SVXY provides -0.5× exposure (benefits from roll decay in contango), declining approximately 0.5 times the VIX futures move in spikes. In extreme events, SVXY\'s decline can be catastrophic: during the February 5, 2018 VIX event, SVXY declined approximately 90% in a single session — the predecessor fund XIV was liquidated the following day when the decline exceeded the 80% mandatory termination threshold specified in its prospectus.',
+      },
     ],
   },
   {
@@ -39550,6 +44776,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The most important variable when comparing two factor ETFs is actual factor exposure — factor purity. A cheaper ETF that delivers little genuine value exposure is worth less than a more expensive one with rigorous, disciplined construction. The entire purpose of holding a factor ETF is to capture the factor premium; an ETF that is labeled "value" but primarily reflects sector bets or market cap differences provides false factor exposure. Tools like Morningstar\'s Factor Profile or running the ETF\'s returns through a factor regression can quantify this.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Buffered ETFs and Defined Outcome Products: Full Mechanics Buffered ETFs',
+        text: '(offered by Innovator Capital Management, First Trust, and others under names like \'Defined Outcome ETFs\' and \'Buffer ETFs\') are exchange-traded funds that use options to create a defined return profile for a specific holding period: they provide protection against a defined percentage of loss (the buffer) while capping the upside at a defined percentage gain (the cap). Unlike structured notes (which are sold as fixed-term instruments and cannot easily be exited early), buffered ETFs trade continuously on exchanges like any other ETF. The specific mechanics of a standard 10% buffer buffered ETF on SPY with a 12-month outcome period: the fund buys an ATM SPY call, sells an OTM call at the cap level, and buys an OTM put at 10% OTM while selling a deeper OTM put at 10% plus the buffer plus the cap proceeds.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: High-Beta Stock Timing High-beta stocks amplify market movements by a factor of',
+        text: '1.5–3×. The timing adjustment: enter high-beta positions only during confirmed trending markets (ADX above 25, breadth expanding), use ATR-based stops that account for the stock’s elevated volatility, and reduce position sizes proportionally so that each position carries the same dollar risk as a low-beta position.',
       },
     ],
   },
@@ -39636,6 +44880,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'Two years of factor underperformance is entirely normal and expected — even the most robust factors experience multi-year droughts. The value factor underperformed growth for an entire decade without losing its long-run validity. Selling after underperformance is a classic behavioral error that locks in losses and typically means exiting right before a recovery. Maintaining the original allocation and rebalancing back to targets is the disciplined response consistent with the long-term investment thesis.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
       },
     ],
   },
@@ -39732,6 +44994,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The 2007 Quant Quake was a crowding event, not a macro event. Many quant funds had independently converged on similar factor signals and held largely overlapping long and short positions. When one large fund began liquidating (likely due to unrelated redemptions from another part of the firm), its selling drove down prices of commonly held stocks. This triggered margin calls and stop-losses at other funds holding the same positions, creating a cascade. The recovery was also fast — within weeks — because no fundamental deterioration had occurred, only forced selling.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Auditor Quality as Risk Factor The choice of auditor',
+        text: '— and changes in that choice — provides genuine information about the quality of the financial reporting. Companies audited by the Big Four firms (Deloitte, EY, KPMG, PwC) have historically lower rates of restatement than those audited by smaller firms. Transitions from Big Four to smaller auditors, particularly when accompanied by auditor disagreements disclosed in the 8-K filing, are among the most reliable predictive signals of subsequent accounting problems.',
+      },
     ],
   },
   {
@@ -39816,6 +45096,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'The strongest evidence against the data-mining hypothesis for the value factor is its cross-market robustness. If value were a US-specific statistical artifact, it should not appear independently in Japan, Germany, the UK, Brazil, and dozens of other markets with completely different regulatory environments, accounting standards, and cultural investor biases. The fact that a cheap-stocks-outperform premium has been found across all of these independently is very hard to explain as multiple simultaneous data mining accidents — it strongly suggests a genuine structural phenomenon.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
       },
     ],
   },
@@ -40011,6 +45309,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A t-statistic of 2.3 would be considered statistically significant under the traditional single-hypothesis threshold of 2.0, but given that hundreds of factors have been tested on overlapping datasets, the revised threshold (Harvey, Liu, Zhu 2016) is approximately 3.0 or higher. A t-statistic of 2.3 is well within the range of false positives expected from data mining. Additionally, a US-only, 25-year sample is inadequate — the strongest factors are confirmed across 40+ countries over 50+ years. Without international evidence and a stronger statistical bar, the factor should not be considered credible for investment.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Relative Strength Momentum Factor The academic momentum factor',
+        text: '(buying the top decile of 12-minus-1 month returns, avoiding the bottom decile) is the quantitative expression of relative strength timing. This factor has produced positive returns in virtually every market and time period studied, with the strongest effect in the 3–12 month lookback range.',
+      },
     ],
   },
   {
@@ -40108,6 +45418,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'This is a classic look-ahead bias error. The annual earnings report is filed with the SEC in February, but the backtest simulates trades in January as if those earnings were already known. In reality, January trades would have to use the prior year\'s earnings report (filed the previous February). Using February data in January is using information from the future — making the strategy appear better than it could possibly have been in real trading. The fix is straightforward: always apply a data lag of at least 60 days for annual earnings and 45 days for quarterly earnings.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Building a Dividend Portfolio: Quality Over Yield The temptation is to buy the highest-yielding stocks. Resist it. A',
+        text: '10% yield often indicates a stock in distress whose dividend is about to be cut. Focus instead on companies with moderate yields (2–4%), strong earnings coverage (payout ratio below 60%), consistent dividend growth history (10+ years of increases), and competitive advantages that protect future earnings. A portfolio of 15–20 dividend growth stocks across diverse sectors provides a growing income stream with lower risk than a concentrated portfolio of high-yield stocks.',
+      },
     ],
   },
   {
@@ -40200,6 +45528,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The tax drag from capital gains distributions is a real cost even though the investor receives the cash distribution — they owe tax on it immediately, reducing their after-tax investment value. The 0.80% annual distribution triggers a tax payment of 0.80% × 50% = 0.40% of the portfolio value. Adding the 0.15% expense ratio gives a total cost of approximately 0.55% per year, on top of any bid-ask spread costs from trading the ETF itself. In a tax-advantaged account, the tax drag disappears, leaving only the 0.15% expense ratio as the cost.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: The Cost of Liquidation Forced liquidation has several costs beyond the trade loss itself:',
+        text: '(1) market impact from large market orders; (2) slippage from liquidation during thin liquidity periods; (3) broker liquidation fees; (4) the psychological tax described above. Total cost of a $5,000 margin call can easily exceed $5,500–$6,500 when all factors are included. Understanding this helps motivate the discipline required to avoid calls in the first place.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
     ],
   },,
 {
@@ -40278,6 +45624,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'This description matches the "peak" phase of the business cycle: strong growth but rising inflation. Commodities benefit directly from inflation (their prices are inputs to CPI), and energy stocks benefit from rising oil and gas prices. Long-term bonds are hurt by rising inflation (which erodes fixed coupon value) and rising rates. Defensive stocks like utilities and staples underperform during peak phases when cyclical growth is still running hot.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Euro-Dollar Macro Drivers Key macro drivers of EUR/USD: Fed-ECB policy divergence',
+        text: '(diverging paths move currency); US-Eurozone growth differentials (faster-growing economy\'s currency strengthens); commodity prices (oil dependence of Europe makes EUR commodity-sensitive); political events (EU elections, Brexit-era volatility, specific country stresses). Tracking these macro factors provides context for 6E movements that pure technical analysis cannot.',
       },
     ],
   },
@@ -40367,6 +45725,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'When the 2-year yield (5.2%) exceeds the 10-year yield (4.5%), the 2/10 spread is negative (−0.7%), which defines an inverted yield curve. This is the most reliable forward indicator of US recessions in modern history. The inversion reflects market expectations that the Fed will eventually cut rates — something it typically does only when economic conditions deteriorate. The signal does not predict the timing precisely, but an inverted 2/10 spread has preceded every US recession since 1955.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Yield Curve Shape as a Technical Signal The shape of the yield curve',
+        text: '— the difference between long-term and short-term yields — is a powerful macro-technical signal. A steepening curve (long rates rising faster than short rates) signals economic expansion. A flattening curve signals slowing growth. An inverted curve (short rates above long rates) has preceded every US recession since the 1960s.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Dividend Yield as Signal Dividend yield',
+        text: '— the annualised dividend per share divided by the stock price — provides a direct measure of the cash income component of the total return. For income-oriented investors and in market environments where the yield spread between equities and bonds is compressed, dividend yield is an important valuation consideration. Historically, periods when the dividend yield on the broad equity market has been materially below the risk-free rate have been associated with subsequent below-average equity market returns.',
+      },
     ],
   },
   {
@@ -40449,6 +45825,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Rising inflation is the environment most hostile to long-duration bonds and growth stocks (both suffer from higher discount rates) and most favorable to commodities (direct inflation beneficiaries), value stocks (concentrated in energy, materials, financials), and TIPS (principal adjusts with CPI). The combination in option B captures all three inflation beneficiaries. Option A is the exact opposite of what works during inflation — both long bonds and growth stocks are the primary casualties of rising rates.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Icebergs in Different Asset Classes Icebergs are most visible in futures and equities with centralized books. In forex',
+        text: '(decentralized) and crypto (fragmented), icebergs still exist but are harder to observe clearly. Pattern recognition adapts to the instrument; the underlying institutional behavior is universal. Icebergs appear in different forms across asset classes. In futures and equities with centralized books, they are most visible; in forex (decentralized) and crypto (fragmented), they still exist but are harder to observe.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Margin Trends as Inflation Signal Gross margin trends across companies in different industries',
+        text: '— whether input cost increases are being successfully passed through to customers or are being absorbed — provide a real-time measure of the inflation transmission mechanism that is more granular and more timely than the headline consumer price index. When multiple companies across different sectors simultaneously report that input cost pressures are exceeding their ability to raise prices — that gross margins are compressing despite significant pricing efforts — the aggregate signal indicates that inflation is stickier and more damaging than the ability to recover it would suggest from nominal pricing data alone. The reverse signal — when multiple companies simultaneously report that pricing increases are exceeding input cost increases, producing expanding gross margins — indicates that the pricing environment is unusually favourable and that inflation may be moderating.',
       },
     ],
   },
@@ -40536,6 +45930,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The 60/40 stock-bond negative correlation depends on the primary macro risk being growth shocks. In a growth recession or deflationary environment, bonds rally as the Fed cuts rates, cushioning the equity drawdown. But in an inflationary shock (the 2022 scenario), both stocks and bonds fall simultaneously: rising inflation raises discount rates, compressing equity valuations, while simultaneously pushing bond yields up and bond prices down. The correlation turns positive, eliminating the diversification benefit exactly when investors need it most.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Macroeconomic Regimes and Metals Macro regimes favor different metals: stagflation favors precious metals',
+        text: '(gold, silver) — real assets and inflation hedge; deflationary bust favors gold (safe haven) but hurts industrial metals; goldilocks growth favors industrial metals (copper) but is neutral for precious; reflation favors both precious (inflation hedge) and industrial (growth). Recognizing current regime informs which metals to emphasize. Regime transitions often produce the most dramatic relative moves between metal categories.',
+      },
     ],
   },
   {
@@ -40618,6 +46024,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The combination of an inverted yield curve and widening credit spreads is a meaningful, multi-signal warning that warrants a modest defensive tilt — but not wholesale de-risking. Moving to 100% cash requires a precision of timing that is nearly impossible to execute well; the cost of being wrong (missing a 20-30% rally while in cash) is severe. The correct response is a disciplined, limited tilt: reduce equities modestly (to 50-55%), shorten bond duration to reduce rate sensitivity, and wait for signals to confirm further before adjusting again. This is adapting to evidence, not gambling on timing.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Timing the Bottom: Capitulation Signals and Breadth Thrusts Bear market bottoms are marked by: climactic volume',
+        text: '(highest in months), extreme VIX readings (above 35–45), AAII bears above 50%, put/call ratio above 1.2, and fewer than 15% of stocks above their 200-day average. The bottom is confirmed not by these extremes (which can persist) but by the subsequent breadth thrust: a rapid expansion of advancing issues from deeply oversold levels that historically marks the beginning of new bull markets. Chapter 27 — Timing in Range-Bound and Choppy Markets Range-bound markets are the most psychologically frustrating environment for active traders because nothing works: breakout entries get whipsawed, trend-following stops get triggered by mean-reverting price action, and directional bets fail in both directions.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: What Pricing Power Is Pricing power is the ability to raise prices without losing meaningful volume or market share',
+        text: '— the ability to pass cost increases through to customers and to expand margins in a favourable pricing environment. It derives from the customer\'s perception that the product or service is worth more than any available alternative, creating a willingness to pay a premium that persists even when the prices of alternatives are lower. Genuine pricing power is rare because most products and services face substitutes, and most customers are willing to switch if the price premium becomes large enough. Pricing power is not the same as high current prices. A business charging high prices in a market where competitors are unable to serve demand adequately has temporary pricing power that will disappear when competitive supply increases.',
       },
     ],
   },,
@@ -40709,6 +46133,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The described signals — falling PMI below 50, rising jobless claims, and three consecutive LEI declines — consistently mark the contraction phase of the business cycle. In contractions, defensive sectors (utilities, consumer staples, healthcare) tend to outperform because their earnings are less sensitive to economic conditions. Energy and materials suffer from falling demand; financials suffer from rising credit losses; consumer discretionary and growth stocks compress on multiple contraction.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Building a Business Cycle Timing Dashboard for Active Investors PART XV',
+        text: '— CASE STUDIES: GREAT TIMING DECISIONS IN MARKET HISTORY Real-world case studies of outstanding and catastrophic timing decisions — what the charts showed, what the smart money did, and the lessons that apply to your next trade. Chapter 67 — Case Studies: Perfectly Timed Entries –',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Wyckoff Price Cycle and Market Phases Wyckoff identified four phases of the market cycle: accumulation',
+        text: '(smart money buying), markup (trending advance), distribution (smart money selling), and markdown (trending decline). Each phase has specific volume, price action, and structural characteristics that allow the trained analyst to identify the current phase and position accordingly.',
+      },
     ],
   },
   {
@@ -40796,6 +46238,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'Markets price in expectations, and a larger-than-expected rate cut is a positive surprise for rate-sensitive assets. Long-term bond prices rise when yields fall (prices and yields move inversely), and equities — particularly high-multiple growth stocks — benefit from lower discount rates. The dollar would typically weaken (not strengthen) on a surprise cut, as lower rates reduce the yield advantage of dollar assets. Whether the cut signals recession fear depends heavily on Fed communication, but the immediate market reaction to the unexpected cut itself is typically positive for bonds and growth equities.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Rate and Macro Data Sources Rate market data: Federal Reserve',
+        text: '(federalreserve.gov) for FOMC calendar, statements, minutes, transcripts; CME FedWatch tool (free, excellent) for Fed Funds probability tracking; US Treasury (treasurydirect.gov) for auction announcements and results; FRED for all rate series. International central bank data: ECB, BOJ, BOE, and Bank of Canada all publish meeting calendars, statements, and forward guidance. Bloomberg Economics provides integrated global macro forecasting (institutional subscription required for full access).',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Major Scheduled Events to Know Major scheduled events include: Federal Reserve decisions',
+        text: '(FOMC), non-farm payrolls (NFP), CPI inflation data, GDP releases, major central bank decisions (ECB, BOJ, BOE), earnings announcements, and OPEC meetings. Each can produce multi-day volatility regimes. Know your calendar; surprise kills traders who don\'t. Major scheduled events: FOMC, non-farm payrolls, CPI, GDP, central bank decisions (ECB, BOJ, BOE), earnings, OPEC meetings. Each produces multi-day volatility regimes. Know your calendar; surprise kills traders who don\'t.',
       },
     ],
   },
@@ -40886,6 +46346,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Persistent deflation drives interest rates down (central banks cut aggressively; real yields fall as prices decline) and raises the real value of fixed payments. Long-duration government bonds benefit from both: falling yields push bond prices up, and the fixed coupon payments rise in real purchasing power terms. Commodities collapse in deflation as demand falls and prices drop. Real estate is devastated by falling collateral values and tightening credit. Financial stocks suffer from rising loan losses and deteriorating collateral.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Icebergs in Different Asset Classes Icebergs are most visible in futures and equities with centralized books. In forex',
+        text: '(decentralized) and crypto (fragmented), icebergs still exist but are harder to observe clearly. Pattern recognition adapts to the instrument; the underlying institutional behavior is universal. Icebergs appear in different forms across asset classes. In futures and equities with centralized books, they are most visible; in forex (decentralized) and crypto (fragmented), they still exist but are harder to observe.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Margin Trends as Inflation Signal Gross margin trends across companies in different industries',
+        text: '— whether input cost increases are being successfully passed through to customers or are being absorbed — provide a real-time measure of the inflation transmission mechanism that is more granular and more timely than the headline consumer price index. When multiple companies across different sectors simultaneously report that input cost pressures are exceeding their ability to raise prices — that gross margins are compressing despite significant pricing efforts — the aggregate signal indicates that inflation is stickier and more damaging than the ability to recover it would suggest from nominal pricing data alone. The reverse signal — when multiple companies simultaneously report that pricing increases are exceeding input cost increases, producing expanding gross margins — indicates that the pricing environment is unusually favourable and that inflation may be moderating.',
       },
     ],
   },
@@ -40978,6 +46456,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'For a USD investor, total dollar return is approximately equal to the local currency return plus the currency return. A 20% gain in BRL terms combined with a 15% depreciation of BRL against USD produces approximately +5% in USD terms (the precise calculation is 1.20 × 0.85 − 1 = +2%, but the approximate answer of +5% is the closest option). Currency movements are a critical component of international returns that compound with, and partially offset, local market performance.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Monetary Policy Signals From Rate Futures SOFR futures',
+        text: '(previously Eurodollar futures) are priced to reflect market expectations of future Federal Reserve interest rates. Fed Funds futures express probability estimates for each upcoming FOMC meeting. These instruments aggregate the collective expectations of thousands of professional participants with billions of dollars at stake, producing forecasts that often prove more accurate than economist surveys. The Fed itself watches these futures to gauge market expectations — a feedback loop where central bank policy and futures prices continuously inform each other.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Central Bank Policy Divergence Trades When major central banks are on diverging policy paths',
+        text: '— one tightening while another is easing, or one pausing while another is accelerating — the resulting interest rate differential drives currency movements and creates specific volatility dynamics in rate and currency options. These central bank policy divergence trades are among the most high-conviction macro options opportunities available. The 2022-2023 Fed tightening cycle while the Bank of Japan maintained ultra-loose policy created the most dramatic G7 central bank divergence in decades. USD/JPY moved from approximately 115 to 150 — a 30% yen depreciation — as the interest rate differential between US and Japanese rates expanded from near zero to 5+ percentage points.',
+      },
     ],
   },
   {
@@ -41059,6 +46555,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Widening credit spreads — particularly when high-yield spreads cross 600 bps — indicate that investors are demanding significantly more compensation for default risk, which happens when financial conditions tighten and recession probability rises. Both IG and HY spreads widening together signals broad credit market stress, not sector-specific issues. This pattern has preceded every major US recession. The correct response for equity investors is to reduce exposure to credit-sensitive sectors (financials, consumer discretionary, industrials) and monitor for further confirmation signals.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: High-Interest Debt: Pay This Off Before Investing Credit card debt at',
+        text: '18–24% interest is a guaranteed negative return that no stock market investment can reliably overcome. If you are carrying a balance on high-interest credit cards, paying it off is the single best financial decision you can make. The guaranteed 18–24% return on debt elimination beats the stock market’s average 10% return every time. Once high-interest debt is eliminated, you can redirect those payments into investments.',
+      },
     ],
   },
   {
@@ -41137,6 +46645,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The defining feature of a commodity supercycle is supply inelasticity: mines take 10-15 years from discovery to production, oil fields take 5-10 years, and agricultural capacity requires multi-year investment in land, irrigation, and machinery. When a structural demand shift (e.g., China\'s industrialization) creates a sustained demand surge that outpaces existing supply, prices must stay elevated for the full duration it takes for new supply to come online — which explains the decade-long duration of supercycles.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Commodity Cycles and Inflation Expectations Commodity prices lead inflation data by',
+        text: '3–6 months because they measure raw material costs before those costs flow through to consumer prices. A breakout in the CRB Commodity Index or in key commodities like crude oil and copper often precedes a shift in inflation expectations that eventually affects monetary policy, bond yields, and equity valuations.',
+      },
     ],
   },
   {
@@ -41213,6 +46733,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'Historical data consistently shows that transient geopolitical shocks — those that do not permanently alter global supply chains or trade architecture — produce short-lived market volatility that recovers quickly. Selling into the shock locks in losses and risks missing the recovery. Substantially increasing energy allocation is appropriate only if the event is a structural regime change (like the 2022 Russia-Ukraine war), not a temporary spike. The correct base-case response to a geopolitical shock is to hold, avoid panic decisions, and reassess only if evidence emerges that the event is creating permanent structural change.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Geopolitical Risk Pricing in Options Markets Geopolitical events',
+        text: '— military conflicts, trade wars, sanctions regimes, political transitions in major economies — create specific volatility dynamics in options markets that differ from the economic cycle volatility examined in previous chapters. Geopolitical risk tends to be sudden and discontinuous: markets can remain calm for extended periods while geopolitical tensions build (suppressing volatility through the \'everything is fine until it isn\'t\' dynamic) and then experience sudden large dislocations when events trigger acute risk-off episodes. The geopolitical risk options trade has two distinct phases.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Central Clearing Every futures trade is cleared by the exchange\'s clearing house, eliminating counterparty risk',
+        text: '— you are not depending on the other trader to honor the contract. Spot forex trades typically rely on your broker\'s bilateral arrangements with liquidity providers, creating layered counterparty risk. During stress events (SNB removing EUR/CHF peg in 2015, for example), some spot forex brokers failed while futures markets operated normally. Central clearing is a structural advantage worth respecting.',
       },
     ],
   },
@@ -41292,6 +46830,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'The inflation breakeven is calculated as nominal yield minus TIPS yield: 4.5% − 2.2% = 2.3% implied 10-year inflation. The real rate is the TIPS yield of 2.2% — significantly positive. Gold, which pays no interest, faces meaningful opportunity cost at 2.2% real rates: investors can earn 2.2% per year in real terms from TIPS without taking commodity risk. This is a headwind for gold. Gold tends to perform best when real rates are negative (as in 2020-2021) and struggles when real rates are solidly positive (as implied here).',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Real Interest Rates and Gold Gold\'s most reliable macro driver is real interest rates',
+        text: '(nominal rates minus inflation expectations). When real rates fall (especially into negative territory), gold strengthens as the opportunity cost of holding non-yielding gold decreases. When real rates rise, gold typically weakens. The 2020–2021 zero-real-rate environment drove gold to all-time highs above $2,000. The 2022–2023 positive real rate environment saw gold consolidation despite geopolitical stress — rates overwhelmed other factors.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Alternative Managers and Carried Interest Private equity, private credit, and real assets managers earn carried interest',
+        text: '— typically 20% of investment profits above a preferred return hurdle — that represents the most valuable but most variable component of their economics. The carried interest pipeline — the unrealised gains in the investment portfolio that are above the hurdle rate and therefore constitute accrued but unpaid carried interest — provides insight into the future performance fee revenue that will be recognised as investments are realised. The size of the pipeline relative to the management company\'s market capitalisation is one of the key valuation inputs for alternative asset managers. The GP stakes market — where investors purchase minority interests in alternative asset management businesses — provides an observable market for the value of management company economics at privately negotiated prices.',
       },
     ],
   },
@@ -41373,6 +46929,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Quantitative tightening reverses the portfolio rebalancing channel of QE: by removing money from the financial system, QT reduces the flow of capital that had been forced into riskier assets. Long-duration bonds face upward pressure on yields (prices fall) as the largest buyer withdraws. High-multiple growth stocks see their discount rates rise, compressing present values of distant cash flows. Emerging markets face capital outflows as the dollar typically strengthens during QT. Short-term T-bills and money markets are relatively insulated because QT primarily affects the long end of the curve. Commodity producers and value stocks are less sensitive to interest rate duration effects.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Central Bank Policy Divergence Trades When major central banks are on diverging policy paths',
+        text: '— one tightening while another is easing, or one pausing while another is accelerating — the resulting interest rate differential drives currency movements and creates specific volatility dynamics in rate and currency options. These central bank policy divergence trades are among the most high-conviction macro options opportunities available. The 2022-2023 Fed tightening cycle while the Bank of Japan maintained ultra-loose policy created the most dramatic G7 central bank divergence in decades. USD/JPY moved from approximately 115 to 150 — a 30% yen depreciation — as the interest rate differential between US and Japanese rates expanded from near zero to 5+ percentage points.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: ECB Policy Impact The European Central Bank\'s policy decisions move',
+        text: '6E directly. Rate hikes strengthen the Euro (push 6E higher); rate cuts weaken it. The ECB meets eight times per year (similar to Fed), with announcements typically 8:15 AM ET Thursday followed by press conference at 8:45 AM ET. 6E moves sharply on ECB days. For US traders, these events fall during pre-market hours, which can produce gaps when US liquidity arrives at 7:00 AM and the Euro session\'s reactions play out.',
+      },
     ],
   },
   {
@@ -41452,6 +47026,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'A weight-of-evidence approach with four recession indicators aligned (inverted yield curve, consecutive LEI declines, PMI below 50, and widening credit spreads approaching the 600 bps danger zone) represents meaningfully elevated recession risk. However, the Sahm Rule not triggering indicates the labor market — the last line of defense for consumer spending — has not yet deteriorated. This asymmetric signal set warrants a moderate defensive tilt: reduce cyclical exposure, shift within equities toward defensive sectors, shorten bond duration. Moving 100% to cash overcorrects; ignoring four aligned signals is reckless.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Leading Indicators as Timing Signals The yield curve',
+        text: '(2s/10s spread), ISM PMI, housing starts, initial jobless claims, and the Conference Board Leading Economic Index provide advance warning of economic turning points by 3–12 months. When three or more leading indicators are deteriorating simultaneously, the timing framework should shift from offensive to defensive positioning regardless of what the equity index is doing at the surface level.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Credit Spreads as Leading Indicators Credit spreads',
+        text: '— the additional yield that investors require on corporate bonds above the risk-free rate — provide a real-time signal about market-wide risk appetite and financial conditions that often leads equity market developments by several months. When credit spreads widen — meaning bond investors are demanding higher returns to hold corporate credit risk — the signal is that credit conditions are tightening, that the probability of corporate default is rising in the market\'s assessment, and that the availability and cost of debt financing is becoming less favourable.',
       },
     ],
   },
@@ -41690,6 +47282,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'PMI analysis for international equity allocation focuses on the direction and relative level of country PMIs. India at 59 — well above the expansion threshold and significantly outperforming the global average — signals strong manufacturing and services activity that should translate into corporate earnings growth. China recovering from 47 (contraction) to 51 (expansion territory) represents the early stages of a growth recovery — historically a favorable entry point for Chinese equities as earnings expectations are depressed and improving. A global PMI of 53 and rising is not an overheating signal; it is a healthy expansion signal that supports risk asset allocation broadly.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Working Capital and the Business Cycle Working capital naturally expands during periods of business growth',
+        text: '— more revenue requires more receivables and inventory — and contracts during slowdowns. But the rate and character of working capital change relative to revenue change reveals the quality of business management and competitive position. A business that efficiently manages receivables collection and inventory turnover through the cycle demonstrates operational discipline that directly translates into stronger free cash flow generation. Cross-cycle working capital analysis is particularly valuable for cyclical businesses. During the expansion phase, working capital should expand in proportion to revenue growth. During contraction, it should contract as receivables are collected and inventory is liquidated.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Dollar Cycle and Global Markets The US dollar cycle',
+        text: '(typically 6-8 years from trough to peak) has broad effects across global markets. Dollar bull markets (rising DXY): pressure emerging markets, commodity prices, and global growth; support US bonds. Dollar bear markets (falling DXY): support commodities, emerging markets, and global growth. Identifying the broader dollar cycle context places shorter-term trades within an appropriate macro framework. The 2011–2016 dollar bull, 2017–2021 bear, and 2021–2022 bull are examples of these multi-year cycles.',
+      },
     ],
   },
   {
@@ -41768,6 +47378,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The late-expansion phase is characterized by accelerating inflation, rising commodity prices, and peak-cycle demand for raw materials and energy. Energy (XLE) and Materials (XLB) historically lead during this phase. Technology and Consumer Discretionary, which led during mid-expansion, face increasing headwinds from rising rates and fading consumer momentum. Utilities and Consumer Staples are defensive sectors appropriate for the contraction phase, which comes after late expansion — not at the late-expansion stage itself. Moving to cash at late expansion means exiting before the cycle peak, which historically produces significant opportunity cost.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Using ETFs for Sector Rotation Strategies Sector ETFs',
+        text: '(XLK, XLF, XLE, XLV, etc.) provide liquid, low-cost vehicles for implementing sector rotation strategies. The practical implementation involves monthly or bi-weekly rebalancing based on relative strength rankings, with position sizes proportional to the strength of each sector’s relative momentum.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Sector Rotation for Dividend Timing Defensive dividend sectors',
+        text: '(utilities, REITs, staples) outperform during late-cycle and contraction phases when investors seek income and safety. The timing: rotate dividend allocation toward these sectors when leading indicators deteriorate and the yield curve flattens or inverts. Rotate toward cyclical dividend payers (financials, industrials) during early recovery when growth resumes.',
       },
     ],
   },
@@ -41848,6 +47476,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The described signals — high and rising inflation (CPI 7%), contracting economy (PMI below 50 and falling), widening credit spreads, and rising unemployment — precisely define stagflation: weak growth plus high inflation. This is the worst regime for conventional portfolios because both stocks (earnings deteriorating) and bonds (inflation keeping rates elevated) suffer simultaneously. The appropriate response is maximizing real asset exposure: gold (store of value, no yield to compete with), commodities (direct inflation beneficiaries), TIPS (inflation-adjusted principal), and energy stocks (revenues rise with oil/gas prices). Long-duration bonds would be the worst choice — elevated inflation prevents the rate cuts that would drive bond prices up in a conventional recession.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Adjusting Valuation for Regime Changes Significant changes in the interest rate environment',
+        text: '— the transition from a 40-year declining rate regime to a higher-rate environment, for example — require reassessment of the valuation multiple appropriate for every category of equity investment. Multiples that were appropriate in a 2% risk-free rate environment may be significantly too high in a 5% risk-free rate environment, because the present value of future cash flows is lower at the higher rate even when the cash flows themselves are unchanged. The analyst who applies historical average multiples without adjusting for the current interest rate environment will consistently overvalue interest-rate-sensitive businesses in high-rate environments and undervalue them in low-rate environments. The practical approach to regime-adjusted valuation is to use forward equity risk premiums rather than historical average multiples as the valuation anchor.',
       },
     ],
   },,
@@ -42025,6 +47665,18 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Implementation Shortfall (IS) is designed precisely for time-sensitive alpha situations. It trades more aggressively at the start to capture the arrival price, explicitly accepting higher market impact to reduce timing risk. VWAP and TWAP both spread execution over time, which works well for passive accumulation but poorly when every minute of delay costs alpha.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: VWAP and TWAP: Institutional Timing Reference Levels Institutional traders measure execution quality against VWAP',
+        text: '(volume-weighted average price) and TWAP (time-weighted average price). These levels serve as intraday timing references: buying below VWAP aligns with institutional demand patterns, while selling above VWAP aligns with their distribution patterns. Using VWAP as an intraday timing anchor improves fill quality and aligns individual timing with the institutional flow that drives most intraday price action.',
+      },
     ],
   },
   {
@@ -42117,6 +47769,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Markets are forward-looking. While an earnings beat is positive, a guidance cut tells investors that the next quarter and full year will be weaker than expected. Since stock prices are discounted present values of future cash flows, the guidance cut — a forward-looking statement — typically dominates the backward-looking earnings beat. Stocks frequently fall on "beat and lower" reports.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Event-Driven Strategy Framework Event-driven strategies in futures identify specific scheduled or unscheduled events',
+        text: '(FOMC decisions, USDA reports, earnings, geopolitical developments) and position for the expected price impact. The edge comes from superior analysis of likely outcomes vs. what\'s currently priced. Event-driven trading is fundamentally different from technical or trend-following strategies: it requires specific knowledge of the event\'s mechanics, historical reaction patterns, and current market positioning.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Managing Vega Risk Around Events Event-driven vega risk',
+        text: '— the risk that an upcoming known event will cause implied volatility to move sharply — requires specific management techniques that differ from normal volatility risk management. Pre-Event Vega Build In the days and weeks before a significant scheduled event (earnings, FOMC, FDA decision), implied volatility on options spanning the event typically rises — the market prices in an increasing probability of a large post-event move. Options sellers who are short vega face increasing paper losses as their short options become more expensive. The key management question is whether to close before the event (taking the loss) or hold through it (hoping the subsequent IV crush will be favorable). For earnings events in particular, the historical pattern is clear: IV rises into earnings, then collapses sharply after the announcement regardless of whether the stock moves significantly.',
+      },
     ],
   },
   {
@@ -42202,6 +47872,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The investment was predicated on Phase 3 success. That assumption is now definitively false — the thesis is broken. The remaining pipeline assets are a separate investment thesis that needs to be evaluated fresh, not used to justify holding a position entered for a different reason. Thesis stops prevent investors from sliding into "thesis creep" where they keep changing the story to avoid acknowledging a mistake.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: ATR-Based Position Sizing Average True Range',
+        text: '(ATR) measures recent volatility. ATR-based sizing sets stops at multiples of ATR (often 1.5x or 2x ATR) and sizes positions to match desired dollar risk. If ES ATR is 20 points and you use 1.5x ATR = 30 points = 120 ticks stop, at $12.50 per tick that\'s $1,500 per contract of risk. For 1% on a $25,000 account ($250), you\'d trade 0 contracts (can\'t afford the full risk) — which is information itself. ATR-based sizing normalizes risk across volatility regimes automatically.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Sizing by Conviction and Certainty Position size should reflect two distinct analytical dimensions: conviction',
+        text: '(the analyst\'s estimate of the probability that the investment thesis is correct and the magnitude of the expected return if correct) and certainty (the analyst\'s confidence in the quality of the underlying analytical work, including the reliability of the financial statements, the depth of the competitive analysis, and the track record of the management team). High conviction and high certainty together justify the largest positions. Low conviction or low certainty, regardless of the other dimension, justifies smaller positions. The practical position sizing framework converts these dimensions into specific weights through a scoring approach: a maximum position size is set for the highest-conviction, highest-certainty investment available to the portfolio; all other positions are sized as a fraction of that maximum based on their relative conviction and certainty scores.',
       },
     ],
   },
@@ -42298,6 +47986,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Net long exposure is $500M − $300M = $200M. A 15% market decline costs approximately $200M × 15% = $30M on the net position. The long book loses $75M but the short book gains $45M, netting to approximately −$30M from directional exposure (ignoring individual stock selection). This is why net exposure is the key metric for understanding market risk in a long/short portfolio.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Saturation Risk Saturation risk arises when a business is approaching the limits of its addressable market',
+        text: '— when the rate of new customer or market expansion begins to slow materially because the high-quality, easily accessible opportunities have already been captured. Saturation manifests in declining customer acquisition efficiency (rising CAC with falling new customer quality), declining market expansion rates (revenue growth decelerating faster than the economy), and geographic concentration in the mature markets that were served first. Identifying saturation risk early is one of the most analytically important capabilities for investors in growth businesses, because the market often does not price saturation risk until the deceleration has already become visible in reported metrics.',
+      },
     ],
   },,
 {
@@ -42393,6 +48093,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A backtest on the same data used to identify the pattern is almost meaningless due to data snooping bias — any random pattern will appear to work if you look hard enough in historical data. The only reliable test is whether the pattern works on future data or data from a different period that was not used in its construction. Transaction costs must also be included, as they often eliminate the apparent edge.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: What Technical Analysis Can and Cannot Do Technical analysis studies price and volume patterns to forecast movements',
+        text: '— a fundamentally different premise from intrinsic value analysis. For fundamental investors, the practical question is not validity but utility: can specific technical tools improve timing and risk management? Technical analysis is most useful for timing entries and exits where the fundamental view is established, and for identifying when market behaviour contradicts the thesis in ways warranting re-examination.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: DX Technical Analysis DX responds to classical technical analysis: round-number support and resistance',
+        text: '(100, 105, 110), moving averages, trend lines, Fibonacci levels. Multi-year DXY highs and lows are watched by institutional flows. Breakouts from multi-month ranges often produce sustained moves. Technical analysis on DX is effectively identical to any other futures contract — chart patterns work because participants watch them.',
+      },
     ],
   },
   {
@@ -42487,6 +48205,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Multiple prior tests make $75 a well-established support zone, but no support level is guaranteed to hold forever. The correct approach is to recognize the zone as significant and look for confirming evidence before acting — specifically, a bounce accompanied by above-average volume suggests real buying interest. Repeated tests can work both ways: they establish the level as significant but also deplete the pool of buyers willing to defend it, increasing the probability of an eventual breakdown.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Difference Between S/R and Supply/Demand Classical support and resistance identifies levels based on price history',
+        text: '— where price bounced or rejected before. Supply and demand zones identify the specific origin points of strong directional moves, focusing on base formation and imbalance. The distinction is subtle but useful: S/R is about level history, supply/demand is about the energy that moved price away from a zone. Supply/demand zones focus on the base before the breakout, while classical S/R focuses on the breakout level itself. The distinction is subtle but matters for how you draw and trade the zones.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Dynamic Support and Resistance from Moving Averages Moving averages function as dynamic support and resistance levels',
+        text: '— levels that move with price over time rather than remaining fixed at historical prices. In an uptrend, the 20-day, 50-day, and 200-day moving averages frequently serve as support levels where pullbacks find buying interest and the uptrend resumes. In a downtrend, these same averages serve as resistance levels where rallies stall and the downtrend reasserts itself. The reason moving averages function as support and resistance is partly mathematical and partly behavioral. Mathematically, the moving average represents the average cost basis of participants who entered positions during the lookback period. In an uptrend, participants who bought during the past 50 days are, on average, in profit as long as price is above the 50-day average. They are psychologically inclined to add to their positions on pullbacks to the average, creating buying pressure at that level.',
+      },
     ],
   },
   {
@@ -42580,6 +48316,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A pullback to the 50-day SMA on low volume is a classic pattern in healthy uptrends. Low volume during a pullback suggests that sellers are not aggressively dumping — it is more likely to be normal profit-taking than a true trend reversal. Trend-following traders often use these setups to add to positions or initiate new ones, with a stop placed below the moving average to define risk.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Moving Average Frameworks Moving averages smooth price to reveal trend direction. Common frameworks:',
+        text: '9/21 EMA for short-term; 50/200 SMA for medium and long term. Golden cross (50 crossing above 200) and death cross (50 crossing below 200) are watched trend signals in futures. EMA reacts faster to recent price; SMA weights all periods equally. In trending futures markets, price consistently stays on one side of the 21 EMA; in ranging markets, it whipsaws across. The 200-day SMA is particularly watched as the major institutional trend indicator.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: POC Cross-Reference With Moving Averages When the POC coincides with a key moving average',
+        text: '(50-day, 200-day), the combined level is extremely significant. Both tools are identifying the same equilibrium price from different angles. These confluence levels are worth watching and trading with conviction. When the POC coincides with a key moving average (50-day, 200-day), the resulting level is especially significant. Two independent tools identifying the same equilibrium price — that coincidence is not random.',
+      },
     ],
   },
   {
@@ -42664,6 +48418,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Absolute returns tell only part of the story. This stock returned 8% while the market returned 12% and its own sector returned 15%. On both comparisons, this stock is underperforming — it is a laggard within an outperforming sector. This suggests stock-specific headwinds that warrant investigation before buying. Relative strength analysis would direct attention toward the healthcare stocks gaining 18-25% instead.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Relative Strength Analysis: Comparing Securities Ratio charts',
+        text: '— the price of one security divided by another — strip away the absolute price movement and isolate the relative performance. An uptrend in the SPY/TLT ratio indicates equities are outperforming bonds. An uptrend in the XLF/SPY ratio indicates financials are outperforming the broad market. These relative trends often persist for months and provide reliable information about institutional capital allocation preferences.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Relative Strength Scanners Scan for stocks whose relative strength',
+        text: '(price/SPX) has reached a new 52-week high. These stocks are outperforming the market by the widest margin in a year, indicating accelerating institutional demand. The RS new-high scan identifies the leaders that deserve entry timing analysis.',
+      },
     ],
   },
   {
@@ -42743,6 +48515,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'A breakout to new highs on below-average volume is a classic warning sign. Genuine breakouts should attract increasing volume as more participants recognize the move and want to participate. When volume is weak, it suggests that the price move is driven by a small number of traders and that institutional buyers have not shown up to validate the new high. These low-volume breakouts fail more frequently than high-volume ones.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Why Price Moves Fast Through LVNs A Low Volume Node',
+        text: '(LVN) is a price level with significantly less traded volume than surrounding levels — a valley in the volume profile. LVNs formed because price moved through that level quickly, without establishing meaningful trade. Without resting orders at LVNs, there is little friction, so price typically accelerates through them. LVNs represent areas where price moved too quickly to establish meaningful trade. Without resting orders to slow it, price typically accelerates through these zones on subsequent traversals as well.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: OBV Divergence as a Leading Indicator When price makes a new high but On-Balance Volume does not confirm',
+        text: '(OBV divergence), the advance is not supported by volume participation. This divergence typically leads price by 1–4 weeks, providing advance warning to tighten stops or take partial profits before the price decline becomes apparent.',
       },
     ],
   },
@@ -42845,6 +48635,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'A high-volume breakout followed by a low-volume pullback to the breakout level is a classic bullish confirmation pattern. The high volume on the initial break shows genuine buyer conviction. The low-volume pullback indicates that sellers are not motivated — the stock is digesting its gains, not distributing them. Many professional breakout traders prefer to enter or add on this lower-risk retest rather than chasing the initial surge.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Breakout Entry Timing Two primary entry timings for breakouts:',
+        text: '(1) enter at the breakout point (aggressive) as soon as price crosses the defined level; (2) wait for a pullback to the breakout level (conservative) before entering. Aggressive entries capture more of the move but experience more false breaks. Conservative (pullback) entries have higher win rates and better risk-reward but miss some moves that never pull back. For most retail traders, a blend of timing or a consistently conservative approach produces better risk-adjusted results than aggressive at-breakout entries.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Trading Strategies for Each Pattern Entry on the breakout above the upper boundary',
+        text: '(for bullish patterns) or below the lower boundary (for bearish patterns), with stops placed beyond the opposite boundary. Aggressive traders enter within the pattern at the boundary that represents the trend direction, with tighter stops. Chapter 34 — Rounding Patterns, Cups & Broadening Formations These patterns represent slower, more gradual shifts in sentiment compared to the angular patterns of triangles and flags. Their extended formation periods typically produce larger and more sustained moves once they complete.',
+      },
     ],
   },
   {
@@ -42935,6 +48743,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Before applying mean reversion logic to an individual stock, the trader must determine whether the decline represents a temporary dislocation or a permanent impairment of earnings power. A retailer that has lost significant market share to e-commerce, closed stores, and cut its dividend may never return to its prior price level — the "mean" it would supposedly revert to no longer reflects reality. Mean reversion on individual names requires fundamental validation; otherwise it is just buying value traps.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Selling Premium Into Extended Moves: The Statistical Case Mean reversion sizing rule: size at',
+        text: '50-60% of normal position size. Mean reversion setups fail more often than directional momentum setups, but successful ones move quickly and far. The reduced sizing creates favorable expected value even with a lower win rate. The statistical case for selling premium into extended directional moves is rooted in three complementary bodies of evidence: empirical studies of stock returns showing that extreme daily and weekly moves are followed by above-average returns in the opposite direction, the mean-reverting behavior of implied volatility (elevated IV after large moves tends to normalize lower), and the systematic overpricing of options during periods of acute volatility elevation.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Valuation Extremes and Mean Reversion Equity index valuations have historical means. S&P',
+        text: '500 forward P/E has averaged 15-17x over long history; readings above 22–25x historically preceded below-average forward returns. These observations don\'t provide timing signals (markets can stay expensive for years) but do provide risk-context: entering longs at historically rich valuations requires greater return expectation to justify the elevated multiple risk. Fundamental valuation context informs position sizing — smaller long positions at extreme valuations, larger at historical troughs.',
+      },
     ],
   },
   {
@@ -43024,6 +48850,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'A major acquisition that fundamentally diversifies Pepsi\'s business is a regime change event — it may permanently alter the cointegration relationship between KO and PEP. The pairs trade was based on both companies being nearly pure-play beverage businesses. If PEP becomes a beverage-plus-snacks conglomerate, the historical spread analysis no longer applies. Pairs traders must monitor for structural changes that invalidate the original statistical relationship and exit when the basis for the trade changes.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Pairs Trading Mechanics A formal pairs trade identifies cointegrated securities',
+        text: '— those whose prices move together over time but diverge temporarily. The spread z-score (current spread minus mean, divided by standard deviation) is the standard entry/exit signal: enter when the z-score exceeds 1.5-2.0 standard deviations, exit when it reverts toward zero. Stop-losses at 3.0-4.0 standard deviations protect against permanent relationship breakage.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Risk Management for Market-Neutral Portfolios Market-neutral portfolios face several unique risks: beta drift',
+        text: '(the long and short legs develop different sensitivities to the market), liquidity asymmetry (the short leg may be harder to exit during stress), and correlation breakdown (historically correlated pairs can decouple permanently). Monitoring these risks requires daily rebalancing of the dollar-neutral and beta-neutral exposures.',
       },
     ],
   },
@@ -43125,6 +48969,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'When the stock closes below the $50 strike at expiration, the put seller is assigned and must purchase 100 shares at $50 per share. However, they already collected $3 in premium, so the effective cost basis is $47 per share — $3 below the strike. If the investor wanted to own the stock anyway, they are now holding shares at a lower effective cost than if they had simply bought at the market price of $50 when they sold the put. The loss relative to market price ($47 basis vs $45 market) represents the inherent risk of put selling when the stock falls significantly.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Trading Rate Views with Options TLT',
+        text: '(the iShares 20+ Year Treasury Bond ETF) is the most liquid rate-trading instrument for retail options traders. TLT\'s duration of approximately 17-18 years means a 1% rise in the 20-year Treasury yield causes TLT to decline approximately 15-18%. Options on TLT provide full access to equity-style strategies: covered calls for income in stable rate environments, protective puts against rate spikes, and straddles around FOMC meetings. For more precise rate exposure, options on /ZB (30-year Treasury futures), /ZN (10-year Treasury futures), and SOFR futures provide access to specific segments of the yield curve with Section 1256 tax treatment. Chapter 28 Dividends, Corporate Actions & Options Dividends and corporate actions are the mechanical events that cause an underlying\'s value to change in ways that affect options pricing beyond normal price movement.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: ZB Spread Strategies ZB spreads with other rate contracts create defined-risk rate strategies. Long ZB short ZN',
+        text: '(the NOB spread — Notes Over Bonds) expresses a view on yield curve steepness. Long ZB short UB isolates mid-duration from long-duration risk. Long ZB short calendar months captures term structure changes. These spreads receive SPAN margin credits, making them capital-efficient relative to outright positions. For traders developing rate-focused strategies, spread construction is where most of the interesting risk-adjusted returns live. Chapter 32 — The 10-Year Note Futures (ZN) ZN is the most actively traded futures contract in the world and the direct instrument for trading the most important interest rate in global finance. This chapter covers ZN\'s specifications, character, and strategies.',
+      },
     ],
   },
   {
@@ -43221,6 +49083,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The implied move priced into the options was approximately 12% ($6 + $6 = $12, divided by $100 stock price). The stock moved 9%, less than the implied move. Additionally, after earnings the implied volatility collapsed sharply, destroying the time value component of the option. The option gained $9 in intrinsic value (the stock is now $9 in the money) but lost several dollars in time/volatility value due to IV crush. The net gain of $1 represents a poor return on the $6 invested — an 83% return needed to break even was not achieved.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Earnings-Driven Strategies',
+        text: '(Sector ETF) Mega-cap earnings drive NQ movements that can be anticipated via option-implied moves. The options market prices expected earnings move; if the actual move exceeds implied, NQ often extends; if it falls short, potential reversal. Trading NQ specifically around NVDA, AAPL, MSFT, GOOGL, AMZN reports requires knowing which company reports on which date, understanding sector weight in NQ, and monitoring options pricing to assess consensus expectations. Retail access to individual earnings is through NQ positioning rather than stock options.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Timing Options Around Earnings The optimal options timing around earnings depends on the strategy. Long straddles: enter',
+        text: '10–14 days before earnings when IV has not yet peaked. Short strangles or iron condors: enter 1–2 days before earnings when IV is at maximum, profiting from the post-report crush. Post-earnings directional plays: enter stock or debit spreads in the first week after earnings when IV has contracted and the directional thesis is clear. Chapter 66 — Business Cycle Timing The business cycle is the longest-duration timing framework in this book. It operates over quarters and years rather than days and weeks, but its impact on the success of every shorter-duration timing decision is enormous.',
+      },
     ],
   },
   {
@@ -43302,6 +49182,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'The disciplined response to news-driven volatility is to assess materiality before acting. A lawsuit that could cost $50 million against a company with $10 billion in market cap is largely irrelevant. The same lawsuit against a $200 million company could be existential. The investor needs to estimate the realistic range of legal liability, the probability of loss, and whether the company\'s core earnings power is affected — then compare that analysis to what the 15% decline implies about market expectations.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: News-Driven Volatility and Stop Placement Major forex news releases',
+        text: '(NFP, CPI, GDP, central bank decisions) create volatility spikes that can trigger stops placed based on normal market conditions. Widening stops before known events or reducing position size are the primary risk management adaptations for news-driven forex environments. ── Futures and Commodities ── Chapter 86 — Technical Analysis in Futures & Commodities Futures markets offer the most technically pure trading environment: centralized exchanges, transparent order books, and complete volume data. The availability of open interest data and the Commitment of Traders report provides additional analytical dimensions not available in equity or forex markets.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The Risks: High Expectations Mean Big Drops on Bad News Growth stocks are priced for perfection. A company trading at',
+        text: '50 times earnings is priced with the assumption that earnings will grow dramatically for years. If growth disappoints even slightly, the stock can drop 20–40% in a single day as the market reprices its expectations. During the 2022 growth stock correction, many high-flying technology stocks fell 50–80% from their peaks. Growth investing requires a strong stomach and conviction that the long-term trajectory remains intact despite short-term volatility.',
+      },
     ],
   },
   {
@@ -43382,6 +49280,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'For a small retail order of 50 shares, HFT market makers are almost certainly on the other side of the trade — providing liquidity at the tightest possible spread. The bid-ask spread on Apple is often $0.01, compared to $0.125-0.25 in the pre-HFT era. This directly saves the retail investor money. The concerns about predatory HFT behavior apply primarily to large institutional orders where the order flow itself becomes a signal that HFT can detect and trade against. Small retail trades are too small to generate a detectable signal.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Rise of Retail Options Trading:',
+        text: '2000s to Present For the first three decades of standardized options trading, participation was dominated by institutional traders, hedge funds, and sophisticated individual investors with direct floor access or institutional-grade infrastructure. Retail traders could technically access options, but the friction was high: options commissions were substantial (often $2 to $5 per contract plus a transaction fee), research and analytics tools were expensive, and the learning curve was steep. Three developments across the 2000s and 2010s fundamentally changed the accessibility equation. The first was the transition to electronic trading, which eliminated floor-based advantages and enabled online brokers to offer options trading to retail customers through web and eventually mobile platforms.',
       },
     ],
   },
@@ -43476,6 +49386,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The pension fund\'s core problem is information leakage. A 5-million-share sell order representing 3 days of ADV, visible on a public exchange, would immediately signal distress or a strategic shift to every market participant. HFT firms would sell ahead of the fund, pushing the price down before the fund finishes. Other institutional investors would become reluctant buyers, knowing a large seller is working. The dark pool allows the fund to seek a buyer for the entire block — or work the order gradually — without the market knowing, thus minimizing market impact. The guarantee of price improvement is real but secondary.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: What Dark Pools Are Dark pools are private exchanges where trading occurs without pre-trade transparency',
+        text: '— orders and executions are not displayed on the public order book. They exist to allow institutions to trade large size without revealing their intentions to the market. In the US, dark pools handle roughly 40% of equity volume. Dark pools are private exchanges without pre-trade transparency. Orders and executions are not displayed on public books, which is the entire point: allowing institutions to trade size without signaling their intent.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: A Complete Divergence Trading Framework The framework requires: identify divergence, wait for price confirmation',
+        text: '(a structural break of a swing point or trendline), enter on the confirmation, set stops beyond the divergence extreme, and target the next major support/resistance level. Chapter 51 — Building Custom Indicators & Composite Signals Standard indicators solve general problems. Custom indicators solve your specific problems. Building custom indicators is the transition from consuming tools to creating them — from analyst to architect.',
       },
     ],
   },
@@ -43576,6 +49504,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Both earned the same gross return, but the active trader lost 1.5% annually to transaction costs, and paid 35% tax on annual profits rather than deferring taxes and paying 15% at the end. The passive investor benefits from tax deferral (the money that would have gone to taxes each year instead continues to compound) and from lower tax rates on long-term gains. Over 10 years, these differences compound into a substantial wealth gap in favor of the passive investor — even though their gross returns were identical.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Demand Destruction and Elasticity Oil demand has limited short-term price elasticity',
+        text: '(people don\'t immediately reduce driving when prices rise) but meaningful long-term elasticity (high prices accelerate EV adoption, efficiency investment, and behavioral change). Price spikes above $100 per barrel have historically produced demand destruction that eventually pressures prices lower. Tracking IEA demand revisions provides forward-looking demand signals; these revisions are published monthly alongside supply estimates.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Short-Term vs. Long-Term Capital Gains Gains on positions held less than',
+        text: '366 days are taxed at ordinary income rates (up to 37%). Gains on positions held 366+ days are taxed at long-term rates (0%, 15%, or 20%). The timing implication: if a profitable position is approaching the 366-day threshold, the tax savings from waiting a few additional days to sell can exceed 15–20% of the gain. If a profitable position is approaching the 366-day threshold for long-term capital gains treatment, the tax savings from waiting a few additional days can exceed 15–20% of the gain. Always check the holding period before selling.',
       },
     ],
   },
@@ -43760,6 +49706,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: '150% annual turnover means the entire portfolio is turned over 1.5 times per year. At 0.5% per round trip, the annual transaction cost is approximately 0.5% × 1.5 = 0.75% of assets per year. The net return is approximately 22% − 0.75% = 21.25%. This is a simplified estimate; in practice, market impact costs — which scale with position size — would further reduce returns, especially for larger funds.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: External Support Systems Trading psychology resources: Brett Steenbarger\'s books',
+        text: '(Trading Psychology 2.0, Enhancing Trader Performance) provide research-based frameworks. Trading coaches and psychologists (available via directories like FINDaCoach) provide personalized support. Trading communities (futures forums, Discord servers) provide peer perspective on shared struggles. Accountability partners who review your journal and trading decisions provide external checks on emotional decisions. No trader improves in isolation; external perspective accelerates psychological development.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Portfolio Review Discipline A systematic portfolio review process',
+        text: '— examining every position in the portfolio on a regular schedule against its current thesis, updated intrinsic value, and alternative opportunities — prevents the accumulation of stale positions that have been held beyond their analytical sell signal and the neglect of positions that deserve more capital based on thesis confirmation. The review should be conducted at minimum quarterly, immediately following each portfolio company\'s earnings report, and at any time a significant corporate event occurs that is material to the investment thesis. The portfolio review should produce explicit decisions for every position: add, hold, trim, or exit — with specific analytical justifications for each decision that are documented and can be reviewed in subsequent periods.',
       },
     ],
   },
@@ -44027,6 +49991,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Python with pandas allows you to compute a rolling 60-day or 252-day correlation with a single line of code (df["A"].rolling(60).corr(df["B"])) and plot the result immediately. This is far faster and more scalable than Excel\'s manual CORREL, does not require a Bloomberg subscription, and is more flexible than R for a beginner learning the basics. It also handles the data download (via yfinance) in the same environment.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Collaboration and Sharing Analysis with Teams Collaborative analysis tools',
+        text: '(shared TradingView charts, team Slack channels for chart discussion, shared screening dashboards) allow teams to leverage multiple analytical perspectives. The discipline of presenting your analysis to peers forces clarity and rigor that solo analysis sometimes lacks. ── Combining Disciplines ── Chapter 117 — Combining Technical Analysis with Other Disciplines The most complete analytical framework integrates technical analysis with fundamental analysis, macro-economic awareness, and quantitative methods. This chapter explores the practical methods for combining these disciplines into a unified decision-making process.',
+      },
     ],
   },
   {
@@ -44216,6 +50192,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A Sharpe ratio of 1.8 is exceptionally high — even the best long-run equity investors achieve Sharpe ratios of 0.5–1.0. A result this strong almost always reflects a data error rather than a genuine strategy edge. The most common culprits are survivorship bias (inflating returns by excluding failed companies), look-ahead bias (using data that was not available at the time of trading), or overfitting to the specific historical period. Before becoming excited about the result, the investor should audit every assumption in the backtest for these three errors.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: When a Timing Idea Is Not Worth Testing Not every timing idea deserves backtesting. Ideas that rely on future information',
+        text: '(look-ahead bias), that have too many parameters (overfitting risk), that lack a logical rationale (data mining), or that require conditions so rare that the sample size will be insufficient (statistical insignificance) should be discarded before the backtesting stage to avoid wasting time on ideas that cannot produce reliable results. Chapter 72 — Backtesting Your Timing System Backtesting is the primary tool for evaluating timing systems before risking real capital. Used properly, it provides invaluable information. Used carelessly, it creates dangerous illusions of profitability.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Forward-Testing in Sim Before Live After backtesting, forward-test in simulation for weeks. Execute the setup live in sim',
+        text: '— real market conditions, just not real money. This forward test reveals execution challenges a backtest misses: emotional response, execution speed, real-time recognition. Graduate to small live size only after successful sim performance.',
+      },
     ],
   },
   {
@@ -44309,6 +50303,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'This is a classic survivorship bias setup. Today\'s Russell 2000 contains approximately 2,000 small-cap companies that currently exist and meet the index\'s criteria. Over the past 15 years, hundreds of small-cap companies were removed from the index due to bankruptcy, forced merger (usually at depressed prices), or significant share price decline that triggered removal. All of these would have generated poor returns in any historical value screen, but they do not appear in today\'s constituent list. Excluding them makes every historical strategy look significantly better than it actually was.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Round-Lot vs. Odd-Lot Signals Institutional trades are almost always round lots',
+        text: '(multiples of 100 shares). Odd lots (like 3,247 shares) are more likely retail or specific algorithm types. Historically, odd-lot trades were invisible on the consolidated tape; modern tapes show everything, but round-lot filters are still useful for identifying institutional flow. Institutional trades are almost always round lots (multiples of 100 shares). Odd lots are more likely retail or specific algorithms. Round-lot filters on the tape are useful for identifying institutional-style flow.',
       },
     ],
   },
@@ -44510,6 +50516,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'This is a data snooping and overfitting problem. When 10,000 strategies are tested on the same dataset at the 5% significance level, approximately 500 would appear statistically significant by chance alone — even if none have genuine predictive power. Selecting the single best-performing strategy from this group and reporting its Sharpe ratio of 1.5 is not evidence of a genuine edge; it is expected statistical noise from massive multiple testing. The correct approach is to reserve an unseen out-of-sample test period, finalize the strategy on in-sample data only, and evaluate it exactly once on the reserved data.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Mid-Day Monitoring: Signal vs. Noise The mid-day period',
+        text: '(10:30 AM to 2:00 PM ET) is typically the most stable portion of the trading session — the opening volatility has subsided, institutional order flow has established the day\'s directional bias, and the afternoon close-driven activity has not yet begun. This stability makes mid-day the ideal window for entering new positions, executing planned adjustments, and evaluating whether any management actions are required by the systematic rules. The mid-day monitoring discipline requires distinguishing between market signals (information that genuinely warrants a trading action) and market noise (normal intraday price variation that does not require any response). The test for a genuine signal: does the current market development trigger a specific, predefined rule from the systematic framework? If a position has reached its 50% profit target, the signal is unambiguous — close the position.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Noise vs. Signal on LTF Lower timeframes contain more noise than signal.',
+        text: '1-minute charts show dozens of tiny swings that mean nothing. The skill is filtering: ignoring 80% of LTF movement and recognizing the 20% that matters. Pattern recognition on LTF is harder than HTF precisely because of this noise density. Lower timeframes contain more noise than signal. 1-minute shows dozens of meaningless tiny swings. Skill is filtering: ignoring 80% of LTF movement, recognizing the 20% that matters. Harder than HTF precisely because of noise density.',
+      },
     ],
   },
   {
@@ -44608,6 +50632,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Transaction cost drag scales with turnover. The additional cost of using 0.15% versus 0.05% round-trip cost is 0.10% per round trip. Multiplied by 120% annual turnover (meaning the portfolio is turned over 1.2 times per year), the additional annual drag is 0.10% × 1.20 = 0.12% per year. This may seem small but on a strategy with a gross return of, say, 6%, it represents 2% of the total gross return — meaningful drag that compounds significantly over time.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Modeling Fills, Slippage, and Commissions Accurately The single most common source of backtest',
+        text: '-to-live-trading performance discrepancy for options strategies is execution cost — the difference between the prices at which the backtest assumes trades are executed and the prices at which they are actually executed in live trading. Options execution costs have several components that are frequently underestimated or ignored entirely in naive backtests . Bid-ask spread cost: options bid-ask spreads in live markets frequently range from 2-5% of the option\'s mid-price for liquid underlying options to 10-20% for less liquid strikes and expirations.',
+      },
     ],
   },
   {
@@ -44702,6 +50738,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Once the researcher uses the OOS results to guide parameter changes and then re-evaluates on the same OOS period, that period is no longer an independent out-of-sample test — it has effectively become additional in-sample data. The strategy is now optimized on 2000–2015 AND implicitly informed by 2016–2018 patterns. The only valid way to test the revised strategy is to use a completely new, previously unseen holdout period (e.g., 2019–2022). The original 2016–2018 OOS test result — before any parameter changes — is the only valid OOS estimate the researcher has.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Testing Mean Reversion Robustness Mean reversion strategy testing:',
+        text: '(1) test across multiple markets (not just the one it was optimized on); (2) test across multiple sub-periods (does it work in every decade?); (3) apply multiple variations of the signal (different lookback periods, different threshold levels); (4) verify the strategy\'s performance degrades gracefully rather than cliff-dropping with minor parameter changes; (5) calculate the percentage of performance attributable to the few extreme events vs. consistent small gains. Mean reversion strategies that depend entirely on a few large reversals are fragile. Chapter 83 — Breakout Strategies Breakout strategies exploit the tendency of prices to continue after breaking significant levels. This chapter covers breakout mechanics, confirmation filters, and implementation.',
       },
     ],
   },
@@ -44800,6 +50848,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'A wide Monte Carlo confidence interval — 5th percentile of −0.10 and 95th percentile of 1.70 — means the strategy\'s performance is highly path-dependent. The original backtest Sharpe of 0.80 is just one draw from a distribution where many equally plausible alternative histories produce very different results. This fragility is a warning sign: the strategy may have done well in the specific historical sequence realized (momentum worked especially well in the 2010s bull market) but could easily have produced poor results in a different but equally plausible history. A robust strategy would show a narrower Monte Carlo band.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Monte Carlo Simulation for Portfolio P&L Distributions Monte Carlo simulation',
+        text: '— generating thousands of random market scenarios and calculating the portfolio\'s P&L under each scenario — provides the most complete risk assessment available for complex options portfolios. Unlike the Greek approximations (which provide linear or quadratic estimates of P&L for small moves) and the stress test scenarios (which provide P&L at specific predetermined scenarios), Monte Carlo simulation generates the full probability distribution of outcomes across the entire range of possible market conditions. The simulation methodology for options portfolios: (1) Specify the stochastic process governing the underlying\'s price and volatility evolution — typically a correlated pair of processes for price and IV (the Heston model or a simpler log-normal approximation for price with a mean-reverting process for IV).',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Stress Testing Stress testing',
+        text: '— applying the worst plausible combination of input assumptions simultaneously — reveals the maximum realistic downside from the investment and provides the analytical foundation for risk-limit decisions. Unlike scenario analysis, which models internally consistent combinations of assumptions that reflect plausible futures, stress testing deliberately combines unfavourable assumptions across multiple dimensions to identify the vulnerability of the valuation to a systematically adverse environment. The stress test is most valuable for assessing the adequacy of the margin of safety. If the current stock price is $50 and the stress-tested intrinsic value — with the worst realistic combination of assumptions — is $35, the margin of safety provides 30% of downside protection. If the stress-tested value is $15, the current price provides essentially no protection against an adverse scenario.',
       },
     ],
   },
@@ -44981,6 +51047,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The Calmar ratio (return / max drawdown) directly compares how much return is earned per unit of worst-case loss. Strategy A, with a smaller max drawdown, would have a higher Calmar ratio — better drawdown efficiency. Combined with drawdown duration (8 months vs 36 months), this reveals that Strategy B requires investors to endure a 45% loss and then wait three years for recovery — a behavioral challenge that would cause most investors to abandon the strategy at the worst moment. The Sharpe ratio, being identical for both, is blind to this critical difference.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Advanced Risk-Adjusted Metrics for Options Portfolios The Sharpe ratio\'s limitation for options strategies',
+        text: '— its use of total standard deviation as the denominator, which treats upside volatility identically to downside volatility — makes it an imperfect risk-adjusted metric for systematic premium selling programs that have many small positive returns and occasional large negative returns. Three alternative metrics provide more meaningful risk-adjusted performance assessment for these skewed return distributions. The Sortino ratio addresses the Sharpe ratio\'s symmetry problem by using only downside volatility (the standard deviation of negative monthly returns) as the denominator: Sortino = (Annualized Return − Risk-Free Rate) / Downside Deviation.',
+      },
     ],
   },
   {
@@ -45075,6 +51159,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The regime breakdown reveals that the aggregate 0.85 Sharpe masks a fundamentally problematic pattern: the strategy loses money during recessions (precisely when investors need stability most) and generates all its alpha during the easier expansion periods. This is a regime-dependent strategy, not a robust factor strategy. An investor holding this strategy through a recession would experience both portfolio losses and the behavioral urge to exit exactly at the wrong time. The aggregate Sharpe is misleading because recessions are far less frequent than expansions — masking their severity in the aggregate metric.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Full System Backtesting Results Across Market Regimes Backtesting the complete iron condor income system',
+        text: '(30-45 DTE entry, 0.20-0.25 delta strikes, 50% profit target, 200% loss maximum) across the 2006-2024 period on SPX options produces consistent results that reveal both the strategy\'s strengths and its specific vulnerabilities. Bull market periods (2013-2019, 2021): win rates of 70-75%, average profit per trade of 35-45% of maximum credit (capturing profit before the 50% target in many trades due to rapid decay in low-volatility environments), minimal losses from the 200% limit triggers. Annual returns of 15-20% on capital committed to the strategy. Crisis periods (2008-2009, March 2020): win rates of 40-50%, frequent 200% loss limit triggers, annual return of negative 20-40% on capital committed.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Adjusting the Wheel for Market Regime In bullish regimes, use lower put strikes',
+        text: '(further OTM) to reduce assignment probability and capture more premium cycles without stock ownership. In neutral regimes, use ATM puts to increase premium and accept frequent assignment/call-away cycling. In bearish regimes, suspend the wheel entirely — the support levels that justify put selling break routinely in bear markets.',
+      },
     ],
   },
   {
@@ -45163,6 +51265,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'With stocks averaging $3M ADV and 150% annual turnover, a $100M portfolio would require approximately $100M × 150% / 252 ≈ $595K per day in trading, or about 20% of ADV per day. At this level, market impact begins to be significant — trading 20% of daily volume in a stock typically moves the price by several basis points against you. By $300M, the daily trading requirement reaches 60% of ADV, where market impact could easily consume 1–2% annually of the gross alpha. The 6% gross alpha provides room for some impact cost before the strategy becomes uneconomical, suggesting rough capacity in the $100–300M range depending on execution quality.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Case Study: Building a Three-Strategy Portfolio A practical example: Strategy A is a',
+        text: '50/200-day moving average crossover on global equity indices (trend-following, weekly, equities). Strategy B is an RSI mean reversion system on S&P 500 stocks (mean reversion, daily, equities). Strategy C is a Donchian breakout system on commodity futures (trend-following, daily, commodities). The three strategies differ in type, time frame, and market, providing robust diversification. Machine learning, statistical methods, quantitative screening, and data science. Chapter 98 — Elder’s Triple Screen & Multi-System Integration Alexander Elder’s Triple Screen system is the most influential multi-time-frame trading methodology. This chapter provides the complete system specification plus frameworks for integrating multiple systems into a unified portfolio approach.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Event-Driven Strategy Framework Event-driven strategies in futures identify specific scheduled or unscheduled events',
+        text: '(FOMC decisions, USDA reports, earnings, geopolitical developments) and position for the expected price impact. The edge comes from superior analysis of likely outcomes vs. what\'s currently priced. Event-driven trading is fundamentally different from technical or trend-following strategies: it requires specific knowledge of the event\'s mechanics, historical reaction patterns, and current market positioning.',
       },
     ],
   },
@@ -45263,6 +51383,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A mean-variance optimizer with no constraints will exploit small, noisy differences in historical returns and covariances to build extreme portfolios that look excellent in-sample. A Sharpe ratio of 2.4 from a 15-stock concentrated portfolio is almost certainly the result of the optimizer fitting historical noise rather than genuine factor signal. The constrained version, while lower in-sample Sharpe, is far more likely to hold up out-of-sample because its diversification prevents any single estimation error from dominating performance. The gap between in-sample (2.4 vs 1.0) and likely out-of-sample (perhaps 0.2 vs 0.7) dramatically favors the constrained approach in real money management.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio Insurance Strategies Systematic portfolio insurance approaches:',
+        text: '(1) VIX calls as portfolio tail hedge (cheap when VIX is low; pay off when equity markets crash); (2) gold as portfolio stabilizer (typically rises during equity tail events); (3) long bond position as equity hedge (works in deflationary crises, less well in inflationary crises); (4) systematic drawdown triggers (reduce portfolio size automatically when portfolio falls 5% in any 20-day period). These structured approaches to tail risk provide automatic protection without requiring real-time decisions during crisis moments when emotional decision-making is most compromised.',
+      },
     ],
   },
   {
@@ -45345,6 +51477,18 @@ export const articles: Article[] = [
         ],
         correctIndex: 3,
         explanation: 'High absolute market returns would actually benefit, not hurt, a long-only quantitative strategy\'s absolute returns. If the market had unusually high returns, the strategy\'s absolute return would likely also be high, making this the least likely explanation for underperformance. The three most common causes of a 4% gap between backtest and live performance are: transaction cost underestimation (very common), overfitting (systematic), and behavioral override during drawdowns (extremely common in practice). High market returns would typically be a tailwind, not a headwind.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Tracking Paper Results Against Backtest If paper trading results deviate significantly from backtest expectations',
+        text: '(win rate more than 10 percentage points lower, average payoff more than 30% lower), the deviation indicates either execution issues or regime differences between the backtest period and the current market. Investigate the source of the deviation before proceeding to live trading.',
       },
     ],
   },
@@ -45438,6 +51582,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The evidence does not support a declaration of factor decay. Momentum crashes following sharp market corrections are a well-documented historical pattern — they are a structural feature of the momentum factor, not a symptom of decay. The rolling 3-year Sharpe remaining positive at 0.25 indicates the factor still generates positive (if reduced) risk-adjusted returns. Most importantly, normal international momentum performance strongly argues against global structural decay — if the economic mechanism had failed, it would fail globally. This pattern is consistent with a US-specific cyclical drawdown from a momentum crash, which historically recovers over 12–24 months.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Edge Decay Every timing edge gradually weakens as the market adapts. A breakout system that worked well in the',
+        text: '2000s may produce more whipsaws in the 2020s as algorithmic traders have learned to exploit breakout traders’ predictable behavior. Monitoring rolling 50-trade performance windows reveals whether the edge is stable, gradually decaying, or abruptly broken. No timing system works forever. Markets evolve, competition increases, and specific inefficiencies may be arbitraged away. Maintaining a timing system requires ongoing monitoring and the wisdom to know when evolution is necessary.',
+      },
     ],
   },
   {
@@ -45529,6 +51685,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'The critical validation step for any strategy change is rerunning the complete historical backtest — not just evaluating the change on the recent underperforming period. If EV/EBITDA genuinely outperforms P/E as a value metric, this should be demonstrable over the full history, not just the most recent 2 years. A change that only improves recent performance is re-optimization: the manager looked at what worked recently and fit the strategy to it — creating an illusion of improvement while actually overfitting to a short, potentially unrepresentative period. Full-history validation is the minimum standard for any meaningful strategy change.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Performance Monitoring and Strategy Health Timing: When Your System Needs Adjustment PART X',
+        text: '— TIMING PSYCHOLOGY AND THE PROFESSIONAL EDGE The mental game of timing — overcoming the biases, building the routines, and developing the discipline that separates profitable timers from everyone else. Chapter 41 — The Cognitive Biases That Destroy Timing –',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Adapting Chart Timeframes Optimal chart timeframes differ by strategy: day trading uses',
+        text: '1–5 minute charts for entry with 15-minute for bias; swing trading uses 60-minute for entry with daily for bias; position trading uses daily for entry with weekly for bias. In each case, the higher timeframe establishes direction and the lower timeframe provides execution. Using a single timeframe produces both directional errors (missing the big trend) and execution errors (entries at poor prices within the trend).',
       },
     ],
   },,
@@ -45624,6 +51798,24 @@ export const articles: Article[] = [
         explanation:
           'VaR is a threshold, not an exact loss or a maximum. A 99% one-day VaR of $50,000 means that on approximately 1% of trading days (about 2-3 days per year), losses are expected to exceed $50,000. The actual loss on those days could be far larger.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Value at Risk',
+        text: '(VaR) Applied to Technical Portfolios Value at Risk estimates the maximum expected loss over a specified time period at a given confidence level. A daily VaR of $10,000 at 95% confidence means that on 95% of days, the portfolio’s loss should not exceed $10,000. VaR is calculated using historical simulation (replaying historical returns), variance-covariance (assuming normal returns), or Monte Carlo simulation (generating random return scenarios). For technical portfolios, historical simulation is most appropriate because it preserves the fat tails and serial correlation that parametric methods ignore.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Why Standard VaR Misses Tail Risk Value at Risk models typically assume returns follow a normal',
+        text: '(bell-curve) distribution. Real futures returns have fat tails — extreme moves occur far more frequently than normal distribution predicts. A move that normal distribution assigns 0.1% probability actually occurs every few years in active futures markets. This "fat tail" reality means VaR consistently underestimates extreme losses. Alternatives: CVaR (Conditional VaR) measures average loss beyond the VaR threshold; Extreme Value Theory models specifically fit to tail behavior; stress testing against historical extremes rather than relying on distribution assumptions.',
+      },
     ],
   },
 
@@ -45711,6 +51903,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'VaR summarises risk as a single probability-weighted threshold and is largely blind to the shape and severity of the tail. Stress testing directly models specific severe scenarios — including historically observed crises — giving managers a concrete sense of maximum plausible damage without relying on distributional assumptions.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Stress-Testing Terminal Value The most important terminal value stress test is the ROIC fade assumption',
+        text: '— the rate at which the business\'s return on invested capital is assumed to converge toward the cost of capital over time as competition erodes the competitive advantage. A business currently earning 25% ROIC that is assumed to maintain 25% ROIC in perpetuity is being valued with an implicitly infinite competitive advantage period — an assumption that is almost never justified by economic evidence, because even the strongest competitive positions face erosion from technological change, new entry, and shifting customer preferences over multi-decade horizons. The more analytically honest approach models a gradual fade in ROIC toward the cost of capital over a specified convergence period — say 10 to 20 years — which produces a lower but more defensible terminal value than the zero-fade perpetuity assumption.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Why Stress Testing Must Go Beyond the Greeks The Greeks',
+        text: '— delta, gamma, theta, vega, and their higher-order relatives — provide an excellent first-order approximation of how a portfolio responds to small market changes. They are the portfolio\'s instantaneous sensitivity measures, calculated at the current market conditions. But the Greek approximation breaks down in exactly the scenarios where accurate risk estimation is most important: large market moves, rapid volatility changes, correlation spikes, and events that simultaneously push the underlying price and implied volatility in correlated directions. The second-order effect (gamma) accounts for the curvature of the delta relationship, but even gamma-corrected estimates become inaccurate for moves of 5% or more in the underlying.',
       },
     ],
   },
@@ -45802,6 +52012,18 @@ export const articles: Article[] = [
         explanation:
           'A price-based stop exits mechanically when the stock falls a fixed percentage from cost. A thesis break stop requires the investor to define upfront what specific assumptions or catalysts justified the position — and exit when those, not just the price, are invalidated. The latter is more intellectually rigorous and avoids selling good stocks into temporary weakness.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Reducing Size During Drawdowns A systematic approach: as drawdown deepens, reduce position size proportionally. At',
+        text: '5% drawdown: normal size. At 10% drawdown: 75% normal size. At 15% drawdown: 50% normal size. At 20% drawdown: 25% normal size (essentially minimum viable trading). This graduated response preserves capital during difficult periods without completely abandoning the strategy. As account recovers, restore size in the same graduated fashion. This mechanical approach prevents the two opposite emotional errors: too much size during drawdown (digging deeper) and too little size during recovery (missing the rebound).',
+      },
     ],
   },
 
@@ -45888,6 +52110,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'In a put spread you sell a further OTM put (collecting premium) to partially finance the put you buy. This reduces net cost significantly. The trade-off is that your downside protection is capped: if the market falls beyond the short put strike, the short put begins paying out against you, neutralising the long put\'s benefit. You are protected within a range, not for unlimited downside.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Tail Risk Hedging: Strategies for Catastrophic Protection Tail risk hedging',
+        text: '— protection against extreme, low-probability loss events that exceed the scope of standard portfolio insurance — has become a specialized sub-discipline of options portfolio management, particularly after the experiences of 2008, 2020, and the periodic severe market dislocations that occur with greater frequency than standard distribution models predict. Pure tail risk hedges focus on far OTM options — typically 20-35% OTM put spreads or back spreads — that have minimal cost in normal market conditions but deliver large payoffs during catastrophic market events. The challenge is the ongoing cost: far OTM SPX put spreads expiring in 3 months might cost only 0.1-0.3% of notional per quarter in calm markets, but this 0.4-1.2% annual cost compound over years of non-crisis conditions creates a significant performance drag.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Tail Risk Hedge Activation: When Your Insurance Policy Pays Off Tail risk hedges',
+        text: '(far OTM put options, VIX calls) purchased during calm periods explode in value during crashes. The timing decision: when should the hedge be closed? If the hedge was purchased as portfolio insurance, sell a portion during the crash to lock in the insurance payout and reduce the equity loss. Retain a portion in case the crash continues. The goal is not to time the bottom perfectly but to monetize the hedge when it has provided the protection it was purchased for.',
       },
     ],
   },
@@ -45980,6 +52220,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation:
           'Despite a 60% dollar weight, equities dominate portfolio risk because their volatility (18%) is 3x that of bonds (6%). In a typical 60/40 portfolio with moderate equity-bond correlation, equities contribute roughly 85-90% of total portfolio variance. This is exactly what risk budgeting reveals — and what motivates approaches like risk parity.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Beta-Weighted Delta: The Universal Risk Language When a portfolio contains positions across multiple underlyings',
+        text: '— AAPL calls, SPY puts, NVDA straddles, TSLA credit spreads — the raw dollar delta of each position is not directly comparable. A $10,000 dollar delta in AAPL does not represent the same market risk as a $10,000 dollar delta in SPY, because AAPL and SPY do not move by the same amount in response to a 1% change in the overall market. Beta-weighted delta solves this problem by converting every position\'s dollar delta into its equivalent SPY exposure. The conversion is: Beta-Weighted Dollar Delta (in SPY terms) = Position Dollar Delta × (Beta of Underlying / SPY Price) Where beta is the sensitivity of the underlying to a 1% move in the S&P 500. A stock with a beta of 1.5 moves approximately 1.5% when the S&P 500 moves 1%.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Cross-Asset Momentum Momentum often transmits across asset classes. A strong risk-on week in equities',
+        text: '(ES up 3%) tends to be followed by strength in commodity currencies (AUD, CAD), weakness in safe havens (yen, gold sometimes), and often some strength in industrial metals. This momentum transmission typically plays out over 1–5 days. Traders who identify the risk-on momentum early in one market can position in correlated markets before they fully catch up. This is not guaranteed but represents a statistical edge.',
       },
     ],
   },,
@@ -46084,6 +52342,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'An FDA trial failure is a company-specific event — the outcome is uncorrelated with macroeconomic conditions or broad market moves. A diversified investor holding this stock at a 1% weight would barely notice the impact. This is the definition of idiosyncratic risk, and it illustrates exactly why diversification protects against such events.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Idiosyncratic Risk: The Defining Characteristic of Single-Stock Options Idiosyncratic risk',
+        text: '— the risk of events specific to a single company that are independent of the overall market — is the essential feature that distinguishes single-stock options from index options. A well-constructed iron condor on SPY might lose 20% of its maximum loss in a week where the S&P 500 moves 1.5% — a normal market oscillation that the condor\'s strikes easily absorb. The same structural iron condor on an individual stock can lose 100% of its maximum loss in a single day if the company reports an earnings miss, announces a product recall, receives an adverse FDA ruling, or reveals accounting irregularities — events that have zero bearing on the S&P 500 but catastrophic bearing on the specific stock. The idiosyncratic risk premium in single-stock options is the additional implied volatility that options on individual stocks carry relative to index options at equivalent delta levels.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Risk-On and Risk-Off Flows FX markets have systematic risk-on/risk-off',
+        text: '(RORO) patterns. Risk-on: AUD, NZD, emerging market currencies strengthen; JPY, CHF weaken. Risk-off: JPY, CHF strengthen; AUD, NZD, EM weaken; USD often strengthens but can go either way. These RORO flows produce predictable currency moves during equity market regime changes. VIX-FX correlations reflect this: VIX and JPY typically positively correlated; VIX and AUD typically inversely correlated. Monitoring equity volatility alongside FX provides intermarket context.',
+      },
     ]
   },
   {
@@ -46188,6 +52464,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'The credit spread is 7.5% − 4.5% = 3.0% (300 bps). Using Spread ≈ PD × (1 − Recovery): 0.03 = PD × (1 − 0.40) = PD × 0.60. Solving gives PD = 0.03 / 0.60 = 5%. This means the market is pricing approximately a 5% annual chance of default.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Credit Spreads and Risk-On/Risk-Off Signals Credit spreads',
+        text: '— the yield difference between corporate bonds and Treasuries — measure the market’s pricing of default risk. Widening credit spreads signal increasing risk aversion and typically precede or accompany equity market declines. Narrowing spreads signal improving confidence and support equity market advances. The ICE BofA High Yield spread chart is an essential component of any intermarket technical dashboard.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Sovereign Credit Risk and CDS-Linked Options Sovereign credit risk',
+        text: '— the risk that a government will default on its debt obligations — creates options opportunities in the government bond markets and in the credit default swap (CDS) markets of affected countries. While retail traders cannot directly trade sovereign CDS, several instruments provide options-based access to sovereign credit risk. For developed market sovereign credit risk (European peripheral sovereign risk, Japanese fiscal sustainability concerns), government bond ETFs provide the most accessible vehicle. iShares\' country-specific government bond ETFs (BUND for German bunds, IGLT for UK gilts) have listed options that allow expression of views on sovereign credit spreads through the bond price mechanism.',
+      },
     ]
   },
   {
@@ -46287,6 +52581,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Netting reduces the $50 million gross exposure to a $10 million net claim. At 30% recovery, the bank recovers $10M × 0.30 = $3 million. The loss is $10M − $3M = $7 million. This illustrates why netting is so powerful: it reduced the potential loss from $35M (70% of $50M gross) to just $7M.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Central Clearing Every futures trade is cleared by the exchange\'s clearing house, eliminating counterparty risk',
+        text: '— you are not depending on the other trader to honor the contract. Spot forex trades typically rely on your broker\'s bilateral arrangements with liquidity providers, creating layered counterparty risk. During stress events (SNB removing EUR/CHF peg in 2015, for example), some spot forex brokers failed while futures markets operated normally. Central clearing is a structural advantage worth respecting.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Risk Per Trade as a Constant Professional position sizing starts with a fixed percentage risk per trade',
+        text: '— typically 0.5% to 2% of account equity. This percentage is constant; what varies is position size, based on stop distance. The risk amount stays predictable; the share count (or contract count) adjusts to fit.',
+      },
     ]
   },
   {
@@ -46486,6 +52798,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Market liquidity risk relates to the depth of the market for an asset — whether you can sell without moving the price significantly. Funding liquidity risk relates to a firm\'s ability to access cash through borrowing, deposits, or asset sales to meet obligations as they come due. They interact dangerously: funding stress forces asset sales that worsen market liquidity, driving prices lower and worsening the funding crisis.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Liquidity Risk in Tail Events During tail events, liquidity can vanish suddenly. Bid-ask spreads widen from',
+        text: '1-2 ticks to 20-50 ticks. Market depth collapses. Market orders fill at prices far from quoted best. In the 2010 Flash Crash, some ES trades executed at prices 10% from theoretical fair value because algorithms withdrew liquidity simultaneously. Planning for liquidity risk means: using limit orders rather than market orders for position exits wherever possible, accepting that extreme events may prevent execution at planned stop prices, and sizing positions so that worst-case execution is survivable.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Liquidity Risk Timing Entering a small-cap position when daily volume is below',
+        text: '200,000 shares creates the risk of being unable to exit at a reasonable price during a decline. The timing rule: only enter small-cap positions when recent volume demonstrates sufficient liquidity (average daily volume above 300,000 shares or recent sessions showing unusual volume expansion that suggests growing institutional interest).',
+      },
     ]
   },
   {
@@ -46581,6 +52911,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Annualized volatility = daily σ × √252 = 1.5% × 15.87 ≈ 23.8%. This is the standard annualization assuming daily returns are independent. The √252 factor reflects the number of trading days in a calendar year and converts daily standard deviation to an annualized figure.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Essential Statistics: Mean, Median, Standard Deviation The mean',
+        text: '(arithmetic average) of a price series over N periods is the foundation of every moving average. Understanding the mean as the center of gravity of a distribution explains why price tends to return to a moving average during trends: the average represents the equilibrium point around which prices oscillate. The median — the middle value when all prices are sorted — is more robust to outliers and is used in some indicators as an alternative center measure. Standard deviation measures how far prices typically deviate from the mean. One standard deviation above and below the mean captures approximately 68% of all price observations (assuming a normal distribution); two standard deviations capture approximately 95%.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Volatility Risk Premium as an Investable Return Source The volatility risk premium',
+        text: '(VRP) — the systematic tendency for implied volatility to exceed subsequently realized volatility — is the primary return source for short volatility investors. To treat this premium as an investable return source requires understanding its economic foundations, its historical magnitude and consistency, and the specific instruments through which it can be systematically captured. Why the VRP Persists The VRP persists for the same reason that all insurance premiums exceed actuarial fair value: insurance buyers (options purchasers) are risk-averse and value the certainty of protection more than the expected value of the losses they are insuring against. The investor who owns a diversified equity portfolio and buys put options to protect against a crash is willing to pay more than the expected value of the crash loss in exchange for the certainty of having protection in place.',
+      },
     ]
   },
   {
@@ -46681,6 +53029,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'β = ρ × (σᵢ / σₘ) = 0.70 × (25% / 15%) = 0.70 × 1.667 = 1.167 ≈ 1.17. The stock moves about 1.17% for every 1% move in the market. Note that even though its correlation is below 1, its higher volatility relative to the market pushes beta above 1.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Risk Management for Market-Neutral Portfolios Market-neutral portfolios face several unique risks: beta drift',
+        text: '(the long and short legs develop different sensitivities to the market), liquidity asymmetry (the short leg may be harder to exit during stress), and correlation breakdown (historically correlated pairs can decouple permanently). Monitoring these risks requires daily rebalancing of the dollar-neutral and beta-neutral exposures.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: High-Beta Stock Timing High-beta stocks amplify market movements by a factor of',
+        text: '1.5–3×. The timing adjustment: enter high-beta positions only during confirmed trending markets (ADX above 25, breadth expanding), use ATR-based stops that account for the stock’s elevated volatility, and reduce position sizes proportionally so that each position carries the same dollar risk as a low-beta position.',
+      },
     ]
   },
   {
@@ -46778,6 +53144,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Monthly data reduces measured volatility relative to daily data because short-term fluctuations average out, making the Sharpe ratio appear higher. Selling put options generates steady premium income (boosting the numerator) while embedding large negative skew (catastrophic losses in crashes) that does not appear in normal-period standard deviation. Both practices flatter the Sharpe ratio without reflecting the true risk profile.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Advanced Risk-Adjusted Metrics for Options Portfolios The Sharpe ratio\'s limitation for options strategies',
+        text: '— its use of total standard deviation as the denominator, which treats upside volatility identically to downside volatility — makes it an imperfect risk-adjusted metric for systematic premium selling programs that have many small positive returns and occasional large negative returns. Three alternative metrics provide more meaningful risk-adjusted performance assessment for these skewed return distributions. The Sortino ratio addresses the Sharpe ratio\'s symmetry problem by using only downside volatility (the standard deviation of negative monthly returns) as the denominator: Sortino = (Annualized Return − Risk-Free Rate) / Downside Deviation.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Key Performance Metrics: Sharpe, Sortino, Max Drawdown, Profit Factor The Sharpe ratio measures risk-adjusted returns',
+        text: '(annualized return divided by annualized volatility). The Sortino ratio penalizes only downside volatility. Maximum drawdown measures the worst peak-to-trough decline. Profit factor divides total gross profit by total gross loss. A viable system typically requires: Sharpe above 0.50, maximum drawdown below 25%, and profit factor above 1.30.',
+      },
     ]
   },
   {
@@ -46873,6 +53257,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: '99% ES from 500 days uses the worst 1% of observations, which is the worst 5 days. The average of $18M, $15M, $14M, $12M, and $11M is ($18+$15+$14+$12+$11)/5 = $70M/5 = $14M. This is meaningfully higher than the $10M VaR, illustrating how ES captures the severity of tail losses rather than just identifying the threshold.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The VIX: The “Fear Index” Explained Simply The VIX is a measure of expected stock market volatility over the next',
+        text: '30 days, derived from S&P 500 options prices. A VIX below 15 indicates low fear and complacency. A VIX between 20–30 indicates elevated concern. A VIX above 30 indicates significant fear. A VIX above 40 indicates panic. During the 2008 crisis, the VIX spiked above 80. During COVID, it reached 82. These extreme readings have historically coincided with or preceded major market bottoms, making the VIX a useful (though imperfect) tool for identifying moments of maximum pessimism.',
+      },
     ]
   },
   {
@@ -46974,6 +53370,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Equity loss: $500,000 × 57% = $285,000. REIT loss: $500,000 × 68% = $340,000. Total loss: $285,000 + $340,000 = $625,000, representing a 62.5% total portfolio decline. This illustrates how concentrated exposure in crisis-correlated assets amplifies losses in a genuine stress scenario — both REITs and equities were severely impaired simultaneously in 2008.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Credit Quality and Stress Testing Credit quality',
+        text: '— the probability that the bank\'s loan portfolio will perform as contracted — is the most consequential uncertainty in bank analysis because loan losses can impair equity rapidly and can create existential threats to institutions with insufficient capital buffers. Key credit quality metrics include non-performing loan ratios (loans not meeting contractual payment terms as a percentage of total loans), loan loss reserve ratios (reserves held against expected future losses), and the net charge-off rate (actual losses recognised after recovery efforts). Trends in these metrics across the business cycle reveal whether the bank is managing credit risk conservatively or aggressively.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Why Stress Testing Must Go Beyond the Greeks The Greeks',
+        text: '— delta, gamma, theta, vega, and their higher-order relatives — provide an excellent first-order approximation of how a portfolio responds to small market changes. They are the portfolio\'s instantaneous sensitivity measures, calculated at the current market conditions. But the Greek approximation breaks down in exactly the scenarios where accurate risk estimation is most important: large market moves, rapid volatility changes, correlation spikes, and events that simultaneously push the underlying price and implied volatility in correlated directions. The second-order effect (gamma) accounts for the curvature of the delta relationship, but even gamma-corrected estimates become inaccurate for moves of 5% or more in the underlying.',
+      },
     ]
   },
   {
@@ -47072,6 +53486,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Inverse-volatility weights: Equities = σ_bonds / (σ_equity + σ_bonds) = 5/(20+5) = 20%. Bonds = σ_equity / (σ_equity + σ_bonds) = 20/(20+5) = 80%. The lower-volatility asset (bonds at 5%) receives 80% of the capital so its risk contribution matches equities\'. This is the fundamental mechanics of risk parity — capital goes where risk is lowest.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Scaling Size With Account Growth As account grows, dollar risk per',
+        text: '1% grows with it. A 1% rule on a $100k account is $1,000 risk; on $200k it is $2,000. Position sizes scale automatically. This natural scaling is part of why percentage-based risk models work for compound growth — you are not trapped at the starting size.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Fixed Dollar Risk Per Trade Fixed-dollar sizing risks the same absolute amount on every trade regardless of account size',
+        text: '(e.g., always $200 per trade). This is simpler than percentage sizing and works well for small accounts where 1% is too small for meaningful stops on any futures contract. As the account grows, fixed-dollar risk becomes a shrinking percentage — requiring periodic recalibration. Many traders start with fixed-dollar and transition to percentage as accounts grow past $50,000.',
+      },
     ]
   },
   {
@@ -47180,6 +53612,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'The put has a strike of $900,000. With the portfolio at $750,000, the put pays $900,000 − $750,000 = $150,000. Portfolio value = $750,000 (equities) + $150,000 (put payoff) − $20,000 (premium paid) = $880,000. Without the put, the investor would have $750,000. The put limited the loss to $120,000 ($1,000,000 − $880,000) instead of $250,000 — the insurance protected as designed.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Institutional Options: Variance Swaps, Collars at Scale, and OTC Structures Large institutional investors',
+        text: '— pension funds, endowments — use options primarily for liability management and downside risk control rather than for income generation. The liability management application is specific to institutions with defined future payment obligations: a pension fund that must pay $50 million in benefits next year has a liability that is economically equivalent to short positions in the underlying investments — any decline in investment value reduces the funding ratio. Options-based liability hedging matches the fund\'s options portfolio to its specific liability structure, protecting the funding ratio rather than the nominal portfolio value.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Margin for Short Options on Futures Short options on futures require margin because they carry unlimited risk',
+        text: '(short calls) or substantial risk (short puts). Margin is calculated via SPAN, which evaluates worst-case scenario across price and volatility moves. A naked short ES call requires similar margin to a long ES futures position — typically $10,000–$15,000 per contract. Short option margin can increase sharply during volatility events. This margin requirement distinguishes futures options from equity options, where short options in a cash account require full strike coverage.',
+      },
     ]
   },
   {
@@ -47276,6 +53726,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'HHI = Σwᵢ² = 5 × (0.20)² = 5 × 0.04 = 0.20. A 100-stock equal-weight portfolio has HHI = 100 × (0.01)² = 100 × 0.0001 = 0.01. The 5-stock portfolio at HHI = 0.20 is 20 times more concentrated than the 100-stock portfolio. In practice, HHI above 0.15 for an equity portfolio signals significant concentration that demands careful monitoring.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Weekly Risk Review Weekly review',
+        text: '(30-60 minutes): (1) total P&L vs. risk budget; (2) number of trades vs. plan parameters; (3) any stop violations (trades exited outside the planned stop level); (4) correlation and concentration review of current portfolio; (5) margin utilization review; (6) upcoming high-risk events in the next week that affect current positions. This weekly review catches risk-management drift before it becomes habit. Many traders execute risk rules well for a week, then subtly relax them during winning streaks without noticing the drift.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Beta-Weighted Delta: The Universal Risk Language When a portfolio contains positions across multiple underlyings',
+        text: '— AAPL calls, SPY puts, NVDA straddles, TSLA credit spreads — the raw dollar delta of each position is not directly comparable. A $10,000 dollar delta in AAPL does not represent the same market risk as a $10,000 dollar delta in SPY, because AAPL and SPY do not move by the same amount in response to a 1% change in the overall market. Beta-weighted delta solves this problem by converting every position\'s dollar delta into its equivalent SPY exposure. The conversion is: Beta-Weighted Dollar Delta (in SPY terms) = Position Dollar Delta × (Beta of Underlying / SPY Price) Where beta is the sensitivity of the underlying to a 1% move in the S&P 500. A stock with a beta of 1.5 moves approximately 1.5% when the S&P 500 moves 1%.',
+      },
     ]
   },
   {
@@ -47382,6 +53850,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'HML (High Minus Low) measures value exposure. β(HML) = -0.7 means the portfolio loads negatively on value — it tilts toward growth stocks (low book-to-market). SMB (Small Minus Big) measures size. β(SMB) = -0.5 means it tilts toward large-cap stocks. Together, this portfolio is implicitly a large-cap growth bet — the kind of portfolio that typically holds mega-cap technology companies with high valuations.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio VaR Calculation Value at Risk',
+        text: '(VaR) estimates the maximum portfolio loss over a given time horizon at a specified confidence level. Simple method: calculate the daily standard deviation of returns for each position, account for correlations between positions (correlated positions don\'t fully diversify), and calculate the portfolio-level standard deviation. At 95% confidence, 1-day VaR is approximately 1.65 times portfolio daily standard deviation. This number provides a daily "probable maximum loss" for proactive position management. Most retail traders can approximate this with simpler calculations.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Fundamental Problem: Risk-Adjusted Returns A portfolio that generates',
+        text: '25% annual returns while taking on enormous risk is not performing well — it is being paid appropriately for extraordinary risk. A portfolio that generates 12% annual returns with minimal risk may be performing better on a risk-adjusted basis than the 25% return portfolio. This distinction — between absolute returns and risk-adjusted returns — is the foundation of all meaningful performance measurement. The Sharpe ratio — the most widely used risk-adjusted return measure — captures this distinction: Sharpe = (Return − Risk-Free Rate) / Annualized Return Volatility. A Sharpe ratio above 1.0 indicates that the portfolio is generating more than one unit of excess return for each unit of volatility it accepts. Above 2.0 is exceptional.',
+      },
     ]
   },
   {
@@ -47478,6 +53964,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The barbell strategy builds genuine black swan resilience because it profits from large, unexpected moves without requiring prediction of their source. 50-asset diversification fails because correlations spike to 1.0 in genuine systemic crises. Higher-confidence VaR still cannot model events outside its training data. Defensive sectors declined significantly in 2008 and 2020 — "less bad" is not tail protection. Only convex instruments (options, volatility) that pay off in proportion to the severity of moves provide genuine black swan protection.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Black Swan Events in Futures History Historical futures tail events:',
+        text: '1987 Black Monday (S&P futures down 30%+ in one session); 1998 LTCM crisis (liquidity vanishes in previously liquid markets); 2008 financial crisis (correlations converge to 1.0 across all assets); 2010 Flash Crash (ES drops 10% in 45 minutes, recovers in 20); 2011 US debt ceiling standoff (unprecedented volatility in Treasury futures); 2015 SNB CHF unpeg (30% CHF move in 30 minutes); 2020 WTI negative oil (CL May contract settles at -$37); 2022 LME nickel short squeeze (trading suspended). Each represents a regime breakdown that standard risk models miss.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Shock Events and Supply/Demand Dislocations Flash crashes, earnings gaps, black-swan events',
+        text: '— these are moments when demand or supply vanishes instantly. Without counterparties, price races to find new ones, creating enormous range in minutes. These events are reminders that liquidity is not guaranteed; it is conditional on participant willingness. During genuine shocks, the normal supply-and-demand mechanics break down because one side has simply vanished. Price races to find new participants, often at prices that would seem unreasonable under normal conditions.',
+      },
     ]
   },
 {
@@ -47562,6 +54066,24 @@ export const articles: Article[] = [
         explanation:
           'The index core is not designed to beat the market — it is designed to match it cheaply and reliably. This anchor layer ensures the portfolio cannot catastrophically underperform the market, giving the investor the confidence to take selective active risk in the other layers without risking their entire financial outcome on manager skill.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Case Study: Building a Three-Strategy Portfolio A practical example: Strategy A is a',
+        text: '50/200-day moving average crossover on global equity indices (trend-following, weekly, equities). Strategy B is an RSI mean reversion system on S&P 500 stocks (mean reversion, daily, equities). Strategy C is a Donchian breakout system on commodity futures (trend-following, daily, commodities). The three strategies differ in type, time frame, and market, providing robust diversification. Machine learning, statistical methods, quantitative screening, and data science. Chapter 98 — Elder’s Triple Screen & Multi-System Integration Alexander Elder’s Triple Screen system is the most influential multi-time-frame trading methodology. This chapter provides the complete system specification plus frameworks for integrating multiple systems into a unified portfolio approach.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio Margin vs. Strategy Margin Some sophisticated brokers offer true portfolio margin',
+        text: '— margin calculated against the entire customer portfolio\'s risk, including offsetting positions across different instruments and markets. This can produce dramatically lower margin than strategy-level SPAN calculation. True portfolio margin typically requires a minimum account size (often $100,000+) and may require specific broker agreements. For traders with complex multi-position portfolios, this can meaningfully improve capital efficiency.',
+      },
     ],
   },
 
@@ -47638,6 +54160,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'A ±5% threshold on a 60% target means rebalancing triggers when equity drifts above 65% (60% + 5%) or below 55% (60% − 5%). This avoids constant small trades while still preventing meaningful drift from target risk levels.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Rebalancing Timing: Calendar vs. Threshold vs. Signal-Based Calendar rebalancing',
+        text: '(quarterly or annually) is simple but may rebalance into declining assets. Threshold rebalancing (rebalance when any position deviates by more than 5% from target) responds to market movements. Signal-based rebalancing (rebalance when technical signals indicate regime change) aligns the portfolio with the current market environment. The hybrid approach: calendar rebalancing as the default with signal-based overrides when significant technical events occur.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Rebalancing Timing: Calendar vs. Signal-Based Approaches Calendar rebalancing',
+        text: '(quarterly or annually) is simple but may rebalance into falling assets during bear markets. Signal-based rebalancing adjusts allocation when technical signals change, avoiding the pro-cyclical tendency of calendar rebalancing. A hybrid approach uses calendar rebalancing as the default but overrides it when significant technical signals fire.',
       },
     ],
   },
@@ -47724,6 +54264,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'A genuine change in financial circumstances — such as losing your primary income — is a structural reason to adjust portfolio liquidity. This is fundamentally different from a market view or emotional reaction. Factor underperformance for 2 years is completely normal and expected in cycle troughs; systematic rules are built to stay invested through exactly these periods.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: From Discretionary to Systematic: The Spectrum The spectrum runs from fully discretionary',
+        text: '(all decisions made by human judgment) through rule-assisted (human uses rules as guidelines but retains override authority) to fully systematic (all decisions made by code with no human intervention). Most professional operations occupy the middle ground: core decisions are systematic, with human oversight for exceptional conditions.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Systematic vs. Discretionary Systematic covered call programs sell calls on a fixed schedule',
+        text: '(every monthly expiration, at a fixed delta) regardless of market conditions. Discretionary programs sell calls only when technical and IV conditions are favorable. Research shows that systematic programs produce more consistent income but sacrifice more upside, while discretionary programs capture more upside but produce less regular income. The choice depends on whether income consistency or total return is the priority. Chapter 89 — Premium Selling Cycle Timing This chapter integrates all premium-selling strategies into a unified timing cycle that optimizes entry, management, and exit across the monthly options calendar.',
       },
     ],
   },
@@ -47812,6 +54370,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           'The Sharpe ratio measures return efficiency: how many units of excess return the portfolio earned per unit of risk (standard deviation). A Sharpe of 0.4 means for every 1% of annualised volatility, the portfolio earned 0.4% above the risk-free rate. This is below the 0.5-1.0 range typical of diversified equity portfolios and warrants investigation — is the return too low, or the volatility too high?',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio VaR Calculation Value at Risk',
+        text: '(VaR) estimates the maximum portfolio loss over a given time horizon at a specified confidence level. Simple method: calculate the daily standard deviation of returns for each position, account for correlations between positions (correlated positions don\'t fully diversify), and calculate the portfolio-level standard deviation. At 95% confidence, 1-day VaR is approximately 1.65 times portfolio daily standard deviation. This number provides a daily "probable maximum loss" for proactive position management. Most retail traders can approximate this with simpler calculations.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Beta-Weighted Delta: The Universal Risk Language When a portfolio contains positions across multiple underlyings',
+        text: '— AAPL calls, SPY puts, NVDA straddles, TSLA credit spreads — the raw dollar delta of each position is not directly comparable. A $10,000 dollar delta in AAPL does not represent the same market risk as a $10,000 dollar delta in SPY, because AAPL and SPY do not move by the same amount in response to a 1% change in the overall market. Beta-weighted delta solves this problem by converting every position\'s dollar delta into its equivalent SPY exposure. The conversion is: Beta-Weighted Dollar Delta (in SPY terms) = Position Dollar Delta × (Beta of Underlying / SPY Price) Where beta is the sensitivity of the underlying to a 1% move in the S&P 500. A stock with a beta of 1.5 moves approximately 1.5% when the S&P 500 moves 1%.',
       },
     ],
   },
@@ -47909,6 +54485,18 @@ export const articles: Article[] = [
         explanation:
           'Factor cycles regularly produce 2-3 year periods of underperformance. Value underperformed growth for nearly a decade before dramatically outperforming from 2021-2023. The minimum change principle requires a pre-committed, rules-based reason to change strategy — not performance chasing. Selling after underperformance is the surest way to buy high and sell low across factor cycles.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio Review Cadence Systematic portfolio review schedule: daily',
+        text: '(5 minutes) — check all positions against stops, upcoming events, margin adequacy; weekly (30 minutes) — review performance, correlation, sector exposure, adjust targets; monthly (2 hours) — comprehensive performance attribution, strategy evaluation, position rebalancing, stress testing; quarterly (half-day) — full system review, strategy allocation adjustments, capital level assessment. This structured review process prevents the common failure mode of managing positions reactively rather than proactively.',
+      },
     ],
   },,
 {
@@ -47992,6 +54580,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Systematic investing is defined by explicit, pre-defined rules applied consistently — not by the absence of human judgment in designing the rules. This investor has defined three clear, measurable criteria (P/E < 15, ROE > 15%, momentum top 30%) and applies them mechanically to every investment candidate. The initial choice of these criteria was discretionary, but the execution is systematic. The strategy is neither passive (it involves active stock selection based on screens) nor pure market timing (momentum is one of three signals, not the sole driver).',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Building Entry and Exit Rules Clear entry rules for systematic spreads:',
+        text: '(1) spread level entry trigger (at X sigma from historical mean); (2) fundamental condition confirmation (is the economic reason for mean reversion present?); (3) seasonal alignment (is the calendar context favorable?); (4) liquidity check (are both legs tradeable at normal spreads?). Exit rules: (1) target at historical mean; (2) time stop (e.g., 30-60 calendar days if spread hasn\'t moved); (3) loss stop (if spread continues moving against, exit at 1.5x your initial risk distance).',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Systematic Sell Disciplines Pre-commitment to specific sell rules',
+        text: '— established before the position is initiated and written into the investment memo — provides the structural discipline to execute analytically justified sell decisions even when psychological forces are at their strongest. Common pre-committed sell rules include: automatic trimming when the position exceeds a specified percentage of portfolio weight; mandatory thesis review when the stock price has declined more than a specified percentage from the purchase price; and automatic full exit when the intrinsic value estimate falls below the current market price by more than a specified margin. The specific rules matter less than the discipline of establishing them in advance and adhering to them when triggered.',
       },
     ],
   },
@@ -48088,6 +54694,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Factor return premia are not evenly distributed across the factor distribution — they are concentrated in the most extreme decile or quintile. A stock with a composite score in the 95th percentile is expected to significantly outperform a stock at the 60th percentile, even though both passed the same hard filters. By selecting the top 25 from 150 survivors, the investor is holding stocks with the highest combined factor scores, maximizing exposure to the empirically documented value, quality, and momentum premia. Simply holding all 150 dilutes factor exposure by including many average-scoring names.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Building Universe Screens: From Thousands to Dozens A screening process begins with a broad universe',
+        text: '(e.g., all US stocks above $10 with average volume above 500,000 shares) and applies progressively tighter filters. A typical sequence: filter for trend direction (price above 200-day SMA), filter for momentum (RSI above 50), filter for setup (within 5% of a breakout level), and filter for volume (recent volume expansion). Each filter narrows the universe until a manageable watchlist of 10–30 securities remains.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Building a Relative Strength Ranking System A practical RS system ranks all stocks in a universe by their RS over',
+        text: '3-month and 6-month periods, creates a composite rank, and generates a tiered watchlist: Tier 1 (top 10% — maximum allocation candidates), Tier 2 (top 25% — standard allocation), Tier 3 (top 50% — reduced allocation), and below median (avoid). This ranking is updated weekly and informs every timing decision about which stocks deserve capital. PART XIV — SEASONAL, CYCLICAL, AND CALENDAR TIMING Time-based timing patterns — seasonal tendencies, calendar effects, business cycle positioning, and predictable rhythms that create repeatable edges. Chapter 62 — Monthly and Seasonal Equity Timing Patterns Seasonal patterns represent some of the most robust anomalies in financial markets. While no pattern works every year, the statistical tendencies provide a probabilistic overlay that enriches timing analysis.',
+      },
     ],
   },
   {
@@ -48177,6 +54801,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Introducing discretionary overrides into a systematic strategy is dangerous precisely because it undermines the core advantage of the systematic approach — consistency and the elimination of behavioral biases. When a factor underperforms for 18 months, the temptation is to modify the system retroactively to avoid that underperformance. But factor underperformance is often mean-reverting; the period just after 18 months of value underperformance has historically been among the best entry points for the value premium. Adding a discretionary "value trap" filter after a period of value underperformance is likely to reduce value exposure exactly when the rebound is approaching.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Combining Quantitative and Discretionary Timing: The Hybrid Approach PART IX',
+        text: '— TIMING EXECUTION AND POSITION MANAGEMENT The practical mechanics of executing timing decisions — order types, scaling, managing open positions, and adapting in real time. Chapter 38 — Order Execution Timing: Translating Decisions Into Fills –',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: The Three-Timeframe Framework The standard professional approach uses three timeframes: higher',
+        text: '(for bias), middle (for setup), lower (for entry). Day traders: daily, 15-minute, 1-minute. Swing traders: weekly, daily, 4-hour. Position traders: monthly, weekly, daily. This structure ensures macro context informs every micro decision. Three-timeframe framework uses higher for bias, middle for setup, lower for entry. Day traders: daily/15-min/1-min. Swing: weekly/daily/4-hour. Position: monthly/weekly/daily. Structure ensures macro context informs every micro decision.',
       },
     ],
   },
@@ -48272,6 +54914,24 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'In a factor model, the composite score signals relative expected return — a score of 85 should receive a larger portfolio weight than a score of 45, not because the higher score guarantees outperformance but because expected return is higher. However, position sizing must be bounded by portfolio construction constraints (e.g., 5% maximum single stock weight) to prevent the model from creating excessive concentration in the highest-scoring names. Equal weighting (option B) ignores the signal strength differential entirely. Excluding Stock A for having a high score contradicts the model\'s logic.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Factor Investing: Value, Quality, Momentum, Size, and Low Volatility The value factor',
+        text: '— the tendency for cheap stocks to outperform expensive stocks over long horizons — is the oldest and most studied factor in academic finance, documented across 90+ years of US data and 40+ international markets. The quality factor captures the tendency for profitable, financially strong, stable-earning companies to outperform their weaker peers. The momentum factor captures the tendency for recent winners to continue outperforming over 3-to-12-month horizons. Each factor has been extensively documented in peer-reviewed research and offers a return premium that the quantitative investor can systematically harvest. The size factor — small-cap outperformance — has weakened significantly in recent decades, particularly after adjusting for liquidity and quality.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Factor Investing: Size, Value, Momentum',
+        text: '(Simplified) Academic research has identified several factors that have historically produced returns above the market average: small-cap stocks tend to outperform large-cap over long periods (the size factor), value stocks tend to outperform growth stocks (the value factor), and stocks that have been rising tend to continue rising (the momentum factor). Factor ETFs allow you to tilt your portfolio toward these characteristics. However, factors do not work consistently in every period, and the additional complexity may not be worth it for a beginner. Consider factor tilts only after you have mastered the basic three-fund approach.',
+      },
     ],
   },
   {
@@ -48351,6 +55011,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The pattern of high backtested alpha followed by significantly lower live alpha after publication is the classic signal decay signature. Multiple mechanisms are likely operating simultaneously: academic and practitioner capital flowing into the strategy after publication reduced the profit opportunity; the original backtest may have incorporated some inadvertent data mining (using thousands of possible factor definitions and selecting the best-performing one); and the economic mechanism may be less robust than originally claimed. The answer is not that the factor is completely dead (1% alpha is still positive), but that publication and replication predictably erode excess returns.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Insider Trading as Forensic Signal Systematic insider selling',
+        text: '— particularly when multiple executives sell simultaneously, when the selling occurs shortly before negative announcements, or when the volume of selling is large relative to the insider total holdings — is one of the strongest non-financial forensic signals available. SEC Form 4 filings disclose all insider transactions within two business days. Monitoring these filings for portfolio holdings provides early warning of management confidence changes that precede financial deterioration.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Adapting Strategies as Markets Evolve and Edges Erode Markets are not static',
+        text: '— they evolve in response to structural changes (regulatory reforms, new instrument introductions, changing participant composition), technological changes (the rise of algorithmic trading, the democratization of options access, the introduction of daily expirations), and macroeconomic regime changes (interest rate cycles, volatility cycles, factor rotation). A trading edge that was robust in one market regime may erode or disappear as the market evolves — and the trader who fails to recognize and adapt to this evolution will see their performance deteriorate while incorrectly attributing the deterioration to bad luck or execution problems. The 0DTE revolution is the most dramatic recent example of market structure evolution changing the options trading landscape.',
       },
     ],
   },
@@ -48433,6 +55111,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Net outperformance = gross theoretical alpha minus execution costs = 4.0% − 2.5% = 1.5%. The strategy is marginally viable — it still earns a positive expected return above the market — but the margin is thin. With 1.5% net alpha, any further deterioration in execution (higher impact costs as AUM grows, wider spreads in stressed markets, signal decay) could make it negative. This illustrates why execution efficiency is not a secondary concern for high-turnover systematic strategies: execution costs of 2.5% on a 4% gross alpha strategy consume 62.5% of the theoretical edge.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Timing Order Execution by Time of Day Market orders at the open receive the worst fills',
+        text: '(widest spreads, most slippage). Limit orders during the midday lull receive the best fills (tightest spreads, patient execution). The practical timing: use market orders only when speed is essential (breakouts that may not return). Use limit orders during the midday lull for non-urgent entries. Avoid market orders in the first and last 5 minutes of the session. Chapter 64 — Options Expiration Cycle Timing Options expirations create predictable patterns in equity markets through dealer hedging mechanics, pin risk, and the release of positioning pressure. Understanding these patterns provides a timing edge that is invisible to traders who ignore options market structure.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Building Gap-Based Trading Systems Systematic gap strategies combine gap classification',
+        text: '(breakaway vs. common) with volume analysis and trend context to determine whether to fade the gap, trade in its direction, or wait for more information. Chapter 37 — Breakout Trading: Strategies, Fakeouts & Retests Breakout trading captures the transition from consolidation to trend by entering positions when price moves beyond a defined boundary. The challenge is distinguishing genuine breakouts from false ones.',
+      },
     ],
   },
   {
@@ -48510,6 +55206,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'One year of outperformance could easily be luck. The strongest evidence against the "luck" hypothesis is the combination of: (1) consistent positive performance across multiple independent crisis episodes (2002, 2008, 2022 — different causes, different durations, but the same directional benefit), and (2) two centuries of academic documentation of momentum premia across many asset classes, geographies, and time periods that cannot plausibly be explained by data mining. A single 5-year Sharpe ratio is insufficient — it could still be chance. The multi-century, multi-asset academic evidence combined with live performance across multiple independent crises is what distinguishes genuine signal from luck.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Why Trend Following Works',
+        text: '— and When It Fails Trend following works because of a behavioral asymmetry: market participants underreact to new information initially (creating the early stage of a trend that the system captures) and overreact eventually (creating the extreme that the system rides through). This behavioral pattern — initial underreaction followed by overreaction — has been documented across virtually every asset class and time period studied. Trend following fails during extended range-bound markets and during sudden, sharp reversals that occur without the gradual deterioration that trend-following exit signals require. The 2011 and 2018 environments, characterized by choppy, trendless markets punctuated by sudden spikes, were particularly difficult for trend-following systems. Understanding these failure modes allows the trader to anticipate drawdown periods and maintain discipline through them.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Multi-Market Trend Following Most successful trend-following systems trade across',
+        text: '20–50 futures markets simultaneously — equity indices, rates, currencies, commodities, and agricultural. Diversification ensures that when some markets are ranging (trend following underperforms), others are trending strongly. Major CTAs (AHL, Winton, Campbell, Millburn) run exactly this diversified approach. Retail traders can approximate it with 10–15 markets across different asset classes. The key: avoid correlation clusters (don\'t include 5 equity indices and call it diversification).',
       },
     ],
   },
@@ -48591,6 +55305,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'The Gold/Silver ratio at 95:1 is approximately 3.6 standard deviations above its historical mean of 70:1, which is a classic mean reversion entry signal. The trade is: buy silver (the underperformer; expected to rise as the ratio reverts) and short gold (the outperformer; expected to underperform as the ratio narrows). This is a pairs trade betting on ratio reversion, not a directional bet on either metal\'s absolute price. The risk is that the ratio continues widening further before reverting — requiring position sizing that can absorb interim losses. The Gold/Silver ratio peaked near 125:1 during the March 2020 COVID crash before reverting sharply to 65:1 over the following year.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Selling Premium Into Extended Moves: The Statistical Case Mean reversion sizing rule: size at',
+        text: '50-60% of normal position size. Mean reversion setups fail more often than directional momentum setups, but successful ones move quickly and far. The reduced sizing creates favorable expected value even with a lower win rate. The statistical case for selling premium into extended directional moves is rooted in three complementary bodies of evidence: empirical studies of stock returns showing that extreme daily and weekly moves are followed by above-average returns in the opposite direction, the mean-reverting behavior of implied volatility (elevated IV after large moves tends to normalize lower), and the systematic overpricing of options during periods of acute volatility elevation.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Fading Overextended Moves: RSI Extremes, Bollinger Band Touches Mean reversion trades at technical extremes',
+        text: '— RSI below 20 or above 80, price at or beyond the Bollinger Band, and price at the measured move target of a preceding swing — exploit the tendency for stretched moves to snap back. These setups work best during range-bound markets and fail spectacularly during strong trends.',
+      },
     ],
   },
   {
@@ -48669,6 +55401,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'The gross carry return is the interest rate differential: the yield earned on the target asset (5.5% NZD bond) minus the cost of the funding position (0.1% JPY borrowing) = 5.4%. With no exchange rate change over the period, this entire differential is retained as return. If the NZD had depreciated 3% against the JPY over the year, the net return would be 5.4% − 3.0% = 2.4%. If the NZD had appreciated 2% against the JPY, the net return would be 5.4% + 2.0% = 7.4%. The exchange rate movement is the variable that determines whether the carry trade is a net winner or loser in any given period.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Carry Trade Fundamentals Carry trades borrow low-yielding currencies',
+        text: '(JPY, CHF historically) and invest in high-yielding currencies (AUD, EM). When carry is on, high-yield currencies strengthen and low-yield currencies weaken. When carry unwinds (during risk-off events), the reverse occurs rapidly and violently. The 2024 carry unwind (yen carry trades unwinding as BOJ raised rates) produced one of the sharpest short-term currency moves in recent memory. Monitoring carry trade positioning through COT data helps anticipate potential unwind risk.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Stub Trades and Conglomerate Discounts Stub trades involve purchasing a holding company whose listed assets',
+        text: '— stakes in publicly-traded subsidiaries or associates — can be valued at market prices, comparing the total market value of those stakes to the holding company\'s market capitalisation, and finding that the market capitalisation implies a negative or significantly discounted value for the holding company\'s operating businesses or other unlisted assets. The "stub" is what the market is implicitly attributing to the businesses not reflected in the listed asset values. Conglomerate discounts — the tendency for diversified holding companies to trade at a discount to the sum of the values of their constituent businesses — are persistent features of equity markets that create specific investment opportunities when the discount is large relative to historical norms or when a catalyst for discount narrowing is approaching.',
       },
     ],
   },
@@ -48750,6 +55500,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'A dramatic gap between in-sample performance (Sharpe 2.5) and out-of-sample performance (Sharpe 0.1) is the classic signature of overfitting. With 200 features and 15 years of daily data (~3,750 observations), the model has far more parameters than it can reliably estimate — it memorizes the training data\'s noise rather than learning generalizable patterns. Adding more features would worsen the problem, not fix it. The correct response is to drastically reduce model complexity (reduce features to 5-15 with strong economic rationale), use regularization techniques (LASSO, ridge regression), and apply much more rigorous OOS validation before trusting any model output.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Pattern Recognition with Machine Learning ML models can identify chart patterns',
+        text: '(head and shoulders, triangles, flags) with consistency that human pattern recognition cannot match. Convolutional neural networks (CNNs) trained on labeled chart images achieve pattern recognition accuracy comparable to expert human analysts while processing thousands of charts simultaneously.',
+      },
     ],
   },
   {
@@ -48830,6 +55592,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'Satellite imagery of parking lots is legal to trade on because it is derived from publicly observable behavior — the same information anyone driving past the parking lot could observe. It is not obtained through corporate insiders or their agents (which would be MNPI). The SEC\'s definition of insider trading requires information to be both material (price-sensitive) AND obtained from insiders who had a duty not to disclose it. Independently derived observations of publicly observable activity — even if they predict a company\'s results — are legal. This is why the alternative data industry has flourished: most of its products are derived from legal observation of public activity rather than from corporate sources.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Continuous Evolution The toolkit evolves as new data sources',
+        text: '(satellite imagery, transaction data, web scraping), new techniques (machine learning, alternative data), and new business models create challenges existing methods were not designed for. The analyst who stops learning falls behind. Every cycle produces new lessons; every new model creates a valuation puzzle; every technological advance shifts the analytical frontier. The 130 chapters of this book are a foundation to be built upon, not a ceiling to be maintained. The most fitting conclusion to a 130-chapter valuation book is the observation that opened Chapter 1: the gap between price and intrinsic value is the entire basis of investing. Every method — from the simplest P/E to the most complex real option model — is a tool for estimating the intrinsic value side of that comparison. The market provides the price. The analyst provides the value estimate.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Metals Fundamental Data Sources Key data sources for metals fundamental analysis: World Gold Council',
+        text: '(quarterly demand reports, central bank data); Silver Institute (annual silver supply-demand report); ICSG (International Copper Study Group, quarterly copper balance); LME warehouse stocks (daily); COMEX COT (weekly, Friday afternoon release); South Africa Chamber of Mines (platinum group metals production); USGS Mineral Commodity Summaries (annual, comprehensive supply data). Building a regular data review routine using these sources provides ongoing fundamental context. Chapter 79 — Agricultural Futures Fundamental Analysis Agricultural fundamental analysis centers on supply-demand balance, government reports, weather, and export demand. This chapter provides the complete framework for grain, livestock, and soft commodity analysis.',
       },
     ],
   },
@@ -48924,6 +55704,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Systematic risk management requires that rules be applied regardless of the unrealized gain or loss. The 5% maximum position rule is a structural constraint that prevents excessive concentration — it applies whether the position is at a gain or a loss. A 7% position exceeding the 5% cap needs to be trimmed to compliance. Simultaneously, a 20% decline warrants a formal thesis review: is the reason you bought the stock still valid? If yes, maintain the (now-trimmed) position. If no, sell entirely. Waiting for the position to naturally drift below 5% allows the concentration risk to persist and the loss to potentially worsen without any disciplined review process.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Risk Management for Prop Firms Prop firm accounts',
+        text: '(Topstep, Apex, FTMO) have externally imposed risk rules: maximum daily loss, maximum drawdown from evaluation start, position size limits. Treat these as your risk management system rather than as constraints to work around. The evaluation process tests whether you can operate within a defined risk framework — which is exactly what professional trading requires. Traders who consistently blow prop firm evaluations are revealing that their self-risk-management is insufficient for professional capital deployment.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Managing Risk in Compressed Time Frames Day trading risk management requires: a maximum daily loss limit',
+        text: '(typically 2–3% of account equity), individual trade risk limits (typically 0.25–0.50% of equity), a maximum position size relative to average volume (to ensure exit liquidity), and a rule to stop trading after reaching the daily loss limit. These hard limits prevent a single bad day from causing irreversible damage.',
+      },
     ],
   },
   {
@@ -49004,6 +55802,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 2,
         explanation: 'Testing 250 variations and selecting the best result is a textbook example of data mining and the multiple testing problem. With 250 tests, you expect to find several that appear highly significant by pure chance at conventional significance levels. A backtest Sharpe of 1.8 from 250 attempts is far less impressive than a Sharpe of 0.8 from a first-principles strategy tested once. The correct approach is to (1) design the strategy from a theoretical basis first, (2) test the specific designed version once, (3) apply a multiple-testing correction if variations were evaluated, and (4) validate on OOS data before drawing conclusions about real-world viability.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Walk-Forward Testing Walk-forward optimization divides history into rolling windows: optimize on window',
+        text: '1, test on window 2, slide forward, repeat. The aggregate out-of-sample performance across all windows provides the most realistic estimate of live performance. This method simulates the real-world experience of periodically recalibrating a system as new data arrives.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Forward-Testing in Sim Before Live After backtesting, forward-test in simulation for weeks. Execute the setup live in sim',
+        text: '— real market conditions, just not real money. This forward test reveals execution challenges a backtest misses: emotional response, execution speed, real-time recognition. Graduate to small live size only after successful sim performance.',
       },
     ],
   },
@@ -49184,6 +56000,24 @@ export const articles: Article[] = [
         ],
         correctIndex: 1,
         explanation: 'The most critical flaw is survivorship bias. Testing only on current S&P 500 constituents means the backtest universe in 2004 contains only companies that were successful enough to remain in the S&P 500 until today — it excludes companies like Enron, Lehman Brothers, Sears, and hundreds of others that were S&P 500 members at some point during the 2004-2024 period but subsequently failed or were removed. A value strategy applied to this biased universe would appear to outperform because the "cheap" stocks in the backtest universe were actually survivors — eliminating the real losers. Point-in-time index membership data must be used instead.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From ORDER FLOW PRICE ACTION: Common Heatmap Reading Mistakes Common errors: treating every bright zone as real',
+        text: '(spoofs exist in heatmaps too); reading instantaneous snapshots instead of patterns across time; assuming heatmap data is complete (hidden orders don\'t show); over-relying on heatmap without chart context. Heatmaps are one input among many. Common heatmap mistakes include treating every bright zone as real, reading snapshots instead of time patterns, assuming heatmap data is complete, and over-relying on heatmap without chart context. Heatmaps are one input among many.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: Long Call: Full Mechanics, Ideal Conditions, and Common Mistakes Buying a call option conveys the right to purchase',
+        text: '100 shares at the strike price before expiration. Maximum loss is limited to the premium paid. Maximum profit is theoretically unlimited. The position profits if the underlying rises above the breakeven (strike plus premium paid) before expiration. Long calls make the most economic sense under three conditions: the trader has a specific time-bounded directional thesis with a catalyst within the option\'s lifespan; implied volatility is low relative to the stock\'s historical volatility (IV rank below 25) ensuring the option is not expensive relative to the expected move; and the trader genuinely accepts the realistic probability of losing the entire premium if the thesis does not materialize within the option\'s lifespan. Common Long Call Mistakes Buying ATM or near-the-money calls with high implied volatility on a stock with an imminent catalyst is the classic trap in options form.',
       },
     ],
   },,
@@ -49911,6 +56745,18 @@ export const articles: Article[] = [
         explanation:
           'Amazon\'s GAAP earnings were near zero or negative for most of its history not because the business was uneconomic, but because Bezos deliberately reinvested every dollar of potential profit into growth, infrastructure, and new categories. A company with zero reported earnings has an undefined P/E ratio — it appears infinitely expensive or simply not analyzable. Investors who focused on free cash flow growth, revenue trajectory, and the hidden value of AWS had a framework that produced correct conclusions where traditional earnings-based analysis failed completely.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: Wall Street: From Buttonwood Tree to Global Powerhouse In',
+        text: '1792, twenty-four stockbrokers signed the Buttonwood Agreement under a tree on Wall Street in lower Manhattan, creating what would eventually become the New York Stock Exchange. For more than two centuries, the NYSE has been the center of American capitalism. It survived the Civil War, two World Wars, the Great Depression, multiple panics, and the rise of electronic trading. The physical trading floor — once crowded with shouting traders in colorful jackets — is now largely symbolic, as most trading is electronic. But the institution remains the world’s largest stock exchange by market capitalization.',
+      },
     ],
   },
 
@@ -50402,6 +57248,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation:
           '$1.2 trillion / 20 = $60 billion of required net income. Toyota, the world\'s most profitable automaker, earns approximately $25–30 billion per year. For Tesla to justify a 20× earnings multiple at $1.2 trillion, it would need to exceed the combined profits of every major automaker — while still being a relatively small volume manufacturer. This does not mean the market was irrational in aggregate: it means the price embedded a scenario where Tesla\'s software, energy, and robotics businesses became dominant. Investors who paid the 2021 peak price were not buying the current business — they were buying speculative future businesses at full probability.',
+      },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From OPTIONS: The Earnings Cycle: Single-Stock Options\' Defining Event Every public company reports quarterly earnings',
+        text: '— four times per year, on a schedule that is announced weeks in advance. The options market\'s pricing of these earnings events follows the lifecycle described in Chapter 64: pre-earnings IV expansion, the IV crush immediately after the announcement, and the potential for post-earnings directional drift. For single-stock options traders, the earnings calendar is the most important scheduling input in the entire trading framework — it determines which positions can be held through a specific date without binary event risk and which must be closed or structured specifically as earnings trades.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Framework as a Living Document The complete valuation framework',
+        text: '— all twelve parts, one hundred and twenty chapters, and their integrated analytical disciplines — is best understood as a living document that the analyst carries into every investment situation and updates with every new experience. It provides the starting structure — the sequence, the questions, the techniques, the checklists — that prevents the analytical omissions that cause the most common investment errors. But it cannot provide the industry-specific insight, the cultivated judgment, and the accumulated pattern recognition that distinguish the best analysts from the merely competent ones. These must be earned through years of disciplined application of the framework to real investment decisions.',
       },
     ],
   },
@@ -50981,6 +57845,24 @@ export const articles: Article[] = [
         explanation:
           'A 4× P/E on a commodity producer is often a signal that the market expects current earnings to be cyclically elevated — not that the stock is genuinely cheap. If steel prices fall from their stimulus-driven peak to long-run equilibrium (which they historically do), earnings might fall 50–70%. At normalized earnings, the "4×" stock might become 12–20× normalized earnings — fair or expensive, not cheap. The correct approach is to calculate earnings at mid-cycle steel prices and apply that P/E. Earnings quality being high (OCF = NI) is a positive sign about the current year but does not address the cyclicality risk.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: How Case Studies Build Pattern Recognition The analysis of specific historical investment cases',
+        text: '— examining the actual analytical decisions made, the intrinsic value estimates constructed, the theses articulated, and the outcomes achieved — develops the pattern recognition that accelerates accurate analysis of new situations. Investors who have deeply analysed twenty consumer brand investments recognise immediately when a new consumer brand displays the specific margin and market share patterns that have historically signalled moat erosion. Investors who have studied fifteen technology industry disruptions recognise the early financial statement signals of disruption before the consensus does. This pattern recognition is the analytical capital that compounds over an investment career.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: How to Screen for Value Stocks Basic value screens: P/E ratio below the industry average. Price-to-book below',
+        text: '2.0. Dividend yield above the market average. Debt-to-equity below 1.0. Free cash flow yield above 5%. These filters identify statistically cheap stocks, but the screen is just the starting point. You must investigate why the stock is cheap. Is it cheap because the market is irrationally fearful, or because the business is genuinely deteriorating? The former is a buying opportunity. The latter is a value trap.',
+      },
     ],
   },
 
@@ -51175,6 +58057,24 @@ export const articles: Article[] = [
         explanation:
           'Selling at 2,400 and buying back at 3,000 means she sold at a 29% decline and paid 25% more to re-enter — a sequence that permanently damaged her returns. The 600-point gap between her sell and buy price represents a permanent loss of capital that compounds unfavorably for the rest of her investment horizon. If she had simply held, she would have owned the same shares throughout, benefiting from the full recovery. The psychological impulse to sell during crashes and wait for "safety" is the most expensive behavior in investing — the recovery from crash lows historically happens faster and more powerfully than expected.',
       },
+
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From INTRO TO THE MARKET: The COVID Crash: The Fastest Bear Market in History In March',
+        text: '2020, the S&P 500 fell 34% in just 23 trading days as the COVID-19 pandemic triggered global lockdowns. It was the fastest descent into a bear market in history. It was also the fastest recovery: the market reached new all-time highs just five months later, fueled by unprecedented Federal Reserve intervention and fiscal stimulus. Investors who panic-sold in March 2020 locked in losses and missed one of the most dramatic recoveries ever recorded.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From TECHNICAL ANALYSIS: Post-Bubble Price Behavior: Crashes, Bear Markets, and Recovery Patterns Post-bubble declines typically retrace',
+        text: '50–80% of the entire advance, with the crash phase retracing the final parabolic move quickly and the subsequent bear market grinding lower over months. Recovery from a major bubble usually takes longer than the bubble took to inflate. The Nasdaq took 15 years to recover its 2000 high. Some bubble victims never recover.',
+      },
     ],
   },,
 {
@@ -51276,6 +58176,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Gross margin compression in a high-growth SaaS company typically signals that COGS — cloud hosting, data transfer, or customer success headcount — is scaling faster than revenue. This is a unit economics concern: the company may be acquiring customers whose lifetime value is shrinking relative to cost of delivery. Analysts will want to see a credible path back to 70%+ as the business scales and infrastructure costs are amortized over a larger revenue base.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Margin Trends as Inflation Signal Gross margin trends across companies in different industries',
+        text: '— whether input cost increases are being successfully passed through to customers or are being absorbed — provide a real-time measure of the inflation transmission mechanism that is more granular and more timely than the headline consumer price index. When multiple companies across different sectors simultaneously report that input cost pressures are exceeding their ability to raise prices — that gross margins are compressing despite significant pricing efforts — the aggregate signal indicates that inflation is stickier and more damaging than the ability to recover it would suggest from nominal pricing data alone. The reverse signal — when multiple companies simultaneously report that pricing increases are exceeding input cost increases, producing expanding gross margins — indicates that the pricing environment is unusually favourable and that inflation may be moderating.',
+      },
     ]
   },
   {
@@ -51368,6 +58280,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Company B has a lower gross margin but a higher operating margin — it converts more of its gross profit into operating income because its SG&A and other overhead costs are much lower relative to revenue. This points to superior operational discipline: possibly a more efficient go-to-market model, lower headcount per dollar of revenue, or better G&A leverage. Whether the lower gross margin signals a product quality issue or just a different business mix requires further investigation, but the operating margin advantage is real and meaningful.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Margin and Capital Assumptions Margin projections must be grounded in the operational reality of the business',
+        text: '— the cost structure, competitive intensity of pricing, and operating leverage dynamics that determine how margins respond to revenue changes. The most useful format is a waterfall that builds from gross margin through operating expenses to EBIT margin, with each step justified by competitive and cost structure analysis. Gross margin should be stable if pricing power is genuine and input costs are manageable; operating leverage should reduce operating expense ratios if fixed costs are significant and revenue is growing. Capital assumption projections — capital expenditure intensity, working capital efficiency, and depreciation policy — must be internally consistent with both the revenue projection and the competitive dynamics.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: Portfolio Margin vs. Strategy Margin Some sophisticated brokers offer true portfolio margin',
+        text: '— margin calculated against the entire customer portfolio\'s risk, including offsetting positions across different instruments and markets. This can produce dramatically lower margin than strategy-level SPAN calculation. True portfolio margin typically requires a minimum account size (often $100,000+) and may require specific broker agreements. For traders with complex multi-position portfolios, this can meaningfully improve capital efficiency.',
+      },
     ]
   },
   {
@@ -51466,6 +58396,18 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'If management says ~50% of capex is growth capex, then maintenance capex ≈ $150M (50% of $300M). True FCF = $500M operating cash flow minus $150M maintenance capex = $350M. Wait — that\'s $350M, closest to option B at $320M which uses the D&A-based estimate of $180M. Both approaches are valid approximations. The key insight is that using total capex of $300M produces only $200M FCF, penalizing the company for growth spending that will generate future returns. The management guidance is the most reliable input here, pointing to ~$350M true FCF.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Maintenance vs. Growth Capex The division of capital expenditure into maintenance',
+        text: '(required to sustain existing capacity) and growth (creating new capacity) is the most analytically important distinction in capital expenditure analysis. Maintenance capex is an unavoidable cost of running the business — equivalent economically to an operating expense — and should be treated as such when computing genuine free cash flow. Growth capex is discretionary investment that should be evaluated on the basis of the returns it is expected to generate. Most companies do not explicitly disclose the maintenance-growth split in their capital expenditure.',
+      },
     ]
   },
   {
@@ -51657,6 +58599,24 @@ export const articles: Article[] = [
         correctIndex: 1,
         explanation: 'Net income of $50M but operating cash flow of only $5M signals a $45M cash absorption — almost entirely explained by the $30M inventory build and $15M receivables increase. The profits are real, but the cash is tied up in unsold goods and uncollected receivables. This is a major red flag for a retailer: rising inventory can signal slowing sales (goods not moving), and rising receivables can signal aggressive credit extension or customer payment delays. Investors should demand an explanation from management before concluding this is benign.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Working Capital and Cash Conversion Working capital',
+        text: '— current assets minus current liabilities — measures the near-term liquidity of the business. But beyond the simple liquidity question, working capital analysis reveals something more important about competitive position: the terms on which a business transacts with its customers and suppliers. A business with very low or negative working capital — one that collects cash from customers before paying suppliers — has a structural financing advantage that reflects its competitive strength relative to counterparties. The cash conversion cycle — the number of days between paying for inventory and collecting cash from customers — quantifies this competitive position precisely. Days sales outstanding measures how long customers take to pay. Days inventory outstanding measures how long inventory sits before being sold.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From MARKET TIMING: Cash as a Position Holding cash during confirmed bear markets is not “missing the market”',
+        text: '— it is the highest-conviction position available when the evidence says equity risk exceeds equity reward. Cash preserves capital, eliminates the stress of watching positions decline, and provides the ammunition to deploy aggressively when the bottom signals arrive.',
+      },
     ]
   },
 {
@@ -52082,6 +59042,24 @@ export const articles: Article[] = [
         correctIndex: 0,
         explanation: 'Company X: CCC = 35 + 50 - 30 = 55 days. Company Y: CCC = 20 + 30 - 65 = -15 days. The 70-day gap in CCC is enormous. Company Y collects from customers faster (lower DSO), moves inventory faster (lower DIO), and pays suppliers more slowly (higher DPO) — all three components favor Company Y. At scale, this translates to Company Y self-funding its working capital while Company X must finance a ~55-day cash gap through working capital facilities or equity. Company Y likely has greater pricing power with customers and greater bargaining power with suppliers — both indicators of a competitively superior business.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: Cash Conversion Cycle Improvement The cash conversion cycle',
+        text: '(CCC) — days sales outstanding plus days inventory outstanding minus days payable outstanding — measures the number of days from paying for inputs to collecting cash from customers. A shorter CCC means the business converts its investments in working capital to cash more quickly, requiring less invested capital to support a given revenue base. A negative CCC means the business collects cash before paying suppliers, generating working capital that grows with revenue rather than consuming it. CCC improvement — reducing DSO, reducing DIO, or extending DPO in ways that reflect genuine competitive position improvements rather than financial stress — directly increases free cash flow generation and improves ROIC.',
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From Futures: The Capital Efficiency Advantage Futures offer',
+        text: '10–33x leverage on posted capital compared to 2x for stock margin and far less for most options strategies. A $10,000 futures account can control $100,000–$300,000 of notional exposure, which means that a 1% move in the underlying produces 10–30% returns on capital. This capital efficiency is why futures are attractive to sophisticated traders who would rather allocate capital to several different strategies than tie it up in lower-leveraged instruments. Of course, the same leverage magnifies losses equally — which is why Part III covers risk management in depth. 8.2 24-Hour Market Access Most major futures contracts trade nearly 23 hours per day via electronic platforms, compared to 6.5 hours for US cash equities. This access matters for traders who want to react to overnight news, for non-US traders in different time zones, and for strategies that profit from session transitions.',
+      },
     ]
   },
   {
@@ -52186,14 +59164,26 @@ export const articles: Article[] = [
         correctIndex: 2,
         explanation: 'Company A\'s 20% ROE is almost entirely driven by its high 18% ROA — genuine operational excellence requiring minimal debt amplification. Company B\'s 20% ROE achieved on only 4% ROA implies approximately 5x financial leverage (ROE / ROA = leverage factor). That leverage amplifies returns in good times but creates fragility: rising interest rates, a credit downturn, or an earnings stumble can rapidly erode equity value in a highly leveraged company. ROE that is primarily a function of ROA is structurally superior and far more durable. This is precisely why DuPont analysis — decomposing ROE into its profit margin, asset turnover, and leverage components — is so valuable.'
       }
+,
+      {
+        type: 'heading',
+        text: 'Going Deeper',
+        level: 2,
+      },
+      {
+        type: 'callout',
+        variant: 'info',
+        title: 'From VALUATIONS FUNDAMENTALS: The Asset Management Business Model Asset management businesses earn fees on the assets they manage',
+        text: '— typically a percentage of assets under management (AUM) in the case of traditional long-only managers, or a combination of management fees and performance fees for alternative asset managers. The economic structure of the business is highly attractive when markets are rising: revenue grows with rising asset values without any proportional increase in costs, creating significant operating leverage. The vulnerability of the model is equally dramatic when markets decline: AUM falls with declining markets, taking revenue with it, while the cost base is largely fixed, compressing margins sharply. The sustainability of the fee revenue depends on two drivers: the performance of the investment strategies relative to benchmarks and peers, and the quality of the client relationships that determine whether clients remain through periods of underperformance.',
+      },
     ]
   }
 ]
 
 export function getArticleById(id: string): Article | undefined {
-  return articles.find((a) => a.id === id)
+  return articles.find((a) => a != null && a.id === id)
 }
 
 export function getArticlesByCategory(categoryId: string): Article[] {
-  return articles.filter((a) => a.category === categoryId)
+  return articles.filter((a) => a != null && a.category === categoryId)
 }

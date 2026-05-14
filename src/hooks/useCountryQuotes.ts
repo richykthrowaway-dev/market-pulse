@@ -47,41 +47,40 @@ export function useCountryQuotes(iso2: string | null) {
   return useQuery<CountryQuote[]>({
     queryKey: ['country-quotes', iso2, [...tickers].sort().join(',')],
     enabled: !!iso2 && tickers.length > 0,
-    staleTime: 10 * 60_000,             // 10 min — live-ish prices are fine
-    gcTime:    60 * 60_000,
+    staleTime: 60 * 60_000,             // 60 min — one batch call per hour
+    gcTime:    120 * 60_000,
     refetchOnWindowFocus: false,
     queryFn: async (): Promise<CountryQuote[]> => {
-      const results = await Promise.all(
-        tickers.map(async (ticker): Promise<CountryQuote | null> => {
-          try {
-            const params = new URLSearchParams({ endpoint: 'quote', symbol: ticker });
-            const res = await fetch(`${YAHOO_FN_BASE}?${params}`, {
-              headers: YAHOO_HEADERS,
-              signal: AbortSignal.timeout(8000),
-            });
-            if (!res.ok) return null;
-            const q = await res.json();
-            if (!q || q.regularMarketPrice == null) return null;
+      // Single batch call instead of N individual calls — collapses N browser→edge
+      // round-trips into 1; the edge function fans out to Yahoo in parallel internally.
+      const params = new URLSearchParams({
+        endpoint: 'quotes',
+        symbols:  tickers.join(','),
+      });
+      const res = await fetch(`${YAHOO_FN_BASE}?${params}`, {
+        headers: YAHOO_HEADERS,
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) return [];
+      const batch: Record<string, any> = await res.json();
 
-            return {
-              symbol:         ticker,
-              baseSymbol:     ticker.split('.')[0],
-              name:           q.shortName ?? q.longName ?? ticker,
-              price:          q.regularMarketPrice,
-              previousClose:  q.previousClose,
-              change:         q.regularMarketChange,
-              changePercent:  q.regularMarketChangePercent,
-              currency:       q.currency,
-              exchange:       q.exchangeName,
-            };
-          } catch {
-            return null;
-          }
+      return tickers
+        .map((ticker): CountryQuote | null => {
+          const q = batch[ticker];
+          if (!q || q.regularMarketPrice == null) return null;
+          return {
+            symbol:        ticker,
+            baseSymbol:    ticker.split('.')[0],
+            name:          q.shortName ?? q.longName ?? ticker,
+            price:         q.regularMarketPrice,
+            previousClose: q.previousClose,
+            change:        q.regularMarketChange,
+            changePercent: q.regularMarketChangePercent,
+            currency:      q.currency,
+            exchange:      q.exchangeName,
+          };
         })
-      );
-
-      // Filter out failed fetches; preserve the curated COUNTRY_META order
-      return results.filter((q): q is CountryQuote => q !== null);
+        .filter((q): q is CountryQuote => q !== null);
     },
   });
 }

@@ -8,7 +8,7 @@ export function OutlierLossList({ outliers, onClick }: { outliers: OutlierLossEn
   return (
     <Card className="p-4">
       <h4 className="text-sm font-semibold mb-2 flex items-center gap-1.5">
-        <Flame className="h-4 w-4 text-destructive" /> Outlier losses
+        <Flame className="h-4 w-4 text-destructive" /> Trades to review
       </h4>
       <ul className="space-y-1.5">
         {outliers.map(o => (

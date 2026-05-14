@@ -27,21 +27,42 @@ export function GoalProgressCard({ trades, settings }: { trades: TradeEntry[]; s
   ];
 
   const anyTarget = rows.some(r => r.target);
-  if (!anyTarget && trades.length === 0) return null;
+
+  // No goals configured — show a single CTA instead of 3 "(no goal set)" rows
+  if (!anyTarget) {
+    if (trades.length === 0) return null;
+    return (
+      <Card className="p-5">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium">No goals set</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Set daily, weekly and monthly targets to track your progress here.
+            </p>
+          </div>
+          <a
+            href="#rules"
+            onClick={e => {
+              e.preventDefault();
+              // best-effort: click the Rules tab trigger if it's in the DOM
+              const el = document.querySelector<HTMLButtonElement>('[data-value="rules"]');
+              el?.click();
+            }}
+            className="text-xs text-primary underline underline-offset-2 whitespace-nowrap ml-4"
+          >
+            Configure in Rules →
+          </a>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <Card className="p-6">
       <h3 className="text-lg font-semibold mb-4">Goal progress</h3>
       <div className="space-y-3">
         {rows.map(r => {
-          if (!r.target) return (
-            <div key={r.label} className="flex justify-between text-sm">
-              <span>{r.label}</span>
-              <span className={r.pnl >= 0 ? 'text-muted-foreground' : 'text-destructive'}>
-                {fmtDollar(r.pnl)} <span className="text-xs">(no goal set)</span>
-              </span>
-            </div>
-          );
+          if (!r.target) return null;
           const pct = Math.max(0, Math.min(100, (r.pnl / r.target) * 100));
           const color = pct >= 100 ? 'bg-green-500' : pct >= 50 ? 'bg-amber-500' : 'bg-muted-foreground/40';
           return (

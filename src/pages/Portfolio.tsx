@@ -10,8 +10,13 @@ import { useAnalystRatings, analystColor } from '@/hooks/useAnalystRatings';
 import { TickerStyleEditor } from '@/components/portfolio/TickerStyleEditor';
 import { EarningsCalendar } from '@/components/portfolio/EarningsCalendar';
 import { CorrelationMatrix } from '@/components/portfolio/CorrelationMatrix';
-import { SnapTradeConnectCard } from '@/components/portfolio/SnapTradeConnectCard';
-import { Link2, Unlink2, ArrowUpDown } from 'lucide-react';
+
+import {
+  useConnectBrokerage,
+  useSnapTradeSync,
+  useSnapTradeConnections,
+} from '@/hooks/useSnapTrade';
+import { Link2, Unlink2, ArrowUpDown, RefreshCw, Loader2, CheckCircle2, PlusCircle } from 'lucide-react';
 import { useNavbarSlot } from '@/contexts/NavbarSlotContext';
 
 import { Card, CardContent } from '@/components/ui/card';
@@ -471,50 +476,143 @@ const Portfolio = () => {
     typeof window !== 'undefined' ? window.location.href.split('?')[0] : undefined,
   );
 
+  // SnapTrade brokerage sync
+  const snapConnections = useSnapTradeConnections();
+  const snapConnect     = useConnectBrokerage();
+  const snapSync        = useSnapTradeSync();
+  const hasSnapConnections = (snapConnections.data?.length ?? 0) > 0;
+
   // Linked sort state
   const { isLinked, toggleLinked, sharedSort, setSharedSort } = useLinkedSort();
   const { setSlot } = useNavbarSlot();
 
-  // Inject the Link/Unlink sort button into the Navbar slot while on this page
+  // Inject the Link/Unlink sort button + SnapTrade controls into the Navbar slot
   useEffect(() => {
     setSlot(
       <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleLinked}
-              aria-label={`Sort synchronization: currently ${isLinked ? 'linked' : 'unlinked'}`}
-              aria-pressed={isLinked}
-              className={cn(
-                'gap-1.5 text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-ring',
-                isLinked
-                  ? 'bg-link-active text-link-active-foreground hover:bg-link-active/90 border-link-active/50'
-                  : 'bg-muted text-link-inactive hover:bg-muted/80 border-border'
-              )}
-            >
-              {isLinked ? (
-                <>
-                  <Link2 className={cn('h-3.5 w-3.5', isLinked && 'animate-pulse-gentle')} aria-hidden="true" />
-                  <span className="hidden sm:inline">Linked</span>
-                </>
-              ) : (
-                <>
-                  <Unlink2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  <span className="hidden sm:inline">Unlinked</span>
-                </>
-              )}
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>{isLinked ? 'Sorting is synchronized between cards. Click to unlink.' : 'Cards sort independently. Click to synchronize sorting.'}</p>
-          </TooltipContent>
-        </Tooltip>
+        <div className="flex items-center gap-2">
+          {/* ── Link / Unlink sort sync ── */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleLinked}
+                aria-label={`Sort synchronization: currently ${isLinked ? 'linked' : 'unlinked'}`}
+                aria-pressed={isLinked}
+                className={cn(
+                  'gap-1.5 text-xs font-medium transition-all focus-visible:ring-2 focus-visible:ring-ring',
+                  isLinked
+                    ? 'bg-link-active text-link-active-foreground hover:bg-link-active/90 border-link-active/50'
+                    : 'bg-muted text-link-inactive hover:bg-muted/80 border-border'
+                )}
+              >
+                {isLinked ? (
+                  <>
+                    <Link2 className={cn('h-3.5 w-3.5', isLinked && 'animate-pulse-gentle')} aria-hidden="true" />
+                    <span className="hidden sm:inline">Linked</span>
+                  </>
+                ) : (
+                  <>
+                    <Unlink2 className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span className="hidden sm:inline">Unlinked</span>
+                  </>
+                )}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <p>{isLinked ? 'Sorting is synchronized between cards. Click to unlink.' : 'Cards sort independently. Click to synchronize sorting.'}</p>
+            </TooltipContent>
+          </Tooltip>
+
+          {/* ── Separator ── */}
+          <span className="h-5 w-px bg-border" aria-hidden="true" />
+
+          {/* ── Auto-sync / Connect Brokerage ── */}
+          {hasSnapConnections ? (
+            /* Connected: show connection count badge + Refresh + Add another */
+            <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1 px-2 py-1 rounded bg-muted/60 border border-border text-[11px]">
+                <CheckCircle2 className="h-3 w-3 text-success flex-shrink-0" aria-hidden="true" />
+                <span className="font-medium hidden sm:inline">
+                  {snapConnections.data?.length === 1
+                    ? snapConnections.data[0].brokerage_name ?? 'Brokerage'
+                    : `${snapConnections.data?.length} brokerages`}
+                </span>
+              </div>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => snapSync.mutate()}
+                    disabled={snapSync.isPending}
+                    aria-label="Refresh brokerage sync"
+                    className="gap-1.5 text-xs font-medium"
+                  >
+                    {snapSync.isPending
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      : <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />}
+                    <span className="hidden sm:inline">Sync</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Re-sync holdings from connected brokerages</p>
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => snapConnect.mutate(undefined)}
+                    disabled={snapConnect.isPending}
+                    aria-label="Connect another brokerage"
+                    className="gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+                  >
+                    {snapConnect.isPending
+                      ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      : <PlusCircle className="h-3.5 w-3.5" aria-hidden="true" />}
+                    <span className="hidden sm:inline">Add</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">
+                  <p>Connect another brokerage account</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
+          ) : (
+            /* Not connected: single "Connect Brokerage" button */
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => snapConnect.mutate(undefined)}
+                  disabled={snapConnect.isPending}
+                  aria-label="Connect a brokerage for auto-sync"
+                  className="gap-1.5 text-xs font-medium"
+                >
+                  {snapConnect.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Link2 className="h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {snapConnect.isPending ? 'Connecting…' : 'Connect Brokerage'}
+                  </span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom">
+                <p>Auto-import positions from your brokerage — no CSV uploads needed</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </div>
       </TooltipProvider>
     );
     return () => setSlot(null);
-  }, [isLinked, toggleLinked, setSlot]);
+  }, [isLinked, toggleLinked, setSlot, hasSnapConnections, snapConnections.data, snapConnect, snapSync]);
 
   // Active grouping key from AllocationExplorer
   const [activeGroupingKey, setActiveGroupingKey] = useState<GroupingKey>('Position');
@@ -890,24 +988,11 @@ const Portfolio = () => {
 
         {/* Empty */}
         {!isLoading && holdings.length === 0 &&
-        <div className="flex flex-col items-center justify-center gap-3 py-8">
-            <p className="text-muted-foreground text-sm">No holdings yet. Upload a statement or connect a brokerage.</p>
-            <div className="w-full max-w-sm">
-              <SnapTradeConnectCard />
-            </div>
+        <div className="flex flex-col items-center justify-center gap-2 py-8">
+            <p className="text-muted-foreground text-sm">No holdings yet. Upload a statement or use <strong>Connect Brokerage</strong> at the top to auto-import positions.</p>
           </div>
         }
 
-        {/* SnapTrade controls — visible whenever the user has any holdings,
-            so they can connect another broker or refresh. */}
-        {holdings.length > 0 &&
-        <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
-            <div /> {/* spacer to right-align */}
-            <div className="w-full sm:w-[280px]">
-              <SnapTradeConnectCard />
-            </div>
-          </div>
-        }
 
         {holdings.length > 0 &&
         <>

@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { ViewModeToggle } from "@/components/layout/ViewModeToggle";
 import { useIndices } from "@/hooks/useSupabaseData";
 import { REGION_TO_ISO, COUNTRY_META } from "@/data/countryMeta";
 import { cn } from "@/lib/utils";
 import { useTradeBreakdown } from "@/hooks/useTradeBreakdown";
 import type { PartnerArc } from "@/components/global/GlobeView";
-import { Globe as GlobeIcon, ArrowLeft, Loader2, RotateCw, Pause, Map, Sun, Moon, Palette, PaintBucket } from "lucide-react";
+import { Globe as GlobeIcon, ArrowLeft, Loader2, RotateCw, Pause, Map, Sun, Moon, Palette, PaintBucket, Zap, ZapOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const GlobeView = lazy(() => import("@/components/global/GlobeView"));
 const MapView  = lazy(() => import("@/components/global/MapView"));
@@ -18,8 +20,11 @@ import { TradePartnersDialog } from "@/components/global/trade/TradePartnersDial
 import type { ExchangeInfo } from "@/data/exchangeData";
 import {
   getVisibleNodes, getVisibleRoutes,
+  CHOKEPOINTS,
   type LayerKey, type TradeNode,
 } from "@/data/tradeInfrastructure";
+import { PORT_LSCI_BY_ID } from "@/data/portConnectivity";
+import { computeChokepointRisk } from "@/lib/computeChokepointRisk";
 import { useAISStream, matchesVesselType, type VesselTypeFilter } from "@/hooks/useAISStream";
 import { useOpenSkyFlights } from "@/hooks/useOpenSkyFlights";
 import { useConflictEvents, type ConflictEvent } from "@/hooks/useConflictEvents";
@@ -128,6 +133,7 @@ function useContainerSize(ref: React.RefObject<HTMLDivElement | null>) {
 
 const Global = () => {
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { data: indices = [] } = useIndices();
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
   const [mode, setMode] = useState<GlobeMode>("flags");
@@ -141,8 +147,34 @@ const Global = () => {
   // Country polygon fills — toggle off to see the bare globe texture (most
   // useful in combination with the day/night cycle so the terminator is fully
   // visible without the opaque country layer above it).
-  const [showCountryColors, setShowCountryColors] = useState(true);
+  const [showCountryColors, setShowCountryColors] = useState(false);
   const [flatMap, setFlatMap] = useState(false);
+
+  // ── Performance Mode ─────────────────────────────────────────────────
+  // Disables expensive visual flourishes (atmosphere, bump map, day/night
+  // recomputation, ring pulse) and drops the rendering pixel-ratio to keep
+  // the globe responsive on low-end hardware. Auto-enabled on first load
+  // for devices with <4 cores or <4 GB RAM. Persisted to localStorage so
+  // the user's preference survives page reloads.
+  //
+  // Heuristic note: `navigator.deviceMemory` is non-standard and missing on
+  // Safari/Firefox — when absent we fall back to hardwareConcurrency alone.
+  const [perfMode, setPerfMode] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const stored = window.localStorage.getItem('globe-perf-mode');
+      if (stored !== null) return stored === '1';
+    } catch { /* ignore SSR / private mode */ }
+    // First-load auto-detect
+    const cores = (navigator as Navigator & { hardwareConcurrency?: number }).hardwareConcurrency ?? 8;
+    const mem   = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+    return cores < 4 || (typeof mem === 'number' && mem < 4);
+  });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem('globe-perf-mode', perfMode ? '1' : '0');
+    } catch { /* ignore quota errors */ }
+  }, [perfMode]);
 
   // ── Global Trade Infrastructure state ───────────────────────────────
   // Lives at the Global-page level so both the GlobeView (left half) and
@@ -218,13 +250,30 @@ const Global = () => {
   // OR routes whose endpoints touch a node in that country. This keeps
   // the country-scoped view focused while preserving the option to
   // expand to global with one click.
+  // Auto-include layers required by overlays:
+  //   - Connectivity overlay → forces seaports to render so they can be
+  //     recoloured by LSCI. Without this, enabling Connectivity alone shows
+  //     nothing because there are no seaport markers to restyle.
+  //   - Risk overlay → forces chokepoints to render so the risk halos sit
+  //     visibly on top of their host markers.
+  const effectiveLayers = useMemo(() => {
+    if (!tradeTabActive) return tradeActiveLayers;
+    if (!tradeActiveLayers.has('connectivity') && !tradeActiveLayers.has('risk')) {
+      return tradeActiveLayers;
+    }
+    const s = new Set(tradeActiveLayers);
+    if (tradeActiveLayers.has('connectivity')) s.add('seaports');
+    if (tradeActiveLayers.has('risk'))         s.add('chokepoints');
+    return s;
+  }, [tradeActiveLayers, tradeTabActive]);
+
   const allVisibleNodes  = useMemo(
-    () => (tradeTabActive ? getVisibleNodes(tradeActiveLayers)  : []),
-    [tradeActiveLayers, tradeTabActive],
+    () => (tradeTabActive ? getVisibleNodes(effectiveLayers)  : []),
+    [effectiveLayers, tradeTabActive],
   );
   const allVisibleRoutes = useMemo(
-    () => (tradeTabActive ? getVisibleRoutes(tradeActiveLayers) : []),
-    [tradeActiveLayers, tradeTabActive],
+    () => (tradeTabActive ? getVisibleRoutes(effectiveLayers) : []),
+    [effectiveLayers, tradeTabActive],
   );
 
   const tradeVisibleNodes = useMemo(() => {
@@ -332,10 +381,15 @@ const Global = () => {
   // Same gating pattern as the AIS/flight feeds: only fetch when the
   // user has actively turned the layer on, so we don't burn the edge
   // function or external API quotas in the background.
+  // Conflict feed: ALSO fetch when Risk overlay is on, since the risk score
+  // pulls from this dataset even when the conflict-events layer is off.
+  // But for RENDERING, only pass the data to the globe when the conflict
+  // layer itself is on — otherwise enabling risk would silently turn on the
+  // conflict-event rings.
   const conflictEventsEnabled =
-    tradeTabActive && tradeActiveLayers.has('conflictEvents');
+    tradeTabActive && (tradeActiveLayers.has('conflictEvents') || tradeActiveLayers.has('risk'));
   const conflictEventsQuery = useConflictEvents(conflictEventsEnabled);
-  const conflictEvents = conflictEventsEnabled
+  const conflictEvents = (tradeTabActive && tradeActiveLayers.has('conflictEvents'))
     ? conflictEventsQuery.data?.events
     : undefined;
   const [selectedEvent, setSelectedEvent] = useState<ConflictEvent | null>(null);
@@ -343,11 +397,23 @@ const Global = () => {
     setSelectedEvent(e);
   }, []);
 
-  // ── USGS earthquake feed (gated on layer toggle) ─────────────────────
+  // ── Risk overlay flag (gated on layer toggle) ─────────────────────────
+  // When the Risk / Disruption layer is on we also enable conflict /
+  // earthquake / natural-event queries (even if those individual layers
+  // are off) so the risk score has the supporting signals to derive from.
+  // Otherwise risk would show 0 for every chokepoint, which is misleading.
+  const riskOverlayEnabled = tradeTabActive && tradeActiveLayers.has('risk');
+
+  // ── Connectivity overlay flag ─────────────────────────────────────────
+  const connectivityEnabled = tradeTabActive && tradeActiveLayers.has('connectivity');
+
+  // ── USGS earthquake feed (gated on layer toggle OR risk overlay) ──────
   const earthquakesEnabled =
-    tradeTabActive && tradeActiveLayers.has('earthquakes');
+    tradeTabActive && (tradeActiveLayers.has('earthquakes') || riskOverlayEnabled);
   const earthquakesQuery = useEarthquakes(earthquakesEnabled);
-  const earthquakeEvents = earthquakesEnabled
+  // Same fetch-vs-render split as conflicts: only feed the globe when the
+  // earthquake LAYER itself is on, not just because risk is on.
+  const earthquakeEvents = (tradeTabActive && tradeActiveLayers.has('earthquakes'))
     ? earthquakesQuery.data
     : undefined;
   const [selectedEarthquake, setSelectedEarthquake] = useState<EarthquakeEvent | null>(null);
@@ -362,16 +428,25 @@ const Global = () => {
   // Storms also fires only the storms query.  This avoids the "wildfires
   // drown out everything else" pathology of the previous single-fetch
   // design where storms (rare globally) got pushed off the response.
+  // Natural events: also fire when Risk overlay is on. We enable all four
+  // categories in that case so the score reflects every available disruption.
+  const riskOnForNaturals = tradeTabActive && tradeActiveLayers.has('risk');
   const naturalEnabledMap = useMemo(() => ({
-    wildfires:    tradeTabActive && tradeActiveLayers.has('wildfires'),
-    severeStorms: tradeTabActive && tradeActiveLayers.has('severeStorms'),
-    volcanoes:    tradeTabActive && tradeActiveLayers.has('volcanoes'),
-    floods:       tradeTabActive && tradeActiveLayers.has('floods'),
-  }), [tradeTabActive, tradeActiveLayers]);
+    wildfires:    tradeTabActive && (tradeActiveLayers.has('wildfires')    || riskOnForNaturals),
+    severeStorms: tradeTabActive && (tradeActiveLayers.has('severeStorms') || riskOnForNaturals),
+    volcanoes:    tradeTabActive && (tradeActiveLayers.has('volcanoes')    || riskOnForNaturals),
+    floods:       tradeTabActive && (tradeActiveLayers.has('floods')       || riskOnForNaturals),
+  }), [tradeTabActive, tradeActiveLayers, riskOnForNaturals]);
   const naturalEventsQuery = useNaturalEvents(naturalEnabledMap);
-  // The hook only returns events for enabled categories, so no extra
-  // client-side filter is needed.  We keep the variable for prop plumbing.
-  const naturalEvents = naturalEventsQuery.data;
+  // For RENDERING on the globe, only show categories whose own layer toggle
+  // is on. When Risk is enabled it fetches all 4 categories (to feed the
+  // score) but we don't want enabling Risk to silently turn on every
+  // natural-event ring on the globe.
+  const naturalEvents = useMemo(() => {
+    const all = naturalEventsQuery.data;
+    if (!all) return undefined;
+    return all.filter(e => tradeActiveLayers.has(e.category as LayerKey));
+  }, [naturalEventsQuery.data, tradeActiveLayers]);
   const [selectedNaturalEvent, setSelectedNaturalEvent] = useState<NaturalEvent | null>(null);
   const onNaturalEventClick = useCallback((e: NaturalEvent) => {
     setSelectedNaturalEvent(e);
@@ -397,6 +472,91 @@ const Global = () => {
   const macroHeatmap = macroHeatmapEnabled
     ? macroHeatmapQuery.data?.data
     : undefined;
+
+  // ── Chokepoint risk score (Risk / Disruption overlay) ────────────────
+  // Pure derivation from the conflict / earthquake / natural-event data
+  // already fetched above (which auto-enabled when the risk layer turned
+  // on, even if those individual layers stayed off). No new network calls.
+  const riskRings = useMemo(() => {
+    if (!riskOverlayEnabled) return undefined;
+    const scored = computeChokepointRisk({
+      chokepoints: CHOKEPOINTS,
+      conflicts:   conflictEventsQuery.data?.events,
+      earthquakes: earthquakesQuery.data,
+      naturals:    naturalEventsQuery.data,
+    });
+    // Show even faint-risk chokepoints (>0.2) so users see the overlay is
+    // live and working — a near-zero halo around Panama/Cape is a useful
+    // signal that "these are calm right now" vs. nothing rendering at all.
+    // If NO chokepoint scores >0.2 (e.g. queries still loading), we still
+    // return an empty array so the overlay is "on" but momentarily empty.
+    return scored.filter(r => r.score >= 0.2);
+  }, [
+    riskOverlayEnabled,
+    conflictEventsQuery.data,
+    earthquakesQuery.data,
+    naturalEventsQuery.data,
+  ]);
+
+  // ── Port LSCI (Connectivity overlay) ────────────────────────────────
+  // Static lookup — the dataset is bundled, no fetch needed.
+  const portConnectivityProp = connectivityEnabled ? PORT_LSCI_BY_ID : undefined;
+
+  // ── Render-list caps for performance ─────────────────────────────────
+  // Each event source can return huge volumes (ACLED can hit 5k+ in busy
+  // weeks; AIS streams thousands of vessels). Rendering all of them as
+  // Three.js meshes craters fps without changing what the user sees in
+  // practice — the eye can't distinguish 200 vs 800 dots on a globe.
+  //
+  // Strategy: keep the top-N by importance / recency. The fetched arrays
+  // remain in React Query's cache for use elsewhere; we only cap what
+  // flows into the globe layer.
+  const MAX_EVENTS_PER_LAYER  = perfMode ? 80  : 200;
+  const MAX_VESSELS_DISPLAYED = perfMode ? 200 : 600;
+  const MAX_FLIGHTS_DISPLAYED = perfMode ? 300 : 1000;
+
+  const conflictEventsRender = useMemo(() => {
+    if (!conflictEvents) return undefined;
+    if (conflictEvents.length <= MAX_EVENTS_PER_LAYER) return conflictEvents;
+    // Rank by fatalities (severity) — recency is a tie-breaker via date.
+    return [...conflictEvents]
+      .sort((a, b) => (b.fatalities - a.fatalities) || b.date.localeCompare(a.date))
+      .slice(0, MAX_EVENTS_PER_LAYER);
+  }, [conflictEvents, MAX_EVENTS_PER_LAYER]);
+
+  const earthquakeEventsRender = useMemo(() => {
+    if (!earthquakeEvents) return undefined;
+    if (earthquakeEvents.length <= MAX_EVENTS_PER_LAYER) return earthquakeEvents;
+    // USGS `sig` blends magnitude + population exposure + shaking — better
+    // than bare magnitude for "which ones should I see".
+    return [...earthquakeEvents]
+      .sort((a, b) => b.sig - a.sig)
+      .slice(0, MAX_EVENTS_PER_LAYER);
+  }, [earthquakeEvents, MAX_EVENTS_PER_LAYER]);
+
+  const naturalEventsRender = useMemo(() => {
+    if (!naturalEvents) return undefined;
+    if (naturalEvents.length <= MAX_EVENTS_PER_LAYER) return naturalEvents;
+    // Recency only (EONET doesn't expose comparable severity across categories).
+    return [...naturalEvents]
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, MAX_EVENTS_PER_LAYER);
+  }, [naturalEvents, MAX_EVENTS_PER_LAYER]);
+
+  const liveVesselsRender = useMemo(() => {
+    if (!liveVesselsEnabled) return undefined;
+    if (liveVessels.length <= MAX_VESSELS_DISPLAYED) return liveVessels;
+    // Most-recently-seen wins — older positions are less informative anyway.
+    return [...liveVessels]
+      .sort((a, b) => b.lastSeen - a.lastSeen)
+      .slice(0, MAX_VESSELS_DISPLAYED);
+  }, [liveVessels, liveVesselsEnabled, MAX_VESSELS_DISPLAYED]);
+
+  const liveFlightsRender = useMemo(() => {
+    if (!liveFlightsEnabled) return undefined;
+    if (liveFlights.length <= MAX_FLIGHTS_DISPLAYED) return liveFlights;
+    return liveFlights.slice(0, MAX_FLIGHTS_DISPLAYED);
+  }, [liveFlights, liveFlightsEnabled, MAX_FLIGHTS_DISPLAYED]);
 
   // ── City label toggle ────────────────────────────────────────────────
   const cityLabelsEnabled =
@@ -487,6 +647,7 @@ const Global = () => {
           <h1 className="text-base font-semibold">Global Investment Hub</h1>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          <ViewModeToggle />
           {/* Flat map toggle */}
           <button
             onClick={() => setFlatMap(v => !v)}
@@ -522,15 +683,43 @@ const Global = () => {
               onClick={() => setDayNightCycle(v => !v)}
               className={cn(
                 "flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border text-xs transition-colors",
-                dayNightCycle ? "bg-primary/10 text-primary hover:bg-primary/15" : "hover:bg-muted text-muted-foreground"
+                dayNightCycle ? "bg-primary/10 text-primary hover:bg-primary/15" : "hover:bg-muted text-muted-foreground",
+                perfMode && "opacity-50 cursor-not-allowed",
               )}
-              title={dayNightCycle ? "Show globe fully lit" : "Show real day/night cycle based on current UTC time"}
+              title={
+                perfMode
+                  ? "Disabled in Performance Mode (per-frame solar recompute)"
+                  : dayNightCycle ? "Show globe fully lit" : "Show real day/night cycle based on current UTC time"
+              }
               aria-pressed={dayNightCycle}
+              disabled={perfMode}
             >
               {dayNightCycle ? <Moon className="h-3 w-3" /> : <Sun className="h-3 w-3" />}
               <span>Day/Night</span>
             </button>
           )}
+
+          {/* Performance Mode toggle — single switch that disables expensive
+              visual flourishes (atmosphere, bump map, day/night cycle, ring
+              pulse) and drops the pixel ratio. Available on globe + flat map. */}
+          <button
+            onClick={() => setPerfMode(v => !v)}
+            className={cn(
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs transition-colors",
+              perfMode
+                ? "bg-amber-500/10 text-amber-500 border-amber-500/40 hover:bg-amber-500/15"
+                : "border-border hover:bg-muted text-muted-foreground",
+            )}
+            title={
+              perfMode
+                ? "Performance Mode ON — reduced visual quality for smoother frame rate. Click to disable."
+                : "Enable Performance Mode — drops atmosphere, bump map, day/night cycle, and lowers pixel ratio for smoother frame rate on slower devices."
+            }
+            aria-pressed={perfMode}
+          >
+            {perfMode ? <Zap className="h-3 w-3" /> : <ZapOff className="h-3 w-3" />}
+            <span>{perfMode ? "Perf Mode" : "Full Quality"}</span>
+          </button>
 
           {/* Country colours toggle — clears the polygon-cap fills so the bare
               globe texture is visible.  Especially useful when day/night is on. */}
@@ -589,9 +778,16 @@ const Global = () => {
       </div>
 
       {/* 50/50 Split */}
-      <div className="flex-1 flex flex-col md:flex-row min-h-0">
+      <div className="flex-1 flex flex-col sm:flex-row min-h-0">
         {/* Left — Globe with CSS-only starfield background */}
-        <div ref={leftRef} className="h-[60vh] md:h-auto md:flex-1 relative overflow-hidden">
+        <div
+          ref={leftRef}
+          className={cn(
+            // Mobile: 75vh by default, 50vh once a country is selected. Desktop unchanged.
+            selectedCountry ? "h-[50vh]" : "h-[75vh]",
+            "sm:h-auto sm:flex-1 relative overflow-hidden transition-[height] duration-300",
+          )}
+        >
           {/* Base layer — tiled inline-SVG starfield.
               ~3 KB data URL, zero network calls, paints instantly.
               The Milky Way "band" effect previously contributed by the
@@ -642,8 +838,8 @@ const Global = () => {
                   tradeArcs={tradeTabActive ? tradeVisibleRoutes : undefined}
                   selectedTradeNodeId={tradeSelectedNode?.id ?? null}
                   onTradeNodeClick={handleTradeNodeClick}
-                  liveVessels={liveVesselsEnabled ? liveVessels : undefined}
-                  liveFlights={liveFlightsEnabled ? liveFlights : undefined}
+                  liveVessels={liveVesselsRender}
+                  liveFlights={liveFlightsRender}
                 />
               ) : (
                 <GlobeView
@@ -661,22 +857,40 @@ const Global = () => {
                   tradeArcs={tradeTabActive ? tradeVisibleRoutes : undefined}
                   selectedTradeNodeId={tradeSelectedNode?.id ?? null}
                   onTradeNodeClick={handleTradeNodeClick}
-                  liveVessels={liveVesselsEnabled ? liveVessels : undefined}
-                  liveFlights={liveFlightsEnabled ? liveFlights : undefined}
-                  conflictEvents={conflictEvents}
+                  liveVessels={liveVesselsRender}
+                  liveFlights={liveFlightsRender}
+                  conflictEvents={conflictEventsRender}
                   onConflictEventClick={onConflictEventClick}
-                  earthquakeEvents={earthquakeEvents}
+                  earthquakeEvents={earthquakeEventsRender}
                   onEarthquakeEventClick={onEarthquakeEventClick}
-                  naturalEvents={naturalEvents}
+                  naturalEvents={naturalEventsRender}
                   onNaturalEventClick={onNaturalEventClick}
                   economicEvents={economicEvents}
                   onEconomicEventClick={onEconomicEventClick}
                   macroHeatmap={macroHeatmap}
                   showCityLabels={cityLabelsEnabled}
                   showWaterways={waterwaysEnabled}
-                  dayNightCycle={dayNightCycle}
+                  // Perf mode forces day/night off — the per-frame solar-
+                  // position recompute is one of the heaviest render
+                  // contributors and adds little for users with degraded
+                  // hardware.
+                  dayNightCycle={perfMode ? false : dayNightCycle}
                   showCountryColors={showCountryColors}
                   partnerArcs={partnerArcs}
+                  riskRings={riskRings}
+                  portConnectivity={portConnectivityProp}
+                  showConnectivity={connectivityEnabled}
+                  // Perf mode drops more pixels; mobile is more aggressive
+                  // than desktop. Default desktop dropped from 1.0 → 0.85
+                  // because at globe scale the pixel-ratio reduction is
+                  // visually imperceptible and saves ~20% GPU work.
+                  pixelRatioScale={
+                    perfMode
+                      ? (isMobile ? 0.5  : 0.65)
+                      : (isMobile ? 0.7  : 0.85)
+                  }
+                  initialAltitude={isMobile ? 1.5 : 2.5}
+                  perfMode={perfMode}
                 />
               )}
             </Suspense>
@@ -737,10 +951,9 @@ const Global = () => {
         </div>
 
         {/* Right — Panel */}
-        <div className="md:w-1/2 border-t md:border-t-0 md:border-l border-border bg-card overflow-hidden">
+        <div className="sm:w-1/2 border-t sm:border-t-0 sm:border-l border-border bg-card overflow-hidden">
           {selectedCountry ? (
             <CountryPanel
-              key={selectedCountry}
               iso2={selectedCountry}
               onClose={handleClose}
               onTabChange={handleTabChange}

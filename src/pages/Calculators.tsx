@@ -1,7 +1,7 @@
 // src/pages/Calculators.tsx
 import { useEffect, useState } from 'react';
 import { PageLayout } from '@/components/layout/PageLayout';
-import { Calculator, TrendingUp, BarChart2, Layers, Receipt, DollarSign, Percent } from 'lucide-react';
+import { Calculator, TrendingUp, BarChart2, Layers, Receipt, DollarSign, Percent, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ── Wealth
@@ -9,15 +9,26 @@ import { CompoundInterest }        from '@/components/calculators/wealth/Compoun
 import { DollarCostAveraging }     from '@/components/calculators/wealth/DollarCostAveraging';
 import { FireRetirement }          from '@/components/calculators/wealth/FireRetirement';
 import { MortgageVsInvest }        from '@/components/calculators/wealth/MortgageVsInvest';
+import { RothVsTraditional }       from '@/components/calculators/wealth/RothVsTraditional';
+import { InflationAdjusted }       from '@/components/calculators/wealth/InflationAdjusted';
+import { AssetAllocation }         from '@/components/calculators/wealth/AssetAllocation';
 // ── Trading
 import { PositionSizing }          from '@/components/calculators/trading/PositionSizing';
 import { RiskReward }              from '@/components/calculators/trading/RiskReward';
 import { MarginLeverage }          from '@/components/calculators/trading/MarginLeverage';
 import { ShortSelling }            from '@/components/calculators/trading/ShortSelling';
+import { DrawdownRecovery }        from '@/components/calculators/trading/DrawdownRecovery';
+import { TradeExpectancy }         from '@/components/calculators/trading/TradeExpectancy';
+import { KellyCriterion }          from '@/components/calculators/trading/KellyCriterion';
+import { Pyramiding }              from '@/components/calculators/trading/Pyramiding';
 // ── Options
 import { OptionsPnl }              from '@/components/calculators/options/OptionsPnl';
 import { CoveredCall }             from '@/components/calculators/options/CoveredCall';
 import { CashSecuredPut }          from '@/components/calculators/options/CashSecuredPut';
+import { VerticalSpread }          from '@/components/calculators/options/VerticalSpread';
+import { BlackScholes }            from '@/components/calculators/options/BlackScholes';
+// ── Real Estate
+import { RentalCashFlow }          from '@/components/calculators/realestate/RentalCashFlow';
 // ── Tax
 import { CapitalGainsTax }         from '@/components/calculators/tax/CapitalGainsTax';
 import { TaxLossHarvesting }       from '@/components/calculators/tax/TaxLossHarvesting';
@@ -48,19 +59,26 @@ const CATEGORIES: CalcCategory[] = [
   {
     id: 'wealth', label: 'Wealth Building', icon: TrendingUp,
     items: [
-      { id: 'compound-interest',  label: 'Compound Interest',    component: CompoundInterest },
-      { id: 'dca',                label: 'Dollar-Cost Averaging', component: DollarCostAveraging },
-      { id: 'fire',               label: 'FIRE / Retirement',    component: FireRetirement },
-      { id: 'mortgage-vs-invest', label: 'Mortgage vs Invest',   component: MortgageVsInvest },
+      { id: 'compound-interest',   label: 'Compound Interest',    component: CompoundInterest },
+      { id: 'dca',                 label: 'Dollar-Cost Averaging', component: DollarCostAveraging },
+      { id: 'fire',                label: 'FIRE / Retirement',    component: FireRetirement },
+      { id: 'mortgage-vs-invest',  label: 'Mortgage vs Invest',   component: MortgageVsInvest },
+      { id: 'roth-vs-traditional', label: 'Roth vs Traditional',  component: RothVsTraditional },
+      { id: 'inflation-adjusted',  label: 'Inflation-Adjusted',   component: InflationAdjusted },
+      { id: 'asset-allocation',    label: 'Asset Allocation',     component: AssetAllocation },
     ],
   },
   {
     id: 'trading', label: 'Trading', icon: BarChart2,
     items: [
-      { id: 'position-sizing', label: 'Position Sizing',   component: PositionSizing },
-      { id: 'risk-reward',     label: 'Risk / Reward',     component: RiskReward },
-      { id: 'margin-leverage', label: 'Margin & Leverage', component: MarginLeverage },
-      { id: 'short-selling',   label: 'Short Selling',     component: ShortSelling },
+      { id: 'position-sizing',    label: 'Position Sizing',    component: PositionSizing },
+      { id: 'risk-reward',        label: 'Risk / Reward',      component: RiskReward },
+      { id: 'margin-leverage',    label: 'Margin & Leverage',  component: MarginLeverage },
+      { id: 'short-selling',      label: 'Short Selling',      component: ShortSelling },
+      { id: 'drawdown-recovery',  label: 'Drawdown Recovery',  component: DrawdownRecovery },
+      { id: 'trade-expectancy',   label: 'Trade Expectancy',   component: TradeExpectancy },
+      { id: 'kelly-criterion',    label: 'Kelly Criterion',    component: KellyCriterion },
+      { id: 'pyramiding',         label: 'Pyramiding',         component: Pyramiding },
     ],
   },
   {
@@ -69,6 +87,14 @@ const CATEGORIES: CalcCategory[] = [
       { id: 'options-pnl',      label: 'Options P&L',      component: OptionsPnl },
       { id: 'covered-call',     label: 'Covered Call',     component: CoveredCall },
       { id: 'cash-secured-put', label: 'Cash-Secured Put', component: CashSecuredPut },
+      { id: 'vertical-spread',  label: 'Vertical Spread',  component: VerticalSpread },
+      { id: 'black-scholes',    label: 'Black-Scholes',    component: BlackScholes },
+    ],
+  },
+  {
+    id: 'realestate', label: 'Real Estate', icon: Home,
+    items: [
+      { id: 'rental-cash-flow', label: 'Rental Cash Flow', component: RentalCashFlow },
     ],
   },
   {

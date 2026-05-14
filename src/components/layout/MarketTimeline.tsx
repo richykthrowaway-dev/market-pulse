@@ -14,12 +14,20 @@ interface Market {
   color: string;            // HSL string
 }
 
+// Distinct, user-specified colours — each market sits in a different hue
+// band so all five rings on the clock and bars on the timeline read clearly.
+//
+//   AU Sydney    — bright gold/yellow
+//   JP Tokyo     — pop red
+//   HK Hong Kong — bright magenta/pink
+//   UK London    — cyan / light blue
+//   US New York  — dark navy
 const MARKETS: Market[] = [
-  { name: "Sydney",    short: "SYD", tz: "Australia/Sydney",   open: [10, 0],  close: [16, 0],  color: "hsl(200, 80%, 55%)" },
-  { name: "Tokyo",     short: "TYO", tz: "Asia/Tokyo",         open: [9, 0],   close: [15, 30], color: "hsl(175, 80%, 50%)" },
-  { name: "Hong Kong", short: "HK",  tz: "Asia/Hong_Kong",     open: [9, 30],  close: [16, 0],  color: "hsl(45, 90%, 55%)" },
-  { name: "London",    short: "LON", tz: "Europe/London",       open: [8, 0],   close: [16, 30], color: "hsl(270, 70%, 60%)" },
-  { name: "New York",  short: "NY",  tz: "America/New_York",    open: [9, 30],  close: [16, 0],  color: "hsl(145, 70%, 50%)" },
+  { name: "Sydney",    short: "SYD", tz: "Australia/Sydney",   open: [10, 0],  close: [16, 0],  color: "hsl(48, 95%, 55%)"  },
+  { name: "Tokyo",     short: "TYO", tz: "Asia/Tokyo",         open: [9, 0],   close: [15, 30], color: "hsl(355, 90%, 53%)" },
+  { name: "Hong Kong", short: "HK",  tz: "Asia/Hong_Kong",     open: [9, 30],  close: [16, 0],  color: "hsl(328, 90%, 60%)" },
+  { name: "London",    short: "LON", tz: "Europe/London",       open: [8, 0],   close: [16, 30], color: "hsl(190, 85%, 55%)" },
+  { name: "New York",  short: "NY",  tz: "America/New_York",    open: [9, 30],  close: [16, 0],  color: "hsl(222, 80%, 28%)" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -146,6 +154,8 @@ export default function MarketTimeline() {
     return a.open ? -1 : 1;
   });
 
+  const openCount = marketData.filter(m => m.open).length;
+
   return (
     <div className="px-2 mt-2">
       {/* Header: title + local time */}
@@ -235,6 +245,142 @@ export default function MarketTimeline() {
             </div>
           );
         })}
+      </div>
+
+      {/* ──────────────────────────────────────────────────────────────── */}
+      {/*  Circular 24-hour global market clock                            */}
+      {/*  Innermost ring (r=24) = Sydney; outermost (r=60) = New York.    */}
+      {/*  Colours match the bars above — those serve as the legend.       */}
+      {/* ──────────────────────────────────────────────────────────────── */}
+      <div className="mt-3 -mx-2">
+        <svg viewBox="-80 -80 160 160" className="w-full h-auto block">
+          {/* Hour ticks — 24 ticks, major every 6h */}
+          {Array.from({ length: 24 }).map((_, h) => {
+            const a = (h / 24) * Math.PI * 2;
+            const isMajor = h % 6 === 0;
+            const r1 = 70;
+            const r2 = isMajor ? 65 : 68;
+            return (
+              <line
+                key={h}
+                x1={Math.sin(a) * r1}
+                y1={-Math.cos(a) * r1}
+                x2={Math.sin(a) * r2}
+                y2={-Math.cos(a) * r2}
+                stroke="hsl(var(--muted-foreground))"
+                strokeWidth={isMajor ? 1 : 0.5}
+                opacity={isMajor ? 0.7 : 0.3}
+              />
+            );
+          })}
+
+          {/* Hour labels (00 / 06 / 12 / 18 in user-local time) */}
+          {[0, 6, 12, 18].map((h) => {
+            const a = (h / 24) * Math.PI * 2;
+            return (
+              <text
+                key={h}
+                x={Math.sin(a) * 76}
+                y={-Math.cos(a) * 76}
+                fill="hsl(var(--muted-foreground))"
+                fontSize="6.5"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                opacity={0.75}
+              >
+                {h.toString().padStart(2, "0")}
+              </text>
+            );
+          })}
+
+          {/* Market rings — Sydney inner (idx=0), NY outer (idx=4) */}
+          {marketData.map((m, idx) => {
+            const r = 24 + idx * 9; // 24, 33, 42, 51, 60
+            const circumference = 2 * Math.PI * r;
+            const startFrac = m.openMin / 1440;
+            const lengthFrac =
+              m.closeMin < m.openMin
+                ? (1440 - m.openMin + m.closeMin) / 1440
+                : (m.closeMin - m.openMin) / 1440;
+            const dashLen = circumference * lengthFrac;
+            const gapLen = circumference - dashLen;
+            const offset = -circumference * startFrac;
+            return (
+              <g key={m.name} transform="rotate(-90 0 0)">
+                {/* Faint full-circle background */}
+                <circle
+                  cx="0"
+                  cy="0"
+                  r={r}
+                  fill="none"
+                  stroke={m.color}
+                  strokeWidth="5"
+                  opacity="0.08"
+                />
+                {/* Active open-period arc */}
+                <circle
+                  cx="0"
+                  cy="0"
+                  r={r}
+                  fill="none"
+                  stroke={m.color}
+                  strokeWidth="5"
+                  strokeDasharray={`${dashLen} ${gapLen}`}
+                  strokeDashoffset={offset}
+                  opacity={m.open ? 0.9 : 0.35}
+                  strokeLinecap="round"
+                >
+                  <title>
+                    {m.name}: {m.timeStr} local — {m.open ? "OPEN" : "closed"}
+                  </title>
+                </circle>
+              </g>
+            );
+          })}
+
+          {/* "Now" needle — extends from centre past the outermost ring */}
+          {(() => {
+            const a = (localNowMins / 1440) * Math.PI * 2;
+            const tipX = Math.sin(a) * 65;
+            const tipY = -Math.cos(a) * 65;
+            return (
+              <line
+                x1="0"
+                y1="0"
+                x2={tipX}
+                y2={tipY}
+                stroke="white"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                style={{ filter: "drop-shadow(0 0 2px rgba(255,255,255,0.7))" }}
+              />
+            );
+          })()}
+
+          {/* Centre open-count label (no hub — the number is the focal point) */}
+          <text
+            x="0"
+            y="-1"
+            fill="hsl(var(--foreground))"
+            fontSize="7"
+            fontWeight="700"
+            textAnchor="middle"
+            dominantBaseline="middle"
+          >
+            {openCount}
+          </text>
+          <text
+            x="0"
+            y="6"
+            fill="hsl(var(--muted-foreground))"
+            fontSize="4"
+            textAnchor="middle"
+            dominantBaseline="middle"
+            letterSpacing="0.5"
+          >
+            OPEN
+          </text>
+        </svg>
       </div>
     </div>
   );

@@ -9,6 +9,13 @@ import { use52Week } from '@/hooks/use52Week';
 import { MarketPositionWidget } from '@/components/risk/MarketPositionWidget';
 import { StressTestSection } from '@/components/risk/StressTestSection';
 import { RebalancingWidget } from '@/components/risk/RebalancingWidget';
+import { ConcentrationRiskCard } from '@/components/risk/ConcentrationRiskCard';
+import { RiskScoreCard } from '@/components/risk/RiskScoreCard';
+import { CountryExposureCard } from '@/components/risk/CountryExposureCard';
+import { SectorCrashCard } from '@/components/risk/SectorCrashCard';
+import { ValueAtRiskCard } from '@/components/risk/ValueAtRiskCard';
+import { HistoricalDrawdownCard } from '@/components/risk/HistoricalDrawdownCard';
+import { annualVolatility, computeDrawdown } from '@/components/risk/riskMath';
 import { batchLookupSymbols, type SymbolMeta as LookupSymbolMeta } from '@/services/symbolLookupService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -202,6 +209,36 @@ const RiskAnalysis = () => {
     [holdings],
   );
 
+  /* ── Returns-derived risk metrics (for VaR / Drawdown / Risk Score) ─────── */
+  const portfolioReturns = betaResult?.portfolioReturns;
+  const spyReturns       = betaResult?.spyReturns;
+  const returnDates      = betaResult?.dates;
+
+  const annualVol = useMemo(
+    () => portfolioReturns && portfolioReturns.length >= 30
+      ? annualVolatility(portfolioReturns)
+      : undefined,
+    [portfolioReturns],
+  );
+
+  const maxDrawdownPct = useMemo(() => {
+    if (!portfolioReturns || !returnDates || portfolioReturns.length !== returnDates.length || portfolioReturns.length < 30) {
+      return undefined;
+    }
+    return computeDrawdown(portfolioReturns, returnDates).maxDrawdownPct;
+  }, [portfolioReturns, returnDates]);
+
+  /* Minimal-shape holdings array for the new risk cards */
+  const minHoldings = useMemo(
+    () => holdings.map(h => ({
+      ticker: h.ticker,
+      sector: h.sector,
+      country: h.country,
+      marketValue: h.marketValue,
+    })),
+    [holdings],
+  );
+
   /* rebalancing logic moved to RebalancingWidget */
 
   /* ── loading state ── */
@@ -230,6 +267,14 @@ const RiskAnalysis = () => {
   return (
     <PageLayout title="Risk Analysis">
       <div className="space-y-6">
+
+        {/* ── HEADLINE: COMPOSITE RISK SCORE (NEW) ── */}
+        <RiskScoreCard
+          holdings={minHoldings}
+          portfolioBeta={betaData.portfolioBeta}
+          annualVol={annualVol}
+          maxDrawdownPct={maxDrawdownPct}
+        />
 
         {/* ── 1. RISK METRICS / SECTOR BREAKDOWN ── */}
         <Card>
@@ -281,6 +326,12 @@ const RiskAnalysis = () => {
           </CardContent>
         </Card>
 
+        {/* ── CONCENTRATION RISK (NEW) ── */}
+        <ConcentrationRiskCard holdings={minHoldings} />
+
+        {/* ── GEOGRAPHIC EXPOSURE (NEW) ── */}
+        <CountryExposureCard holdings={minHoldings} />
+
         {/* ── 2. PORTFOLIO BETA GRAPH ── */}
         <Card>
           <CardHeader className="pb-2">
@@ -326,6 +377,26 @@ const RiskAnalysis = () => {
             </Card>
           </CardContent>
         </Card>
+
+        {/* ── VALUE AT RISK + CVaR (NEW) ── */}
+        <ValueAtRiskCard
+          portfolioValue={totalValue}
+          returns={portfolioReturns}
+          spyReturns={spyReturns}
+          isLoading={isBetaLoading}
+        />
+
+        {/* ── HISTORICAL DRAWDOWN + RISK-ADJUSTED RETURNS (NEW) ── */}
+        <HistoricalDrawdownCard
+          portfolioValue={totalValue}
+          returns={portfolioReturns}
+          spyReturns={spyReturns}
+          dates={returnDates}
+          isLoading={isBetaLoading}
+        />
+
+        {/* ── SECTOR CRASH SCENARIOS (NEW) ── */}
+        <SectorCrashCard holdings={minHoldings} />
 
         {/* ── 3. MARKET POSITION ANALYSIS ── */}
         <MarketPositionWidget

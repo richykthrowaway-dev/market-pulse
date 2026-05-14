@@ -3,11 +3,12 @@ import type { ReactNode, ErrorInfo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import { categories } from './data/categories'
-import { articles, getArticlesByCategory } from './data/articles'
+import { articles, getArticleById, getArticlesByCategory } from './data/articles'
+import { paths, type LearningPath } from './data/paths'
 import type { Article, Category, ContentBlock } from './data/types'
 import {
-  GraduationCap, Search, X, ArrowLeft, BookOpen,
-  CheckCircle2, Clock, BookMarked, ChevronDown,
+  GraduationCap, Search, X, ArrowLeft, ArrowRight, BookOpen,
+  CheckCircle2, Clock, BookMarked, ChevronDown, Play,
 } from 'lucide-react'
 
 // ── Error boundary ──────────────────────────────────────────────────────────
@@ -39,16 +40,25 @@ function useLearnState() {
     try { return new Set(JSON.parse(localStorage.getItem('learn-bookmarks') || '[]') as string[]) }
     catch { return new Set<string>() }
   })
-  const markRead = (id: string) => setReadIds((prev) => {
-    const next = new Set(prev); next.add(id)
-    localStorage.setItem('learn-read', JSON.stringify([...next])); return next
+  const [lastRead, setLastRead] = useState<{ id: string; ts: number } | null>(() => {
+    try { return JSON.parse(localStorage.getItem('learn-lastread') || 'null') }
+    catch { return null }
   })
+  const markRead = (id: string) => {
+    setReadIds((prev) => {
+      const next = new Set(prev); next.add(id)
+      localStorage.setItem('learn-read', JSON.stringify([...next])); return next
+    })
+    const last = { id, ts: Date.now() }
+    setLastRead(last)
+    localStorage.setItem('learn-lastread', JSON.stringify(last))
+  }
   const toggleBookmark = (id: string) => setBookmarkIds((prev) => {
     const next = new Set(prev)
     if (next.has(id)) next.delete(id); else next.add(id)
     localStorage.setItem('learn-bookmarks', JSON.stringify([...next])); return next
   })
-  return { readIds, bookmarkIds, markRead, toggleBookmark }
+  return { readIds, bookmarkIds, lastRead, markRead, toggleBookmark }
 }
 
 // ── Difficulty badge ────────────────────────────────────────────────────────
@@ -227,7 +237,7 @@ function ArticleCard({ article, cat, isRead, onSelect }: {
 }
 
 // ── Article detail view ─────────────────────────────────────────────────────
-function ArticleView({ article, onBack, onSelectArticle, readIds, bookmarkIds, markRead, toggleBookmark }: {
+function ArticleView({ article, onBack, onSelectArticle, readIds, bookmarkIds, markRead, toggleBookmark, activePath }: {
   article: Article
   onBack: () => void
   onSelectArticle: (a: Article) => void
@@ -235,6 +245,7 @@ function ArticleView({ article, onBack, onSelectArticle, readIds, bookmarkIds, m
   bookmarkIds: Set<string>
   markRead: (id: string) => void
   toggleBookmark: (id: string) => void
+  activePath?: LearningPath | null
 }) {
   const cat = categories.find((c) => c.id === article.category)
   const [quizStates, setQuizStates] = useState<Record<string, number | null>>({})
@@ -243,7 +254,27 @@ function ArticleView({ article, onBack, onSelectArticle, readIds, bookmarkIds, m
     [article.category, article.id],
   )
 
-  useEffect(() => { markRead(article.id) }, [article.id]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Build the prev/next navigation list — path order if a path is active, otherwise category order
+  const navList = useMemo<Article[]>(() => {
+    if (activePath) {
+      return activePath.articleIds
+        .map((id) => getArticleById(id))
+        .filter((a): a is Article => a != null)
+    }
+    return getArticlesByCategory(article.category)
+  }, [activePath, article.category])
+
+  const currentIdx = navList.findIndex((a) => a.id === article.id)
+  const prev = currentIdx > 0 ? navList[currentIdx - 1] : null
+  const next = currentIdx >= 0 && currentIdx < navList.length - 1 ? navList[currentIdx + 1] : null
+
+  useEffect(() => {
+    markRead(article.id)
+    // Scroll the window AND any scrollable parent container to the top.
+    window.scrollTo(0, 0)
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }, [article.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const setQuizState = (key: string, idx: number) =>
     setQuizStates((prev) => ({ ...prev, [key]: idx }))
@@ -253,6 +284,19 @@ function ArticleView({ article, onBack, onSelectArticle, readIds, bookmarkIds, m
       <button onClick={onBack} className="flex items-center gap-1.5 text-xs text-surface-400 hover:text-accent transition-colors mb-6">
         <ArrowLeft className="w-3.5 h-3.5" />Back to Learn Hub
       </button>
+
+      {activePath && currentIdx >= 0 && (
+        <div className="mb-6 rounded-lg border p-3 flex items-center gap-3" style={{ borderColor: activePath.color + '40', backgroundColor: activePath.color + '0d' }}>
+          <span className="text-xl">{activePath.icon}</span>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: activePath.color }}>Path · {activePath.title}</div>
+            <div className="text-xs text-surface-400 mt-0.5">Article {currentIdx + 1} of {navList.length}</div>
+          </div>
+          <div className="w-24 h-1 rounded-full bg-surface-700 overflow-hidden">
+            <div className="h-full rounded-full transition-all" style={{ width: `${((currentIdx + 1) / navList.length) * 100}%`, backgroundColor: activePath.color }} />
+          </div>
+        </div>
+      )}
 
       <div className="mb-8">
         <div className="flex items-center gap-2 flex-wrap mb-3">
@@ -280,6 +324,35 @@ function ArticleView({ article, onBack, onSelectArticle, readIds, bookmarkIds, m
           <BlockRenderer key={i} block={block} articleId={article.id} quizStates={quizStates} setQuizState={setQuizState} />
         ))}
       </div>
+
+      {(prev || next) && (
+        <div className="mt-10 pt-6 border-t border-surface-700/50 grid grid-cols-2 gap-3">
+          {prev ? (
+            <button
+              onClick={() => onSelectArticle(prev)}
+              className="flex items-start gap-2 p-3 rounded-xl border border-surface-600/50 bg-surface-800/60 hover:border-accent/40 hover:bg-surface-800 transition-colors text-left"
+            >
+              <ArrowLeft className="w-4 h-4 text-surface-400 shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-wider text-surface-500 mb-0.5">Previous</div>
+                <div className="text-xs font-semibold text-surface-200 truncate">{prev.title}</div>
+              </div>
+            </button>
+          ) : <div />}
+          {next ? (
+            <button
+              onClick={() => onSelectArticle(next)}
+              className="flex items-start gap-2 p-3 rounded-xl border border-surface-600/50 bg-surface-800/60 hover:border-accent/40 hover:bg-surface-800 transition-colors text-right justify-end"
+            >
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-wider text-surface-500 mb-0.5">Next</div>
+                <div className="text-xs font-semibold text-surface-200 truncate">{next.title}</div>
+              </div>
+              <ArrowRight className="w-4 h-4 text-surface-400 shrink-0 mt-0.5" />
+            </button>
+          ) : <div />}
+        </div>
+      )}
 
       {related.length > 0 && (
         <div className="mt-10 pt-6 border-t border-surface-700/50">
@@ -349,13 +422,19 @@ function CategorySection({ cat, arts, readIds, onSelect, activeDiff }: {
 // ── Main Learn page ─────────────────────────────────────────────────────────
 function LearnHub() {
   const navigate = useNavigate()
-  const { readIds, bookmarkIds, markRead, toggleBookmark } = useLearnState()
+  const { readIds, bookmarkIds, lastRead, markRead, toggleBookmark } = useLearnState()
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
+  const [activePath, setActivePath] = useState<LearningPath | null>(null)
   const [query, setQuery]           = useState('')
   const [activeCat, setActiveCat]   = useState<string | null>(null)
   const [activeDiff, setActiveDiff] = useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = useState<'all' | 'read' | 'unread'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'read' | 'unread' | 'bookmarked'>('all')
   const [showAllCats, setShowAllCats]   = useState(false)
+
+  const continueArticle = useMemo(
+    () => (lastRead ? getArticleById(lastRead.id) ?? null : null),
+    [lastRead],
+  )
 
   const filtered = useMemo(() => {
     let pool = articles.filter((a): a is Article => a != null && typeof a === 'object' && 'id' in a)
@@ -369,10 +448,11 @@ function LearnHub() {
     }
     if (activeCat) pool = pool.filter((a) => a.category === activeCat)
     if (activeDiff) pool = pool.filter((a) => a.difficulty === activeDiff)
-    if (statusFilter === 'read')   pool = pool.filter((a) =>  readIds.has(a.id))
-    if (statusFilter === 'unread') pool = pool.filter((a) => !readIds.has(a.id))
+    if (statusFilter === 'read')       pool = pool.filter((a) =>  readIds.has(a.id))
+    if (statusFilter === 'unread')     pool = pool.filter((a) => !readIds.has(a.id))
+    if (statusFilter === 'bookmarked') pool = pool.filter((a) =>  bookmarkIds.has(a.id))
     return pool
-  }, [query, activeCat, activeDiff, statusFilter, readIds])
+  }, [query, activeCat, activeDiff, statusFilter, readIds, bookmarkIds])
 
   const grouped = useMemo(() => {
     const map = new Map<string, Article[]>()
@@ -401,6 +481,7 @@ function LearnHub() {
           bookmarkIds={bookmarkIds}
           markRead={markRead}
           toggleBookmark={toggleBookmark}
+          activePath={activePath}
         />
       </div>
     )
@@ -447,8 +528,76 @@ function LearnHub() {
         )}
       </div>
 
+      {/* Continue reading */}
+      {!query && !activePath && continueArticle && (
+        <button
+          onClick={() => setSelectedArticle(continueArticle)}
+          className="w-full mb-6 flex items-center gap-3 p-3 rounded-xl border border-accent/30 bg-accent/5 hover:border-accent/50 hover:bg-accent/10 transition-colors text-left group"
+        >
+          <div className="w-10 h-10 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
+            <Play className="w-4 h-4 text-accent" fill="currentColor" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] uppercase tracking-wider font-semibold text-accent mb-0.5">Continue reading</div>
+            <div className="text-sm font-semibold text-surface-100 truncate group-hover:text-white">{continueArticle.title}</div>
+            <div className="text-[11px] text-surface-400 truncate">{continueArticle.description}</div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-accent shrink-0" />
+        </button>
+      )}
+
+      {/* Active path banner */}
+      {activePath && (
+        <div className="mb-6 rounded-xl border p-4 flex items-center gap-3" style={{ borderColor: activePath.color + '40', backgroundColor: activePath.color + '0d' }}>
+          <span className="text-2xl">{activePath.icon}</span>
+          <div className="flex-1 min-w-0">
+            <div className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: activePath.color }}>Active Path</div>
+            <div className="text-sm font-bold text-surface-50">{activePath.title}</div>
+            <div className="text-[11px] text-surface-400 mt-0.5 line-clamp-1">{activePath.description}</div>
+          </div>
+          <button onClick={() => setActivePath(null)} className="text-xs text-surface-400 hover:text-surface-100 shrink-0 flex items-center gap-1">
+            Exit path <X className="w-3 h-3" />
+          </button>
+        </div>
+      )}
+
+      {/* Learning paths */}
+      {!query && !activePath && (
+        <div className="mb-8">
+          <div className="text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-3">Learning Paths</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {paths.map((p) => {
+              const read = p.articleIds.filter((id) => readIds.has(id)).length
+              const pct = p.articleIds.length > 0 ? Math.round((read / p.articleIds.length) * 100) : 0
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => setActivePath(p)}
+                  className="text-left p-3 rounded-xl border border-surface-600/40 bg-surface-800/60 hover:border-surface-500/60 hover:bg-surface-800/80 transition-all group"
+                >
+                  <div className="flex items-start gap-2.5 mb-2">
+                    <span className="text-xl shrink-0">{p.icon}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="text-xs font-bold text-surface-100 group-hover:text-white leading-tight">{p.title}</div>
+                      <div className="text-[10px] text-surface-400 line-clamp-2 mt-0.5 leading-snug">{p.description}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 text-[10px]">
+                    <span className="text-surface-500">{read}/{p.articleIds.length} read</span>
+                    <span className="font-semibold" style={{ color: p.color }}>{pct}%</span>
+                  </div>
+                  <div className="mt-1.5 h-1 rounded-full bg-surface-700 overflow-hidden">
+                    <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, backgroundColor: p.color }} />
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Category grid */}
-      {!query && (
+      {!query && !activePath && (
         <div className="mb-8">
           <div className="text-[10px] font-semibold text-surface-400 uppercase tracking-wider mb-3">Browse by Category</div>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
@@ -471,7 +620,9 @@ function LearnHub() {
                   {catArts.length > 0 && (
                     <div className="flex items-center justify-between w-full mt-1.5">
                       <span className="text-[9px] text-surface-500">{catRead}/{catArts.length} read</span>
-                      <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-surface-700/60 text-surface-400">{catArts.length} articles</span>
+                      {catRead > 0 && (
+                        <span className="text-[9px] font-semibold text-emerald-400">{Math.round((catRead / catArts.length) * 100)}%</span>
+                      )}
                     </div>
                   )}
                 </button>
@@ -491,7 +642,7 @@ function LearnHub() {
       )}
 
       {/* Filter bar */}
-      <div className="flex items-center gap-2 mb-5 flex-wrap">
+      <div className="sticky top-0 z-20 flex items-center gap-2 mb-5 flex-wrap bg-background/95 backdrop-blur-md py-2.5 -mx-6 px-6 border-b border-surface-700/50">
         {activeCat && (
           <button
             onClick={() => setActiveCat(null)}
@@ -515,7 +666,7 @@ function LearnHub() {
           ))}
         </div>
         <div className="flex items-center rounded-lg border border-surface-600/50 overflow-hidden text-[10px]">
-          {(['all', 'unread', 'read'] as const).map((s) => (
+          {(['all', 'unread', 'read', 'bookmarked'] as const).map((s) => (
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
@@ -539,6 +690,22 @@ function LearnHub() {
           <BookOpen className="w-10 h-10 text-surface-600 mx-auto mb-3" />
           <p className="text-surface-400 font-medium mb-1">Articles coming soon</p>
           <p className="text-sm text-surface-500">The article library is being loaded.</p>
+        </div>
+      ) : activePath ? (
+        // Path mode — render path articles in order, ungrouped
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          {activePath.articleIds
+            .map((id) => getArticleById(id))
+            .filter((a): a is Article => a != null)
+            .map((article, idx) => {
+              const cat = categories.find((c) => c.id === article.category)
+              return (
+                <div key={article.id} className="relative">
+                  <span className="absolute -top-1 -left-1 z-10 w-5 h-5 rounded-full bg-surface-900 border border-surface-600 text-[9px] font-bold text-surface-300 flex items-center justify-center">{idx + 1}</span>
+                  <ArticleCard article={article} cat={cat} isRead={readIds.has(article.id)} onSelect={setSelectedArticle} />
+                </div>
+              )
+            })}
         </div>
       ) : visibleCats.length === 0 ? (
         <div className="text-center py-16 text-surface-500">

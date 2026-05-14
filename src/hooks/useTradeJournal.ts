@@ -91,10 +91,16 @@ const IDB_DOC = 'all';
 
 function openIdb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(IDB_NAME, 1);
-    req.onupgradeneeded = () => { req.result.createObjectStore(IDB_STORE); };
+    const req = indexedDB.open(IDB_NAME, 3);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('trades'))      db.createObjectStore('trades');
+      if (!db.objectStoreNames.contains('settings'))    db.createObjectStore('settings');
+      if (!db.objectStoreNames.contains('screenshots')) db.createObjectStore('screenshots');
+      if (!db.objectStoreNames.contains('strategy'))    db.createObjectStore('strategy');
+    };
     req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
+    req.onerror   = () => reject(req.error);
   });
 }
 

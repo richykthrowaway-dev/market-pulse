@@ -855,23 +855,23 @@ function BuyersView({ selectedId }: { selectedId: string }) {
 // ── View: Monopolies (cross-commodity concentration ranking) ──────────────────
 /**
  * Ranks ALL commodities AND all individual rare-earth elements by supply
- * concentration (HHI).  The single "Rare Earths" bloc entry is replaced
- * by 16 individual elements (Pm excluded — no commercial mining).
- *
- * REE elements use the class-level producer list as their mining HHI proxy
- * (all LREEs share one HHI; all HREEs share another), then are sub-sorted
- * by separationChinaPct so Tb → Dy → Tm → Ho/Er bubble to the top within
- * each class.  Clicking any REE row navigates to that element's Producers view.
- *
- * onSelect: callback to navigate — receives the new selectedId and optionally
- * switches to the Producers view so the user can drill further.
+ * concentration.  Includes sort + filter controls so the user can slice by
+ * category (Energy / Metals / Agri / REE) and risk level (Monopoly / etc.).
  */
 function MonopoliesView({ onSelect }: { onSelect?: (id: string) => void }) {
+  type SortKey      = 'conc-desc' | 'conc-asc' | 'az';
+  type CatFilter    = 'all' | 'energy' | 'metals' | 'agriculture' | 'ree';
+  type RiskFilter   = 'all' | 'monopoly' | 'concentrated' | 'diversified';
+
+  const [sort,       setSort]       = useState<SortKey>('conc-desc');
+  const [catFilter,  setCatFilter]  = useState<CatFilter>('all');
+  const [riskFilter, setRiskFilter] = useState<RiskFilter>('all');
+
   type RankedEntry = {
     type:      'commodity' | 'ree';
     id:        string;
     label:     string;
-    /** Share of the leading country (0–100). Sort key + bar width. */
+    category:  'energy' | 'metals' | 'agriculture' | 'ree';
     topShare:  number;
     top:       { iso2: string; share: number } | null;
     element:   RareEarthElement | null;
@@ -879,20 +879,19 @@ function MonopoliesView({ onSelect }: { onSelect?: (id: string) => void }) {
   };
 
   const ranked = useMemo<RankedEntry[]>(() => {
-    // Regular commodities — rare-earths bloc replaced by individual elements
     const regular: RankedEntry[] = COMMODITIES
       .filter(c => c.id !== 'rare-earths')
       .map(c => ({
         type:     'commodity',
         id:       c.id,
         label:    c.label,
+        category: c.category,
         topShare: c.producers[0]?.share ?? 0,
         top:      c.producers[0] ?? null,
         element:  null,
         sepPct:   0,
       }));
 
-    // Individual REE elements (Pm excluded — miningChinaPct=0)
     const reeEntries: RankedEntry[] = RARE_EARTH_ELEMENTS
       .filter(e => e.miningChinaPct > 0)
       .map(e => {
@@ -901,7 +900,8 @@ function MonopoliesView({ onSelect }: { onSelect?: (id: string) => void }) {
           type:     'ree',
           id:       `${REE_PREFIX}${e.symbol}`,
           label:    e.name,
-          topShare: e.miningChinaPct,   // China is always #1 for all REEs
+          category: 'ree' as const,
+          topShare: e.miningChinaPct,
           top:      producers[0] ?? null,
           element:  e,
           sepPct:   e.separationChinaPct,
@@ -910,33 +910,102 @@ function MonopoliesView({ onSelect }: { onSelect?: (id: string) => void }) {
 
     return [...regular, ...reeEntries].sort((a, b) => {
       if (b.topShare !== a.topShare) return b.topShare - a.topShare;
-      return b.sepPct - a.sepPct;      // tie-break: higher separation = higher risk
+      return b.sepPct - a.sepPct;
     });
   }, []);
+
+  // Apply active filters + sort
+  const displayed = useMemo(() => {
+    let list = [...ranked];
+    if (catFilter !== 'all')             list = list.filter(e => e.category === catFilter);
+    if (riskFilter === 'monopoly')       list = list.filter(e => e.topShare >= 70);
+    if (riskFilter === 'concentrated')   list = list.filter(e => e.topShare >= 40 && e.topShare < 70);
+    if (riskFilter === 'diversified')    list = list.filter(e => e.topShare < 40);
+    if (sort === 'conc-asc')             list.sort((a, b) => a.topShare - b.topShare);
+    else if (sort === 'az')              list.sort((a, b) => a.label.localeCompare(b.label));
+    return list;
+  }, [ranked, catFilter, riskFilter, sort]);
+
+  // Chip button helper
+  function Chip<T extends string>({
+    value, active, onClick, children,
+  }: { value: T; active: boolean; onClick: (v: T) => void; children: React.ReactNode }) {
+    return (
+      <button
+        type="button"
+        onClick={() => onClick(value)}
+        className={cn(
+          'px-1.5 py-0.5 rounded text-[9px] font-medium transition-colors leading-none',
+          active
+            ? 'bg-purple-600 text-white'
+            : 'border border-border/60 text-muted-foreground hover:bg-muted hover:text-foreground',
+        )}
+      >
+        {children}
+      </button>
+    );
+  }
 
   return (
     <>
       <p className="px-4 pb-2 text-[11px] leading-snug text-muted-foreground italic">
-        Ranked by the leading country's share of global supply.
-        REE rows show China's mining share; sep% is the separation chokepoint (always higher).
+        Ranked by the leading country's share of global supply. REE rows show
+        China's mining share — hover the flag for sep% (refining chokepoint).
         Click any REE to view its producers.
       </p>
 
+      {/* ── Controls ──────────────────────────────────────────────────────── */}
+      <div className="px-4 pb-2 space-y-1.5">
+        {/* Sort */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/50 w-8 shrink-0">
+            Sort
+          </span>
+          <div className="flex items-center gap-1 flex-wrap">
+            <Chip value="conc-desc" active={sort === 'conc-desc'} onClick={setSort}>% High ↓</Chip>
+            <Chip value="conc-asc"  active={sort === 'conc-asc'}  onClick={setSort}>% Low ↑</Chip>
+            <Chip value="az"        active={sort === 'az'}         onClick={setSort}>A–Z</Chip>
+          </div>
+        </div>
+
+        {/* Category filter */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/50 w-8 shrink-0">
+            Type
+          </span>
+          <div className="flex items-center gap-1 flex-wrap">
+            <Chip value="all"         active={catFilter === 'all'}         onClick={setCatFilter}>All</Chip>
+            <Chip value="energy"      active={catFilter === 'energy'}      onClick={setCatFilter}>⚡ Energy</Chip>
+            <Chip value="metals"      active={catFilter === 'metals'}      onClick={setCatFilter}>⚙ Metals</Chip>
+            <Chip value="agriculture" active={catFilter === 'agriculture'} onClick={setCatFilter}>🌾 Agri</Chip>
+            <Chip value="ree"         active={catFilter === 'ree'}         onClick={setCatFilter}>✦ REE</Chip>
+          </div>
+        </div>
+
+        {/* Risk level filter */}
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-[9px] uppercase tracking-wider text-muted-foreground/50 w-8 shrink-0">
+            Risk
+          </span>
+          <div className="flex items-center gap-1 flex-wrap">
+            <Chip value="all"          active={riskFilter === 'all'}          onClick={setRiskFilter}>Any</Chip>
+            <Chip value="monopoly"     active={riskFilter === 'monopoly'}     onClick={setRiskFilter}><span className="inline-block w-1.5 h-1.5 rounded-full bg-red-400 mr-1 align-middle" />≥70%</Chip>
+            <Chip value="concentrated" active={riskFilter === 'concentrated'} onClick={setRiskFilter}><span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-400 mr-1 align-middle" />40–70%</Chip>
+            <Chip value="diversified"  active={riskFilter === 'diversified'}  onClick={setRiskFilter}><span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1 align-middle" />&lt;40%</Chip>
+          </div>
+        </div>
+      </div>
+
       {/* Legend */}
-      <div className="px-4 pb-2 flex items-center gap-3 text-[10px] text-muted-foreground/70 flex-wrap">
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-red-500" /> ≥70% monopoly
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-amber-500" /> 40–70% concentrated
-        </span>
-        <span className="flex items-center gap-1">
-          <span className="w-2 h-2 rounded-full bg-emerald-500" /> &lt;40% diversified
-        </span>
+      <div className="px-4 pb-1.5 flex items-center gap-3 text-[10px] text-muted-foreground/50 flex-wrap border-t border-border/30 pt-1.5">
+        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" /> monopoly</span>
+        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> concentrated</span>
+        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> diversified</span>
+        <span className="ml-auto tabular-nums text-muted-foreground/40">{displayed.length} shown</span>
       </div>
 
       <ul className="px-4 pb-3 space-y-1">
-        {ranked.map(({ type, id, label, topShare, top, element }, i) => {
+        {displayed.map(({ type, id, label, topShare, top, element }, i) => {
           const dotColor = topShare >= 70 ? 'bg-red-500'    : topShare >= 40 ? 'bg-amber-500'    : 'bg-emerald-500';
           const barColor = topShare >= 70 ? 'bg-red-500/70' : topShare >= 40 ? 'bg-amber-500/70' : 'bg-emerald-500/70';
           // Bar width IS the percentage — no scaling needed (0–100 range)
@@ -995,14 +1064,16 @@ function MonopoliesView({ onSelect }: { onSelect?: (id: string) => void }) {
 
               {/* 4 ── Info slot — FIXED w-12 keeps bar column aligned */}
               <div className="w-12 shrink-0 flex items-center justify-end">
-                {isReeRow && element && cs ? (
-                  /* REE: separation % chip (the real supply bottleneck) */
-                  <span className={cn(
-                    'text-[8px] font-mono tabular-nums px-1 py-px rounded border leading-none',
-                    cs.badge,
-                  )}>
-                    sep {element.separationChinaPct}%
-                  </span>
+                {isReeRow && element ? (
+                  /* REE: China flag (always #1) — sep% shown in tooltip */
+                  <img
+                    src={getFlagSrc('cn')}
+                    alt="China"
+                    title={`#1: China — mining ${element.miningChinaPct}% · separation ${element.separationChinaPct}%`}
+                    width={16}
+                    height={11}
+                    className="rounded-[2px] ring-1 ring-border/40 object-cover opacity-80"
+                  />
                 ) : top ? (
                   /* Commodity: top-producer flag */
                   <img

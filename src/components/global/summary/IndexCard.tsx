@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { LineChart, Line, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, YAxis, ResponsiveContainer } from 'recharts';
 import { ArrowUpIcon, ArrowDownIcon } from 'lucide-react';
 import type { CountryIndexQuote } from '@/hooks/useCountryIndices';
 import { useIndexHistory } from '@/hooks/useIndexHistory';
@@ -78,6 +78,21 @@ export function IndexCard({ index }: Props) {
             ) : sparkData.length >= 2 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={sparkData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+                  {/*
+                    Hidden Y-axis with a *tight* data-driven domain. Recharts
+                    defaults to [0, auto] which makes index sparklines (S&P
+                    ~5000, Nikkei ~38000) look completely flat because the
+                    full year's range becomes a sliver near the top. Padding
+                    the domain by 2% above/below the range gives the line
+                    room to breathe without clipping at the edges.
+                  */}
+                  <YAxis
+                    hide
+                    domain={[
+                      (min: number) => min - (Math.abs(min) * 0.02 || 1),
+                      (max: number) => max + (Math.abs(max) * 0.02 || 1),
+                    ]}
+                  />
                   <Line
                     type="monotone"
                     dataKey="v"

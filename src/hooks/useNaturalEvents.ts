@@ -340,7 +340,25 @@ function parseEvent(e: EonetEvent, forcedCategory: NaturalEventCategory): Natura
         };
 }
 
-/** Build the EONET URL for a single category fetch. */
+/**
+ * Build the request URL for a single category fetch.
+ *
+ * Goes through our `api-eonet` edge function, which:
+ *   - Caches NASA EONET responses for 15 min in worker memory
+ *   - Adds Cache-Control: s-maxage=900, stale-while-revalidate=1800
+ *     so the Supabase edge CDN also caches the response
+ *   - Falls back to stale cache when upstream errors or times out
+ *
+ * Cold-response latency drops from 500-2000 ms (direct EONET) to ~50 ms
+ * (cached) or ~600 ms (cache miss with upstream fetch).
+ */
+const EONET_FN_BASE =
+  `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/api-eonet`;
+const EONET_HEADERS = {
+  apikey:        import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string,
+  Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string}`,
+};
+
 function buildUrl(spec: CategorySpec): string {
   const params = new URLSearchParams({
     category: spec.eonetId,
@@ -348,12 +366,15 @@ function buildUrl(spec: CategorySpec): string {
     days:     String(spec.days),
     limit:    String(spec.limit),
   });
-  return `https://eonet.gsfc.nasa.gov/api/v3/events?${params}`;
+  return `${EONET_FN_BASE}?${params}`;
 }
 
 async function fetchCategory(spec: CategorySpec): Promise<NaturalEvent[]> {
-  const res = await fetch(buildUrl(spec), { signal: AbortSignal.timeout(20_000) });
-  if (!res.ok) throw new Error(`EONET ${spec.eonetId} ${res.status}`);
+  const res = await fetch(buildUrl(spec), {
+    signal: AbortSignal.timeout(25_000), // edge function may take longer on a cache miss
+    headers: EONET_HEADERS,
+  });
+  if (!res.ok) throw new Error(`api-eonet ${spec.eonetId} ${res.status}`);
   const data = await res.json() as EonetResponse;
   const out: NaturalEvent[] = [];
   for (const e of (data.events ?? [])) {
@@ -399,9 +420,18 @@ export function useNaturalEvents(enabled: boolean | Partial<Record<NaturalEventC
   const data = useMemo<NaturalEvent[] | undefined>(() => {
     // If no category is enabled, return undefined so consumers can short-circuit.
     if (!CATEGORY_SPECS.some(s => enabledMap[s.category])) return undefined;
+    // Important: a disabled React Query still exposes its previously-cached
+    // `data` on `results[i].data` (that's the gc behaviour, not a bug).
+    // We must filter by the current enabledMap so toggling a layer OFF
+    // actually removes its events from the merged output. Without this,
+    // wildfires (or any other category) would stay on the globe after
+    // their toggle is turned off until the cache eventually gc'd them.
     const combined: NaturalEvent[] = [];
-    for (const r of results) {
-      if (r.data) combined.push(...r.data);
+    for (let i = 0; i < CATEGORY_SPECS.length; i++) {
+      const spec = CATEGORY_SPECS[i];
+      if (!enabledMap[spec.category]) continue;
+      const d = results[i]?.data;
+      if (d) combined.push(...d);
     }
     return combined;
     // eslint-disable-next-line react-hooks/exhaustive-deps

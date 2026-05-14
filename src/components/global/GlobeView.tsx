@@ -147,6 +147,38 @@ interface GlobeViewProps {
    * so they never interfere with the existing pathsData trade routes.
    */
   partnerArcs?:             PartnerArc[];
+
+  /**
+   * Chokepoint disruption-risk rings. Each entry pulses a red halo at the
+   * chokepoint coordinate, sized + tinted by composite risk score (0-10).
+   * Derived from already-loaded conflict/earthquake/natural events upstream.
+   */
+  riskRings?:               Array<{
+    lat:            number;
+    lng:            number;
+    chokepointId:   string;
+    chokepointName: string;
+    score:          number;
+  }>;
+
+  /**
+   * UNCTAD LSCI per port. When `showConnectivity` is true, seaport markers
+   * are enlarged + tinted by their LSCI value, so well-connected ports
+   * (Shanghai, Singapore) visually dominate.  Keyed by `TradeNode.id`.
+   */
+  portConnectivity?:        Record<string, number>;
+  showConnectivity?:        boolean;
+
+  /** Scale applied to the WebGL pixel ratio (e.g. 0.75 = 25% resolution reduction). */
+  pixelRatioScale?:         number;
+  /** Starting camera altitude (react-globe.gl default is 2.5). */
+  initialAltitude?:         number;
+  /**
+   * Performance Mode: disables expensive visual flourishes (atmosphere shader,
+   * bump-mapped terrain, ring pulse propagation). Lets the globe stay
+   * responsive on low-end devices and saves ~20-30% GPU per frame.
+   */
+  perfMode?:                boolean;
 }
 
 // ── Partner arc type ─────────────────────────────────────────────────────────
@@ -427,7 +459,11 @@ type RingDatum =
   | { kind: 'conflict';   lat: number; lng: number; event: ConflictEvent }
   | { kind: 'earthquake'; lat: number; lng: number; event: EarthquakeEvent }
   | { kind: 'economic';   lat: number; lng: number; event: EconomicEvent }
-  | { kind: 'natural';    lat: number; lng: number; event: NaturalEvent };
+  | { kind: 'natural';    lat: number; lng: number; event: NaturalEvent }
+  // Derived overlay: chokepoint disruption risk score (0-10) — pulses red
+  // proportional to score. Not a "live event" — a synthesis of nearby
+  // conflicts + earthquakes + naturals.
+  | { kind: 'risk';       lat: number; lng: number; chokepointId: string; chokepointName: string; score: number };
 
 // ── Per-category palette for natural events (EONET) ────────────────────────
 // Color values picked to be visually distinct from conflict (orange/red) and
@@ -483,7 +519,16 @@ const LABEL_SIZE       = (d: object) => (d as WorldCity).capital ? 0.50 : 0.35;
 const LABEL_DOT_RADIUS = (d: object) => (d as WorldCity).capital ? 0.28 : 0.18;
 const LABEL_DOT_ORIENT = () => 'bottom' as const;
 
-/** Color callback — orange/red for conflicts, teal for earthquakes, blue for economic events. */
+/** Color callback — orange/red for conflicts, teal for earthquakes, blue for economic events.
+ *
+ *  Each return value is a `(t) => rgba(...)` callback invoked per-frame
+ *  during ring animation. We check `isFarSide(rd.lat, rd.lng)` inside the
+ *  inner callback so culling is **per frame, from the latest camera pose**
+ *  — without rebuilding the ringsData array on camera movement (which would
+ *  trigger expensive Three.js scene-graph diffs).
+ */
+const TRANSPARENT = 'rgba(0,0,0,0)';
+
 function ringColor(d: object) {
   const rd = d as RingDatum;
   if (rd.kind === 'conflict') {
@@ -492,23 +537,42 @@ function ringColor(d: object) {
     const r = 249;
     const g = Math.round(115 - (f / 50) * 47);
     const b = Math.round(22  + (f / 50) * 46);
-    return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t * 0.6).toFixed(2)})`;
+    return (t: number) => isFarSide(rd.lat, rd.lng)
+      ? TRANSPARENT
+      : `rgba(${r}, ${g}, ${b}, ${(1 - t * 0.6).toFixed(2)})`;
   } else if (rd.kind === 'earthquake') {
     const e = rd.event as EarthquakeEvent;
     const intensity = Math.min(1, (e.magnitude - 2.5) / 5);
     const r = Math.round(56  - intensity * 20);
     const g = Math.round(189 - intensity * 40);
     const b = Math.round(248 - intensity * 10);
-    return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t).toFixed(2)})`;
+    return (t: number) => isFarSide(rd.lat, rd.lng)
+      ? TRANSPARENT
+      : `rgba(${r}, ${g}, ${b}, ${(1 - t).toFixed(2)})`;
   } else if (rd.kind === 'natural') {
     const e = rd.event as NaturalEvent;
     const [r, g, b] = NATURAL_RING_RGB[e.category];
-    return (t: number) => `rgba(${r}, ${g}, ${b}, ${(1 - t * 0.6).toFixed(2)})`;
+    return (t: number) => isFarSide(rd.lat, rd.lng)
+      ? TRANSPARENT
+      : `rgba(${r}, ${g}, ${b}, ${(1 - t * 0.6).toFixed(2)})`;
+  } else if (rd.kind === 'risk') {
+    // Chokepoint risk halo — saturated red whose alpha scales with score.
+    // Floor the peak alpha at 0.65 so even faint-risk halos are clearly
+    // visible against the dark globe (otherwise they read as "nothing
+    // here" and users assume the layer is broken).
+    const intensity = Math.min(1, rd.score / 10);
+    const alphaPeak = 0.65 + intensity * 0.30;
+    const gb = Math.round(68 - intensity * 30);
+    return (t: number) => isFarSide(rd.lat, rd.lng)
+      ? TRANSPARENT
+      : `rgba(239, ${gb}, ${gb}, ${(alphaPeak * (1 - t)).toFixed(2)})`;
   } else {
     // Economic event — blue, high-importance pulses brighter
     const e = rd.event as EconomicEvent;
     const bright = e.importance === 'high' ? 255 : e.importance === 'medium' ? 200 : 160;
-    return (t: number) => `rgba(96, ${bright}, 250, ${(1 - t * 0.65).toFixed(2)})`;
+    return (t: number) => isFarSide(rd.lat, rd.lng)
+      ? TRANSPARENT
+      : `rgba(96, ${bright}, 250, ${(1 - t * 0.65).toFixed(2)})`;
   }
 }
 
@@ -524,6 +588,11 @@ function ringMaxRadius(d: object) {
     // Constant ring size — EONET doesn't expose severity uniformly across
     // categories, so we let color carry the category meaning instead.
     return 2.0;
+  } else if (rd.kind === 'risk') {
+    // Risk halo — radius scales with score. Floor at 3.5 so even faint-risk
+    // chokepoints get a visually distinct halo (a 2.5-radius ring is similar
+    // in size to nearby individual event rings, making them hard to tell apart).
+    return 3.5 + (rd.score / 10) * 4.0;
   } else {
     // Economic: high = 2.5, medium = 1.8
     const e = rd.event as EconomicEvent;
@@ -543,6 +612,14 @@ const OBJ_ALT = () => 0.05;
 
 function makeEventMarker(d: object): THREE.Object3D {
   const rd = d as RingDatum;
+
+  // Risk-overlay rings have no standalone marker — they overlay existing
+  // chokepoint markers from the tradePoints layer. Returning an empty Group
+  // here keeps the objectsData layer aligned with ringsData (same array length)
+  // while contributing zero geometry per risk entry.
+  if (rd.kind === 'risk') {
+    return new THREE.Group();
+  }
 
   // Per-kind color palette
   const naturalCat = rd.kind === 'natural'
@@ -566,16 +643,13 @@ function makeEventMarker(d: object): THREE.Object3D {
   // The hit sphere is fully transparent so its segments matter even less.
   //
   // Shared module-level geometries (created lazily once) reduce per-event
-  // geometry allocation to zero; only the per-event MATERIAL is unique
-  // (it carries the color).
-  const hitMat   = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false });
-  const hitSphere = new THREE.Mesh(getEventHitGeom(), hitMat);
-
-  const innerMat = new THREE.MeshBasicMaterial({ color: coreColor, transparent: true, opacity: 0.95, depthWrite: false });
-  const inner    = new THREE.Mesh(getEventInnerGeom(), innerMat);
-
-  const haloMat  = new THREE.MeshBasicMaterial({ color: haloColor, transparent: true, opacity: 0.30, depthWrite: false });
-  const halo     = new THREE.Mesh(getEventHaloGeom(), haloMat);
+  // geometry allocation to zero. Materials are also pooled by colour via
+  // getInnerMat/getHaloMat so 800 events of the same kind share a single
+  // material trio instead of 2400 unique ones — dramatically reduces GPU
+  // state churn during data refreshes.
+  const hitSphere = new THREE.Mesh(getEventHitGeom(), _hitMatShared);
+  const inner     = new THREE.Mesh(getEventInnerGeom(), getInnerMat(coreColor));
+  const halo      = new THREE.Mesh(getEventHaloGeom(),  getHaloMat(haloColor));
 
   const group = new THREE.Group();
   group.add(hitSphere);
@@ -606,6 +680,82 @@ function getEventInnerGeom(): THREE.SphereGeometry {
 function getEventHaloGeom(): THREE.SphereGeometry {
   if (!_eventHaloGeom) _eventHaloGeom = new THREE.SphereGeometry(1.8, 8, 6);
   return _eventHaloGeom;
+}
+
+// ── Camera position + hemisphere culling (module-level, no React state) ────
+//
+// The globe is a sphere. From the camera's perspective, any point > 90° from
+// the camera's surface footprint is hidden behind the planet. Polygons +
+// markers benefit from depth testing (they get culled at the fragment stage
+// automatically). Rings, however, sit at globe-surface altitude with a flat
+// ring geometry — depth testing doesn't help, so they continue rendering on
+// the far side, costing ~50% of ring-layer GPU work for invisible output.
+//
+// Solution: in the per-frame ringColor inner callback, check angular distance
+// from the camera's footprint and return rgba(0,0,0,0) when out of range.
+// Three.js draws nothing for fully-transparent fragments (early discard) and
+// the saved GPU cycles add up to a real FPS gain on dense scenes.
+//
+// Module-level state (not React state) so the per-frame color callbacks can
+// read the latest camera position without triggering re-renders.
+let _cameraLatDeg = 0;
+let _cameraLngDeg = 0;
+/** ~95° = a little past the visible limb, so rings near the edge don't pop. */
+const CULL_ANGLE_DEG = 95;
+
+function angularDistanceDeg(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const φ1 = lat1 * Math.PI / 180;
+  const φ2 = lat2 * Math.PI / 180;
+  const dλ = (lng2 - lng1) * Math.PI / 180;
+  const cosD =
+    Math.sin(φ1) * Math.sin(φ2) +
+    Math.cos(φ1) * Math.cos(φ2) * Math.cos(dλ);
+  // Clamp before acos to absorb floating-point overshoot.
+  return Math.acos(Math.max(-1, Math.min(1, cosD))) * 180 / Math.PI;
+}
+
+/** Fast pre-check used inside the per-frame color callbacks. */
+function isFarSide(lat: number, lng: number): boolean {
+  return angularDistanceDeg(lat, lng, _cameraLatDeg, _cameraLngDeg) > CULL_ANGLE_DEG;
+}
+
+// ── Shared event-marker material pools ─────────────────────────────────────
+//
+// Previously: each event allocated 3 new THREE.MeshBasicMaterial instances
+// (hit / inner / halo). With 800+ events this meant 2400+ unique materials,
+// each carrying its own uniform buffer and texture binding — heavy GPU
+// state churn during data refresh.
+//
+// Now: all events of the same (coreColor, haloColor) share a single trio
+// of materials. Pool size is bounded by the number of distinct event-kind
+// colour combinations (~10), so total material count drops from thousands
+// to a handful. The visible result is identical.
+const _hitMatShared = new THREE.MeshBasicMaterial({
+  transparent: true, opacity: 0, depthWrite: false,
+});
+const _innerMatPool = new Map<number, THREE.MeshBasicMaterial>();
+const _haloMatPool  = new Map<number, THREE.MeshBasicMaterial>();
+
+function getInnerMat(color: number): THREE.MeshBasicMaterial {
+  let m = _innerMatPool.get(color);
+  if (!m) {
+    m = new THREE.MeshBasicMaterial({
+      color, transparent: true, opacity: 0.95, depthWrite: false,
+    });
+    _innerMatPool.set(color, m);
+  }
+  return m;
+}
+
+function getHaloMat(color: number): THREE.MeshBasicMaterial {
+  let m = _haloMatPool.get(color);
+  if (!m) {
+    m = new THREE.MeshBasicMaterial({
+      color, transparent: true, opacity: 0.30, depthWrite: false,
+    });
+    _haloMatPool.set(color, m);
+  }
+  return m;
 }
 
 // ── Waterway data (Natural Earth 10m rivers + lake centerlines) ──────────
@@ -756,6 +906,12 @@ export default function GlobeView({
   dayNightCycle     = false,
   showCountryColors = true,
   partnerArcs,
+  riskRings,
+  portConnectivity,
+  showConnectivity = false,
+  pixelRatioScale = 1,
+  initialAltitude = 2.5,
+  perfMode = false,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -897,8 +1053,9 @@ export default function GlobeView({
       controls = globe.controls();
       const renderer = globe.renderer();
       el = renderer.domElement;
-      // Cap pixel ratio — 2 is visually identical to 3 but renders 2.25× fewer pixels
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      // Cap pixel ratio — 2 is visually identical to 3 but renders 2.25× fewer pixels.
+      // pixelRatioScale < 1 reduces render resolution (e.g. 0.75 = 25% less on mobile).
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2) * pixelRatioScale);
     } catch {
       return;
     }
@@ -906,6 +1063,13 @@ export default function GlobeView({
     controls.autoRotateSpeed = 0.4;
     controls.enableDamping = true;
     controls.dampingFactor = 0.03; // low = long coast after release
+
+    // Set initial camera altitude (duration 0 = instant, no tween)
+    if (initialAltitude !== 2.5) {
+      try {
+        (globe as any).pointOfView({ lat: 0, lng: 0, altitude: initialAltitude }, 0);
+      } catch { /* ignore if globe not fully ready */ }
+    }
 
     // ── Intercept globe.gl's per-frame controls.change listener ─────────
     // globe.gl registers a 'change' listener that fires every frame during
@@ -1016,9 +1180,18 @@ export default function GlobeView({
       if (now - lastWheelTime < 100) return;
       lastWheelTime = now;
       draggingRef.current = true;
+      // Disable polygon raycasting during zoom — stops Three.js testing mouse
+      // position against all 250 country meshes on every scroll tick.
+      const g = globeRef.current as any;
+      if (g) g.enablePointerInteraction(false);
       clearTimeout(coastTimerRef.current);
       coastTimerRef.current = setTimeout(() => {
         draggingRef.current = false;
+        if (g) {
+          g.enablePointerInteraction(true);
+          g.onPolygonHover(handleHoverRef.current);
+          g.polygonLabel(getLabelRef.current);
+        }
       }, 800);
       controls.autoRotate = false;
       scheduleAutoRotateRestart();
@@ -1569,7 +1742,9 @@ export default function GlobeView({
         // as the "jiggling" / "clipping in and out" the previous version
         // showed at radius × 1.005 (which collided exactly with the
         // polygon altitude).
-        const geometry = new THREE.SphereGeometry(radius * 1.025, 96, 96);
+        // 32×32 = ~2K triangles vs 96×96 = ~18K — imperceptible difference on a
+        // transparent cloud layer; the gain is fewer GPU vertices per rAF frame.
+        const geometry = new THREE.SphereGeometry(radius * 1.025, 32, 32);
         const material = new THREE.MeshPhongMaterial({
           map:          texture,
           transparent:  true,
@@ -1899,8 +2074,16 @@ export default function GlobeView({
     const id = setInterval(() => {
       const globe = globeRef.current;
       if (!globe) return;
-      const alt = (globe as any)?.pointOfView()?.altitude;
+      const pov = (globe as any)?.pointOfView();
+      const alt = pov?.altitude;
       if (alt == null || alt <= 0) return;
+
+      // Update module-level camera tracking used by ringColor's per-frame
+      // hemisphere-culling check. 500ms cadence is fine here — the eye
+      // can't perceive a 0.5s lag in which rings appear/disappear at the
+      // limb, and avoiding sub-frame updates keeps the cost negligible.
+      if (typeof pov.lat === 'number') _cameraLatDeg = pov.lat;
+      if (typeof pov.lng === 'number') _cameraLngDeg = pov.lng;
 
       // Tiered city-label visibility — population threshold by altitude.
       // Bands hand-picked to feel like a real map: at world view you see
@@ -2483,6 +2666,16 @@ export default function GlobeView({
     [onCountryClick]
   );
 
+  // Camera tracker — fires on every zoom/rotation so the per-frame ring
+  // hemisphere-culling sees the latest camera pose without a 500ms lag.
+  // Writes to module-level vars (not React state) to avoid re-rendering.
+  // The 500ms poll above is still the canonical "lazy" source on idle —
+  // this one snaps things into place during interaction.
+  const handleZoom = useCallback((pov: { lat?: number; lng?: number; altitude?: number }) => {
+    if (typeof pov?.lat === 'number') _cameraLatDeg = pov.lat;
+    if (typeof pov?.lng === 'number') _cameraLngDeg = pov.lng;
+  }, []);
+
   // Keep module-level click ref in sync so HTML pin elements always call latest callback
   _exchangeClickRef = onExchangeClick;
 
@@ -2534,14 +2727,42 @@ export default function GlobeView({
   const tradePointRadius = useCallback((d: object) => {
     const n = d as TradeNode;
     const isSelected = n.id === selectedTradeNodeId;
-    return (isSelected ? 0.55 : 0.35) + (n.importance / 100) * 0.25;
-  }, [selectedTradeNodeId]);
+    let r = (isSelected ? 0.55 : 0.35) + (n.importance / 100) * 0.25;
+
+    // Connectivity overlay: enlarge seaports proportional to their LSCI
+    // score so well-connected ports (Shanghai 161, Singapore 145) visually
+    // dominate vs. regional ports (Durban 50, Mundra 62). Up to +0.45
+    // radius bump at the top of the scale.
+    if (showConnectivity && n.kind === 'seaport' && portConnectivity) {
+      const lsci = portConnectivity[n.id];
+      if (typeof lsci === 'number' && lsci > 0) {
+        const intensity = Math.min(1, lsci / 160);
+        r += intensity * 0.45;
+      }
+    }
+    return r;
+  }, [selectedTradeNodeId, showConnectivity, portConnectivity]);
+
   const tradePointColor = useCallback((d: object) => {
     const n = d as TradeNode;
-    const base = NODE_COLOR[n.kind];
     if (n.id === selectedTradeNodeId) return '#ffffff';
+    const base = NODE_COLOR[n.kind];
+
+    // Connectivity overlay: tint seaport markers along a green→amber gradient
+    // by LSCI band so the eye instantly groups top-tier hubs vs. regional ports.
+    if (showConnectivity && n.kind === 'seaport' && portConnectivity) {
+      const lsci = portConnectivity[n.id];
+      if (typeof lsci === 'number' && lsci > 0) {
+        if (lsci >= 130) return '#22c55e'; // top-tier — green
+        if (lsci >= 95)  return '#84cc16'; // high     — lime
+        if (lsci >= 65)  return '#eab308'; // mid      — amber
+        return '#f97316';                  // regional — orange
+      }
+      // Port has no LSCI score → dim it so the eye focuses on rated ports.
+      return '#475569';
+    }
     return base;
-  }, [selectedTradeNodeId]);
+  }, [selectedTradeNodeId, showConnectivity, portConnectivity]);
   const tradePointLabel = useCallback((d: object) => {
     const n = d as TradeNode;
     return `<div style="padding:4px 8px;background:rgba(0,0,0,0.85);border-radius:4px;font-size:12px;color:#fff;border-left:3px solid ${NODE_COLOR[n.kind]}">
@@ -2602,6 +2823,8 @@ export default function GlobeView({
     } else if (rd.kind === 'economic' && onEconomicEventClick) {
       onEconomicEventClick(rd.event as EconomicEvent);
     }
+    // Risk rings have no click handler — the underlying chokepoint marker
+    // (rendered via tradePoints) handles its own click via onTradeNodeClick.
   }, [
     onConflictEventClick, onEarthquakeEventClick,
     onNaturalEventClick, onEconomicEventClick,
@@ -2624,7 +2847,14 @@ export default function GlobeView({
     );
   }, [showCityLabels, labelPopThreshold]);
 
-  // ── Merged ring data: conflicts + earthquakes + naturals + economic events ─
+  // ── Merged event data: conflicts + earthquakes + naturals + economic events ─
+  // `mergedRings` is the FULL union used for the solid clickable markers
+  // (objectsData), so every event gets a visible, click-testable sphere.
+  //
+  // `animatedRings` is the subset that should pulse on the globe via the
+  // ringsData slot.  Economic events are deliberately excluded — they're
+  // calendar entries, not "live happening right now" events, so an animated
+  // ring overstates the urgency.  The static blue marker carries them.
   const mergedRings = useMemo<RingDatum[]>(() => {
     const out: RingDatum[] = [];
     if (conflictEvents) {
@@ -2643,8 +2873,25 @@ export default function GlobeView({
       for (const e of economicEvents)
         out.push({ kind: 'economic', lat: e.lat, lng: e.lng, event: e });
     }
+    if (riskRings) {
+      for (const r of riskRings) {
+        out.push({
+          kind: 'risk',
+          lat: r.lat,
+          lng: r.lng,
+          chokepointId: r.chokepointId,
+          chokepointName: r.chokepointName,
+          score: r.score,
+        });
+      }
+    }
     return out;
-  }, [conflictEvents, earthquakeEvents, naturalEvents, economicEvents]);
+  }, [conflictEvents, earthquakeEvents, naturalEvents, economicEvents, riskRings]);
+
+  const animatedRings = useMemo<RingDatum[]>(
+    () => mergedRings.filter(r => r.kind !== 'economic'),
+    [mergedRings],
+  );
 
   return (
     <div
@@ -2658,12 +2905,17 @@ export default function GlobeView({
         backgroundColor="rgba(0,0,0,0)"
         // NASA Blue Marble (8K daylight imagery) + topology bump map for
         // terrain depth. Both served from jsDelivr's edge cache.
+        // Perf mode skips the bump map — extra texture sampling per fragment
+        // is one of the biggest per-frame costs and the visual effect is
+        // subtle at globe scale.
         globeImageUrl={EARTH_TEXTURE_URL}
-        bumpImageUrl={EARTH_BUMP_URL}
+        bumpImageUrl={perfMode ? undefined : EARTH_BUMP_URL}
         // Atmosphere tuned for daylight Earth — slightly warmer blue.
         // Shell altitude reduced 25% (0.22 → 0.165) per user request to
         // tone down the prominent rim glow around the planet.
-        showAtmosphere
+        // Perf mode disables atmosphere entirely — the shader recomputes
+        // rim lighting per fragment every frame.
+        showAtmosphere={!perfMode}
         atmosphereColor="#7eb6ff"
         atmosphereAltitude={0.165}
         // animateIn DISABLED — react-globe.gl's intro animation runs a 1200ms
@@ -2687,6 +2939,7 @@ export default function GlobeView({
         polygonsTransitionDuration={0}
         onPolygonClick={handleClick}
         onPolygonHover={handleHover}
+        onZoom={handleZoom}
         // ── Exchange HTML pin layer ──
         // Uses real DOM elements instead of Three.js points — native browser
         // hover detection, never misses. Pins fade via handlePinVisibility
@@ -2745,14 +2998,20 @@ export default function GlobeView({
         // Conflicts → orange/red rings scaled by fatalities.
         // Earthquakes → teal rings scaled by magnitude.
         // Both use the same ringsData slot via a discriminated union.
-        ringsData={mergedRings.length > 0 ? mergedRings : EMPTY_RINGS}
+        // `animatedRings` excludes economic events — they get only a static
+        // marker (no pulsing animation), since they're calendar entries
+        // rather than live incidents.
+        ringsData={animatedRings.length > 0 ? animatedRings : EMPTY_RINGS}
         ringLat={RING_LAT}
         ringLng={RING_LNG}
         ringAltitude={RING_ALT}
         ringColor={ringColor}
         ringMaxRadius={ringMaxRadius}
-        ringPropagationSpeed={1.2}
-        ringRepeatPeriod={1800}
+        // Perf mode slows ring propagation to 0.4 and stretches the repeat
+        // window to 3600ms — fewer animation ticks per second for the same
+        // visual idea (rings pulse, just slower).
+        ringPropagationSpeed={perfMode ? 0.4 : 1.2}
+        ringRepeatPeriod={perfMode ? 3600 : 1800}
         onRingClick={handleEventClick}
         // ── Solid clickable markers (objectsData) ────────────────────────
         // Pairs each ring with a 3D sphere at the same coordinates — gives

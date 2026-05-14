@@ -3,7 +3,7 @@ import { PageLayout } from '@/components/layout/PageLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Plus, BookOpen, CalendarDays, LineChart, List, Activity, BarChart3, ScrollText, Download } from 'lucide-react';
+import { Plus, BookOpen, CalendarDays, LineChart, List, Activity, BarChart3, ScrollText, Download, Map } from 'lucide-react';
 import { useTradeJournal } from '@/hooks/useTradeJournal';
 import type { TradeEntry } from '@/hooks/useTradeJournal';
 import { PnLCalendar } from '@/components/journal/PnLCalendar';
@@ -18,6 +18,7 @@ import { OverviewTab } from '@/components/journal/OverviewTab';
 import { IbkrImportDialog } from '@/components/journal/IbkrImportDialog';
 import { AnalyticsTab } from '@/components/journal/AnalyticsTab';
 import { RulesTab } from '@/components/journal/RulesTab';
+import { StrategyTab } from '@/components/journal/StrategyTab';
 import { useJournalSettings } from '@/hooks/useJournalSettings';
 import { isDailyMaxLossHit } from '@/components/journal/KillSwitchBanner';
 import { toast } from 'sonner';
@@ -151,6 +152,9 @@ const TradeJournal = () => {
           <TabsTrigger value="rules" className="gap-1.5">
             <ScrollText className="h-4 w-4" /> Rules
           </TabsTrigger>
+          <TabsTrigger value="strategy" className="gap-1.5">
+            <Map className="h-4 w-4" /> Strategy
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview">
@@ -187,6 +191,10 @@ const TradeJournal = () => {
 
         <TabsContent value="rules">
           <RulesTab />
+        </TabsContent>
+
+        <TabsContent value="strategy">
+          <StrategyTab />
         </TabsContent>
       </Tabs>
 

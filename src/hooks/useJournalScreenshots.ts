@@ -5,12 +5,13 @@ const IDB_STORE = 'screenshots';
 
 function openIdb(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(IDB_NAME, 2);
+    const req = indexedDB.open(IDB_NAME, 3); // v3 adds strategy store
     req.onupgradeneeded = () => {
       const db = req.result;
-      if (!db.objectStoreNames.contains('trades')) db.createObjectStore('trades');
-      if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings');
-      if (!db.objectStoreNames.contains(IDB_STORE)) db.createObjectStore(IDB_STORE);
+      if (!db.objectStoreNames.contains('trades'))      db.createObjectStore('trades');
+      if (!db.objectStoreNames.contains('settings'))    db.createObjectStore('settings');
+      if (!db.objectStoreNames.contains(IDB_STORE))    db.createObjectStore(IDB_STORE);
+      if (!db.objectStoreNames.contains('strategy'))    db.createObjectStore('strategy');
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
