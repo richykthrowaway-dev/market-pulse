@@ -628,19 +628,23 @@ const Global = () => {
             <span>{flatMap ? "Flat Map" : "3D Globe"}</span>
           </button>
 
-          {/* Spin toggle — only relevant for 3D globe */}
+          {/* Spin toggle — only relevant for 3D globe, disabled in perf mode */}
           {!flatMap && (
             <button
               onClick={() => setAutoRotate(v => !v)}
+              disabled={perfMode}
               className={cn(
                 "flex items-center gap-1.5 px-2.5 py-1 rounded-md border border-border text-xs transition-colors",
-                autoRotate ? "bg-primary/10 text-primary hover:bg-primary/15" : "hover:bg-muted text-muted-foreground"
+                perfMode && "opacity-50 cursor-not-allowed",
+                autoRotate && !perfMode
+                  ? "bg-primary/10 text-primary hover:bg-primary/15"
+                  : "hover:bg-muted text-muted-foreground"
               )}
-              title={autoRotate ? "Pause spin" : "Resume spin"}
-              aria-pressed={autoRotate}
+              title={perfMode ? "Spin disabled in Perf Mode" : (autoRotate ? "Pause spin" : "Resume spin")}
+              aria-pressed={autoRotate && !perfMode}
             >
-              {autoRotate ? <RotateCw className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
-              <span>{autoRotate ? "Spin On" : "Spin Off"}</span>
+              {autoRotate && !perfMode ? <RotateCw className="h-3 w-3" /> : <Pause className="h-3 w-3" />}
+              <span>{autoRotate && !perfMode ? "Spin On" : "Spin Off"}</span>
             </button>
           )}
 
@@ -819,7 +823,7 @@ const Global = () => {
                   showExchangePins={showExchangePins}
                   onExchangeClick={handleExchangeClick}
                   selectedExchange={selectedExchange}
-                  autoRotate={autoRotate}
+                  autoRotate={perfMode ? false : autoRotate}
                   tradePoints={tradeTabActive ? tradeVisibleNodes : undefined}
                   tradeArcs={tradeTabActive ? tradeVisibleRoutes : undefined}
                   selectedTradeNodeId={tradeSelectedNode?.id ?? null}

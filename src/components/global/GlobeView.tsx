@@ -964,10 +964,11 @@ export default function GlobeView({
   const [polygons10mReady, setPolygons10mReady] = useState(false);
   useEffect(() => {
     if (!userZoomedIn) return;
+    if (perfMode)       return; // perf mode: stay on 8K texture + 50m polygons forever
     const t1 = setTimeout(() => setTexture16kReady(true),   600);
     const t2 = setTimeout(() => setPolygons10mReady(true), 2000);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [userZoomedIn]);
+  }, [userZoomedIn, perfMode]);
 
   const idleTimer = useRef<ReturnType<typeof setTimeout>>();
   // Hover ISO stored in a ref — changes do NOT trigger React re-renders.
@@ -2904,6 +2905,17 @@ export default function GlobeView({
         width={globeSize}
         height={globeSize}
         backgroundColor="rgba(0,0,0,0)"
+        // WebGL renderer config — antialiasing is set at context creation
+        // and cannot be toggled later, so it's keyed on perfMode at mount.
+        // MSAA is one of the biggest per-frame fragment costs (2-4× shader
+        // work on triangle edges); skipping it gives a major GPU win at the
+        // cost of slightly jaggier silhouettes on the globe rim and arcs.
+        // powerPreference hints to the OS to prefer the low-power GPU on
+        // hybrid laptops in perf mode (longer battery, less heat).
+        rendererConfig={{
+          antialias:       !perfMode,
+          powerPreference: perfMode ? 'low-power' : 'high-performance',
+        }}
         // NASA Blue Marble (8K daylight imagery) + topology bump map for
         // terrain depth. Both served from jsDelivr's edge cache.
         // Perf mode skips the bump map — extra texture sampling per fragment
