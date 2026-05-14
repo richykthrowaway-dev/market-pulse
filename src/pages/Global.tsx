@@ -801,7 +801,6 @@ const Global = () => {
               backgroundSize:     "800px 800px",
               backgroundColor:    "#02030a",
               willChange:         "transform",
-              contain:            "strict",
             }}
           />
 
@@ -812,7 +811,6 @@ const Global = () => {
             style={{
               background: SPACE_OVERLAY,
               willChange: "transform",
-              contain:    "strict",
             }}
           />
           {leftW > 0 && leftH > 0 && (
