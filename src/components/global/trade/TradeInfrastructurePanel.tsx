@@ -5,6 +5,7 @@ import {
   Network, ShieldAlert, Globe2, Radio, Loader2,
   CalendarDays, BarChart3, Type, Waves, ArrowLeftRight,
   Activity, Flame, Wind, Mountain, Droplets,
+  Wheat, Zap, Shield, TrendingUp, Gauge,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -80,6 +81,11 @@ const LAYERS: LayerOption[] = [
   { key: 'cityLabels',      label: 'City Names',       icon: Type,          color: '#e2e8f0', group: 'overlays', hint: '~220 world capitals and major financial/trade cities. Labels appear when zoomed in (altitude < 1.2). Capitals are shown slightly larger.' },
   { key: 'waterways',       label: 'Waterways',        icon: Waves,         color: '#60a5fa', group: 'overlays', hint: 'Major rivers, canals, and lake centerlines (Natural Earth 10m). Lines stay subtle at default zoom and thicken when you zoom in close.' },
   { key: 'tradePartnerArcs', label: 'Trade Partners',  icon: ArrowLeftRight, color: '#22c55e', group: 'overlays', hint: 'Animated arcs from the selected country to its top trade partners. Green = exports flowing out, amber = imports flowing in. Click any country first, then enable this layer. Source: UN Comtrade.' },
+  { key: 'commodityFlows',  label: 'Commodity Flows', icon: Wheat,          color: '#f59e0b', group: 'overlays', hint: 'Major global commodity trade flows — oil (amber), LNG (purple), grain (lime), semiconductors (cyan), metals (slate). Arc thickness scales with volume. Toggle commodity types in the filter below.' },
+  { key: 'sanctions',       label: 'Sanctions Map',   icon: Shield,         color: '#ef4444', group: 'overlays', hint: 'UN/US/EU active sanctions and embargo zones. Critical (red): North Korea, Iran, Syria. Severe (orange-red): Russia, Belarus, Cuba. Moderate: Venezuela, Myanmar, and others. Source: OFAC / EU restrictive measures.' },
+  { key: 'lpi',             label: 'Logistics Index',  icon: TrendingUp,    color: '#818cf8', group: 'overlays', hint: 'World Bank 2023 Logistics Performance Index (LPI) — measures customs efficiency, infrastructure quality, and trade timeliness. Blue = high (Singapore 4.3, Germany 4.3). Red = low. Replaces GDP heatmap when active.' },
+  { key: 'pipelines',       label: 'Pipelines',        icon: Zap,           color: '#f97316', group: 'overlays', hint: 'Major global oil & gas pipeline corridors — ESPO, Druzhba, BTC, Keystone, West-East China, TANAP, and others. Orange = oil, violet = gas. Critical chokepoints for energy supply.' },
+  { key: 'portCongestion',  label: 'Port Congestion',  icon: Gauge,         color: '#f59e0b', group: 'overlays', hint: 'Indicative port congestion levels based on historical averages. Green = low, amber = moderate, orange = high. Seaport markers recolour accordingly — enable Seaports layer for best effect.' },
 ];
 
 // ── Component ───────────────────────────────────────────────────────────────

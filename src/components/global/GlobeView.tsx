@@ -22,6 +22,13 @@ import type { Flight } from "@/hooks/useOpenSkyFlights";
 import type { EconomicEvent } from "@/hooks/useEconomicEvents";
 import type { MacroCountry } from "@/hooks/useMacroHeatmap";
 import { WORLD_CITIES, type WorldCity } from "@/data/worldCities";
+import type { CommodityFlow } from "@/data/commodityFlows";
+import { COMMODITY_COLORS } from "@/data/commodityFlows";
+import type { PipelineRoute } from "@/data/pipelineRoutes";
+import { PIPELINE_COLOR } from "@/data/pipelineRoutes";
+import { SANCTIONS, SANCTION_COLORS } from "@/data/sanctionsData";
+import { lpiColor } from "@/data/lpiData";
+import { CONGESTION_COLORS, type CongestionLevel } from "@/data/portCongestion";
 
 // ── Earth textures (NASA Blue Marble + topology + clouds) ──────────────
 //
@@ -179,6 +186,20 @@ interface GlobeViewProps {
    * responsive on low-end devices and saves ~20-30% GPU per frame.
    */
   perfMode?:                boolean;
+
+  // ── Tier-1 overlay props ─────────────────────────────────────────────────
+  /** Commodity trade flow arcs (oil/LNG/grain/semis/metals). */
+  commodityFlows?:          CommodityFlow[];
+  /** Active commodity filter — undefined means show all. */
+  activeCommodities?:       Set<CommodityFlow['commodity']>;
+  /** Major pipeline corridors rendered as waypoint paths. */
+  pipelineRoutes?:          PipelineRoute[];
+  /** ISO2 → LPI score. When present, polygon caps shade by LPI. */
+  lpiMap?:                  Map<string, number>;
+  /** ISO2 → sanction level. Overlaid on top of base polygon color. */
+  sanctionsMap?:            Map<string, string>;
+  /** portId → congestion level. Recolors seaport nodes when active. */
+  portCongestion?:          Map<string, CongestionLevel>;
 }
 
 // ── Partner arc type ─────────────────────────────────────────────────────────
@@ -912,6 +933,12 @@ export default function GlobeView({
   pixelRatioScale = 1,
   initialAltitude = 2.5,
   perfMode = false,
+  commodityFlows,
+  activeCommodities,
+  pipelineRoutes,
+  lpiMap,
+  sanctionsMap,
+  portCongestion,
 }: GlobeViewProps) {
   // Mirror autoRotate prop into a ref so the idle-timer callback (created
   // once inside a stable useEffect) can read the latest value without
@@ -2563,6 +2590,10 @@ export default function GlobeView({
         raw = "rgba(255, 255, 255, 0.35)";
       } else if (iso === hoverIsoRef.current) {
         raw = "rgba(255, 255, 255, 0.22)";
+      } else if (lpiMap) {
+        // LPI mode — shade by World Bank Logistics Performance Index.
+        const score = lpiMap.get(iso);
+        raw = score !== undefined ? lpiColor(score) : "rgba(60, 60, 70, 0.20)";
       } else if (macroMap) {
         // Macro heatmap mode — shade by GDP growth annual %.
         const gdp = macroMap.get(iso);
@@ -2579,6 +2610,14 @@ export default function GlobeView({
       } else {
         const change = performanceMap[iso];
         raw = change === undefined ? "rgba(80, 80, 80, 0.13)" : perfColor(change);
+      }
+
+      // ── Sanctions overlay — tint on top of base color ────────────────────
+      // Applied after base color so it works with any underlying mode.
+      // Only overrides non-selected, non-hover countries.
+      if (sanctionsMap && iso !== selectedCountry && iso !== hoverIsoRef.current) {
+        const level = sanctionsMap.get(iso);
+        if (level) raw = SANCTION_COLORS[level as keyof typeof SANCTION_COLORS] ?? raw;
       }
 
       // ── Per-country day/night darkening ──────────────────────────────────
@@ -2614,7 +2653,7 @@ export default function GlobeView({
       return raw;
     },
     [mode, performanceMap, selectedCountry, showExchangePins, macroMap,
-     showCountryColors, sunDirCached]
+     showCountryColors, sunDirCached, lpiMap, sanctionsMap]
   );
 
   // ── Altitude: only elevate selected country ──
@@ -2750,6 +2789,12 @@ export default function GlobeView({
     if (n.id === selectedTradeNodeId) return '#ffffff';
     const base = NODE_COLOR[n.kind];
 
+    // Port congestion overlay: recolor seaports by congestion level.
+    if (portCongestion && n.kind === 'seaport') {
+      const level = portCongestion.get(n.id);
+      if (level) return CONGESTION_COLORS[level];
+    }
+
     // Connectivity overlay: tint seaport markers along a green→amber gradient
     // by LSCI band so the eye instantly groups top-tier hubs vs. regional ports.
     if (showConnectivity && n.kind === 'seaport' && portConnectivity) {
@@ -2760,11 +2805,10 @@ export default function GlobeView({
         if (lsci >= 65)  return '#eab308'; // mid      — amber
         return '#f97316';                  // regional — orange
       }
-      // Port has no LSCI score → dim it so the eye focuses on rated ports.
       return '#475569';
     }
     return base;
-  }, [selectedTradeNodeId, showConnectivity, portConnectivity]);
+  }, [selectedTradeNodeId, showConnectivity, portConnectivity, portCongestion]);
   const tradePointLabel = useCallback((d: object) => {
     const n = d as TradeNode;
     return `<div style="padding:4px 8px;background:rgba(0,0,0,0.85);border-radius:4px;font-size:12px;color:#fff;border-left:3px solid ${NODE_COLOR[n.kind]}">
@@ -2802,6 +2846,49 @@ export default function GlobeView({
       <div style="opacity:0.7;font-size:10px;margin-top:2px;text-transform:uppercase">${r.mode} · importance ${r.importance}</div>
     </div>`;
   }, []);
+
+  // ── Merge pipelines into pathsData ───────────────────────────────────────
+  // Pipeline routes share the TradeRoute interface shape (waypoints, importance,
+  // mode) so they slot directly into the existing path rendering system.
+  // We synthesise a minimal TradeRoute-compatible object from PipelineRoute.
+  const mergedPaths = useMemo(() => {
+    const base = tradeArcs ?? [];
+    if (!pipelineRoutes?.length) return base;
+    const pipeAsPaths: TradeRoute[] = pipelineRoutes.map(p => ({
+      id:         p.id,
+      name:       p.name,
+      mode:       'pipeline' as const,
+      startLat:   p.waypoints[0]?.lat ?? 0,
+      startLng:   p.waypoints[0]?.lng ?? 0,
+      endLat:     p.waypoints[p.waypoints.length - 1]?.lat ?? 0,
+      endLng:     p.waypoints[p.waypoints.length - 1]?.lng ?? 0,
+      importance: p.importance,
+      description: `${p.type.toUpperCase()} · ${p.capacity}`,
+      waypoints:  p.waypoints,
+    }));
+    return [...base, ...pipeAsPaths];
+  }, [tradeArcs, pipelineRoutes]);
+
+  // ── Merge commodity flows into arcsData ───────────────────────────────────
+  // CommodityFlow has the same startLat/Lng/endLat/Lng/color/label/share shape
+  // as PartnerArc, so we map it and merge directly into the single arcsData slot.
+  const mergedArcs = useMemo(() => {
+    const partner = partnerArcs ?? [];
+    if (!commodityFlows?.length) return partner;
+    const filtered = activeCommodities?.size
+      ? commodityFlows.filter(f => activeCommodities.has(f.commodity))
+      : commodityFlows;
+    const flowArcs: PartnerArc[] = filtered.map(f => ({
+      startLat: f.startLat,
+      startLng: f.startLng,
+      endLat:   f.endLat,
+      endLng:   f.endLng,
+      color:    COMMODITY_COLORS[f.commodity],
+      label:    `<div style="padding:4px 8px;background:rgba(0,0,0,0.85);border-radius:4px;font-size:11px;color:#fff;border-left:3px solid ${COMMODITY_COLORS[f.commodity]}"><div style="font-weight:600">${f.from} → ${f.to}</div><div style="opacity:0.7;font-size:10px;margin-top:2px;text-transform:uppercase">${f.commodity} · ${f.volume}</div></div>`,
+      share:    f.share * 0.6, // slightly thinner than partner arcs
+    }));
+    return [...partner, ...flowArcs];
+  }, [partnerArcs, commodityFlows, activeCommodities]);
 
   // EMPTY arrays — pull from module-scope (GLOBE_EMPTY_POINTS etc.) so the
   // identity is stable across renders.  react-globe.gl uses reference equality
@@ -2977,7 +3064,7 @@ export default function GlobeView({
         pointLabel={tradePointLabel}
         onPointClick={tradePointClick}
         pointsTransitionDuration={300}
-        pathsData={tradeArcs ?? GLOBE_EMPTY_ARCS}
+        pathsData={mergedPaths.length ? mergedPaths : GLOBE_EMPTY_ARCS}
         pathPoints={tradePathPoints}
         pathColor={tradePathColor}
         pathStroke={tradePathStroke}
@@ -2994,7 +3081,7 @@ export default function GlobeView({
         // Stroke width scales with trade share so top partners stand out.
         // Dashed animation (dashLength 0.5 / dashGap 0.5 / animateTime 2s)
         // gives the "flow of goods" feel without being distracting.
-        arcsData={partnerArcs ?? GLOBE_EMPTY_PARTNER_ARCS}
+        arcsData={mergedArcs.length ? mergedArcs : GLOBE_EMPTY_PARTNER_ARCS}
         arcStartLat={ARC_START_LAT}
         arcStartLng={ARC_START_LNG}
         arcEndLat={ARC_END_LAT}

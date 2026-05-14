@@ -25,6 +25,12 @@ import {
 } from "@/data/tradeInfrastructure";
 import { PORT_LSCI_BY_ID } from "@/data/portConnectivity";
 import { computeChokepointRisk } from "@/lib/computeChokepointRisk";
+import { COMMODITY_FLOWS, type CommodityFlow } from "@/data/commodityFlows";
+import { PIPELINE_ROUTES } from "@/data/pipelineRoutes";
+import { SANCTIONS } from "@/data/sanctionsData";
+import { LPI_SCORES } from "@/data/lpiData";
+import { PORT_CONGESTION } from "@/data/portCongestion";
+import type { CongestionLevel } from "@/data/portCongestion";
 import { useAISStream, matchesVesselType, type VesselTypeFilter } from "@/hooks/useAISStream";
 import { useOpenSkyFlights } from "@/hooks/useOpenSkyFlights";
 import { useConflictEvents, type ConflictEvent } from "@/hooks/useConflictEvents";
@@ -225,12 +231,10 @@ const Global = () => {
   //     visibly on top of their host markers.
   const effectiveLayers = useMemo(() => {
     if (!tradeTabActive) return tradeActiveLayers;
-    if (!tradeActiveLayers.has('connectivity') && !tradeActiveLayers.has('risk')) {
-      return tradeActiveLayers;
-    }
     const s = new Set(tradeActiveLayers);
-    if (tradeActiveLayers.has('connectivity')) s.add('seaports');
-    if (tradeActiveLayers.has('risk'))         s.add('chokepoints');
+    if (tradeActiveLayers.has('connectivity'))   s.add('seaports');
+    if (tradeActiveLayers.has('risk'))           s.add('chokepoints');
+    if (tradeActiveLayers.has('portCongestion')) s.add('seaports');
     return s;
   }, [tradeActiveLayers, tradeTabActive]);
 
@@ -468,6 +472,44 @@ const Global = () => {
   // ── Port LSCI (Connectivity overlay) ────────────────────────────────
   // Static lookup — the dataset is bundled, no fetch needed.
   const portConnectivityProp = connectivityEnabled ? PORT_LSCI_BY_ID : undefined;
+
+  // ── Tier-1 overlay derived data ──────────────────────────────────────
+  const showCommodityFlows = tradeTabActive && tradeActiveLayers.has('commodityFlows');
+  const showSanctions      = tradeTabActive && tradeActiveLayers.has('sanctions');
+  const showLpi            = tradeTabActive && tradeActiveLayers.has('lpi');
+  const showPipelines      = tradeTabActive && tradeActiveLayers.has('pipelines');
+  const showPortCongestion = tradeTabActive && tradeActiveLayers.has('portCongestion');
+
+  const commodityFlowsProp = useMemo<CommodityFlow[] | undefined>(() => {
+    if (!showCommodityFlows) return undefined;
+    return COMMODITY_FLOWS;
+  }, [showCommodityFlows]);
+
+  const pipelineRoutesProp = useMemo(() => {
+    if (!showPipelines) return undefined;
+    return PIPELINE_ROUTES;
+  }, [showPipelines]);
+
+  const lpiMapProp = useMemo(() => {
+    if (!showLpi) return undefined;
+    const m = new Map<string, number>();
+    for (const [iso, score] of Object.entries(LPI_SCORES)) m.set(iso, score);
+    return m;
+  }, [showLpi]);
+
+  const sanctionsMapProp = useMemo(() => {
+    if (!showSanctions) return undefined;
+    const m = new Map<string, string>();
+    for (const [iso, level] of Object.entries(SANCTIONS)) m.set(iso, level);
+    return m;
+  }, [showSanctions]);
+
+  const portCongestionProp = useMemo(() => {
+    if (!showPortCongestion) return undefined;
+    const m = new Map<string, CongestionLevel>();
+    for (const [id, level] of Object.entries(PORT_CONGESTION)) m.set(id, level);
+    return m;
+  }, [showPortCongestion]);
 
   // ── Render-list caps for performance ─────────────────────────────────
   // Each event source can return huge volumes (ACLED can hit 5k+ in busy
@@ -851,6 +893,11 @@ const Global = () => {
                   riskRings={riskRings}
                   portConnectivity={portConnectivityProp}
                   showConnectivity={connectivityEnabled}
+                  commodityFlows={commodityFlowsProp}
+                  pipelineRoutes={pipelineRoutesProp}
+                  lpiMap={lpiMapProp}
+                  sanctionsMap={sanctionsMapProp}
+                  portCongestion={portCongestionProp}
                   // Perf mode drops more pixels; mobile is more aggressive
                   // than desktop. Default desktop dropped from 1.0 → 0.85
                   // because at globe scale the pixel-ratio reduction is

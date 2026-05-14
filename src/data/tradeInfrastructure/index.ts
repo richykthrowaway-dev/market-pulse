@@ -69,9 +69,10 @@ export const NODE_COLOR: Record<TradeNode['kind'], string> = {
 };
 
 /** Route color by mode. */
-export const ROUTE_COLOR: Record<'maritime' | 'air' | 'rail' | 'inland', string> = {
+export const ROUTE_COLOR: Record<'maritime' | 'air' | 'rail' | 'inland' | 'pipeline', string> = {
   maritime: '#38bdf8',
   air:      '#a78bfa',
   rail:     '#10b981',
   inland:   '#94a3b8',
+  pipeline: '#f97316',
 };

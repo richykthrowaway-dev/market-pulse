@@ -8,7 +8,7 @@
  * `pointsData` array.
  */
 
-export type TransportMode = 'maritime' | 'air' | 'rail' | 'inland';
+export type TransportMode = 'maritime' | 'air' | 'rail' | 'inland' | 'pipeline';
 
 export type LayerKey =
   | 'maritimeRoutes'
@@ -31,8 +31,13 @@ export type LayerKey =
   | 'cityLabels'         // city / capital name labels at close zoom
   | 'waterways'          // Natural Earth 10m rivers + lake centerlines
   | 'tradePartnerArcs'   // animated arcs to top trade partners (WITS / Comtrade)
-  | 'connectivity'       // future overlay
-  | 'risk';              // future overlay
+  | 'connectivity'       // UNCTAD LSCI port connectivity sizing
+  | 'risk'               // derived disruption-risk score per chokepoint
+  | 'commodityFlows'     // major commodity trade flows (oil/LNG/grain/semis/metals)
+  | 'sanctions'          // UN/US/EU sanctions & embargo country shading
+  | 'lpi'                // World Bank Logistics Performance Index choropleth
+  | 'pipelines'          // major oil & gas pipeline corridors
+  | 'portCongestion';    // indicative port congestion levels (green→red)
 
 export interface TradeNodeBase {
   id:              string;
