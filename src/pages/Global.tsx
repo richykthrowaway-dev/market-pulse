@@ -21,7 +21,7 @@ import type { ExchangeInfo } from "@/data/exchangeData";
 import {
   getVisibleNodes, getVisibleRoutes,
   CHOKEPOINTS,
-  type LayerKey, type TradeNode,
+  type LayerKey, type TradeNode, type TradeRoute,
 } from "@/data/tradeInfrastructure";
 import { PORT_LSCI_BY_ID } from "@/data/portConnectivity";
 import { computeChokepointRisk } from "@/lib/computeChokepointRisk";
@@ -246,14 +246,31 @@ const Global = () => {
     return s;
   }, [tradeActiveLayers, tradeTabActive]);
 
-  const allVisibleNodes  = useMemo(
-    () => (tradeTabActive ? getVisibleNodes(effectiveLayers)  : []),
-    [effectiveLayers, tradeTabActive],
-  );
-  const allVisibleRoutes = useMemo(
-    () => (tradeTabActive ? getVisibleRoutes(effectiveLayers) : []),
-    [effectiveLayers, tradeTabActive],
-  );
+  // Ref-stabilized: return the SAME array reference when layer content hasn't
+  // changed. Since getVisibleNodes/Routes push objects from stable module-level
+  // arrays (SEAPORTS, MARITIME_ROUTES, etc.), identity comparison (===) is
+  // sufficient. When sanctions, LPI, or other non-route overlays toggle, the
+  // route/node arrays are identical → same ref → mergedPaths does NOT re-run →
+  // no path smoothing on every unrelated layer click.
+  const prevNodesRef = useRef<TradeNode[]>([]);
+  const allVisibleNodes = useMemo(() => {
+    if (!tradeTabActive) return [];
+    const nodes = getVisibleNodes(effectiveLayers);
+    const prev = prevNodesRef.current;
+    if (nodes.length === prev.length && nodes.every((n, i) => n === prev[i])) return prev;
+    prevNodesRef.current = nodes;
+    return nodes;
+  }, [effectiveLayers, tradeTabActive]);
+
+  const prevRoutesRef = useRef<TradeRoute[]>([]);
+  const allVisibleRoutes = useMemo(() => {
+    if (!tradeTabActive) return [];
+    const routes = getVisibleRoutes(effectiveLayers);
+    const prev = prevRoutesRef.current;
+    if (routes.length === prev.length && routes.every((r, i) => r === prev[i])) return prev;
+    prevRoutesRef.current = routes;
+    return routes;
+  }, [effectiveLayers, tradeTabActive]);
 
   const tradeVisibleNodes = useMemo(() => {
     if (tradeWorldwide || !selectedCountry) return allVisibleNodes;
