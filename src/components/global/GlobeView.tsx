@@ -2830,8 +2830,10 @@ export default function GlobeView({
     return smoothRouteCoords(r, 10).map(([lng, lat]) => [lat, lng] as [number, number]);
   }, []);
   const tradePathColor = useCallback((d: object) => {
-    const r = d as TradeRoute;
-    const c = ROUTE_COLOR[r.mode];
+    // Support a `_color` override so commodity-flow paths can carry their
+    // own per-commodity colour without needing a ROUTE_COLOR entry.
+    const r = d as TradeRoute & { _color?: string };
+    const c = r._color ?? ROUTE_COLOR[r.mode] ?? '#94a3b8';
     return [`${c}70`, `${c}ee`];
   }, []);
   const tradePathStroke   = useCallback((d: object) => 0.3 + ((d as TradeRoute).importance / 100) * 0.7, []);
@@ -2840,55 +2842,86 @@ export default function GlobeView({
   // hidden underneath the country mesh. Still reads flat to the eye.
   const tradePathAltitude = useCallback((_d: object) => 0.006, []);
   const tradePathLabel = useCallback((d: object) => {
-    const r = d as TradeRoute;
-    return `<div style="padding:4px 8px;background:rgba(0,0,0,0.85);border-radius:4px;font-size:11px;color:#fff;border-left:3px solid ${ROUTE_COLOR[r.mode]}">
+    const r = d as TradeRoute & { _color?: string };
+    const c   = r._color ?? ROUTE_COLOR[r.mode] ?? '#94a3b8';
+    // Use description field when present (commodity flows store "OIL · 2.5M bbl/day")
+    const sub = r.description ?? `${r.mode} · importance ${r.importance}`;
+    return `<div style="padding:4px 8px;background:rgba(0,0,0,0.85);border-radius:4px;font-size:11px;color:#fff;border-left:3px solid ${c}">
       <div style="font-weight:600">${r.name}</div>
-      <div style="opacity:0.7;font-size:10px;margin-top:2px;text-transform:uppercase">${r.mode} · importance ${r.importance}</div>
+      <div style="opacity:0.7;font-size:10px;margin-top:2px;text-transform:uppercase">${sub}</div>
     </div>`;
   }, []);
 
-  // ── Merge pipelines into pathsData ───────────────────────────────────────
-  // Pipeline routes share the TradeRoute interface shape (waypoints, importance,
-  // mode) so they slot directly into the existing path rendering system.
-  // We synthesise a minimal TradeRoute-compatible object from PipelineRoute.
+  // ── Merge pipelines + commodity flows into pathsData ─────────────────────
+  //
+  // Both use the flat-line path renderer (same look as shipping routes) rather
+  // than the elevated arcsData slot.
+  //
+  // PIPELINE FIX — waypoints.slice(1, -1):
+  //   smoothRouteCoords assembles [startLat/Lng, ...waypoints, endLat/Lng].
+  //   If we pass ALL waypoints here AND set startLat = waypoints[0] / endLat =
+  //   waypoints[last], the assembled array gets consecutive duplicates.
+  //   The Barry-Goldman Catmull-Rom knot spacing is dist(A,B)^0.5; when
+  //   dist = 0 the denominator is 0 → NaN → renderer crash.
+  //   Passing only the INTERMEDIATE waypoints (slice off first and last) fixes
+  //   this because smoothRouteCoords supplies the true endpoints separately.
+  //
+  // COMMODITY FLOWS — flat paths with per-commodity _color override:
+  //   CommodityFlow has no waypoints, so smoothRouteCoords just interpolates
+  //   the great-circle chord (exactly what we want).  A `_color` field carries
+  //   the per-commodity colour so tradePathColor doesn't need a ROUTE_COLOR entry.
   const mergedPaths = useMemo(() => {
-    const base = tradeArcs ?? [];
-    if (!pipelineRoutes?.length) return base;
-    const pipeAsPaths: TradeRoute[] = pipelineRoutes.map(p => ({
-      id:         p.id,
-      name:       p.name,
-      mode:       'pipeline' as const,
-      startLat:   p.waypoints[0]?.lat ?? 0,
-      startLng:   p.waypoints[0]?.lng ?? 0,
-      endLat:     p.waypoints[p.waypoints.length - 1]?.lat ?? 0,
-      endLng:     p.waypoints[p.waypoints.length - 1]?.lng ?? 0,
-      importance: p.importance,
-      description: `${p.type.toUpperCase()} · ${p.capacity}`,
-      waypoints:  p.waypoints,
-    }));
-    return [...base, ...pipeAsPaths];
-  }, [tradeArcs, pipelineRoutes]);
+    const base  = tradeArcs ?? [];
+    const extra: Array<TradeRoute & { _color?: string }> = [];
 
-  // ── Merge commodity flows into arcsData ───────────────────────────────────
-  // CommodityFlow has the same startLat/Lng/endLat/Lng/color/label/share shape
-  // as PartnerArc, so we map it and merge directly into the single arcsData slot.
-  const mergedArcs = useMemo(() => {
-    const partner = partnerArcs ?? [];
-    if (!commodityFlows?.length) return partner;
-    const filtered = activeCommodities?.size
-      ? commodityFlows.filter(f => activeCommodities.has(f.commodity))
-      : commodityFlows;
-    const flowArcs: PartnerArc[] = filtered.map(f => ({
-      startLat: f.startLat,
-      startLng: f.startLng,
-      endLat:   f.endLat,
-      endLng:   f.endLng,
-      color:    COMMODITY_COLORS[f.commodity],
-      label:    `<div style="padding:4px 8px;background:rgba(0,0,0,0.85);border-radius:4px;font-size:11px;color:#fff;border-left:3px solid ${COMMODITY_COLORS[f.commodity]}"><div style="font-weight:600">${f.from} → ${f.to}</div><div style="opacity:0.7;font-size:10px;margin-top:2px;text-transform:uppercase">${f.commodity} · ${f.volume}</div></div>`,
-      share:    f.share * 0.6, // slightly thinner than partner arcs
-    }));
-    return [...partner, ...flowArcs];
-  }, [partnerArcs, commodityFlows, activeCommodities]);
+    // ── Pipelines ────────────────────────────────────────────────────────
+    if (pipelineRoutes?.length) {
+      for (const p of pipelineRoutes) {
+        extra.push({
+          id:          p.id,
+          name:        p.name,
+          mode:        'pipeline' as const,
+          startLat:    p.waypoints[0]?.lat  ?? 0,
+          startLng:    p.waypoints[0]?.lng  ?? 0,
+          endLat:      p.waypoints[p.waypoints.length - 1]?.lat ?? 0,
+          endLng:      p.waypoints[p.waypoints.length - 1]?.lng ?? 0,
+          importance:  p.importance,
+          description: `${p.type.toUpperCase()} · ${p.capacity}`,
+          // Exclude first & last — they are the same coords as start/end above
+          waypoints:   p.waypoints.slice(1, -1),
+        });
+      }
+    }
+
+    // ── Commodity flows ──────────────────────────────────────────────────
+    if (commodityFlows?.length) {
+      const filtered = activeCommodities?.size
+        ? commodityFlows.filter(f => activeCommodities.has(f.commodity))
+        : commodityFlows;
+      for (const f of filtered) {
+        extra.push({
+          id:          f.id,
+          name:        `${f.from} → ${f.to}`,
+          mode:        'maritime' as const,    // fallback; colour comes from _color
+          startLat:    f.startLat,
+          startLng:    f.startLng,
+          endLat:      f.endLat,
+          endLng:      f.endLng,
+          importance:  Math.round(f.share * 100),
+          description: `${f.commodity.toUpperCase()} · ${f.volume}`,
+          _color:      COMMODITY_COLORS[f.commodity],
+        });
+      }
+    }
+
+    if (!extra.length) return base;
+    return [...base, ...extra];
+  }, [tradeArcs, pipelineRoutes, commodityFlows, activeCommodities]);
+
+  // ── Partner arcs (trade-partner arcs from selected country) ─────────────
+  // Commodity flows have been moved to pathsData (flat lines) so this slot
+  // is now only for the animated partner import/export arcs.
+  const mergedArcs = useMemo(() => partnerArcs ?? [], [partnerArcs]);
 
   // EMPTY arrays — pull from module-scope (GLOBE_EMPTY_POINTS etc.) so the
   // identity is stable across renders.  react-globe.gl uses reference equality

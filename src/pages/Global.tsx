@@ -231,6 +231,14 @@ const Global = () => {
   //     visibly on top of their host markers.
   const effectiveLayers = useMemo(() => {
     if (!tradeTabActive) return tradeActiveLayers;
+    // Only allocate a new Set when an auto-include overlay is actually enabled.
+    // Otherwise return the same reference so downstream memos (allVisibleNodes,
+    // allVisibleRoutes, mergedPaths) don't re-run on every unrelated toggle.
+    if (
+      !tradeActiveLayers.has('connectivity') &&
+      !tradeActiveLayers.has('risk') &&
+      !tradeActiveLayers.has('portCongestion')
+    ) return tradeActiveLayers;
     const s = new Set(tradeActiveLayers);
     if (tradeActiveLayers.has('connectivity'))   s.add('seaports');
     if (tradeActiveLayers.has('risk'))           s.add('chokepoints');
