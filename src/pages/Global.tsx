@@ -756,19 +756,22 @@ const Global = () => {
           )}
         >
           {/* Base layer — NASA Tycho-2 Skymap photographic star map.
+              Hidden in perf mode to skip the 4 MB image download entirely.
               Fills the container via `cover` and is biased vertically
               so the Milky Way band appears in the lower half behind
               the globe's lower hemisphere. Black fallback until loaded. */}
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              backgroundImage:    `url(${NASA_TYCHO_SKYMAP_URL})`,
-              backgroundSize:     "cover",
-              backgroundPosition: "50% 60%",
-              backgroundColor:    "#000",
-              willChange:         "transform",
-            }}
-          />
+          {!perfMode && (
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage:    `url(${NASA_TYCHO_SKYMAP_URL})`,
+                backgroundSize:     "cover",
+                backgroundPosition: "50% 60%",
+                backgroundColor:    "#000",
+                willChange:         "transform",
+              }}
+            />
+          )}
 
           {/* Overlay — darkening tint + vignette + globe backlight glow
               painted on top of the NASA photo. */}

@@ -1708,6 +1708,7 @@ export default function GlobeView({
   // texture, and cancel the rAF loop — required to avoid GPU memory leaks
   // on hot-reload and route changes.
   useEffect(() => {
+    if (perfMode) return; // clouds disabled in performance mode
     if (!countries.length) return; // wait for the globe to be mounted
     const globe = globeRef.current;
     if (!globe) return;
@@ -1865,7 +1866,7 @@ export default function GlobeView({
       if (cloudsTexture) cloudsTexture.dispose();
       cloudShaderRef.current = null;
     };
-  }, [countries]);
+  }, [countries, perfMode]);
 
     // ── Live AIS vessels (imperative three.js Points layer) ──────────────
   // Performance split: material is created ONCE on mount and reused across
