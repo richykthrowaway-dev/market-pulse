@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,9 +10,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatsCard } from '@/components/ui/StatsCard';
+import { TradeTracker } from '@/components/trading/TradeTracker';
 import { toast } from 'sonner';
 import {
   Activity,
+  AlertTriangle,
   ArrowDownRight,
   ArrowUpRight,
   Briefcase,
@@ -39,6 +42,10 @@ import {
   useIBKRPortfolioSummary,
   useIBKRSnapshot,
 } from '@/hooks/useIBKR';
+import { useSymbolSearch } from '@/hooks/useSymbolSearch';
+import { useOpenTrades } from '@/hooks/useOpenTrades';
+import { fetchYahooQuote } from '@/services/yahooFinanceApi';
+import { riskPreview } from '@/lib/riskPreview';
 
 /* ─── helpers ─── */
 function fmtCurrency(v: number | null | undefined, fallback = '—') {
@@ -48,6 +55,25 @@ function fmtCurrency(v: number | null | undefined, fallback = '—') {
 function pnlClass(v: number | null | undefined) {
   if (v == null || v === 0) return 'text-muted-foreground';
   return v > 0 ? 'text-trading-buy' : 'text-trading-sell';
+}
+
+const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+// Read the user's saved Risk Parameters (set in My Trading Plan) so the
+// Order Ticket preview can show account-relative risk. Read-only; optional.
+function readRiskParams(): { account: number; riskPct: number } | null {
+  try {
+    const r = localStorage.getItem('tp-risk-v1');
+    if (!r) return null;
+    const p = JSON.parse(r);
+    if (typeof p?.account === 'number' && typeof p?.riskPct === 'number') {
+      return { account: p.account, riskPct: p.riskPct };
+    }
+    return null;
+  } catch { return null; }
 }
 
 /* ─── Connection Status ─── */
@@ -406,21 +432,90 @@ function LivePrices({ accountId }: { accountId: string }) {
   );
 }
 
-/* ─── Quick Order ─── */
-function QuickOrder({ accountId }: { accountId: string }) {
+/* ─── Quick Order / Order Ticket ─── */
+function QuickOrder({ accountId, isConnected, selSymbol }: { accountId: string; isConnected: boolean; selSymbol: string }) {
   const [symbol, setSymbol] = useState('');
   const [side, setSide] = useState<'BUY' | 'SELL'>('BUY');
   const [qty, setQty] = useState('1');
   const [orderType, setOrderType] = useState('MKT');
   const [price, setPrice] = useState('');
+  const [stop, setStop] = useState('');
+  const [target, setTarget] = useState('');
+  const [entry, setEntry] = useState('');
+  const [confirming, setConfirming] = useState(false);
 
+  // Symbol autocomplete (broker-independent)
+  const [showSym, setShowSym] = useState(false);
+  const symBoxRef = useRef<HTMLDivElement>(null);
+  const { data: symResults = [] } = useSymbolSearch(symbol);
+
+  // IBKR contract resolution (still needed for selectedConid on connected path)
   const { data: searchResults } = useIBKRContractSearch(symbol);
   const placeOrder = useIBKRPlaceOrder();
+  const { addOpen } = useOpenTrades();
 
   const contracts = Array.isArray(searchResults) ? searchResults : [];
+  // TODO Wave 2: contract disambiguation when multiple IBKR contracts
   const selectedConid = contracts[0]?.conid;
 
-  const handleSubmit = () => {
+  // Close the suggestion dropdown on any outside click.
+  useEffect(() => {
+    if (!showSym) return;
+    const onDoc = (e: MouseEvent) => {
+      if (symBoxRef.current && !symBoxRef.current.contains(e.target as Node)) {
+        setShowSym(false);
+      }
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [showSym]);
+
+  // selSymbol sync — watchlist "→ Ticket" / row-select prefills the ticket.
+  useEffect(() => {
+    if (selSymbol && selSymbol !== symbol) setSymbol(selSymbol);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selSymbol]);
+
+  // Live price for the chosen symbol.
+  const { data: liveQuote } = useQuery({
+    queryKey: ['ticket-quote', symbol],
+    queryFn: () => fetchYahooQuote(symbol),
+    staleTime: 60_000,
+    enabled: symbol.length > 0,
+  });
+  const livePrice = liveQuote?.regularMarketPrice ?? null;
+  const liveName = liveQuote?.shortName ?? liveQuote?.longName ?? null;
+
+  // Prefill entry with a fresh live price only when entry is empty/0.
+  useEffect(() => {
+    if (livePrice != null && (!entry || Number(entry) === 0)) {
+      setEntry(String(livePrice));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [livePrice]);
+
+  // Any change to the order parameters resets the confirm step.
+  useEffect(() => {
+    setConfirming(false);
+  }, [symbol, side, qty, orderType, price, stop, target, entry]);
+
+  const rp = readRiskParams();
+  const preview = riskPreview({
+    side: side === 'BUY' ? 'long' : 'short',
+    entry: Number(entry) || 0,
+    stop: stop ? Number(stop) : undefined,
+    target: target ? Number(target) : undefined,
+    qty: Number(qty) || 0,
+    account: rp?.account,
+    riskPct: rp?.riskPct,
+  });
+
+  const isBuy = side === 'BUY';
+  const sym = symbol.trim().toUpperCase();
+  const canSubmit = !!symbol && Number(qty) > 0 && (!isConnected || !!selectedConid);
+  const actionWord = isConnected ? side : `Track ${side}`;
+
+  const doConnectedOrder = () => {
     if (!accountId || !selectedConid || !qty) {
       toast.error('Fill all required fields');
       return;
@@ -445,36 +540,105 @@ function QuickOrder({ accountId }: { accountId: string }) {
           setSymbol('');
           setQty('1');
           setPrice('');
+          setConfirming(false);
         },
         onError: (err) => toast.error(`Order failed: ${err.message}`),
       }
     );
   };
 
-  const isBuy = side === 'BUY';
+  const doTrack = () => {
+    addOpen({
+      id: Math.random().toString(36).slice(2, 9),
+      symbol: sym,
+      side: side === 'BUY' ? 'long' : 'short',
+      quantity: Number(qty) || 0,
+      entryPrice: Number(entry) || 0,
+      stopLoss: stop ? Number(stop) : undefined,
+      target: target ? Number(target) : undefined,
+      entryDate: todayISO(),
+      planValid: true,
+    });
+    toast.success('Tracked — see Trade Tracker');
+    setSymbol('');
+    setQty('1');
+    setPrice('');
+    setStop('');
+    setTarget('');
+    setEntry('');
+    setConfirming(false);
+  };
+
+  const handleSubmit = () => {
+    if (!canSubmit) {
+      toast.error('Fill all required fields');
+      return;
+    }
+    if (!confirming) {
+      setConfirming(true);
+      return;
+    }
+    if (isConnected) doConnectedOrder();
+    else doTrack();
+  };
 
   return (
     <Card className="trading-card">
       <CardHeader className="pb-3">
         <CardTitle className="text-sm flex items-center gap-2">
           <Zap className="h-4 w-4 text-primary" />
-          Quick Order
+          Order Ticket
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Symbol search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        {/* Symbol search — broker-independent autocomplete */}
+        <div className="relative" ref={symBoxRef}>
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground z-10" />
           <Input
             placeholder="Search symbol…"
             value={symbol}
-            onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+            onChange={(e) => { setSymbol(e.target.value.toUpperCase()); setShowSym(true); }}
+            onFocus={() => { if (symbol) setShowSym(true); }}
             className="pl-9 font-mono text-sm"
+            autoComplete="off"
           />
+          {showSym && symResults.length > 0 && (
+            <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-64 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
+              {symResults.map((r) => (
+                <button
+                  key={r.symbolId}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    setSymbol(r.canonicalTicker.toUpperCase());
+                    setShowSym(false);
+                  }}
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-accent transition-colors"
+                >
+                  <span className="font-mono text-sm font-semibold">{r.canonicalTicker}</span>
+                  <span className="truncate text-xs text-muted-foreground">{r.name}</span>
+                  {r.primaryExchangeCode && (
+                    <span className="ml-auto shrink-0 text-[10px] uppercase tracking-wide text-muted-foreground/70">
+                      {r.primaryExchangeCode}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* Contract result */}
-        {selectedConid && (
+        {/* Live price */}
+        {symbol && livePrice != null && (
+          <p className="-mt-2 text-[11px] text-muted-foreground">
+            <Zap className="inline h-3 w-3 text-primary mr-0.5 -mt-0.5" />
+            Live <span className="font-mono-num text-foreground">{fmtCurrency(livePrice)}</span>
+            {liveName && <> · {liveName}</>}
+          </p>
+        )}
+
+        {/* Contract result (connected path) */}
+        {isConnected && selectedConid && (
           <div className="rounded-lg bg-muted/50 p-2.5 text-xs space-y-0.5">
             <p className="font-medium">{contracts[0]?.companyName || symbol}</p>
             <p className="text-muted-foreground">conid: {selectedConid} · {contracts[0]?.secType || 'STK'}</p>
@@ -547,6 +711,43 @@ function QuickOrder({ accountId }: { accountId: string }) {
           </div>
         </div>
 
+        {/* Entry / Stop / Target */}
+        <div className="grid grid-cols-3 gap-2">
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">Entry</label>
+            <Input
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={entry}
+              onChange={(e) => setEntry(e.target.value)}
+              className="w-full font-mono-num text-sm"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">Stop</label>
+            <Input
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={stop}
+              onChange={(e) => setStop(e.target.value)}
+              className="w-full font-mono-num text-sm"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">Target</label>
+            <Input
+              type="number"
+              step="0.01"
+              placeholder="0.00"
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+              className="w-full font-mono-num text-sm"
+            />
+          </div>
+        </div>
+
         {/* Price (for limit/stop) */}
         {orderType !== 'MKT' && (
           <div className="space-y-1.5">
@@ -562,24 +763,31 @@ function QuickOrder({ accountId }: { accountId: string }) {
           </div>
         )}
 
-        {/* Order summary */}
-        <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-xs space-y-1">
+        {/* Risk preview */}
+        <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-xs space-y-1.5">
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Action</span>
-            <span className={isBuy ? 'text-trading-buy font-medium' : 'text-trading-sell font-medium'}>{side}</span>
+            <span className="text-muted-foreground">Risk : Reward</span>
+            <span className={`font-mono-num font-semibold ${
+              preview.rr == null ? '' : preview.rr >= 2 ? 'text-trading-buy' : preview.rr >= 1.5 ? 'text-warning' : 'text-trading-sell'
+            }`}>{preview.rr != null ? `${preview.rr.toFixed(2)} : 1` : '—'}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Type</span>
-            <span>{orderType === 'MKT' ? 'Market' : orderType === 'LMT' ? 'Limit' : 'Stop'}</span>
+            <span className="text-muted-foreground">$ at risk</span>
+            <span className={`font-mono-num ${preview.overRisk ? 'text-trading-sell font-semibold' : ''}`}>
+              {preview.dollarRisk != null ? fmtCurrency(preview.dollarRisk) : '—'}
+              {preview.acctRiskPct != null && (
+                <span className="text-muted-foreground"> · {preview.acctRiskPct.toFixed(2)}%</span>
+              )}
+            </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Qty</span>
-            <span className="font-mono-num">{qty || '—'}</span>
+            <span className="text-muted-foreground">Position value</span>
+            <span className="font-mono-num">{preview.posValue ? fmtCurrency(preview.posValue) : '—'}</span>
           </div>
-          {orderType !== 'MKT' && price && (
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Price</span>
-              <span className="font-mono-num">{fmtCurrency(Number(price))}</span>
+          {preview.overRisk && (
+            <div className="flex items-center gap-1.5 text-warning pt-0.5">
+              <AlertTriangle className="h-3 w-3 shrink-0" />
+              <span>Exceeds your saved max risk %.</span>
             </div>
           )}
         </div>
@@ -587,12 +795,14 @@ function QuickOrder({ accountId }: { accountId: string }) {
         {/* Submit */}
         <Button
           onClick={handleSubmit}
-          disabled={placeOrder.isPending || !selectedConid || !qty}
+          disabled={placeOrder.isPending || !canSubmit}
           className={`w-full font-semibold ${isBuy ? 'btn-buy' : 'btn-sell'}`}
         >
           {placeOrder.isPending
             ? 'Submitting…'
-            : `${side} ${qty || 0} ${symbol || '…'}`}
+            : confirming
+              ? `Confirm ${actionWord} ${qty || 0} ${sym || '…'}`
+              : `${actionWord} ${qty || 0} ${sym || '…'}`}
         </Button>
       </CardContent>
     </Card>
@@ -611,6 +821,9 @@ export default function Trading() {
 
   const isGatewayOffline = !authLoading && authStatus === null;
   const isConnected = authStatus?.authenticated === true;
+
+  // selSymbol prefills the Order Ticket; wired to Watchlist/SymbolChart in Task 8.
+  const [selSymbol] = useState('');
 
   return (
     <PageLayout
@@ -640,6 +853,10 @@ export default function Trading() {
           </div>
           <ConnectionStatus />
         </div>
+
+        {/* Trade Tracker — broker-independent; always shown (moved here from
+            My Trading Plan). Closing a trade files it into the shared Journal. */}
+        <TradeTracker />
 
         {/* Gateway guide if offline */}
         {isGatewayOffline && <GatewayGuide />}
@@ -694,7 +911,7 @@ export default function Trading() {
 
             {/* Right: Order form + Live Prices */}
             <div className="space-y-4">
-              <QuickOrder accountId={accountId} />
+              <QuickOrder accountId={accountId} isConnected={isConnected} selSymbol={selSymbol} />
               {accountId && <LivePrices accountId={accountId} />}
             </div>
           </div>
