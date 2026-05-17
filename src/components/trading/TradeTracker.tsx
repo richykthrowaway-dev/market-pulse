@@ -97,7 +97,8 @@ export function TradeTracker() {
     try { localStorage.setItem('tt-live-speed-v1', f ? 'fast' : 'slow'); } catch { /* ignore */ }
   };
   const intervalMs = fast ? 5_000 : 30_000;
-  const quotes = useLiveQuotes(open.map((t) => t.symbol), intervalMs);
+  const openSymbols = useMemo(() => open.map((t) => t.symbol), [open]);
+  const quotes = useLiveQuotes(openSymbols, intervalMs);
 
   // ── Ticker autocomplete + live-price infill ───────────────────────────────
   const { settings, addSetup } = useJournalSettings();
@@ -430,9 +431,11 @@ export function TradeTracker() {
                     type="button"
                     onClick={() => setSpeed(!fast)}
                     title="Live price refresh rate"
+                    aria-pressed={fast}
+                    aria-label={`Live price refresh rate: ${fast ? '5 seconds' : '30 seconds'}`}
                     className="rounded-md border border-border/60 px-1.5 py-0.5 text-[10px] font-mono-num text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    ⚡ {fast ? '5s' : '30s'}
+                    <span aria-hidden="true">⚡</span> {fast ? '5s' : '30s'}
                   </button>
                 )}
                 {open.length > 0 && (
