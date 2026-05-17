@@ -853,11 +853,11 @@ export default function Trading() {
       description="Interactive Brokers trading dashboard — manage positions, orders, and execute trades."
       canonical="/trading"
     >
-      <div className="space-y-6">
+      <div className="space-y-5 trading-terminal">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="tt-headstrip flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold tracking-tight">Trading</h1>
+            <h1 className="text-base font-semibold tracking-tight">Trading</h1>
             {accountList.length > 1 && (
               <Select value={String(selectedIdx)} onValueChange={(v) => setSelectedIdx(Number(v))}>
                 <SelectTrigger className="w-auto h-8 text-xs">
