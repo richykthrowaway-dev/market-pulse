@@ -11,6 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatsCard } from '@/components/ui/StatsCard';
 import { TradeTracker } from '@/components/trading/TradeTracker';
+import { Watchlist } from '@/components/trading/Watchlist';
+import { SymbolChart } from '@/components/trading/SymbolChart';
 import { toast } from 'sonner';
 import {
   Activity,
@@ -19,11 +21,11 @@ import {
   ArrowUpRight,
   Briefcase,
   DollarSign,
+  Eye,
   Minus,
   Plus,
   Radio,
   Search,
-  Server,
   TrendingUp,
   X,
   Zap,
@@ -102,43 +104,6 @@ function ConnectionStatus() {
         {connected ? 'Connected' : 'Not Authenticated'}
       </span>
     </div>
-  );
-}
-
-/* ─── Gateway Setup Guide ─── */
-function GatewayGuide() {
-  return (
-    <Card className="trading-card border-dashed border-muted-foreground/30">
-      <CardContent className="py-8">
-        <div className="flex flex-col items-center text-center gap-4">
-          <div className="rounded-full bg-muted p-4">
-            <Server className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <div className="space-y-2 max-w-md">
-            <h3 className="text-lg font-semibold">Connect Your IBKR Gateway</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              To use live trading features, you need to run the IBKR Client Portal Gateway on your machine
-              and expose it via a public tunnel (e.g. ngrok). Then set the <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded">IBKR_GATEWAY_URL</code> secret
-              to the tunnel&apos;s public URL.
-            </p>
-          </div>
-          <div className="grid gap-2 text-left text-xs text-muted-foreground w-full max-w-sm">
-            <div className="flex items-start gap-2">
-              <Badge variant="outline" className="mt-0.5 shrink-0">1</Badge>
-              <span>Download &amp; run the <strong>IB Gateway</strong> or <strong>TWS</strong></span>
-            </div>
-            <div className="flex items-start gap-2">
-              <Badge variant="outline" className="mt-0.5 shrink-0">2</Badge>
-              <span>Start a tunnel: <code className="font-mono bg-muted px-1 rounded">ngrok http 5000</code></span>
-            </div>
-            <div className="flex items-start gap-2">
-              <Badge variant="outline" className="mt-0.5 shrink-0">3</Badge>
-              <span>Set the <strong>IBKR_GATEWAY_URL</strong> secret to the ngrok URL</span>
-            </div>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -822,8 +787,9 @@ export default function Trading() {
   const isGatewayOffline = !authLoading && authStatus === null;
   const isConnected = authStatus?.authenticated === true;
 
-  // selSymbol prefills the Order Ticket; wired to Watchlist/SymbolChart in Task 8.
-  const [selSymbol] = useState('');
+  // selSymbol drives the SymbolChart and prefills the Order Ticket; set by
+  // Watchlist row-select / "→ Ticket".
+  const [selSymbol, setSelSymbol] = useState('');
 
   return (
     <PageLayout
@@ -858,64 +824,79 @@ export default function Trading() {
             My Trading Plan). Closing a trade files it into the shared Journal. */}
         <TradeTracker />
 
-        {/* Gateway guide if offline */}
-        {isGatewayOffline && <GatewayGuide />}
+        {/* Stats row — IBKR-only, self-gated */}
+        {isConnected && <AccountStats accountId={accountId} />}
 
-        {/* Stats row */}
-        {!isGatewayOffline && <AccountStats accountId={accountId} />}
-
-        {/* Main content: tables + sidebar */}
-        {!isGatewayOffline && (
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Left: Tabbed data */}
-            <div className="lg:col-span-2 space-y-4">
-              <Tabs defaultValue="positions">
-                <TabsList className="w-full justify-start">
-                  <TabsTrigger value="positions" className="gap-1.5">
-                    <Briefcase className="h-3.5 w-3.5" /> Positions
-                  </TabsTrigger>
-                  <TabsTrigger value="orders" className="gap-1.5">
-                    <Zap className="h-3.5 w-3.5" /> Orders
-                  </TabsTrigger>
-                  <TabsTrigger value="trades" className="gap-1.5">
-                    <Radio className="h-3.5 w-3.5" /> Trades
-                  </TabsTrigger>
-                </TabsList>
-                <TabsContent value="positions" className="mt-3">
-                  <Card className="trading-card">
-                    <CardContent className="pt-4 px-0 sm:px-4">
-                      {accountId ? (
-                        <PositionsTable accountId={accountId} />
-                      ) : (
-                        <p className="text-sm text-muted-foreground text-center py-8">Connect to view positions.</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                <TabsContent value="orders" className="mt-3">
-                  <Card className="trading-card">
-                    <CardContent className="pt-4 px-0 sm:px-4">
-                      <OrdersTable accountId={accountId} />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                <TabsContent value="trades" className="mt-3">
-                  <Card className="trading-card">
-                    <CardContent className="pt-4 px-0 sm:px-4">
-                      <TradesTable />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            {/* Right: Order form + Live Prices */}
-            <div className="space-y-4">
-              <QuickOrder accountId={accountId} isConnected={isConnected} selSymbol={selSymbol} />
-              {accountId && <LivePrices accountId={accountId} />}
-            </div>
+        {/* Always-on workspace: broker-independent core + IBKR self-gating */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          {/* Left: Tabbed data */}
+          <div className="lg:col-span-2 space-y-4">
+            <Tabs defaultValue="watchlist">
+              <TabsList className="w-full justify-start">
+                <TabsTrigger value="watchlist" className="gap-1.5">
+                  <Eye className="h-3.5 w-3.5" /> Watchlist
+                </TabsTrigger>
+                {isConnected && (
+                  <>
+                    <TabsTrigger value="positions" className="gap-1.5">
+                      <Briefcase className="h-3.5 w-3.5" /> Positions
+                    </TabsTrigger>
+                    <TabsTrigger value="orders" className="gap-1.5">
+                      <Zap className="h-3.5 w-3.5" /> Orders
+                    </TabsTrigger>
+                    <TabsTrigger value="trades" className="gap-1.5">
+                      <Radio className="h-3.5 w-3.5" /> Trades
+                    </TabsTrigger>
+                  </>
+                )}
+              </TabsList>
+              <TabsContent value="watchlist" className="mt-3">
+                <Watchlist
+                  selSymbol={selSymbol}
+                  onSelect={setSelSymbol}
+                  onSendToTicket={setSelSymbol}
+                  showGatewayNote={isGatewayOffline}
+                />
+              </TabsContent>
+              {isConnected && (
+                <>
+                  <TabsContent value="positions" className="mt-3">
+                    <Card className="trading-card">
+                      <CardContent className="pt-4 px-0 sm:px-4">
+                        {accountId ? (
+                          <PositionsTable accountId={accountId} />
+                        ) : (
+                          <p className="text-sm text-muted-foreground text-center py-8">Connect to view positions.</p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  <TabsContent value="orders" className="mt-3">
+                    <Card className="trading-card">
+                      <CardContent className="pt-4 px-0 sm:px-4">
+                        <OrdersTable accountId={accountId} />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                  <TabsContent value="trades" className="mt-3">
+                    <Card className="trading-card">
+                      <CardContent className="pt-4 px-0 sm:px-4">
+                        <TradesTable />
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                </>
+              )}
+            </Tabs>
           </div>
-        )}
+
+          {/* Right: Symbol chart + Order form + Live Prices */}
+          <div className="space-y-4">
+            <SymbolChart symbol={selSymbol} />
+            <QuickOrder accountId={accountId} isConnected={isConnected} selSymbol={selSymbol} />
+            {isConnected && accountId && <LivePrices accountId={accountId} />}
+          </div>
+        </div>
       </div>
     </PageLayout>
   );
