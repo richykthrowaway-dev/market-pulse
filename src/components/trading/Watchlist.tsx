@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Search, X, ArrowRight, Eye } from 'lucide-react';
-import { Area, AreaChart, ResponsiveContainer } from 'recharts';
+import { Area, AreaChart } from 'recharts';
 import { useWatchlist } from '@/hooks/useWatchlist';
 import { useLiveQuotes, type LiveQuote } from '@/hooks/useLiveQuotes';
 import { useSymbolSearch } from '@/hooks/useSymbolSearch';
@@ -68,8 +68,7 @@ function WatchRow({ sym, selected, quote, onSelect, onSendToTicket, onRemove }: 
       {/* Tiny sparkline */}
       <div style={{ width: 64, height: 24 }} className="shrink-0">
         {bars.length > 0 ? (
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={bars.map((b, i) => ({ i, c: b.c }))}>
+            <AreaChart width={64} height={24} data={bars.map((b, i) => ({ i, c: b.c }))}>
               <defs>
                 <linearGradient id={`spark-${sym}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor={color ?? 'hsl(var(--muted-foreground))'} stopOpacity={0.35} />
@@ -86,7 +85,6 @@ function WatchRow({ sym, selected, quote, onSelect, onSendToTicket, onRemove }: 
                 dot={false}
               />
             </AreaChart>
-          </ResponsiveContainer>
         ) : null}
       </div>
 
