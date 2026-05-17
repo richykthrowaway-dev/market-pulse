@@ -24,4 +24,9 @@ describe('riskPreview', () => {
   it('zero qty → posValue 0', () => {
     expect(riskPreview({ side: 'long', entry: 100, stop: 90, qty: 0 }).posValue).toBe(0);
   });
+  it('acctRiskPct exactly equal to riskPct → not over-risk (strict >)', () => {
+    const r = riskPreview({ side: 'long', entry: 100, stop: 90, qty: 10, account: 10000, riskPct: 1 });
+    expect(r.acctRiskPct).toBeCloseTo(1, 5);
+    expect(r.overRisk).toBe(false);
+  });
 });
