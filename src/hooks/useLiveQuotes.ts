@@ -11,6 +11,10 @@ export interface LiveQuote {
  * Poll live quotes for a set of symbols. One React Query per UNIQUE symbol
  * (keying dedups for free). Pauses when the tab is hidden; resumes on focus.
  * Empty input → zero requests. Write-free (safe for read-only mirrors).
+ *
+ * The result map is derived inside React Query's `combine` so its identity is
+ * stable across renders until the underlying quote data actually changes —
+ * consumers can safely use it as an effect/memo dependency.
  */
 export function useLiveQuotes(
   symbols: string[],
@@ -21,7 +25,7 @@ export function useLiveQuotes(
     [symbols],
   );
 
-  const results = useQueries({
+  return useQueries({
     queries: unique.map((sym) => ({
       queryKey: ['live-quote', sym],
       queryFn: async ({ signal }: { signal: AbortSignal }): Promise<LiveQuote> => ({
@@ -33,14 +37,13 @@ export function useLiveQuotes(
       staleTime: Math.max(0, intervalMs - 5_000),
       gcTime: 60_000,
     })),
+    combine: (results) => {
+      const map: Record<string, LiveQuote> = {};
+      unique.forEach((sym, i) => {
+        const d = results[i]?.data;
+        if (d) map[sym] = d;
+      });
+      return map;
+    },
   });
-
-  return useMemo(() => {
-    const map: Record<string, LiveQuote> = {};
-    unique.forEach((sym, i) => {
-      const d = results[i]?.data;
-      if (d) map[sym] = d;
-    });
-    return map;
-  }, [unique, results]);
 }
