@@ -458,6 +458,14 @@ export function TradeTracker() {
                   const rr = risk && reward && risk > 0 ? reward / risk : null;
                   const long = t.side === 'long';
                   const closing = closingId === t.id;
+                  const q = quotes[t.symbol.trim().toUpperCase()];
+                  const livePrice = q?.price ?? null;
+                  const pnl = livePrice != null ? unrealizedPnl(t.side, t.entryPrice, livePrice, t.quantity) : null;
+                  const stopState = livePrice != null ? stopProximity(t.side, t.entryPrice, t.stopLoss, livePrice) : 'ok';
+                  const gapPct = (to?: number) =>
+                    livePrice != null && to != null && livePrice > 0
+                      ? ((to - livePrice) / livePrice) * 100
+                      : null;
                   return (
                     <div key={t.id}
                       className={`rounded-lg border bg-card/60 p-3 transition-colors ${
@@ -487,6 +495,43 @@ export function TradeTracker() {
                             <div className="font-mono-num font-medium">{v}</div>
                           </div>
                         ))}
+                      </div>
+
+                      {/* Live row */}
+                      <div className="mt-2 rounded-md bg-muted/30 px-2.5 py-2 text-xs">
+                        {livePrice == null ? (
+                          <span className="text-muted-foreground/60">waiting for price…</span>
+                        ) : (
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                            <span className="font-mono-num">
+                              <span className="text-muted-foreground/70">Last </span>
+                              {money(livePrice)}
+                            </span>
+                            {pnl && (
+                              <span className={`font-mono-num font-semibold ${
+                                pnl.dollars >= 0 ? 'text-trading-buy' : 'text-trading-sell'
+                              }`}>
+                                {pnl.dollars >= 0 ? '+' : ''}{money(pnl.dollars)} ({pnl.pct >= 0 ? '+' : ''}{pnl.pct.toFixed(2)}%)
+                              </span>
+                            )}
+                            {t.stopLoss != null && (
+                              <span className={`font-mono-num ${
+                                stopState === 'breached' ? 'text-trading-sell font-semibold'
+                                  : stopState === 'near' ? 'text-warning' : 'text-muted-foreground'
+                              }`}>
+                                {stopState === 'breached' ? 'stop hit' : `${Math.abs(gapPct(t.stopLoss) ?? 0).toFixed(1)}% to stop`}
+                              </span>
+                            )}
+                            {t.target != null && (() => {
+                              const reached = t.side === 'long' ? livePrice >= t.target : livePrice <= t.target;
+                              return (
+                                <span className={`font-mono-num ${reached ? 'text-trading-buy font-semibold' : 'text-muted-foreground'}`}>
+                                  {reached ? 'target hit' : `${Math.abs(gapPct(t.target) ?? 0).toFixed(1)}% to target`}
+                                </span>
+                              );
+                            })()}
+                          </div>
+                        )}
                       </div>
 
                       {/* Plan-valid toggle + actions */}
