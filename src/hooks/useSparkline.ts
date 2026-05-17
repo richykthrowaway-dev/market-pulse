@@ -5,7 +5,7 @@ import { fetchYahooChart, type YahooBar } from '@/services/yahooFinanceApi';
  * Daily bars for a sparkline + window-change. `enabled` lets callers gate
  * (e.g. skip until the symbol is on screen). 10-min React Query cache.
  */
-export function useSparkline(symbol: string, range: '5d' | '1mo' | '3mo' | '1y' = '1mo') {
+export function useSparkline(symbol: string, range: '7d' | '1mo' | '3mo' | '1y' = '1mo') {
   return useQuery<YahooBar[]>({
     queryKey: ['sparkline', symbol.trim().toUpperCase(), range],
     queryFn: () => fetchYahooChart(symbol.trim().toUpperCase(), '1d', range),
