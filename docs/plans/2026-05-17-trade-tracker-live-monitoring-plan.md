@@ -49,7 +49,7 @@ import path from 'path';
 
 export default defineConfig({
   resolve: { alias: { '@': path.resolve(__dirname, './src') } },
-  test: { environment: 'node', include: ['src/**/*.test.ts'] },
+  test: { environment: 'node', include: ['src/lib/**/*.test.ts'] },
 });
 ```
 
@@ -452,9 +452,7 @@ git commit -m "feat: live P&L + distance-to-stop/target per open position"
 **Step 1: Run the unit suite**
 
 Run: `cd "C:/Users/PC/Downloads/market-pulse" && npm test 2>&1 | tail -10`
-Expected: `src/lib/tradeMetrics.test.ts` passes (9 assertions). Pre-existing
-`src/test/*.test.ts` may require network/Supabase — note any failures as
-pre-existing, do NOT fix in this branch.
+Expected: `src/lib/tradeMetrics.test.ts` passes (9 assertions). The vitest `include` is scoped to `src/lib/**` so pre-existing network-dependent suites are not run by `npm test`.
 
 **Step 2: Clean production build**
 
