@@ -129,7 +129,11 @@ export function SymbolChart({ symbol }: SymbolChartProps) {
               />
               <XAxis
                 dataKey="t"
-                tickFormatter={(t: number) => new Date(t * 1000).toLocaleDateString()}
+                tickFormatter={(t: number) =>
+                  range === '1D'
+                    ? new Date(t * 1000).toLocaleTimeString([], { hour: 'numeric' })
+                    : new Date(t * 1000).toLocaleDateString()
+                }
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 axisLine={false}
                 tickLine={false}
