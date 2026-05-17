@@ -33,4 +33,14 @@ describe('stopProximity', () => {
   it('no stop → ok', () => {
     expect(stopProximity('long', 100, undefined, 50)).toBe('ok');
   });
+  it('exact band edge → near (long, 92.5)', () => {
+    expect(stopProximity('long', 100, 90, 92.5)).toBe('near');
+  });
+  it('price exactly at stop → breached (long)', () => {
+    expect(stopProximity('long', 100, 90, 90)).toBe('breached');
+  });
+  it('zero-width stop (stop === entry): no near zone', () => {
+    expect(stopProximity('long', 100, 100, 100)).toBe('breached');
+    expect(stopProximity('long', 100, 100, 101)).toBe('ok');
+  });
 });

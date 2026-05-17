@@ -18,6 +18,7 @@ export function unrealizedPnl(
  *  - 'breached': price has crossed the stop (loss side)
  *  - 'near': price within 25% of the entry→stop distance of the stop
  *  - 'ok': otherwise (or no stop set)
+ *  Assumes `stop` is on the loss side of `entry` (below for long, above for short).
  */
 export function stopProximity(
   side: 'long' | 'short',
