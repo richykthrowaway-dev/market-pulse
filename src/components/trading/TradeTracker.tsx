@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useTradeJournal, type TradeSide, type ExitReason } from '@/hooks/useTradeJournal';
 import { useOpenTrades, type OpenTrade } from '@/hooks/useOpenTrades';
+import { useLiveSpeed } from '@/hooks/useLiveSpeed';
 import { useSymbolSearch } from '@/hooks/useSymbolSearch';
 import { useJournalSettings } from '@/hooks/useJournalSettings';
 import { fetchYahooQuote } from '@/services/yahooFinanceApi';
@@ -89,14 +90,7 @@ export function TradeTracker() {
   const [fees, setFees] = useState('');
   const [closeNotes, setCloseNotes] = useState('');
 
-  const [fast, setFast] = useState<boolean>(() => {
-    try { return localStorage.getItem('tt-live-speed-v1') === 'fast'; } catch { return false; }
-  });
-  const setSpeed = (f: boolean) => {
-    setFast(f);
-    try { localStorage.setItem('tt-live-speed-v1', f ? 'fast' : 'slow'); } catch { /* ignore */ }
-  };
-  const intervalMs = fast ? 5_000 : 30_000;
+  const { fast, setFast, intervalMs } = useLiveSpeed();
   const openSymbols = useMemo(() => open.map((t) => t.symbol), [open]);
   const quotes = useLiveQuotes(openSymbols, intervalMs);
 
@@ -429,7 +423,7 @@ export function TradeTracker() {
                 {open.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => setSpeed(!fast)}
+                    onClick={() => setFast(!fast)}
                     title="Live price refresh rate"
                     aria-pressed={fast}
                     aria-label={`Live price refresh rate: ${fast ? '5 seconds' : '30 seconds'}`}

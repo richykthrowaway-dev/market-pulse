@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Search, X, ArrowRight, Eye } from 'lucide-react';
 import { Area, AreaChart } from 'recharts';
 import { useWatchlist } from '@/hooks/useWatchlist';
+import { useLiveSpeed } from '@/hooks/useLiveSpeed';
 import { useLiveQuotes, type LiveQuote } from '@/hooks/useLiveQuotes';
 import { useSymbolSearch } from '@/hooks/useSymbolSearch';
 import { useSparkline } from '@/hooks/useSparkline';
@@ -128,14 +129,7 @@ export function Watchlist(props: WatchlistProps) {
   const { selSymbol, onSelect, onSendToTicket, showGatewayNote } = props;
   const { symbols, add, remove } = useWatchlist();
 
-  const [fast, setFast] = useState<boolean>(() => {
-    try { return localStorage.getItem('tt-live-speed-v1') === 'fast'; } catch { return false; }
-  });
-  const setSpeed = (f: boolean) => {
-    setFast(f);
-    try { localStorage.setItem('tt-live-speed-v1', f ? 'fast' : 'slow'); } catch { /* ignore */ }
-  };
-  const intervalMs = fast ? 5_000 : 30_000;
+  const { fast, setFast, intervalMs } = useLiveSpeed();
 
   // `symbols` from useSyncExternalStore is already stable across renders.
   const quotes = useLiveQuotes(symbols, intervalMs);
@@ -174,7 +168,7 @@ export function Watchlist(props: WatchlistProps) {
           {symbols.length > 0 && (
             <button
               type="button"
-              onClick={() => setSpeed(!fast)}
+              onClick={() => setFast(!fast)}
               title="Live price refresh rate"
               aria-pressed={fast}
               aria-label={`Live price refresh rate: ${fast ? '5 seconds' : '30 seconds'}`}
