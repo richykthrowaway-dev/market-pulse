@@ -48,6 +48,7 @@ import { useSymbolSearch } from '@/hooks/useSymbolSearch';
 import { useOpenTrades } from '@/hooks/useOpenTrades';
 import { fetchYahooQuote } from '@/services/yahooFinanceApi';
 import { riskPreview } from '@/lib/riskPreview';
+import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
 
 /* ─── helpers ─── */
 function fmtCurrency(v: number | null | undefined, fallback = '—') {
@@ -408,6 +409,7 @@ function QuickOrder({ accountId, isConnected, selSymbol }: { accountId: string; 
   const [target, setTarget] = useState('');
   const [entry, setEntry] = useState('');
   const [confirming, setConfirming] = useState(false);
+  const [qtyTouched, setQtyTouched] = useState(false);
 
   // Symbol autocomplete (broker-independent)
   const [showSym, setShowSym] = useState(false);
@@ -475,6 +477,29 @@ function QuickOrder({ accountId, isConnected, selSymbol }: { accountId: string; 
     riskPct: rp?.riskPct,
   });
 
+  const sideLW = side === 'BUY' ? 'long' : 'short';
+  const entryN = Number(entry) || 0;
+  const stopN = stop ? Number(stop) : undefined;
+
+  const applyStopPct = (pct: number) => {
+    const s = stopFromPct(sideLW, entryN, pct);
+    if (s != null) setStop(String(s));
+  };
+  const applyTargetR = (r: number) => {
+    const t = targetFromR(sideLW, entryN, stopN, r);
+    if (t != null) setTarget(String(t));
+  };
+  const useLive = () => { if (livePrice != null) setEntry(String(livePrice)); };
+
+  useEffect(() => {
+    if (qtyTouched) return;
+    if (entryN > 0 && stopN != null && rp) {
+      const q = qtyFromRisk(entryN, stopN, rp.account, rp.riskPct);
+      if (q > 0) setQty(String(q));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entry, stop, side, qtyTouched]);
+
   const isBuy = side === 'BUY';
   const sym = symbol.trim().toUpperCase();
   const canSubmit = !!symbol && Number(qty) > 0 && (!isConnected || !!selectedConid);
@@ -504,6 +529,7 @@ function QuickOrder({ accountId, isConnected, selSymbol }: { accountId: string; 
           toast.success('Order submitted successfully');
           setSymbol('');
           setQty('1');
+          setQtyTouched(false);
           setPrice('');
           setConfirming(false);
         },
@@ -527,6 +553,7 @@ function QuickOrder({ accountId, isConnected, selSymbol }: { accountId: string; 
     toast.success('Tracked — see Trade Tracker');
     setSymbol('');
     setQty('1');
+    setQtyTouched(false);
     setPrice('');
     setStop('');
     setTarget('');
@@ -654,7 +681,7 @@ function QuickOrder({ accountId, isConnected, selSymbol }: { accountId: string; 
               variant="outline"
               size="icon"
               className="h-9 w-9 shrink-0"
-              onClick={() => setQty(String(Math.max(1, Number(qty) - 1)))}
+              onClick={() => { setQty(String(Math.max(1, Number(qty) - 1))); setQtyTouched(true); }}
             >
               <Minus className="h-3.5 w-3.5" />
             </Button>
@@ -662,14 +689,14 @@ function QuickOrder({ accountId, isConnected, selSymbol }: { accountId: string; 
               type="number"
               min={1}
               value={qty}
-              onChange={(e) => setQty(e.target.value)}
+              onChange={(e) => { setQty(e.target.value); setQtyTouched(true); }}
               className="text-center font-mono-num text-sm"
             />
             <Button
               variant="outline"
               size="icon"
               className="h-9 w-9 shrink-0"
-              onClick={() => setQty(String(Number(qty) + 1))}
+              onClick={() => { setQty(String(Number(qty) + 1)); setQtyTouched(true); }}
             >
               <Plus className="h-3.5 w-3.5" />
             </Button>
@@ -680,14 +707,20 @@ function QuickOrder({ accountId, isConnected, selSymbol }: { accountId: string; 
         <div className="grid grid-cols-3 gap-2">
           <div className="space-y-1.5">
             <label className="text-xs text-muted-foreground">Entry</label>
-            <Input
-              type="number"
-              step="0.01"
-              placeholder="0.00"
-              value={entry}
-              onChange={(e) => setEntry(e.target.value)}
-              className="w-full font-mono-num text-sm"
-            />
+            <div className="flex gap-1 items-center">
+              <Input
+                type="number"
+                step="0.01"
+                placeholder="0.00"
+                value={entry}
+                onChange={(e) => setEntry(e.target.value)}
+                className="w-full font-mono-num text-sm"
+              />
+              <button type="button" onClick={useLive} disabled={livePrice == null}
+                className="shrink-0 px-2 rounded text-[11px] font-mono-num border border-border/50 text-muted-foreground hover:text-foreground disabled:opacity-40 transition-colors">
+                Use live
+              </button>
+            </div>
           </div>
           <div className="space-y-1.5">
             <label className="text-xs text-muted-foreground">Stop</label>
@@ -699,6 +732,15 @@ function QuickOrder({ accountId, isConnected, selSymbol }: { accountId: string; 
               onChange={(e) => setStop(e.target.value)}
               className="w-full font-mono-num text-sm"
             />
+            <div className="flex gap-1 mt-1">
+              {[1, 2, 3, 5].map((p) => (
+                <button key={p} type="button" onClick={() => applyStopPct(p)}
+                  disabled={entryN <= 0}
+                  className="px-2 py-0.5 rounded text-[10px] font-mono-num border border-border/50 text-muted-foreground hover:text-foreground hover:border-border disabled:opacity-40 transition-colors">
+                  −{p}%
+                </button>
+              ))}
+            </div>
           </div>
           <div className="space-y-1.5">
             <label className="text-xs text-muted-foreground">Target</label>
@@ -710,6 +752,15 @@ function QuickOrder({ accountId, isConnected, selSymbol }: { accountId: string; 
               onChange={(e) => setTarget(e.target.value)}
               className="w-full font-mono-num text-sm"
             />
+            <div className="flex gap-1 mt-1">
+              {[1, 2, 3].map((r) => (
+                <button key={r} type="button" onClick={() => applyTargetR(r)}
+                  disabled={entryN <= 0 || stopN == null}
+                  className="px-2 py-0.5 rounded text-[10px] font-mono-num border border-border/50 text-muted-foreground hover:text-foreground hover:border-border disabled:opacity-40 transition-colors">
+                  +{r}R
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -791,6 +842,11 @@ export default function Trading() {
   // Watchlist row-select / "→ Ticket".
   const [selSymbol, setSelSymbol] = useState('');
 
+  const [activeTab, setActiveTab] = useState('watchlist');
+  useEffect(() => {
+    if (!isConnected && activeTab !== 'watchlist') setActiveTab('watchlist');
+  }, [isConnected, activeTab]);
+
   return (
     <PageLayout
       title="IBKR Trading"
@@ -831,7 +887,7 @@ export default function Trading() {
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Left: Tabbed data */}
           <div className="lg:col-span-2 space-y-4">
-            <Tabs defaultValue="watchlist">
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="w-full justify-start">
                 <TabsTrigger value="watchlist" className="gap-1.5">
                   <Eye className="h-3.5 w-3.5" /> Watchlist
