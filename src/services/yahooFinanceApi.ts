@@ -173,3 +173,24 @@ export async function fetchYahooChart(
     { ttlMs: interval === '1h' ? 10 * 60_000 : 60 * 60_000 },
   );
 }
+
+/**
+ * Non-cached quote fetch for live polling. Same proxy as `fetchYahooQuote`
+ * but WITHOUT `fetchCached` — React Query owns freshness/dedup. Returns the
+ * regular-market price, or null on any failure (never throws to the caller).
+ */
+export async function fetchYahooQuoteLive(symbol: string): Promise<number | null> {
+  try {
+    const qs = new URLSearchParams({ endpoint: 'quote', symbol }).toString();
+    const url = `https://${PROJECT_ID}.supabase.co/functions/v1/api-yahoo?${qs}`;
+    const res = await fetch(url, {
+      headers: { apikey: API_KEY, Authorization: `Bearer ${API_KEY}` },
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!res.ok) return null;
+    const json: { regularMarketPrice?: number | null } = await res.json();
+    return json.regularMarketPrice ?? null;
+  } catch {
+    return null;
+  }
+}
