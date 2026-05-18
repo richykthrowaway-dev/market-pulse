@@ -47,6 +47,16 @@ describe('rankSymbols', () => {
     expect(out).not.toBe(input);
   });
 
+  it('does not throw on rows with missing name/ticker (dropdown stays alive)', () => {
+    const out = rankSymbols('AAPL', [
+      { canonicalTicker: 'AAPD', name: null } as any,
+      { canonicalTicker: 'AAPL', name: 'Apple Inc' } as any,
+      { canonicalTicker: undefined, name: 'random AAPL fund' } as any,
+    ]);
+    expect(out[0].canonicalTicker).toBe('AAPL');
+    expect(out).toHaveLength(3);
+  });
+
   it('does not mutate the input array', () => {
     const input = [row('AAPD', 'x AAPL'), row('AAPL', 'Apple')];
     const snapshot = input.map((r) => r.canonicalTicker);

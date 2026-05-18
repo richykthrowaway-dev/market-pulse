@@ -26,10 +26,10 @@ export function rankSymbols(
   const q = query.trim().toUpperCase();
   if (!q) return [...rows];
   return [...rows].sort((a, b) => {
-    const ta = a.canonicalTicker.toUpperCase();
-    const tb = b.canonicalTicker.toUpperCase();
-    const sa = tier(q, ta, a.name.toUpperCase());
-    const sb = tier(q, tb, b.name.toUpperCase());
+    const ta = (a.canonicalTicker ?? '').toUpperCase();
+    const tb = (b.canonicalTicker ?? '').toUpperCase();
+    const sa = tier(q, ta, (a.name ?? '').toUpperCase());
+    const sb = tier(q, tb, (b.name ?? '').toUpperCase());
     if (sa !== sb) return sa - sb;
     if (ta.length !== tb.length) return ta.length - tb.length;
     return ta < tb ? -1 : ta > tb ? 1 : 0;
