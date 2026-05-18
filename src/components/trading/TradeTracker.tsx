@@ -20,6 +20,7 @@ import { unrealizedPnl, stopProximity } from '@/lib/tradeMetrics';
 import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
 import { resolveEntryDefaults, rrBar, payoff } from '@/lib/entryViz';
 import { isValidExit } from '@/lib/exitValidation';
+import { computePnL, computeR } from '@/lib/tradeMath';
 
 // Setup names saved in the My-Trading-Plan playbook (tp-playbook-v1). Read-only,
 // best-effort — the Setup combobox merges these with the Journal's saved setups
@@ -845,6 +846,35 @@ export function TradeTracker() {
                               Pick an exit reason to file this trade.
                             </p>
                           )}
+                          {(() => {
+                            if (!isValidExit(exitPrice)) {
+                              return (
+                                <div className="text-xs text-muted-foreground">
+                                  Books <span className="font-mono-num">—</span>
+                                </div>
+                              );
+                            }
+                            const m = {
+                              side: t.side, entryPrice: t.entryPrice,
+                              exitPrice: Number(exitPrice), quantity: t.quantity,
+                              fees: Number(fees) || 0, stopLoss: t.stopLoss,
+                            };
+                            const pnl = computePnL(m);
+                            const r = computeR(m);
+                            const cls = pnl > 0 ? 'text-trading-buy'
+                              : pnl < 0 ? 'text-trading-sell' : 'text-muted-foreground';
+                            return (
+                              <div className="text-xs">
+                                Books{' '}
+                                <span className={`font-mono-num font-semibold ${cls}`}>
+                                  {pnl >= 0 ? '+' : ''}{money(pnl)}
+                                </span>
+                                {r != null && (
+                                  <span className="text-muted-foreground"> · {r.toFixed(2)}R</span>
+                                )}
+                              </div>
+                            );
+                          })()}
                           <Button size="sm" className="w-full font-semibold"
                             disabled={!isValidExit(exitPrice) || exitReason === ''}
                             onClick={() => confirmClose(t)}>
