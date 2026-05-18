@@ -15,6 +15,7 @@ import { useJournalSettings } from '@/hooks/useJournalSettings';
 import { fetchYahooQuote } from '@/services/yahooFinanceApi';
 import { useLiveQuotes } from '@/hooks/useLiveQuotes';
 import { unrealizedPnl, stopProximity } from '@/lib/tradeMetrics';
+import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
 
 // Setup names saved in the My-Trading-Plan playbook (tp-playbook-v1). Read-only,
 // best-effort — the Setup combobox merges these with the Journal's saved setups
@@ -83,6 +84,7 @@ export function TradeTracker() {
   const { trades: open, addOpen, removeOpen, patchOpen } = useOpenTrades();
 
   const [draft, setDraft] = useState<OpenTrade>(emptyDraft());
+  const [qtyTouched, setQtyTouched] = useState(false);
   const [closingId, setClosingId] = useState<string | null>(null);
   const [exitPrice, setExitPrice] = useState('');
   const [exitDate, setExitDate] = useState(todayISO());
@@ -154,6 +156,27 @@ export function TradeTracker() {
   }, []);
 
   const isLong = draft.side === 'long';
+
+  const rpTT = readRiskParams();
+  const applyStopPct = (pct: number) => {
+    const s = stopFromPct(draft.side, draft.entryPrice, pct);
+    if (s != null) set('stopLoss', s);
+  };
+  const applyTargetR = (r: number) => {
+    const t = targetFromR(draft.side, draft.entryPrice, draft.stopLoss, r);
+    if (t != null) set('target', t);
+  };
+  const useLive = () => { if (live?.price != null) set('entryPrice', live.price); };
+
+  useEffect(() => {
+    if (qtyTouched) return;
+    if (draft.entryPrice > 0 && draft.stopLoss != null && rpTT) {
+      const q = qtyFromRisk(draft.entryPrice, draft.stopLoss, rpTT.account, rpTT.riskPct);
+      if (q > 0 && q !== draft.quantity) set('quantity', q);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft.entryPrice, draft.stopLoss, draft.side, qtyTouched]);
+
   const canAdd = draft.symbol.trim() !== '' && draft.quantity > 0 && draft.entryPrice > 0;
 
   // ── Live deal preview — recomputes as the user types ──────────────────────
@@ -186,6 +209,7 @@ export function TradeTracker() {
     if (!canAdd) return;
     addOpen({ ...draft, symbol: draft.symbol.trim().toUpperCase() });
     setDraft(emptyDraft());
+    setQtyTouched(false);
     setLive(null);
     setSymQuery('');
     if (draft.setup?.trim()) addSetup(draft.setup.trim());
@@ -327,25 +351,49 @@ export function TradeTracker() {
                 <label className={lblCls}>Quantity</label>
                 <Input type="number" min={0} className={fieldCls}
                   value={draft.quantity || ''}
-                  onChange={(e) => set('quantity', Number(e.target.value) || 0)} />
+                  onChange={(e) => { setQtyTouched(true); set('quantity', Number(e.target.value) || 0); }} />
               </div>
               <div className="space-y-1">
                 <label className={lblCls}>Entry</label>
-                <Input type="number" min={0} step={0.01} className={fieldCls}
-                  value={draft.entryPrice || ''}
-                  onChange={(e) => set('entryPrice', Number(e.target.value) || 0)} />
+                <div className="flex gap-1 items-center">
+                  <Input type="number" min={0} step={0.01} className={fieldCls}
+                    value={draft.entryPrice || ''}
+                    onChange={(e) => set('entryPrice', Number(e.target.value) || 0)} />
+                  <button type="button" onClick={useLive} disabled={live?.price == null}
+                    className="shrink-0 px-2 rounded text-[11px] font-mono-num border border-border/50 text-muted-foreground hover:text-foreground disabled:opacity-40 transition-colors">
+                    Use live
+                  </button>
+                </div>
               </div>
               <div className="space-y-1">
                 <label className={lblCls}>Stop</label>
                 <Input type="number" min={0} step={0.01} className={fieldCls}
                   value={draft.stopLoss ?? ''}
                   onChange={(e) => set('stopLoss', e.target.value === '' ? undefined : Number(e.target.value))} />
+                <div className="flex gap-1 mt-1">
+                  {[1, 2, 3, 5].map((p) => (
+                    <button key={p} type="button" onClick={() => applyStopPct(p)}
+                      disabled={!(draft.entryPrice > 0)}
+                      className="px-2 py-0.5 rounded text-[10px] font-mono-num border border-border/50 text-muted-foreground hover:text-foreground hover:border-border disabled:opacity-40 transition-colors">
+                      −{p}%
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="space-y-1">
                 <label className={lblCls}>Target</label>
                 <Input type="number" min={0} step={0.01} className={fieldCls}
                   value={draft.target ?? ''}
                   onChange={(e) => set('target', e.target.value === '' ? undefined : Number(e.target.value))} />
+                <div className="flex gap-1 mt-1">
+                  {[1, 2, 3].map((r) => (
+                    <button key={r} type="button" onClick={() => applyTargetR(r)}
+                      disabled={!(draft.entryPrice > 0) || draft.stopLoss == null}
+                      className="px-2 py-0.5 rounded text-[10px] font-mono-num border border-border/50 text-muted-foreground hover:text-foreground hover:border-border disabled:opacity-40 transition-colors">
+                      +{r}R
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="space-y-1">
                 <label className={lblCls}>Setup</label>
