@@ -1,7 +1,7 @@
 # Close-Flow Quality Improvements — Design
 
 **Date:** 2026-05-18
-**Status:** Approved (design)
+**Status:** Implemented (2026-05-18)
 **Scope:** First pass on the Trade Tracker → Journal handoff. Three changes:
 #1 realized P&L/R preview before Confirm, #4 require explicit exit reason,
 #5 idempotency guard. Plus a behavior-preserving extraction of the P&L math
