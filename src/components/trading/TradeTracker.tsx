@@ -16,7 +16,7 @@ import { fetchYahooQuote } from '@/services/yahooFinanceApi';
 import { useLiveQuotes } from '@/hooks/useLiveQuotes';
 import { unrealizedPnl, stopProximity } from '@/lib/tradeMetrics';
 import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
-import { resolveEntryDefaults } from '@/lib/entryViz';
+import { resolveEntryDefaults, rrBar, payoff } from '@/lib/entryViz';
 
 // Setup names saved in the My-Trading-Plan playbook (tp-playbook-v1). Read-only,
 // best-effort — the Setup combobox merges these with the Journal's saved setups
@@ -236,6 +236,13 @@ export function TradeTracker() {
     if (rr != null && rr < 1.5) hints.push(`R:R is only ${rr.toFixed(1)}:1 — below most plan minimums.`);
     return { rr, dollarRisk, posValue, acctRiskPct, overRisk, hints, hasRp: !!rp };
   }, [draft]);
+
+  const bar = rrBar(draft.side, draft.entryPrice, draft.stopLoss, draft.target, draftLive);
+  const pay = payoff(draft.side, draft.entryPrice, draft.stopLoss, draft.target, draft.quantity, rpTT?.account);
+  const nowPnl =
+    draftLive != null && draft.entryPrice > 0 && draft.quantity > 0
+      ? unrealizedPnl(draft.side, draft.entryPrice, draftLive, draft.quantity)
+      : null;
 
   const submit = useCallback(() => {
     if (!canAdd) return;
@@ -464,6 +471,73 @@ export function TradeTracker() {
                   onChange={(e) => set('entryDate', e.target.value)} />
               </div>
             </div>
+
+            {/* R/R bar */}
+            {bar && (
+              <div className="rounded-lg border border-border/50 bg-muted/30 p-3 space-y-2">
+                <div className="flex justify-between text-[11px] text-muted-foreground">
+                  <span>Risk / Reward</span>
+                  <span className="font-mono-num text-foreground">
+                    {bar.rMultiple != null ? `${bar.rMultiple.toFixed(2)} : 1` : '—'}
+                  </span>
+                </div>
+                <div className="relative h-2 rounded bg-muted">
+                  {/* stop→entry (risk) segment */}
+                  <div className="absolute top-0 bottom-0 rounded-l bg-trading-sell/40"
+                    style={{
+                      left: `${Math.min(bar.stopPct, bar.entryPct) * 100}%`,
+                      width: `${Math.abs(bar.entryPct - bar.stopPct) * 100}%`,
+                    }} />
+                  {/* entry→target (reward) segment */}
+                  <div className="absolute top-0 bottom-0 rounded-r bg-trading-buy/40"
+                    style={{
+                      left: `${Math.min(bar.entryPct, bar.targetPct) * 100}%`,
+                      width: `${Math.abs(bar.targetPct - bar.entryPct) * 100}%`,
+                    }} />
+                  {/* entry tick */}
+                  <div className="absolute top-[-2px] bottom-[-2px] w-px bg-foreground/70"
+                    style={{ left: `${bar.entryPct * 100}%` }} />
+                  {/* live marker */}
+                  {bar.livePct != null && (
+                    <div className="absolute top-[-3px] bottom-[-3px] w-0.5 bg-primary"
+                      style={{ left: `${bar.livePct * 100}%` }} />
+                  )}
+                </div>
+                <div className="flex justify-between text-[10px] font-mono-num text-muted-foreground">
+                  <span className="text-trading-sell">{money(bar.lo)}</span>
+                  <span className="text-trading-buy">{money(bar.hi)}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Payoff gauge */}
+            {(pay.ifStopped || pay.ifTarget) && (
+              <div className="rounded-lg border border-border/50 bg-muted/30 p-3 grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">If stop</div>
+                  <div className="font-mono-num text-xs text-trading-sell">
+                    {pay.ifStopped ? `${money(pay.ifStopped.dollars)} (${pay.ifStopped.pct.toFixed(1)}%)` : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">If target</div>
+                  <div className="font-mono-num text-xs text-trading-buy">
+                    {pay.ifTarget ? `+${money(pay.ifTarget.dollars)} (${pay.ifTarget.pct.toFixed(1)}%)` : '—'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Now</div>
+                  <div className={`font-mono-num text-xs ${
+                    nowPnl == null ? 'text-muted-foreground' : nowPnl.dollars >= 0 ? 'text-trading-buy' : 'text-trading-sell'
+                  }`}>
+                    {nowPnl ? `${nowPnl.dollars >= 0 ? '+' : ''}${money(nowPnl.dollars)}` : '—'}
+                  </div>
+                </div>
+                <div className="col-span-3 text-[10px] font-mono-num text-muted-foreground pt-0.5 border-t border-border/40">
+                  Pos {money(pay.posValue)}{pay.acctPct != null ? ` · ${pay.acctPct.toFixed(1)}% acct` : ''}
+                </div>
+              </div>
+            )}
 
             {/* Live deal preview */}
             <div className="rounded-lg border border-border/50 bg-muted/30 p-3 text-xs space-y-1.5">
