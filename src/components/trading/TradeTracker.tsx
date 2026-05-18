@@ -138,17 +138,20 @@ export function TradeTracker() {
 
   const draftLive = quotes[draft.symbol.trim().toUpperCase()]?.price ?? live?.price ?? null;
 
+  const entryFollowing = !entryLocked && draft.stopLoss == null;
+
   useEffect(() => {
-    if (entryLocked) return;
+    if (!entryFollowing) return;
     if (draftLive != null && draftLive !== draft.entryPrice) set('entryPrice', draftLive);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftLive, entryLocked]);
+  }, [draftLive, entryFollowing]);
 
   // Pick a ticker from the dropdown: set the symbol, then fetch a live quote and
   // infill Entry (only if the user hasn't already typed one) + show the name.
   const pickSymbol = useCallback(async (ticker: string, name: string) => {
     const sym = ticker.trim().toUpperCase();
-    setDraft((d) => ({ ...d, symbol: sym }));
+    setDraft((d) => ({ ...d, symbol: sym, entryPrice: 0 }));
+    setEntryLocked(false);
     setSymQuery('');
     setShowSym(false);
     setLive({ price: null, name });
@@ -379,7 +382,7 @@ export function TradeTracker() {
                 </div>
                 {draftLive != null && (
                   <span className="text-[10px] font-mono-num text-muted-foreground">
-                    {entryLocked ? '🔒 locked' : '● live'} {money(draftLive)}
+                    {entryFollowing ? '● live' : '🔒 locked'} {money(draftLive)}
                   </span>
                 )}
               </div>
