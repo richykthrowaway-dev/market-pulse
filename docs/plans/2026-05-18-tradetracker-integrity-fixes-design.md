@@ -1,7 +1,7 @@
 # TradeTracker Integrity Fixes — Design
 
 **Date:** 2026-05-18
-**Status:** Approved (design)
+**Status:** Implemented (2026-05-18)
 **Scope:** Two trust-critical bug fixes in the Trade Tracker. No data-model or API change.
 
 ## Why
