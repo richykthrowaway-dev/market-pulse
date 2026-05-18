@@ -46,6 +46,17 @@ function writeLS(next: OpenTrade[]) {
 
 function emit() { listeners.forEach((l) => l()); }
 
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (e: StorageEvent) => {
+    // storage events fire only in OTHER tabs (no echo loop). Adopt the
+    // latest persisted state when this key (or all keys) changed.
+    if (e.key === LS_KEY || e.key == null) {
+      snapshot = readLS();
+      emit();
+    }
+  });
+}
+
 function subscribe(cb: () => void): () => void {
   listeners.add(cb);
   return () => { listeners.delete(cb); };
