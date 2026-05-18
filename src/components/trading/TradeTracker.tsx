@@ -16,6 +16,7 @@ import { fetchYahooQuote } from '@/services/yahooFinanceApi';
 import { useLiveQuotes } from '@/hooks/useLiveQuotes';
 import { unrealizedPnl, stopProximity } from '@/lib/tradeMetrics';
 import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
+import { resolveEntryDefaults } from '@/lib/entryViz';
 
 // Setup names saved in the My-Trading-Plan playbook (tp-playbook-v1). Read-only,
 // best-effort — the Setup combobox merges these with the Journal's saved setups
@@ -139,6 +140,22 @@ export function TradeTracker() {
   const draftLive = quotes[draft.symbol.trim().toUpperCase()]?.price ?? live?.price ?? null;
 
   const entryFollowing = !entryLocked && draft.stopLoss == null;
+
+  const quickFill = () => {
+    const px = draftLive;
+    if (px == null) return;
+    const { stopPct, targetR } = resolveEntryDefaults(
+      typeof localStorage !== 'undefined' ? localStorage.getItem('tp-entry-defaults-v1') : null,
+    );
+    const s = stopFromPct(draft.side, px, stopPct);
+    setDraft((d) => ({
+      ...d,
+      entryPrice: px,
+      stopLoss: s ?? d.stopLoss,
+      target: s != null ? (targetFromR(draft.side, px, s, targetR) ?? d.target) : d.target,
+    }));
+    setEntryLocked(true);
+  };
 
   useEffect(() => {
     if (!entryFollowing) return;
@@ -338,6 +355,16 @@ export function TradeTracker() {
                 {live.price != null && <> · live {money(live.price)}</>}
               </p>
             )}
+
+            <button
+              type="button"
+              onClick={quickFill}
+              disabled={draftLive == null}
+              className="w-full rounded-lg py-2 text-xs font-semibold border border-border/60 text-muted-foreground hover:text-foreground hover:border-border disabled:opacity-40 transition-colors"
+              title="Fill entry from live price + default stop/target, then auto-size"
+            >
+              ⚡ Quick-fill
+            </button>
 
             {/* Long / Short segmented toggle */}
             <div className="grid grid-cols-2 gap-2">
