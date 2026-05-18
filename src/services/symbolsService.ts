@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { rankSymbols } from '@/lib/symbolRank';
 
 export interface SymbolSearchResult {
   symbolId: string;
@@ -36,6 +37,10 @@ export async function searchSymbols(
   limit = 10
 ): Promise<SymbolSearchResult[]> {
   const pattern = `%${query}%`;
+  // Fetch a wider candidate pool so client-side ranking can surface the
+  // best matches (exact ticker first) before we slice to `limit`. Without
+  // this the DB's arbitrary-order LIMIT buries the exact ticker.
+  const pool = Math.max(limit * 5, 50);
 
   const { data, error } = await supabase
     .from('symbols')
@@ -46,11 +51,12 @@ export async function searchSymbols(
       )
     `)
     .or(`canonical_ticker.ilike.${pattern},name.ilike.${pattern}`)
-    .limit(limit);
+    .order('canonical_ticker', { ascending: true })
+    .limit(pool);
 
   if (error) throw error;
 
-  return (data ?? []).map((s: any) => {
+  const mapped: SymbolSearchResult[] = (data ?? []).map((s: any) => {
     const primary = (s.listings as any[])?.find((l: any) => l.primary_listing) ?? s.listings?.[0];
     return {
       symbolId: s.id,
@@ -65,6 +71,8 @@ export async function searchSymbols(
       primaryLocalTicker: primary?.local_ticker ?? null,
     };
   });
+
+  return rankSymbols(query, mapped).slice(0, limit);
 }
 
 export async function getSymbol(symbolId: string): Promise<SymbolDetail | null> {
