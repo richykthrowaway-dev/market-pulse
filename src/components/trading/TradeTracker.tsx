@@ -107,9 +107,11 @@ export function TradeTracker() {
   const { settings, addSetup } = useJournalSettings();
   const [symQuery, setSymQuery] = useState('');
   const [showSym, setShowSym] = useState(false);
+  const [showSetup, setShowSetup] = useState(false);
   const [live, setLive] = useState<{ price: number | null; name: string | null } | null>(null);
   const [liveLoading, setLiveLoading] = useState(false);
   const symBoxRef = useRef<HTMLDivElement>(null);
+  const setupBoxRef = useRef<HTMLDivElement>(null);
   const { data: symResults = [] } = useSymbolSearch(symQuery);
 
   // Close the suggestion dropdown on any outside click.
@@ -124,6 +126,16 @@ export function TradeTracker() {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [showSym]);
 
+  // Close the Setup suggestion dropdown on any outside click.
+  useEffect(() => {
+    if (!showSetup) return;
+    const onDoc = (e: MouseEvent) => {
+      if (setupBoxRef.current && !setupBoxRef.current.contains(e.target as Node)) setShowSetup(false);
+    };
+    document.addEventListener('mousedown', onDoc);
+    return () => document.removeEventListener('mousedown', onDoc);
+  }, [showSetup]);
+
   // Combined, de-duplicated setup options: Journal's saved setups first, then
   // any playbook setups defined in My Trading Plan.
   const setupOptions = useMemo(() => {
@@ -135,6 +147,11 @@ export function TradeTracker() {
     }
     return out;
   }, [settings.setups]);
+
+  const setupQuery = (draft.setup ?? '').trim().toLowerCase();
+  const setupMatches = setupQuery
+    ? setupOptions.filter((s) => s.toLowerCase().includes(setupQuery) && s.toLowerCase() !== setupQuery)
+    : setupOptions;
 
   const set = <K extends keyof OpenTrade>(k: K, v: OpenTrade[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
@@ -487,17 +504,31 @@ export function TradeTracker() {
               </div>
               <div className="space-y-1">
                 <label className={lblCls}>Setup</label>
-                <Input
-                  list="tt-setup-options"
-                  className={`${fieldCls} font-sans`}
-                  placeholder="VCP / pullback…"
-                  value={draft.setup ?? ''}
-                  onChange={(e) => set('setup', e.target.value)}
-                  onBlur={(e) => { const v = e.target.value.trim(); if (v) addSetup(v); }}
-                />
-                <datalist id="tt-setup-options">
-                  {setupOptions.map((s) => <option key={s} value={s} />)}
-                </datalist>
+                <div className="relative" ref={setupBoxRef}>
+                  <Input
+                    className={`${fieldCls} font-sans`}
+                    placeholder="VCP / pullback…"
+                    value={draft.setup ?? ''}
+                    onChange={(e) => { set('setup', e.target.value); setShowSetup(true); }}
+                    onFocus={() => setShowSetup(true)}
+                    onBlur={(e) => { const v = e.target.value.trim(); if (v) addSetup(v); }}
+                    autoComplete="off"
+                  />
+                  {showSetup && setupMatches.length > 0 && (
+                    <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-48 overflow-y-auto rounded-lg border border-border bg-popover shadow-lg">
+                      {setupMatches.map((s) => (
+                        <button
+                          key={s}
+                          type="button"
+                          onMouseDown={(e) => { e.preventDefault(); set('setup', s); addSetup(s); setShowSetup(false); }}
+                          className="flex w-full items-center px-3 py-1.5 text-left text-sm hover:bg-accent transition-colors"
+                        >
+                          {s}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="space-y-1">
                 <label className={lblCls}>Entry date</label>
