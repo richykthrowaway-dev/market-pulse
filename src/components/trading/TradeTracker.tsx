@@ -19,6 +19,7 @@ import { useLiveQuotes } from '@/hooks/useLiveQuotes';
 import { unrealizedPnl, stopProximity } from '@/lib/tradeMetrics';
 import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
 import { resolveEntryDefaults, rrBar, payoff } from '@/lib/entryViz';
+import { isValidExit } from '@/lib/exitValidation';
 
 // Setup names saved in the My-Trading-Plan playbook (tp-playbook-v1). Read-only,
 // best-effort — the Setup combobox merges these with the Journal's saved setups
@@ -287,6 +288,7 @@ export function TradeTracker() {
   }
 
   function confirmClose(t: OpenTrade) {
+    if (!isValidExit(exitPrice)) return;
     addTrade({
       symbol: t.symbol, side: t.side, quantity: t.quantity,
       entryPrice: t.entryPrice, exitPrice: Number(exitPrice) || 0,
@@ -831,7 +833,13 @@ export function TradeTracker() {
                             <Input className={`${fieldCls} font-sans`} placeholder="What happened on the exit…"
                               value={closeNotes} onChange={(e) => setCloseNotes(e.target.value)} />
                           </div>
+                          {!isValidExit(exitPrice) && (
+                            <p className="text-[11px] text-trading-sell">
+                              Enter the actual exit price to file this trade.
+                            </p>
+                          )}
                           <Button size="sm" className="w-full font-semibold"
+                            disabled={!isValidExit(exitPrice)}
                             onClick={() => confirmClose(t)}>
                             Confirm close &amp; add to Journal
                           </Button>
