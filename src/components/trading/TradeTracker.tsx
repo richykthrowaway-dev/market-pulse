@@ -820,14 +820,27 @@ export function TradeTracker() {
                             </div>
                             <div className="space-y-1">
                               <label className={lblCls}>Exit reason</label>
-                              <Select value={exitReason} onValueChange={(v) => setExitReason(v as ExitReason)}>
-                                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Why did you exit?" /></SelectTrigger>
-                                <SelectContent>
-                                  {EXIT_REASONS.map((r) => (
-                                    <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <div role="radiogroup" aria-label="Exit reason" className="flex flex-wrap gap-1">
+                                {EXIT_REASONS.map((r) => {
+                                  const selected = exitReason === r;
+                                  return (
+                                    <button
+                                      key={r}
+                                      type="button"
+                                      role="radio"
+                                      aria-checked={selected}
+                                      onClick={() => setExitReason(r)}
+                                      className={`px-2.5 py-1 rounded text-xs capitalize border transition-colors ${
+                                        selected
+                                          ? 'bg-primary text-primary-foreground border-primary'
+                                          : 'border-border/50 text-muted-foreground hover:text-foreground hover:border-border'
+                                      }`}
+                                    >
+                                      {r}
+                                    </button>
+                                  );
+                                })}
+                              </div>
                             </div>
                             <div className="space-y-1">
                               <label className={lblCls}>Fees</label>
