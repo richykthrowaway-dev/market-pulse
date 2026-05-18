@@ -85,6 +85,7 @@ export function TradeTracker() {
 
   const [draft, setDraft] = useState<OpenTrade>(emptyDraft());
   const [qtyTouched, setQtyTouched] = useState(false);
+  const [entryLocked, setEntryLocked] = useState(false);
   const [closingId, setClosingId] = useState<string | null>(null);
   const [exitPrice, setExitPrice] = useState('');
   const [exitDate, setExitDate] = useState(todayISO());
@@ -93,7 +94,10 @@ export function TradeTracker() {
   const [closeNotes, setCloseNotes] = useState('');
 
   const { fast, setFast, intervalMs } = useLiveSpeed();
-  const openSymbols = useMemo(() => open.map((t) => t.symbol), [open]);
+  const openSymbols = useMemo(
+    () => Array.from(new Set([...open.map((t) => t.symbol), draft.symbol].filter(Boolean))),
+    [open, draft.symbol],
+  );
   const quotes = useLiveQuotes(openSymbols, intervalMs);
 
   // ── Ticker autocomplete + live-price infill ───────────────────────────────
@@ -132,6 +136,14 @@ export function TradeTracker() {
   const set = <K extends keyof OpenTrade>(k: K, v: OpenTrade[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
 
+  const draftLive = quotes[draft.symbol.trim().toUpperCase()]?.price ?? live?.price ?? null;
+
+  useEffect(() => {
+    if (entryLocked) return;
+    if (draftLive != null && draftLive !== draft.entryPrice) set('entryPrice', draftLive);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftLive, entryLocked]);
+
   // Pick a ticker from the dropdown: set the symbol, then fetch a live quote and
   // infill Entry (only if the user hasn't already typed one) + show the name.
   const pickSymbol = useCallback(async (ticker: string, name: string) => {
@@ -166,7 +178,7 @@ export function TradeTracker() {
     const t = targetFromR(draft.side, draft.entryPrice, draft.stopLoss, r);
     if (t != null) set('target', t);
   };
-  const useLive = () => { if (live?.price != null) set('entryPrice', live.price); };
+  const useMarket = () => { if (draftLive != null) { set('entryPrice', draftLive); setEntryLocked(true); } };
 
   useEffect(() => {
     if (qtyTouched) return;
@@ -210,6 +222,7 @@ export function TradeTracker() {
     addOpen({ ...draft, symbol: draft.symbol.trim().toUpperCase() });
     setDraft(emptyDraft());
     setQtyTouched(false);
+    setEntryLocked(false);
     setLive(null);
     setSymQuery('');
     if (draft.setup?.trim()) addSetup(draft.setup.trim());
@@ -358,12 +371,17 @@ export function TradeTracker() {
                 <div className="flex gap-1 items-center">
                   <Input type="number" min={0} step={0.01} className={fieldCls}
                     value={draft.entryPrice || ''}
-                    onChange={(e) => set('entryPrice', Number(e.target.value) || 0)} />
-                  <button type="button" onClick={useLive} disabled={live?.price == null}
+                    onChange={(e) => { setEntryLocked(true); set('entryPrice', Number(e.target.value) || 0); }} />
+                  <button type="button" onClick={useMarket} disabled={draftLive == null}
                     className="shrink-0 px-2 rounded text-[11px] font-mono-num border border-border/50 text-muted-foreground hover:text-foreground disabled:opacity-40 transition-colors">
-                    Use live
+                    Market
                   </button>
                 </div>
+                {draftLive != null && (
+                  <span className="text-[10px] font-mono-num text-muted-foreground">
+                    {entryLocked ? '🔒 locked' : '● live'} {money(draftLive)}
+                  </span>
+                )}
               </div>
               <div className="space-y-1">
                 <label className={lblCls}>Stop</label>
