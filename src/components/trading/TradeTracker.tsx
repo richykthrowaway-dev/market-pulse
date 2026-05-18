@@ -820,14 +820,16 @@ export function TradeTracker() {
                             </div>
                             <div className="space-y-1">
                               <label className={lblCls}>Exit reason</label>
-                              <Select value={exitReason} onValueChange={(v) => setExitReason(v as ExitReason)}>
-                                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Why did you exit?" /></SelectTrigger>
-                                <SelectContent>
-                                  {EXIT_REASONS.map((r) => (
-                                    <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                              <select
+                                value={exitReason}
+                                onChange={(e) => setExitReason(e.target.value as ExitReason)}
+                                className={`${fieldCls} capitalize appearance-none bg-background`}
+                              >
+                                <option value="" disabled hidden>Why did you exit?</option>
+                                {EXIT_REASONS.map((r) => (
+                                  <option key={r} value={r} className="capitalize">{r}</option>
+                                ))}
+                              </select>
                             </div>
                             <div className="space-y-1">
                               <label className={lblCls}>Fees</label>
