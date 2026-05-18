@@ -37,26 +37,45 @@ export async function searchSymbols(
   limit = 10
 ): Promise<SymbolSearchResult[]> {
   const pattern = `%${query}%`;
-  // Fetch a wider candidate pool so client-side ranking can surface the
-  // best matches (exact ticker first) before we slice to `limit`. Without
-  // this the DB's arbitrary-order LIMIT buries the exact ticker.
+  const prefix = `${query}%`;
   const pool = Math.max(limit * 5, 50);
 
-  const { data, error } = await supabase
+  const SELECT = `
+    id, canonical_ticker, name, type, sector, industry, country,
+    listings!inner ( id, local_ticker, primary_listing, exchange_id,
+      exchanges ( code )
+    )
+  `;
+
+  // Dedicated ticker-prefix query: guarantees exact/prefix-ticker rows are
+  // always in the candidate pool, even for short queries where the broad
+  // alphabetical pool would otherwise exclude the exact match.
+  const tickerQ = supabase
     .from('symbols')
-    .select(`
-      id, canonical_ticker, name, type, sector, industry, country,
-      listings!inner ( id, local_ticker, primary_listing, exchange_id,
-        exchanges ( code )
-      )
-    `)
+    .select(SELECT)
+    .ilike('canonical_ticker', prefix)
+    .order('canonical_ticker', { ascending: true })
+    .limit(limit * 2);
+
+  // Broad pool: ticker OR company-name substring.
+  const broadQ = supabase
+    .from('symbols')
+    .select(SELECT)
     .or(`canonical_ticker.ilike.${pattern},name.ilike.${pattern}`)
     .order('canonical_ticker', { ascending: true })
     .limit(pool);
 
-  if (error) throw error;
+  const [tickerRes, broadRes] = await Promise.all([tickerQ, broadQ]);
+  if (tickerRes.error) throw tickerRes.error;
+  if (broadRes.error) throw broadRes.error;
 
-  const mapped: SymbolSearchResult[] = (data ?? []).map((s: any) => {
+  // Merge, ticker-prefix rows first, de-duplicated by id.
+  const byId = new Map<string, any>();
+  for (const s of [...(tickerRes.data ?? []), ...(broadRes.data ?? [])]) {
+    if (!byId.has(s.id)) byId.set(s.id, s);
+  }
+
+  const mapped: SymbolSearchResult[] = [...byId.values()].map((s: any) => {
     const primary = (s.listings as any[])?.find((l: any) => l.primary_listing) ?? s.listings?.[0];
     return {
       symbolId: s.id,
