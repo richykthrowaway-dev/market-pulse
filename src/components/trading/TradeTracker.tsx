@@ -12,6 +12,8 @@ import { useOpenTrades, type OpenTrade } from '@/hooks/useOpenTrades';
 import { useLiveSpeed } from '@/hooks/useLiveSpeed';
 import { useSymbolSearch } from '@/hooks/useSymbolSearch';
 import { useJournalSettings } from '@/hooks/useJournalSettings';
+import { useSparkline } from '@/hooks/useSparkline';
+import { ResponsiveContainer, AreaChart, Area, ReferenceLine, YAxis } from 'recharts';
 import { fetchYahooQuote } from '@/services/yahooFinanceApi';
 import { useLiveQuotes } from '@/hooks/useLiveQuotes';
 import { unrealizedPnl, stopProximity } from '@/lib/tradeMetrics';
@@ -138,6 +140,8 @@ export function TradeTracker() {
     setDraft((d) => ({ ...d, [k]: v }));
 
   const draftLive = quotes[draft.symbol.trim().toUpperCase()]?.price ?? live?.price ?? null;
+
+  const { data: chartBars } = useSparkline(draft.symbol);
 
   const entryFollowing = !entryLocked && draft.stopLoss == null;
 
@@ -361,6 +365,37 @@ export function TradeTracker() {
                 {live.name}
                 {live.price != null && <> · live {money(live.price)}</>}
               </p>
+            )}
+
+            {draft.symbol && (chartBars?.length ?? 0) > 0 && (
+              <div className="rounded-lg border border-border/50 bg-muted/30 p-2">
+                <ResponsiveContainer width="100%" height={120}>
+                  <AreaChart data={(chartBars ?? []).map((b, i) => ({ i, c: b.c }))}
+                    margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                    <defs>
+                      <linearGradient id="tt-entry-spark" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <YAxis hide domain={['auto', 'auto']} />
+                    <Area type="monotone" dataKey="c" stroke="hsl(var(--primary))" strokeWidth={1.5}
+                      fill="url(#tt-entry-spark)" isAnimationActive={false} dot={false} />
+                    {draft.entryPrice > 0 && (
+                      <ReferenceLine y={draft.entryPrice} stroke="hsl(var(--foreground))" strokeOpacity={0.6} strokeDasharray="2 2" />
+                    )}
+                    {draft.stopLoss != null && (
+                      <ReferenceLine y={draft.stopLoss} stroke="hsl(var(--trading-sell))" strokeWidth={1.5} />
+                    )}
+                    {draft.target != null && (
+                      <ReferenceLine y={draft.target} stroke="hsl(var(--trading-buy))" strokeWidth={1.5} />
+                    )}
+                    {draftLive != null && (
+                      <ReferenceLine y={draftLive} stroke="hsl(var(--primary))" strokeDasharray="4 2" />
+                    )}
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
             )}
 
             <button
