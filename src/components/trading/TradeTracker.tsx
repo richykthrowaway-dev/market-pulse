@@ -93,7 +93,7 @@ export function TradeTracker() {
   const [closingId, setClosingId] = useState<string | null>(null);
   const [exitPrice, setExitPrice] = useState('');
   const [exitDate, setExitDate] = useState(todayISO());
-  const [exitReason, setExitReason] = useState<ExitReason>('target');
+  const [exitReason, setExitReason] = useState<ExitReason | ''>('');
   const [fees, setFees] = useState('');
   const [closeNotes, setCloseNotes] = useState('');
 
@@ -283,13 +283,14 @@ export function TradeTracker() {
     const liveAtOpen = quotes[t.symbol.trim().toUpperCase()]?.price ?? null;
     setExitPrice(liveAtOpen != null && liveAtOpen > 0 ? String(liveAtOpen) : '');
     setExitDate(todayISO());
-    setExitReason('target');
+    setExitReason('');
     setFees('');
     setCloseNotes('');
   }
 
   function confirmClose(t: OpenTrade) {
     if (!isValidExit(exitPrice)) return;
+    if (exitReason === '') return;
     addTrade({
       symbol: t.symbol, side: t.side, quantity: t.quantity,
       entryPrice: t.entryPrice, exitPrice: Number(exitPrice) || 0,
@@ -815,7 +816,7 @@ export function TradeTracker() {
                             <div className="space-y-1">
                               <label className={lblCls}>Exit reason</label>
                               <Select value={exitReason} onValueChange={(v) => setExitReason(v as ExitReason)}>
-                                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Why did you exit?" /></SelectTrigger>
                                 <SelectContent>
                                   {EXIT_REASONS.map((r) => (
                                     <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
@@ -839,8 +840,13 @@ export function TradeTracker() {
                               Enter the actual exit price to file this trade.
                             </p>
                           )}
+                          {isValidExit(exitPrice) && exitReason === '' && (
+                            <p className="text-[11px] text-trading-sell">
+                              Pick an exit reason to file this trade.
+                            </p>
+                          )}
                           <Button size="sm" className="w-full font-semibold"
-                            disabled={!isValidExit(exitPrice)}
+                            disabled={!isValidExit(exitPrice) || exitReason === ''}
                             onClick={() => confirmClose(t)}>
                             Confirm close &amp; add to Journal
                           </Button>
