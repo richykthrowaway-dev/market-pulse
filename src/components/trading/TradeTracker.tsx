@@ -114,6 +114,7 @@ export function TradeTracker() {
   const [liveLoading, setLiveLoading] = useState(false);
   const symBoxRef = useRef<HTMLDivElement>(null);
   const setupBoxRef = useRef<HTMLDivElement>(null);
+  const submittingRef = useRef(false);
   const { data: symResults = [] } = useSymbolSearch(symQuery);
 
   // Close the suggestion dropdown on any outside click.
@@ -292,6 +293,8 @@ export function TradeTracker() {
   function confirmClose(t: OpenTrade) {
     if (!isValidExit(exitPrice)) return;
     if (exitReason === '') return;
+    if (submittingRef.current) return;
+    submittingRef.current = true;
     addTrade({
       symbol: t.symbol, side: t.side, quantity: t.quantity,
       entryPrice: t.entryPrice, exitPrice: Number(exitPrice) || 0,
@@ -303,6 +306,7 @@ export function TradeTracker() {
     removeOpen(t.id);
     setClosingId(null);
     toast.success(`${t.symbol} closed — filed to your Journal`);
+    submittingRef.current = false;
   }
 
   const fieldCls = 'h-9 font-mono-num text-sm';
@@ -876,7 +880,7 @@ export function TradeTracker() {
                             );
                           })()}
                           <Button size="sm" className="w-full font-semibold"
-                            disabled={!isValidExit(exitPrice) || exitReason === ''}
+                            disabled={!isValidExit(exitPrice) || exitReason === '' || submittingRef.current}
                             onClick={() => confirmClose(t)}>
                             Confirm close &amp; add to Journal
                           </Button>
