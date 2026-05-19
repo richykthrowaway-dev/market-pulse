@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { unrealizedPnl, stopProximity } from './tradeMetrics';
+import { unrealizedPnl, stopProximity, openR } from './tradeMetrics';
 
 describe('unrealizedPnl', () => {
   it('long gain', () => {
@@ -42,5 +42,20 @@ describe('stopProximity', () => {
   it('zero-width stop (stop === entry): no near zone', () => {
     expect(stopProximity('long', 100, 100, 100)).toBe('breached');
     expect(stopProximity('long', 100, 100, 101)).toBe('ok');
+  });
+});
+
+describe('openR', () => {
+  it('long: +1R at target distance, negative below entry', () => {
+    expect(openR('long', 100, 90, 110)).toBeCloseTo(1);
+    expect(openR('long', 100, 90, 95)).toBeCloseTo(-0.5);
+  });
+  it('short: signed correctly', () => {
+    expect(openR('short', 100, 110, 90)).toBeCloseTo(1);
+  });
+  it('null when no stop or entry===stop or non-finite', () => {
+    expect(openR('long', 100, undefined, 110)).toBeNull();
+    expect(openR('long', 100, 100, 110)).toBeNull();
+    expect(openR('long', 100, 90, NaN)).toBeNull();
   });
 });

@@ -37,3 +37,17 @@ export function stopProximity(
   if (price >= stop - dist * 0.25) return 'near';
   return 'ok';
 }
+
+/** Live R-multiple of an open position. null if no usable stop. */
+export function openR(
+  side: 'long' | 'short',
+  entry: number,
+  stop: number | undefined,
+  live: number,
+): number | null {
+  if (stop == null || !Number.isFinite(stop) || !Number.isFinite(live)) return null;
+  const perR = Math.abs(entry - stop);
+  if (perR === 0) return null;
+  const dir = side === 'long' ? 1 : -1;
+  return ((live - entry) * dir) / perR;
+}
