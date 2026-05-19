@@ -19,6 +19,8 @@ import { MarketOverview } from '@/components/markets/MarketOverview';
 import { MarketBreadthCards } from '@/components/widgets/MarketBreadthCards';
 import { NewsCard } from '@/components/news/NewsCard';
 import { StatsCard } from '@/components/ui/StatsCard';
+import { YourSnapshot } from '@/components/dashboard/YourSnapshot';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { WatchlistChart } from '@/components/stocks/WatchlistChart';
 import { MarketOverviewCard } from '@/components/widgets/MarketOverviewCard';
 import { TopMoverCard } from '@/components/widgets/TopMoverCard';
@@ -158,6 +160,7 @@ export function Dashboard() {
   
   const dashboardContent = (
     <>
+      <ErrorBoundary name="YourSnapshot"><YourSnapshot /></ErrorBoundary>
       <h1 className="text-2xl font-bold mb-6 tracking-tight">
         Market Dashboard
       </h1>
