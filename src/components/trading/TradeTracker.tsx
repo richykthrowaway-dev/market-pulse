@@ -22,6 +22,7 @@ import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
 import { resolveEntryDefaults, rrBar, payoff } from '@/lib/entryViz';
 import { isValidExit } from '@/lib/exitValidation';
 import { classifyExit } from '@/lib/planAdherence';
+import { planClose } from '@/lib/splitClose';
 
 // Setup names saved in the My-Trading-Plan playbook (tp-playbook-v1). Read-only,
 // best-effort — the Setup combobox merges these with the Journal's saved setups
@@ -165,6 +166,7 @@ export function TradeTracker() {
   const [exitReason, setExitReason] = useState<ExitReason>('target');
   const [fees, setFees] = useState('');
   const [closeNotes, setCloseNotes] = useState('');
+  const [closeQty, setCloseQty] = useState('');
 
   const { fast, setFast, intervalMs } = useLiveSpeed();
   const openSymbols = useMemo(
@@ -369,29 +371,45 @@ export function TradeTracker() {
     setExitReason('target');
     setFees('');
     setCloseNotes('');
+    setCloseQty(String(t.quantity));
   }
 
   function confirmClose(t: OpenTrade) {
     if (!isValidExit(exitPrice)) return;
     if (submittingRef.current) return;
     submittingRef.current = true;
+    const cp = planClose({ positionQty: t.quantity, closeQty: Number(closeQty) || 0 });
+    if (cp.mode === 'invalid') { submittingRef.current = false; return; }
+    const partial = cp.mode === 'partial';
     const newId = addTrade({
-      symbol: t.symbol, side: t.side, quantity: t.quantity,
+      symbol: t.symbol, side: t.side, quantity: cp.closeQty,
       entryPrice: t.entryPrice, exitPrice: Number(exitPrice) || 0,
       entryDate: t.entryDate, exitDate, fees: Number(fees) || 0,
-      notes: [t.notes, closeNotes].filter(Boolean).join(' · '),
-      tags: [classifyExit({ side: t.side, entry: t.entryPrice, stop: t.stopLoss, target: t.target, exitPrice: Number(exitPrice) || 0 })], stopLoss: t.stopLoss, target: t.target, setup: t.setup,
+      notes: [t.notes, closeNotes, partial ? `partial ${cp.closeQty}/${t.quantity}` : '']
+        .filter(Boolean).join(' · '),
+      tags: [classifyExit({ side: t.side, entry: t.entryPrice, stop: t.stopLoss, target: t.target, exitPrice: Number(exitPrice) || 0 })],
+      stopLoss: t.stopLoss, target: t.target, setup: t.setup,
       exitReason, inPlaybook: !!t.setup,
     });
-    removeOpen(t.id);
+    if (partial) patchOpen(t.id, { quantity: cp.remainder });
+    else removeOpen(t.id);
     setClosingId(null);
-    toast.success(`${t.symbol} closed — filed to your Journal`, {
-      action: {
-        label: 'Undo',
-        onClick: () => { deleteTrade(newId); addOpen(t); },
+    toast.success(
+      partial
+        ? `${t.symbol} — closed ${cp.closeQty}/${t.quantity}, filed to your Journal`
+        : `${t.symbol} closed — filed to your Journal`,
+      {
+        action: {
+          label: 'Undo',
+          onClick: () => {
+            deleteTrade(newId);
+            if (partial) patchOpen(t.id, { quantity: t.quantity });
+            else addOpen(t);
+          },
+        },
+        duration: 6000,
       },
-      duration: 6000,
-    });
+    );
     submittingRef.current = false;
   }
 
@@ -946,6 +964,11 @@ export function TradeTracker() {
                               <label className={lblCls}>Exit price</label>
                               <Input type="number" step={0.01} className={fieldCls}
                                 value={exitPrice} onChange={(e) => setExitPrice(e.target.value)} />
+                            </div>
+                            <div className="space-y-1">
+                              <label className={lblCls}>Qty to close</label>
+                              <Input type="number" min={0} step={1} className={fieldCls}
+                                value={closeQty} onChange={(e) => setCloseQty(e.target.value)} />
                             </div>
                             <div className="space-y-1">
                               <label className={lblCls}>Exit date</label>
