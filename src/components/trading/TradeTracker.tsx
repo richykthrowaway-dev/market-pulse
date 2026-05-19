@@ -211,6 +211,7 @@ export function TradeTracker() {
   const [fees, setFees] = useState('');
   const [closeNotes, setCloseNotes] = useState('');
   const [closeQty, setCloseQty] = useState('');
+  const [justClosed, setJustClosed] = useState<{ entry: TradeEntry; id: string }[]>([]);
 
   const { fast, setFast, intervalMs } = useLiveSpeed();
   const openSymbols = useMemo(
@@ -425,7 +426,7 @@ export function TradeTracker() {
     const cp = planClose({ positionQty: t.quantity, closeQty: Number(closeQty) || 0 });
     if (cp.mode === 'invalid') { submittingRef.current = false; return; }
     const partial = cp.mode === 'partial';
-    const newId = addTrade({
+    const payload = {
       symbol: t.symbol, side: t.side, quantity: cp.closeQty,
       entryPrice: t.entryPrice, exitPrice: Number(exitPrice) || 0,
       entryDate: t.entryDate, exitDate, fees: Number(fees) || 0,
@@ -434,9 +435,15 @@ export function TradeTracker() {
       tags: [classifyExit({ side: t.side, entry: t.entryPrice, stop: t.stopLoss, target: t.target, exitPrice: Number(exitPrice) || 0 })],
       stopLoss: t.stopLoss, target: t.target, setup: t.setup,
       exitReason, inPlaybook: !!t.setup,
-    });
-    if (partial) patchOpen(t.id, { quantity: cp.remainder });
-    else removeOpen(t.id);
+    };
+    const newId = addTrade(payload);
+    if (partial) {
+      patchOpen(t.id, { quantity: cp.remainder });
+    } else {
+      removeOpen(t.id);
+      const entry: TradeEntry = { ...payload, id: newId, createdAt: new Date().toISOString() };
+      setJustClosed((prev) => [{ entry, id: newId }, ...prev]);
+    }
     setClosingId(null);
     toast.success(
       partial
@@ -449,6 +456,7 @@ export function TradeTracker() {
             deleteTrade(newId);
             if (partial) patchOpen(t.id, { quantity: t.quantity });
             else addOpen(t);
+            setJustClosed((prev) => prev.filter((j) => j.id !== newId));
           },
         },
         duration: 6000,
@@ -1056,6 +1064,39 @@ export function TradeTracker() {
                           onCancel={() => setEditId(null)}
                         />
                       )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {justClosed.length > 0 && (
+              <div className="space-y-1.5 opacity-60">
+                {justClosed.map(({ entry, id }) => {
+                  const pnl = computePnL(entry);
+                  const r = computeR(entry);
+                  const win = pnl >= 0;
+                  return (
+                    <div
+                      key={id}
+                      className="rounded-lg border border-border/40 bg-card/40 px-3 py-2 text-[11px] font-mono-num flex flex-wrap items-center gap-x-2 gap-y-0.5"
+                    >
+                      <span className="font-semibold">{entry.symbol}</span>
+                      <span className="uppercase text-muted-foreground">{entry.side}</span>
+                      <span className="text-muted-foreground">{entry.quantity}</span>
+                      <span className="text-muted-foreground">${entry.entryPrice}→${entry.exitPrice}</span>
+                      <span className={win ? 'text-trading-buy font-semibold' : 'text-trading-sell font-semibold'}>
+                        {win ? '+' : ''}{money(pnl)}{r != null && ` (${r >= 0 ? '+' : ''}${r.toFixed(2)}R)`}
+                      </span>
+                      <span className="text-muted-foreground">Closed → Journal</span>
+                      <button
+                        type="button"
+                        aria-label="Dismiss"
+                        onClick={() => setJustClosed((prev) => prev.filter((j) => j.id !== id))}
+                        className="ml-auto text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
                     </div>
                   );
                 })}
