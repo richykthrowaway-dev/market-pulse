@@ -19,8 +19,6 @@ import { useLiveQuotes } from '@/hooks/useLiveQuotes';
 import { unrealizedPnl, stopProximity } from '@/lib/tradeMetrics';
 import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
 import { resolveEntryDefaults, rrBar, payoff } from '@/lib/entryViz';
-import { isValidExit } from '@/lib/exitValidation';
-import { computePnL, computeR } from '@/lib/tradeMath';
 
 // Setup names saved in the My-Trading-Plan playbook (tp-playbook-v1). Read-only,
 // best-effort — the Setup combobox merges these with the Journal's saved setups
@@ -94,7 +92,7 @@ export function TradeTracker() {
   const [closingId, setClosingId] = useState<string | null>(null);
   const [exitPrice, setExitPrice] = useState('');
   const [exitDate, setExitDate] = useState(todayISO());
-  const [exitReason, setExitReason] = useState<ExitReason | ''>('');
+  const [exitReason, setExitReason] = useState<ExitReason>('target');
   const [fees, setFees] = useState('');
   const [closeNotes, setCloseNotes] = useState('');
 
@@ -114,7 +112,6 @@ export function TradeTracker() {
   const [liveLoading, setLiveLoading] = useState(false);
   const symBoxRef = useRef<HTMLDivElement>(null);
   const setupBoxRef = useRef<HTMLDivElement>(null);
-  const submittingRef = useRef(false);
   const { data: symResults = [] } = useSymbolSearch(symQuery);
 
   // Close the suggestion dropdown on any outside click.
@@ -282,19 +279,14 @@ export function TradeTracker() {
 
   function beginClose(t: OpenTrade) {
     setClosingId(t.id);
-    const liveAtOpen = quotes[t.symbol.trim().toUpperCase()]?.price ?? null;
-    setExitPrice(liveAtOpen != null && liveAtOpen > 0 ? String(liveAtOpen) : '');
+    setExitPrice(String(t.target ?? t.entryPrice));
     setExitDate(todayISO());
-    setExitReason('');
+    setExitReason('target');
     setFees('');
     setCloseNotes('');
   }
 
   function confirmClose(t: OpenTrade) {
-    if (!isValidExit(exitPrice)) return;
-    if (exitReason === '') return;
-    if (submittingRef.current) return;
-    submittingRef.current = true;
     addTrade({
       symbol: t.symbol, side: t.side, quantity: t.quantity,
       entryPrice: t.entryPrice, exitPrice: Number(exitPrice) || 0,
@@ -306,7 +298,6 @@ export function TradeTracker() {
     removeOpen(t.id);
     setClosingId(null);
     toast.success(`${t.symbol} closed — filed to your Journal`);
-    submittingRef.current = false;
   }
 
   const fieldCls = 'h-9 font-mono-num text-sm';
@@ -821,7 +812,7 @@ export function TradeTracker() {
                             <div className="space-y-1">
                               <label className={lblCls}>Exit reason</label>
                               <Select value={exitReason} onValueChange={(v) => setExitReason(v as ExitReason)}>
-                                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Why did you exit?" /></SelectTrigger>
+                                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                                 <SelectContent>
                                   {EXIT_REASONS.map((r) => (
                                     <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
@@ -840,47 +831,7 @@ export function TradeTracker() {
                             <Input className={`${fieldCls} font-sans`} placeholder="What happened on the exit…"
                               value={closeNotes} onChange={(e) => setCloseNotes(e.target.value)} />
                           </div>
-                          {!isValidExit(exitPrice) && (
-                            <p className="text-[11px] text-trading-sell">
-                              Enter the actual exit price to file this trade.
-                            </p>
-                          )}
-                          {isValidExit(exitPrice) && exitReason === '' && (
-                            <p className="text-[11px] text-trading-sell">
-                              Pick an exit reason to file this trade.
-                            </p>
-                          )}
-                          {(() => {
-                            if (!isValidExit(exitPrice)) {
-                              return (
-                                <div className="text-xs text-muted-foreground">
-                                  Books <span className="font-mono-num">—</span>
-                                </div>
-                              );
-                            }
-                            const m = {
-                              side: t.side, entryPrice: t.entryPrice,
-                              exitPrice: Number(exitPrice), quantity: t.quantity,
-                              fees: Number(fees) || 0, stopLoss: t.stopLoss,
-                            };
-                            const pnl = computePnL(m);
-                            const r = computeR(m);
-                            const cls = pnl > 0 ? 'text-trading-buy'
-                              : pnl < 0 ? 'text-trading-sell' : 'text-muted-foreground';
-                            return (
-                              <div className="text-xs">
-                                Books{' '}
-                                <span className={`font-mono-num font-semibold ${cls}`}>
-                                  {pnl >= 0 ? '+' : ''}{money(pnl)}
-                                </span>
-                                {r != null && (
-                                  <span className="text-muted-foreground"> · {r.toFixed(2)}R</span>
-                                )}
-                              </div>
-                            );
-                          })()}
                           <Button size="sm" className="w-full font-semibold"
-                            disabled={!isValidExit(exitPrice) || exitReason === '' || submittingRef.current}
                             onClick={() => confirmClose(t)}>
                             Confirm close &amp; add to Journal
                           </Button>

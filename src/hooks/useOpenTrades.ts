@@ -1,6 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react';
 import type { TradeSide } from '@/hooks/useTradeJournal';
-import { parseOpenTrades } from '@/lib/openTradesStore';
 
 /**
  * useOpenTrades — the single shared store for *currently-open* positions.
@@ -36,8 +35,13 @@ let snapshot: OpenTrade[] = readLS();
 const listeners = new Set<() => void>();
 
 function readLS(): OpenTrade[] {
-  if (typeof localStorage === 'undefined') return [];
-  return parseOpenTrades(localStorage.getItem(LS_KEY));
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    const parsed = raw != null ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 function writeLS(next: OpenTrade[]) {
@@ -45,17 +49,6 @@ function writeLS(next: OpenTrade[]) {
 }
 
 function emit() { listeners.forEach((l) => l()); }
-
-if (typeof window !== 'undefined') {
-  window.addEventListener('storage', (e: StorageEvent) => {
-    // storage events fire only in OTHER tabs (no echo loop). Adopt the
-    // latest persisted state when this key (or all keys) changed.
-    if (e.key === LS_KEY || e.key == null) {
-      snapshot = readLS();
-      emit();
-    }
-  });
-}
 
 function subscribe(cb: () => void): () => void {
   listeners.add(cb);
