@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useStocks, useIndices, useCurrencies, useNews } from '@/hooks/useSupabaseData';
 import { useWatchlist } from '@/hooks/useWatchlist';
-import { resolveDisplayStocks } from '@/lib/dashboardStocks';
+import { resolveDisplayStocks, watchlistMovers } from '@/lib/dashboardStocks';
 import { useHistoricalPrices } from '@/hooks/useDefeatBeta';
 import { useSparklineData } from '@/hooks/useSparklineData';
 import { useLogoPrefetch } from '@/hooks/useLogoPrefetch';
@@ -79,11 +79,27 @@ export function Dashboard() {
 
   const [selectedStock, setSelectedStock] = useState<typeof stocks[0] | null>(null);
 
-  const { symbols: watchSymbols } = useWatchlist();
+  const { symbols: watchSymbols, add: addWatch, remove: removeWatch } = useWatchlist();
   const { list: displayStocks, source: listSource } = useMemo(
     () => resolveDisplayStocks(stocks, watchSymbols),
     [stocks, watchSymbols],
   );
+
+  const [wlQuery, setWlQuery] = useState('');
+  const wlMovers = useMemo(() => watchlistMovers(stocks, watchSymbols), [stocks, watchSymbols]);
+  const wlMatches = useMemo(() => {
+    const q = wlQuery.trim().toLowerCase();
+    if (!q) return [] as typeof stocks;
+    const have = new Set(watchSymbols.map((s) => s.toUpperCase()));
+    return stocks
+      .filter(
+        (s) =>
+          !have.has(String(s.symbol).toUpperCase()) &&
+          (String(s.symbol).toLowerCase().includes(q) ||
+            String(s.name ?? '').toLowerCase().includes(q)),
+      )
+      .slice(0, 6);
+  }, [wlQuery, stocks, watchSymbols]);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const persistedSym =
@@ -221,23 +237,69 @@ export function Dashboard() {
           {/* Stock Cards + Chart side-by-side */}
           <div className="flex flex-col lg:flex-row gap-6 mb-6 animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
             <div className="lg:w-1/3 flex flex-col animate-slide-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
-              <h2 className="text-lg font-semibold tracking-tight mb-3">
+              <h2 className="text-lg font-semibold tracking-tight mb-2">
                 {listSource === 'watchlist' ? 'Your Watchlist' : 'Top Movers'}
               </h2>
+
+              {listSource === 'watchlist' && wlMovers && (
+                <p className="text-xs mb-2 font-mono-num">
+                  <span className="text-green-500">▲ {wlMovers.best.symbol} {Number(wlMovers.best.changePercent) >= 0 ? '+' : ''}{Number(wlMovers.best.changePercent).toFixed(2)}%</span>
+                  <span className="text-muted-foreground"> · </span>
+                  <span className="text-red-500">▼ {wlMovers.worst.symbol} {Number(wlMovers.worst.changePercent).toFixed(2)}%</span>
+                </p>
+              )}
+
+              <div className="relative mb-3">
+                <input
+                  value={wlQuery}
+                  onChange={(e) => setWlQuery(e.target.value)}
+                  placeholder="Add symbol to watchlist…"
+                  className="w-full h-8 rounded-md border border-border bg-background px-2 text-xs"
+                  aria-label="Add symbol to watchlist"
+                />
+                {wlQuery.trim() && wlMatches.length > 0 && (
+                  <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-56 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+                    {wlMatches.map((m) => (
+                      <button
+                        key={m.symbol}
+                        type="button"
+                        onClick={() => { addWatch(m.symbol); setWlQuery(''); }}
+                        className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-xs hover:bg-accent transition-colors"
+                      >
+                        <span className="font-semibold">{m.symbol}</span>
+                        <span className="truncate text-muted-foreground">{m.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <ErrorBoundary name="AllStocks">
                 <div className="space-y-3 overflow-y-auto lg:max-h-[500px] p-1">
                   {displayStocks.map((stock) => (
-                    <StockCardWithHistory
-                      key={stock.symbol}
-                      stock={stock}
-                      days={chartDays}
-                      isActive={activeStock.symbol === stock.symbol}
-                      onClick={() => selectStock(stock)}
-                      compact
-                    />
+                    <div key={stock.symbol} className="relative group">
+                      <StockCardWithHistory
+                        stock={stock}
+                        days={chartDays}
+                        isActive={activeStock.symbol === stock.symbol}
+                        onClick={() => selectStock(stock)}
+                        compact
+                      />
+                      {listSource === 'watchlist' && (
+                        <button
+                          type="button"
+                          aria-label={`Remove ${stock.symbol} from watchlist`}
+                          onClick={(e) => { e.stopPropagation(); removeWatch(stock.symbol); }}
+                          className="absolute top-1 right-1 z-10 rounded-full p-1 text-muted-foreground bg-background/70 opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-destructive transition-opacity"
+                        >
+                          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" /></svg>
+                        </button>
+                      )}
+                    </div>
                   ))}
                 </div>
               </ErrorBoundary>
+
               {listSource === 'movers' && (
                 <Link
                   to="/watchlists"
