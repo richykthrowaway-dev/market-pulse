@@ -16,7 +16,8 @@ import { useSparkline } from '@/hooks/useSparkline';
 import { ResponsiveContainer, AreaChart, Area, ReferenceLine, YAxis } from 'recharts';
 import { fetchYahooQuote } from '@/services/yahooFinanceApi';
 import { useLiveQuotes } from '@/hooks/useLiveQuotes';
-import { unrealizedPnl, stopProximity } from '@/lib/tradeMetrics';
+import { unrealizedPnl, stopProximity, openR } from '@/lib/tradeMetrics';
+import { aggregateRisk } from '@/lib/portfolioRisk';
 import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
 import { resolveEntryDefaults, rrBar, payoff } from '@/lib/entryViz';
 import { isValidExit } from '@/lib/exitValidation';
@@ -103,6 +104,10 @@ export function TradeTracker() {
     [open, draft.symbol],
   );
   const quotes = useLiveQuotes(openSymbols, intervalMs);
+
+  const rpRisk = readRiskParams();
+  const openRisk = useMemo(() => aggregateRisk(open, rpRisk?.account), [open, rpRisk?.account]);
+  const openRiskOver = rpRisk != null && openRisk.pct != null && openRisk.pct > rpRisk.riskPct * 3;
 
   // ── Ticker autocomplete + live-price infill ───────────────────────────────
   const { settings, addSetup } = useJournalSettings();
@@ -704,6 +709,17 @@ export function TradeTracker() {
               </div>
             </div>
 
+            {open.length > 0 && (
+              <div className={`text-[11px] font-mono-num rounded-md border px-2 py-1 ${
+                openRiskOver ? 'border-trading-sell/50 text-trading-sell' : 'border-border/50 text-muted-foreground'
+              }`}>
+                Open risk {money(openRisk.totalRisk)}
+                {openRisk.pct != null && <> · {openRisk.pct.toFixed(2)}% acct</>}
+                {openRisk.noStopCount > 0 && <> · {openRisk.noStopCount} no-stop</>}
+                {openRiskOver && <> · over 3× plan</>}
+              </div>
+            )}
+
             {open.length === 0 ? (
               <div className="rounded-lg border border-dashed border-border/60 py-10 text-center">
                 <ClipboardList className="h-7 w-7 mx-auto text-muted-foreground/40 mb-2" />
@@ -720,6 +736,7 @@ export function TradeTracker() {
                   const closing = closingId === t.id;
                   const q = quotes[t.symbol.trim().toUpperCase()];
                   const livePrice = q?.price ?? null;
+                  const rMult = livePrice != null ? openR(t.side, t.entryPrice, t.stopLoss, livePrice) : null;
                   const pnl = livePrice != null ? unrealizedPnl(t.side, t.entryPrice, livePrice, t.quantity) : null;
                   const stopState = livePrice != null ? stopProximity(t.side, t.entryPrice, t.stopLoss, livePrice) : 'ok';
                   const gapPct = (to?: number) =>
@@ -772,6 +789,11 @@ export function TradeTracker() {
                                 pnl.dollars >= 0 ? 'text-trading-buy' : 'text-trading-sell'
                               }`}>
                                 {pnl.dollars >= 0 ? '+' : ''}{money(pnl.dollars)} ({pnl.pct >= 0 ? '+' : ''}{pnl.pct.toFixed(2)}%)
+                              </span>
+                            )}
+                            {rMult != null && (
+                              <span className={`font-mono-num ${rMult >= 0 ? 'text-trading-buy' : 'text-trading-sell'}`}>
+                                {rMult >= 0 ? '+' : ''}{rMult.toFixed(2)}R
                               </span>
                             )}
                             {t.stopLoss != null && (
