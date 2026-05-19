@@ -119,6 +119,7 @@ export function TradeTracker() {
   const symBoxRef = useRef<HTMLDivElement>(null);
   const setupBoxRef = useRef<HTMLDivElement>(null);
   const submittingRef = useRef(false);
+  const crossRef = useRef<Record<string, 'ok' | 'breached' | 'target'>>({});
   const { data: symResults = [] } = useSymbolSearch(symQuery);
 
   // Close the suggestion dropdown on any outside click.
@@ -334,6 +335,22 @@ export function TradeTracker() {
       toast(`Recovered your saved data — skipped ${dropped} unreadable row${dropped === 1 ? '' : 's'}.`);
     }
   }, []);
+
+  useEffect(() => {
+    for (const t of open) {
+      const q = quotes[t.symbol.trim().toUpperCase()];
+      const live = q?.price ?? null;
+      if (live == null) continue;
+      const reached = t.target != null && (t.side === 'long' ? live >= t.target : live <= t.target);
+      const breached = stopProximity(t.side, t.entryPrice, t.stopLoss, live) === 'breached';
+      const next: 'ok' | 'breached' | 'target' = breached ? 'breached' : reached ? 'target' : 'ok';
+      const prev = crossRef.current[t.id] ?? 'ok';
+      if (next !== prev && next !== 'ok') {
+        toast(next === 'breached' ? `${t.symbol} hit stop` : `${t.symbol} hit target`);
+      }
+      crossRef.current[t.id] = next;
+    }
+  }, [quotes, open]);
 
   const fieldCls = 'h-9 font-mono-num text-sm';
   const lblCls = 'text-[11px] font-medium text-muted-foreground';
