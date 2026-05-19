@@ -54,7 +54,15 @@ export interface JournalStats {
 
 // ── P/L calculation ─────────────────────────────────────────────────────────
 
-export { computePnL, computeInitialRisk, computeR } from '@/lib/tradeMath';
+// Import so the names are bound in THIS module's scope (the hook's derived
+// memos below call computePnL/computeR directly), and re-export so existing
+// `@/hooks/useTradeJournal` consumers keep working. NOTE: a bare
+// `export { … } from '…'` re-exports WITHOUT creating a local binding — that
+// caused `ReferenceError: computePnL is not defined` and white-screened the
+// whole app on any page that mounts this hook with a non-empty journal.
+import { computePnL, computeInitialRisk, computeR } from '@/lib/tradeMath';
+
+export { computePnL, computeInitialRisk, computeR };
 
 // ── Persistent store (localStorage + IndexedDB dual-write) ─────────────────
 //
