@@ -21,6 +21,7 @@ import { aggregateRisk } from '@/lib/portfolioRisk';
 import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
 import { resolveEntryDefaults, rrBar, payoff } from '@/lib/entryViz';
 import { isValidExit } from '@/lib/exitValidation';
+import { classifyExit } from '@/lib/planAdherence';
 
 // Setup names saved in the My-Trading-Plan playbook (tp-playbook-v1). Read-only,
 // best-effort — the Setup combobox merges these with the Journal's saved setups
@@ -312,7 +313,7 @@ export function TradeTracker() {
       entryPrice: t.entryPrice, exitPrice: Number(exitPrice) || 0,
       entryDate: t.entryDate, exitDate, fees: Number(fees) || 0,
       notes: [t.notes, closeNotes].filter(Boolean).join(' · '),
-      tags: [], stopLoss: t.stopLoss, target: t.target, setup: t.setup,
+      tags: [classifyExit({ side: t.side, entry: t.entryPrice, stop: t.stopLoss, target: t.target, exitPrice: Number(exitPrice) || 0 })], stopLoss: t.stopLoss, target: t.target, setup: t.setup,
       exitReason, inPlaybook: !!t.setup,
     });
     removeOpen(t.id);
