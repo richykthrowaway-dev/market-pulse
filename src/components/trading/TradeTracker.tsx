@@ -7,8 +7,8 @@ import { toast } from 'sonner';
 import {
   ClipboardList, Plus, X, ArrowRight, CheckCircle2, AlertTriangle, Search, Loader2, Zap,
 } from 'lucide-react';
-import { useTradeJournal, type TradeSide, type ExitReason } from '@/hooks/useTradeJournal';
-import { useOpenTrades, type OpenTrade } from '@/hooks/useOpenTrades';
+import { useTradeJournal, type TradeSide, type ExitReason, pendingJournalNotice } from '@/hooks/useTradeJournal';
+import { useOpenTrades, type OpenTrade, pendingNotice } from '@/hooks/useOpenTrades';
 import { useLiveSpeed } from '@/hooks/useLiveSpeed';
 import { useSymbolSearch } from '@/hooks/useSymbolSearch';
 import { useJournalSettings } from '@/hooks/useJournalSettings';
@@ -306,6 +306,15 @@ export function TradeTracker() {
     toast.success(`${t.symbol} closed — filed to your Journal`);
     submittingRef.current = false;
   }
+
+  useEffect(() => {
+    const dropped = pendingNotice.open + pendingJournalNotice.dropped;
+    if (dropped > 0) {
+      pendingNotice.open = 0;
+      pendingJournalNotice.dropped = 0;
+      toast(`Recovered your saved data — skipped ${dropped} unreadable row${dropped === 1 ? '' : 's'}.`);
+    }
+  }, []);
 
   const fieldCls = 'h-9 font-mono-num text-sm';
   const lblCls = 'text-[11px] font-medium text-muted-foreground';
