@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveDisplayStocks } from './dashboardStocks';
+import { resolveDisplayStocks, watchlistMovers } from './dashboardStocks';
 
 const S = (symbol: string, changePercent = 0) => ({ symbol, changePercent, name: symbol });
 
@@ -33,5 +33,29 @@ describe('resolveDisplayStocks', () => {
   it('non-array / garbage safe', () => {
     // @ts-expect-error intentional
     expect(resolveDisplayStocks(null, null)).toEqual({ list: [], source: 'movers' });
+  });
+});
+
+describe('watchlistMovers', () => {
+  const mk = (symbol: string, changePercent: number) => ({ symbol, changePercent, name: symbol });
+  const stocks = [mk('AAPL', 1), mk('MSFT', -3), mk('NVDA', 5), mk('TSLA', -8)];
+
+  it('best = max %, worst = min %, among resolved watchlist (case-insensitive)', () => {
+    const r = watchlistMovers(stocks, ['nvda', 'tsla', 'aapl'])!;
+    expect(r.best.symbol).toBe('NVDA');
+    expect(r.worst.symbol).toBe('TSLA');
+  });
+  it('null when no symbols resolve', () => {
+    expect(watchlistMovers(stocks, ['ZZZ'])).toBeNull();
+    expect(watchlistMovers(stocks, [])).toBeNull();
+  });
+  it('single resolved → best === worst', () => {
+    const r = watchlistMovers(stocks, ['AAPL'])!;
+    expect(r.best.symbol).toBe('AAPL');
+    expect(r.worst.symbol).toBe('AAPL');
+  });
+  it('non-array safe', () => {
+    // @ts-expect-error intentional
+    expect(watchlistMovers(null, null)).toBeNull();
   });
 });

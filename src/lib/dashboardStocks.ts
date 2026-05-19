@@ -48,3 +48,38 @@ export function resolveDisplayStocks<T extends StockLike>(
     .slice(0, limit);
   return { list: movers, source: 'movers' };
 }
+
+/**
+ * Best/worst performer among the watchlist symbols resolved against `stocks`
+ * (same case-insensitive match as resolveDisplayStocks). null if none resolve.
+ * Pure, never throws.
+ */
+export function watchlistMovers<T extends StockLike>(
+  stocks: T[],
+  symbols: string[],
+): { best: T; worst: T } | null {
+  const all = Array.isArray(stocks) ? stocks : [];
+  const wl = Array.isArray(symbols) ? symbols : [];
+  const bySym = new Map<string, T>();
+  for (const s of all) {
+    if (s && typeof s.symbol === 'string') {
+      const k = s.symbol.trim().toUpperCase();
+      if (k && !bySym.has(k)) bySym.set(k, s);
+    }
+  }
+  const resolved: T[] = [];
+  for (const raw of wl) {
+    if (typeof raw !== 'string') continue;
+    const hit = bySym.get(raw.trim().toUpperCase());
+    if (hit && !resolved.includes(hit)) resolved.push(hit);
+  }
+  if (resolved.length === 0) return null;
+  let best = resolved[0];
+  let worst = resolved[0];
+  for (const s of resolved) {
+    const c = Number(s.changePercent) || 0;
+    if (c > (Number(best.changePercent) || 0)) best = s;
+    if (c < (Number(worst.changePercent) || 0)) worst = s;
+  }
+  return { best, worst };
+}
