@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import {
   ClipboardList, Plus, X, ArrowRight, CheckCircle2, AlertTriangle, Search, Loader2, Zap,
 } from 'lucide-react';
-import { useTradeJournal, type TradeSide, type ExitReason, pendingJournalNotice } from '@/hooks/useTradeJournal';
+import { useTradeJournal, computePnL, computeR, type TradeSide, type ExitReason, type TradeEntry, pendingJournalNotice } from '@/hooks/useTradeJournal';
 import { useOpenTrades, type OpenTrade, pendingNotice } from '@/hooks/useOpenTrades';
 import { useLiveSpeed } from '@/hooks/useLiveSpeed';
 import { useSymbolSearch } from '@/hooks/useSymbolSearch';
@@ -152,8 +152,52 @@ function RowEditor({
   );
 }
 
+function RecentlyClosed({ trades }: { trades: TradeEntry[] }) {
+  const [show, setShow] = useState(false);
+  if (trades.length === 0) return null;
+  const recent = trades.slice(0, 5);
+  return (
+    <div className="mt-4">
+      <button
+        type="button"
+        onClick={() => setShow((v) => !v)}
+        className="flex w-full items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <span>Recently closed ({trades.length})</span>
+        <span aria-hidden="true">{show ? '▾' : '▸'}</span>
+      </button>
+      {show && (
+        <div className="mt-2 space-y-1.5">
+          {recent.map((t) => {
+            const pnl = computePnL(t);
+            const r = computeR(t);
+            const tag = t.tags?.[0] ?? t.exitReason ?? null;
+            const win = pnl >= 0;
+            return (
+              <div
+                key={t.id}
+                className="rounded-md border border-border/40 bg-card/40 px-2.5 py-1.5 text-[11px] font-mono-num flex flex-wrap items-center gap-x-2 gap-y-0.5"
+              >
+                <span className="font-semibold">{t.symbol}</span>
+                <span className="uppercase text-muted-foreground">{t.side}</span>
+                <span className="text-muted-foreground">{t.quantity}</span>
+                <span className="text-muted-foreground">${t.entryPrice}→${t.exitPrice}</span>
+                <span className={win ? 'text-trading-buy font-semibold' : 'text-trading-sell font-semibold'}>
+                  {win ? '+' : ''}{money(pnl)}{r != null && ` (${r >= 0 ? '+' : ''}${r.toFixed(2)}R)`}
+                </span>
+                {tag && <span className="text-muted-foreground capitalize">{tag}</span>}
+                <span className="ml-auto text-muted-foreground/70">{t.exitDate}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function TradeTracker() {
-  const { addTrade, deleteTrade } = useTradeJournal();
+  const { addTrade, deleteTrade, trades: journalTrades } = useTradeJournal();
   const { trades: open, addOpen, removeOpen, patchOpen } = useOpenTrades();
 
   const [draft, setDraft] = useState<OpenTrade>(emptyDraft());
@@ -1017,6 +1061,8 @@ export function TradeTracker() {
                 })}
               </div>
             )}
+
+            <RecentlyClosed trades={journalTrades} />
           </div>
         </div>
       </CardContent>
