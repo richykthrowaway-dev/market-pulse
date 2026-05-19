@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
+import { parseJournal } from '@/lib/parseJournal';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -75,6 +76,7 @@ export { computePnL, computeInitialRisk, computeR };
 //              is empty, an async IndexedDB read hydrates the snapshot.
 
 const LS_KEY = 'trade-journal-v1';
+export const pendingJournalNotice = { dropped: 0 };
 const IDB_NAME = 'market-pulse-journal';
 const IDB_STORE = 'trades';
 const IDB_DOC = 'all';
@@ -120,9 +122,9 @@ function idbWrite(entries: TradeEntry[]) {
 
 function lsRead(): TradeEntry[] {
   try {
-    const raw = localStorage.getItem(LS_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw) as TradeEntry[];
+    const { trades, dropped } = parseJournal(localStorage.getItem(LS_KEY));
+    if (dropped > 0) pendingJournalNotice.dropped += dropped;
+    return trades;
   } catch { return []; }
 }
 
@@ -192,11 +194,13 @@ function update(fn: (prev: TradeEntry[]) => TradeEntry[]) {
 export function useTradeJournal() {
   const trades = useSyncExternalStore(subscribe, getSnapshot);
 
-  const addTrade = useCallback((input: Omit<TradeEntry, 'id' | 'createdAt'>) => {
+  const addTrade = useCallback((input: Omit<TradeEntry, 'id' | 'createdAt'>): string => {
+    const id = crypto.randomUUID();
     update(prev => [
       ...prev,
-      { ...input, id: crypto.randomUUID(), createdAt: new Date().toISOString() },
+      { ...input, id, createdAt: new Date().toISOString() },
     ]);
+    return id;
   }, []);
 
   const updateTrade = useCallback((id: string, patch: Partial<TradeEntry>) => {
