@@ -54,7 +54,23 @@ export interface JournalStats {
 
 // ── P/L calculation ─────────────────────────────────────────────────────────
 
-export { computePnL, computeInitialRisk, computeR } from '@/lib/tradeMath';
+export function computePnL(t: TradeEntry): number {
+  const gross = t.side === 'long'
+    ? (t.exitPrice - t.entryPrice) * t.quantity
+    : (t.entryPrice - t.exitPrice) * t.quantity;
+  return gross - t.fees;
+}
+
+export function computeInitialRisk(t: TradeEntry): number | null {
+  if (t.stopLoss === undefined || t.stopLoss === null) return null;
+  return Math.abs(t.entryPrice - t.stopLoss) * t.quantity;
+}
+
+export function computeR(t: TradeEntry): number | null {
+  const risk = computeInitialRisk(t);
+  if (risk === null || risk === 0) return null;
+  return computePnL(t) / risk;
+}
 
 // ── Persistent store (localStorage + IndexedDB dual-write) ─────────────────
 //

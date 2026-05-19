@@ -19,7 +19,6 @@ import { useLiveQuotes } from '@/hooks/useLiveQuotes';
 import { unrealizedPnl, stopProximity } from '@/lib/tradeMetrics';
 import { stopFromPct, targetFromR, qtyFromRisk } from '@/lib/entryMath';
 import { resolveEntryDefaults, rrBar, payoff } from '@/lib/entryViz';
-import { isValidExit } from '@/lib/exitValidation';
 
 // Setup names saved in the My-Trading-Plan playbook (tp-playbook-v1). Read-only,
 // best-effort — the Setup combobox merges these with the Journal's saved setups
@@ -113,7 +112,6 @@ export function TradeTracker() {
   const [liveLoading, setLiveLoading] = useState(false);
   const symBoxRef = useRef<HTMLDivElement>(null);
   const setupBoxRef = useRef<HTMLDivElement>(null);
-  const submittingRef = useRef(false);
   const { data: symResults = [] } = useSymbolSearch(symQuery);
 
   // Close the suggestion dropdown on any outside click.
@@ -281,8 +279,7 @@ export function TradeTracker() {
 
   function beginClose(t: OpenTrade) {
     setClosingId(t.id);
-    const liveAtOpen = quotes[t.symbol.trim().toUpperCase()]?.price ?? null;
-    setExitPrice(liveAtOpen != null && liveAtOpen > 0 ? String(liveAtOpen) : '');
+    setExitPrice(String(t.target ?? t.entryPrice));
     setExitDate(todayISO());
     setExitReason('target');
     setFees('');
@@ -290,9 +287,6 @@ export function TradeTracker() {
   }
 
   function confirmClose(t: OpenTrade) {
-    if (!isValidExit(exitPrice)) return;
-    if (submittingRef.current) return;
-    submittingRef.current = true;
     addTrade({
       symbol: t.symbol, side: t.side, quantity: t.quantity,
       entryPrice: t.entryPrice, exitPrice: Number(exitPrice) || 0,
@@ -304,7 +298,6 @@ export function TradeTracker() {
     removeOpen(t.id);
     setClosingId(null);
     toast.success(`${t.symbol} closed — filed to your Journal`);
-    submittingRef.current = false;
   }
 
   const fieldCls = 'h-9 font-mono-num text-sm';
