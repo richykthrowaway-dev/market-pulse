@@ -1,10 +1,19 @@
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useStocks, useIndices, useCurrencies, useNews } from '@/hooks/useSupabaseData';
 import { useWatchlist } from '@/hooks/useWatchlist';
+import { use52Week } from '@/hooks/use52Week';
+import { useEarningsCalendar } from '@/hooks/useEarningsCalendar';
 import { resolveDisplayStocks, watchlistMovers } from '@/lib/dashboardStocks';
+import { watchlistHeatmap } from '@/lib/watchlistHeatmap';
+import { sectorExposure } from '@/lib/sectorExposure';
+import { weekRangePosition } from '@/lib/weekRangePosition';
+import { newsMood } from '@/lib/headlineSentiment';
+import { earningsWindow } from '@/lib/earningsWindow';
+import { parseAlerts, evaluateAlerts, STORAGE_KEY, type PriceAlert } from '@/lib/priceAlerts';
+import { SECTOR_COLORS } from '@/lib/gicsColors';
 import { useHistoricalPrices } from '@/hooks/useDefeatBeta';
 import { useSparklineData } from '@/hooks/useSparklineData';
 import { useLogoPrefetch } from '@/hooks/useLogoPrefetch';
@@ -101,6 +110,53 @@ export function Dashboard() {
       .slice(0, 6);
   }, [wlQuery, stocks, watchSymbols]);
 
+  // ── Insights widgets derived state ─────────────────────────────────────────
+  const heatCells = useMemo(() => watchlistHeatmap(stocks, watchSymbols), [stocks, watchSymbols]);
+  const sectors = useMemo(() => sectorExposure(stocks, watchSymbols), [stocks, watchSymbols]);
+  const mood = useMemo(() => newsMood(news), [news]);
+
+  const earningsHoldings = useMemo(
+    () => watchSymbols.map((t) => ({ ticker: t })),
+    [watchSymbols],
+  );
+  const { data: earningsEvents = [] } = useEarningsCalendar(earningsHoldings);
+  const upcomingEarnings = useMemo(
+    () => earningsWindow(earningsEvents.map((e) => ({ ticker: e.ticker, daysUntil: e.daysUntil }))),
+    [earningsEvents],
+  );
+
+  const [alerts, setAlerts] = useState<PriceAlert[]>(() =>
+    parseAlerts(typeof localStorage !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null),
+  );
+  useEffect(() => {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(alerts)); } catch { /* quota */ }
+  }, [alerts]);
+  const [alSym, setAlSym] = useState('');
+  const [alTarget, setAlTarget] = useState('');
+  const [alDir, setAlDir] = useState<'above' | 'below'>('above');
+  const priceMap = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const s of stocks) m[String(s.symbol).toUpperCase()] = Number(s.price);
+    return m;
+  }, [stocks]);
+  const triggeredIds = useMemo(
+    () => new Set(evaluateAlerts(alerts, priceMap).map((a) => a.id)),
+    [alerts, priceMap],
+  );
+  const addAlert = useCallback(() => {
+    const t = parseFloat(alTarget);
+    if (!alSym.trim() || !Number.isFinite(t)) return;
+    setAlerts((a) => [
+      ...a,
+      { id: `${Date.now()}-${a.length}`, symbol: alSym.trim().toUpperCase(), target: t, dir: alDir },
+    ]);
+    setAlSym('');
+    setAlTarget('');
+  }, [alSym, alTarget, alDir]);
+  const removeAlert = useCallback((id: string) => {
+    setAlerts((a) => a.filter((x) => x.id !== id));
+  }, []);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const persistedSym =
     searchParams.get('sym') ||
@@ -123,6 +179,14 @@ export function Dashboard() {
       ? stocks.find((s) => s.symbol?.toUpperCase() === persistedSym.toUpperCase())
       : undefined) ??
     stocks[0];
+
+  const { data: range52 } = use52Week(activeStock ? [activeStock.symbol] : []);
+  const weekRange = useMemo(() => {
+    const d = activeStock ? range52?.ranges?.[activeStock.symbol] : undefined;
+    if (!d) return null;
+    const pos = weekRangePosition(d.low52, d.high52, d.price);
+    return pos === null ? null : { pos, low52: d.low52, high52: d.high52, price: d.price };
+  }, [range52, activeStock]);
 
   // ── Per-stock metrics (Market Cap + Volume cards) ──────────────────────────
   // Fetch 90 days of history for the active stock to compute average daily volume.
@@ -308,6 +372,68 @@ export function Dashboard() {
                   Add symbols to build your watchlist →
                 </Link>
               )}
+
+              {upcomingEarnings.length > 0 && (
+                <ErrorBoundary name="EarningsStrip">
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    📅 {upcomingEarnings.map((u) => `${u.ticker} ${u.label}`).join(' · ')}
+                  </p>
+                </ErrorBoundary>
+              )}
+
+              {listSource === 'watchlist' && heatCells.length > 0 && (
+                <ErrorBoundary name="WatchlistHeatmap">
+                  <div className="mt-3 grid grid-cols-3 gap-1">
+                    {heatCells.map((c) => {
+                      const up = c.changePercent >= 0;
+                      const alpha = 0.18 + c.intensity * 0.2;
+                      return (
+                        <div
+                          key={c.symbol}
+                          title={`${c.name} ${c.changePercent.toFixed(2)}%`}
+                          className="rounded px-1.5 py-1 text-center"
+                          style={{ backgroundColor: `hsl(${up ? '142 70% 45%' : '0 72% 51%'} / ${alpha})` }}
+                        >
+                          <div className="text-[10px] font-semibold leading-tight">{c.symbol}</div>
+                          <div className="text-[10px] font-mono-num leading-tight">
+                            {up ? '+' : ''}{c.changePercent.toFixed(1)}%
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ErrorBoundary>
+              )}
+
+              {listSource === 'watchlist' && sectors.length > 0 && (
+                <ErrorBoundary name="SectorExposure">
+                  <div className="mt-3">
+                    <div className="flex h-2 w-full overflow-hidden rounded-full">
+                      {sectors.map((s) => (
+                        <div
+                          key={s.sector}
+                          title={`${s.sector} ${s.pct}%`}
+                          style={{
+                            width: `${s.pct}%`,
+                            backgroundColor: `hsl(${SECTOR_COLORS[s.sector] ?? '0 0% 50%'})`,
+                          }}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5">
+                      {sectors.slice(0, 5).map((s) => (
+                        <span key={s.sector} className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <span
+                            className="inline-block h-2 w-2 rounded-sm"
+                            style={{ backgroundColor: `hsl(${SECTOR_COLORS[s.sector] ?? '0 0% 50%'})` }}
+                          />
+                          {s.sector} {s.pct}%
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </ErrorBoundary>
+              )}
             </div>
 
             <div className="lg:w-2/3 min-w-0 h-64 md:h-96 lg:h-[500px]">
@@ -331,6 +457,26 @@ export function Dashboard() {
                 currentPrice={activeStock.price}
               />
             </ErrorBoundary>
+
+            {weekRange && (
+              <ErrorBoundary name="WeekRange52">
+                <div className="mt-3 rounded-lg border border-border bg-card p-3">
+                  <div className="mb-1.5 flex justify-between text-[11px] text-muted-foreground">
+                    <span>52-Week Range — {activeStock.symbol}</span>
+                    <span className="font-mono-num">
+                      {weekRange.low52.toFixed(2)} – {weekRange.high52.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="relative h-1.5 w-full rounded-full bg-muted">
+                    <div
+                      className="absolute top-1/2 h-3 w-3 -translate-x-1/2 -translate-y-1/2 rounded-full bg-primary shadow"
+                      style={{ left: `${weekRange.pos * 100}%` }}
+                      title={`Current ${weekRange.price.toFixed(2)}`}
+                    />
+                  </div>
+                </div>
+              </ErrorBoundary>
+            )}
           </div>
         </>
       ) : (
@@ -346,6 +492,17 @@ export function Dashboard() {
       {/* Main Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6 animate-slide-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
+          <ErrorBoundary name="NewsMood">
+            <div className="flex items-center gap-3 text-xs">
+              <span className="font-semibold">News mood:</span>
+              <span className="text-green-500">🐂 {mood.bull}</span>
+              <span className="text-red-500">🐻 {mood.bear}</span>
+              <span className="text-muted-foreground">· neutral {mood.neutral}</span>
+              <span className={mood.net > 0 ? 'text-green-500' : mood.net < 0 ? 'text-red-500' : 'text-muted-foreground'}>
+                net {mood.net >= 0 ? '+' : ''}{mood.net}
+              </span>
+            </div>
+          </ErrorBoundary>
           <ErrorBoundary name="News">
             <NewsCard
               news={news}
@@ -370,6 +527,79 @@ export function Dashboard() {
         </div>
 
         <div className="lg:col-span-1 space-y-6 animate-slide-up" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
+          <ErrorBoundary name="PriceAlerts">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Price Alerts</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex gap-1.5">
+                  <input
+                    value={alSym}
+                    onChange={(e) => setAlSym(e.target.value)}
+                    placeholder="Symbol"
+                    aria-label="Alert symbol"
+                    className="h-8 w-20 rounded-md border border-border bg-background px-2 text-xs uppercase"
+                  />
+                  <select
+                    value={alDir}
+                    onChange={(e) => setAlDir(e.target.value as 'above' | 'below')}
+                    aria-label="Alert direction"
+                    className="h-8 rounded-md border border-border bg-background px-1 text-xs"
+                  >
+                    <option value="above">≥</option>
+                    <option value="below">≤</option>
+                  </select>
+                  <input
+                    value={alTarget}
+                    onChange={(e) => setAlTarget(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') addAlert(); }}
+                    placeholder="Target"
+                    inputMode="decimal"
+                    aria-label="Alert target price"
+                    className="h-8 w-20 rounded-md border border-border bg-background px-2 text-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={addAlert}
+                    className="h-8 rounded-md bg-primary px-3 text-xs text-primary-foreground hover:opacity-90"
+                  >
+                    Add
+                  </button>
+                </div>
+                {alerts.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No alerts set.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-1.5">
+                    {alerts.map((a) => {
+                      const hit = triggeredIds.has(a.id);
+                      return (
+                        <span
+                          key={a.id}
+                          className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs ${
+                            hit
+                              ? 'bg-destructive/15 text-destructive font-semibold'
+                              : 'bg-muted text-muted-foreground'
+                          }`}
+                        >
+                          {a.symbol} {a.dir === 'above' ? '≥' : '≤'} {a.target}
+                          {hit && ' 🔔'}
+                          <button
+                            type="button"
+                            aria-label={`Remove alert ${a.symbol}`}
+                            onClick={() => removeAlert(a.id)}
+                            className="hover:text-foreground"
+                          >
+                            ✕
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </ErrorBoundary>
           <ErrorBoundary name="MarketOverviewCard"><MarketOverviewCard /></ErrorBoundary>
           <ErrorBoundary name="MarketOverview"><MarketOverview indices={indices} /></ErrorBoundary>
           <ErrorBoundary name="MarketBreadth">
