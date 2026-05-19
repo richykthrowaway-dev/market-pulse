@@ -13,6 +13,9 @@ import { weekRangePosition } from '@/lib/weekRangePosition';
 import { newsMood } from '@/lib/headlineSentiment';
 import { earningsWindow } from '@/lib/earningsWindow';
 import { parseAlerts, evaluateAlerts, STORAGE_KEY, type PriceAlert } from '@/lib/priceAlerts';
+import { concentrationScore } from '@/lib/concentrationScore';
+import { topMovers } from '@/lib/topMovers';
+import { parseNotes, setNote, STORAGE_KEY as NOTES_KEY } from '@/lib/symbolNotes';
 import { SECTOR_COLORS } from '@/lib/gicsColors';
 import { useHistoricalPrices } from '@/hooks/useDefeatBeta';
 import { useSparklineData } from '@/hooks/useSparklineData';
@@ -114,6 +117,15 @@ export function Dashboard() {
   const heatCells = useMemo(() => watchlistHeatmap(stocks, watchSymbols), [stocks, watchSymbols]);
   const sectors = useMemo(() => sectorExposure(stocks, watchSymbols), [stocks, watchSymbols]);
   const mood = useMemo(() => newsMood(news), [news]);
+  const conc = useMemo(() => concentrationScore(sectors), [sectors]);
+  const gapMovers = useMemo(() => topMovers(stocks), [stocks]);
+
+  const [notes, setNotes] = useState(() =>
+    parseNotes(typeof localStorage !== 'undefined' ? localStorage.getItem(NOTES_KEY) : null),
+  );
+  useEffect(() => {
+    try { localStorage.setItem(NOTES_KEY, JSON.stringify(notes)); } catch { /* quota */ }
+  }, [notes]);
 
   const earningsHoldings = useMemo(
     () => watchSymbols.map((t) => ({ ticker: t })),
@@ -434,6 +446,26 @@ export function Dashboard() {
                   </div>
                 </ErrorBoundary>
               )}
+
+              {listSource === 'watchlist' && sectors.length > 0 && (
+                <ErrorBoundary name="Concentration">
+                  <p className="mt-2 text-[11px] text-muted-foreground">
+                    Concentration{' '}
+                    <span className="font-semibold text-foreground">{conc.score}/100</span> ·{' '}
+                    <span
+                      className={
+                        conc.label === 'Concentrated'
+                          ? 'text-red-500'
+                          : conc.label === 'Moderate'
+                          ? 'text-yellow-500'
+                          : 'text-green-500'
+                      }
+                    >
+                      {conc.label}
+                    </span>
+                  </p>
+                </ErrorBoundary>
+              )}
             </div>
 
             <div className="lg:w-2/3 min-w-0 h-64 md:h-96 lg:h-[500px]">
@@ -474,6 +506,26 @@ export function Dashboard() {
                       title={`Current ${weekRange.price.toFixed(2)}`}
                     />
                   </div>
+                </div>
+              </ErrorBoundary>
+            )}
+
+            {activeStock && (
+              <ErrorBoundary name="SymbolNotes">
+                <div className="mt-3 rounded-lg border border-border bg-card p-3">
+                  <label className="mb-1.5 block text-[11px] text-muted-foreground">
+                    Notes — {activeStock.symbol}
+                  </label>
+                  <textarea
+                    value={notes[activeStock.symbol.toUpperCase()] ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setNotes((m) => setNote(m, activeStock.symbol, v));
+                    }}
+                    placeholder="Your private notes for this symbol…"
+                    rows={3}
+                    className="w-full resize-y rounded-md border border-border bg-background p-2 text-xs"
+                  />
                 </div>
               </ErrorBoundary>
             )}
@@ -596,6 +648,35 @@ export function Dashboard() {
                       );
                     })}
                   </div>
+                )}
+              </CardContent>
+            </Card>
+          </ErrorBoundary>
+          <ErrorBoundary name="GapMovers">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base">Market Gap Movers</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1.5">
+                {gapMovers.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No data.</p>
+                ) : (
+                  gapMovers.map((m) => {
+                    const cp = Number(m.changePercent) || 0;
+                    return (
+                      <button
+                        key={m.symbol}
+                        type="button"
+                        onClick={() => selectStock(m)}
+                        className="flex w-full items-center justify-between rounded-md px-2 py-1.5 text-sm hover:bg-accent transition-colors"
+                      >
+                        <span className="font-semibold">{m.symbol}</span>
+                        <span className={cp >= 0 ? 'text-green-500 font-mono-num' : 'text-red-500 font-mono-num'}>
+                          {cp >= 0 ? '+' : ''}{cp.toFixed(2)}%
+                        </span>
+                      </button>
+                    );
+                  })
                 )}
               </CardContent>
             </Card>
