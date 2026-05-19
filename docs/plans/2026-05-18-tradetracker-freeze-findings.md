@@ -1,8 +1,13 @@
 # Trade Tracker Close-Form Freeze — Investigation Findings (handoff)
 
 **Date:** 2026-05-18
-**Status:** OPEN — pre-existing bug, root cause not yet pinned. Code is pristine
-(`9d5a414`); nothing from this session is applied or pushed.
+**Status:** RESOLVED (2026-05-18) — see "Resolution" at the bottom. The "freeze"
+was **not** an application infinite loop. It was two independent things: (a) a
+Vite **dev-mode** on-demand dependency re-optimization + forced full reload the
+first time the lazy `/trading` route pulls `recharts`/`d3`/radix (the real
+"clicking Trading crashes the site / won't load until restart"), and (b) Chrome
+**background/hidden-tab throttling** that made every `setTimeout`/`setInterval`/
+CDP-based automated repro mis-measure a perfectly healthy thread as a 45s freeze.
 
 ## One-paragraph summary
 
@@ -69,3 +74,50 @@ nothing was pushed; production is untouched.
 ## Related design/plan docs in this folder (this session, all reverted)
 `2026-05-18-tradetracker-integrity-fixes*`, `*-close-flow-quality*`,
 `*-close-form-select-freeze*`, `*-exit-reason-chips*`, `*-reapply-safe-subset*`.
+
+---
+
+## Resolution (2026-05-18)
+
+The earlier conclusions in this doc were a **measurement artifact**. Every
+automated repro ran in a Chrome **MCP automation tab that is never foregrounded**
+→ Chrome clamps `setTimeout`/`setInterval` to ~1 Hz, pauses rAF, and eventually
+freezes the background tab. Harnesses built on `setTimeout` delays +
+`setInterval` heartbeats + CDP `eval` therefore reported a ~1000 ms/op "freeze"
+and 45 s "renderer frozen" **regardless of the code** — which is exactly why it
+looked silent, non-deterministic, control-independent, and "bisects identically
+to `9d5a414`". Proof: same hidden tab, same 3 s window — a `MessageChannel`
+heartbeat ticked **374,178** times while `setInterval(50ms)` ticked **3**; a
+10M-iteration loop ran in **35 ms**; **40 close-form open/cancel cycles in 29 ms**
+(MessageChannel-driven = throttle-immune); full close→Journal E2E **8 ms**, files
+correctly. There is **no app infinite loop**.
+
+The **real-world** symptom ("clicking Trading crashes the site / won't load until
+restart") is a **Vite dev-server** behavior: `/trading` is lazy-loaded and the
+sole importer of `recharts` (+ `victory-vendor`/`d3-*`) and `@radix-ui/react-select`.
+Vite can't see a lazy route's deps at cold start, so the first click on Trading
+triggers an on-the-fly re-optimization **and a forced full-page reload**; with
+libs this heavy it can stall/loop until `npm run dev` is restarted. Reproduced
+deterministically on a cold dev server (cleared `node_modules/.vite`).
+
+### Fixes shipped
+1. **`vite.config.ts`** — `optimizeDeps.include` for `recharts`,
+   `victory-vendor/d3-shape`, `victory-vendor/d3-scale`, `d3-shape`, `d3-scale`,
+   `@tanstack/react-query`, `@radix-ui/react-select`, `lucide-react`. Vite now
+   pre-bundles them at startup → **no on-demand re-opt, no forced reload** when
+   navigating to `/trading`. Verified on a cold dev server: clicked the in-app
+   Trading link → mounted 158 ms, 0 reloads, 0 re-opt. (Dev-only; the production
+   Rollup build was never affected — which is why it felt non-deterministic.)
+2. **`src/components/layout/MarketTimeline.tsx`** — the global sidebar world
+   clock no longer runs its 1 s interval (+~25 timezone conversions + a React
+   commit) forever on every page; it **pauses while the tab is hidden** and
+   resumes on return. Removes perpetual app-wide main-thread churn.
+3. **`src/hooks/useLiveQuotes.ts`** — memoized `queries` + `useCallback`
+   `combine` (TanStack-documented contract) so React Query stops reconciling its
+   `QueriesObserver` on every render of the Trading page and the Watchlist.
+
+### Methodology lesson
+Never measure UI responsiveness with `setTimeout`/`setInterval`/rAF or CDP
+`eval` in an unfocused automation tab — they are throttled/frozen by the browser
+and will fabricate a "freeze". Use a `MessageChannel` round-trip (exempt from
+background throttling) for throttle-immune timing and freeze detection.

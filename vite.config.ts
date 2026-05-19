@@ -29,6 +29,26 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
+  // Pre-bundle the heavy libraries that are ONLY reached through lazy-loaded
+  // routes (Trading → recharts/d3; dialogs → radix). Without this, Vite can't
+  // see them at cold start, so the first navigation to such a route triggers
+  // an on-the-fly dependency re-optimization + a forced full-page reload —
+  // which, with libs this heavy, can stall or loop until `npm run dev` is
+  // restarted ("clicking Trading crashes the site / won't load until restart").
+  // Listing them here makes Vite bundle them once upfront. Dev-only; the
+  // production Rollup build is unaffected.
+  optimizeDeps: {
+    include: [
+      'recharts',
+      'victory-vendor/d3-shape',
+      'victory-vendor/d3-scale',
+      'd3-shape',
+      'd3-scale',
+      '@tanstack/react-query',
+      '@radix-ui/react-select',
+      'lucide-react',
+    ],
+  },
   plugins: [
     react(),
   ],

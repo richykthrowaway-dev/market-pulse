@@ -114,9 +114,36 @@ function toLocalMins(
 export default function MarketTimeline() {
   const [now, setNow] = useState(() => new Date());
 
+  // Tick once per second, but ONLY while the tab is visible. A backgrounded
+  // tab gets its timers throttled/frozen by the browser anyway, so running
+  // the clock there is pure wasted main-thread work (≈1 React commit + ~25
+  // timezone conversions every second, app-wide, forever). Pausing it removes
+  // that churn and resumes instantly — with a fresh time — on return.
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
+    let id: ReturnType<typeof setInterval> | undefined;
+    const tick = () => setNow(new Date());
+    const start = () => {
+      if (id == null) {
+        tick(); // refresh immediately so we never show a stale time
+        id = setInterval(tick, 1000);
+      }
+    };
+    const stop = () => {
+      if (id != null) {
+        clearInterval(id);
+        id = undefined;
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') start();
+      else stop();
+    };
+    onVisibility(); // start only if currently visible
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      stop();
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, []);
 
   const localTime = now.toLocaleTimeString([], {
