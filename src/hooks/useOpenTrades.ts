@@ -32,12 +32,16 @@ export interface OpenTrade {
 
 const LS_KEY = 'tp-open-trades-v1';
 
+export const pendingNotice = { open: 0 };
+
 let snapshot: OpenTrade[] = readLS();
 const listeners = new Set<() => void>();
 
 function readLS(): OpenTrade[] {
   if (typeof localStorage === 'undefined') return [];
-  return parseOpenTrades(localStorage.getItem(LS_KEY));
+  const { trades, dropped } = parseOpenTrades(localStorage.getItem(LS_KEY));
+  if (dropped > 0) pendingNotice.open += dropped;
+  return trades;
 }
 
 function writeLS(next: OpenTrade[]) {
