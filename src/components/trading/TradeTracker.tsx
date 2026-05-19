@@ -280,7 +280,8 @@ export function TradeTracker() {
 
   function beginClose(t: OpenTrade) {
     setClosingId(t.id);
-    setExitPrice(String(t.target ?? t.entryPrice));
+    const liveAtOpen = quotes[t.symbol.trim().toUpperCase()]?.price ?? null;
+    setExitPrice(liveAtOpen != null && liveAtOpen > 0 ? String(liveAtOpen) : '');
     setExitDate(todayISO());
     setExitReason('target');
     setFees('');
