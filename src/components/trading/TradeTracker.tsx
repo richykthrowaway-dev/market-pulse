@@ -85,6 +85,24 @@ function readRiskParams(): { account: number; riskPct: number } | null {
 const money = (n: number) =>
   '$' + n.toLocaleString('en-US', { maximumFractionDigits: n >= 1000 ? 0 : 2 });
 
+function RowSparkline({ t, live }: { t: OpenTrade; live: number | null }) {
+  const { data } = useSparkline(t.symbol);
+  const bars = data ?? [];
+  if (bars.length === 0) return null;
+  const d = bars.map((b, i) => ({ i, c: b.c }));
+  return (
+    <div style={{ width: '100%', height: 40 }} className="mt-2">
+      <AreaChart width={260} height={40} data={d} margin={{ top: 2, right: 2, bottom: 0, left: 0 }}>
+        <Area type="monotone" dataKey="c" stroke="hsl(var(--primary))" strokeWidth={1} fill="hsl(var(--primary))" fillOpacity={0.12} isAnimationActive={false} dot={false} />
+        {t.entryPrice > 0 && <ReferenceLine y={t.entryPrice} stroke="hsl(var(--foreground))" strokeOpacity={0.5} strokeDasharray="2 2" />}
+        {t.stopLoss != null && <ReferenceLine y={t.stopLoss} stroke="hsl(var(--trading-sell))" />}
+        {t.target != null && <ReferenceLine y={t.target} stroke="hsl(var(--trading-buy))" />}
+        {live != null && <ReferenceLine y={live} stroke="hsl(var(--primary))" strokeDasharray="4 2" />}
+      </AreaChart>
+    </div>
+  );
+}
+
 export function TradeTracker() {
   const { addTrade, deleteTrade } = useTradeJournal();
   const { trades: open, addOpen, removeOpen, patchOpen } = useOpenTrades();
@@ -833,6 +851,8 @@ export function TradeTracker() {
                           </div>
                         )}
                       </div>
+
+                      <RowSparkline t={t} live={livePrice} />
 
                       {/* Plan-valid toggle + actions */}
                       <div className="flex items-center gap-3 mt-2.5 pt-2.5 border-t border-border/50 flex-wrap">
