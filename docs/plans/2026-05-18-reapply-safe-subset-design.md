@@ -1,7 +1,7 @@
 # Re-apply Safe-Subset Improvements — Design
 
 **Date:** 2026-05-18
-**Status:** Approved (design)
+**Status:** Implemented (2026-05-18)
 **Context:** All of this session's Trade Tracker work was reverted to the
 pre-session baseline `9d5a414` (commit `6cd4c67`) because the user believed it
 broke the site. Investigation proved the close-form freeze is **pre-existing,
