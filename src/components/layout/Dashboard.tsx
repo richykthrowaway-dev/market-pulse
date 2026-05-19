@@ -21,6 +21,7 @@ import { NewsCard } from '@/components/news/NewsCard';
 import { StatsCard } from '@/components/ui/StatsCard';
 import { YourSnapshot } from '@/components/dashboard/YourSnapshot';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { DeferUntilVisible } from '@/components/common/DeferUntilVisible';
 import { WatchlistChart } from '@/components/stocks/WatchlistChart';
 import { MarketOverviewCard } from '@/components/widgets/MarketOverviewCard';
 import { TopMoverCard } from '@/components/widgets/TopMoverCard';
@@ -147,116 +148,132 @@ export function Dashboard() {
 
   const isMobile = useIsMobile();
 
-  if (stocksLoading || !activeStock) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-          <p className="text-muted-foreground text-sm">Loading dashboard…</p>
-        </div>
-      </div>
-    );
-  }
+  const ready = !stocksLoading && !!activeStock;
   
   const dashboardContent = (
     <>
       <ErrorBoundary name="YourSnapshot"><YourSnapshot /></ErrorBoundary>
+
       <h1 className="text-2xl font-bold mb-6 tracking-tight">
         Market Dashboard
       </h1>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
-        <StatsCard
-          title="Market Cap"
-          value={activeMarketCap != null ? formatMarketCap(activeMarketCap) : '…'}
-          trend={activeStock?.changePercent}
-          trendLabel={activeStock?.symbol}
-          icon={<Wallet2 />}
-          className="bg-card"
-        />
-        <StatsCard
-          title="Trading Volume"
-          value={formatVolume(activeStock?.volume ?? 0)}
-          description={
-            relativeVolume != null
-              ? `Rel Vol: ${relativeVolume.toFixed(2)}×`
-              : 'Today\'s volume'
-          }
-          icon={<BarChart3 />}
-          className="bg-card"
-        />
-        <TopMoverCard direction="gainer" className="bg-card" />
-        <TopMoverCard direction="loser"  className="bg-card" />
-      </div>
+      <ErrorBoundary name="StatsRow">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+          <StatsCard
+            title="Market Cap"
+            value={activeMarketCap != null ? formatMarketCap(activeMarketCap) : '…'}
+            trend={activeStock?.changePercent}
+            trendLabel={activeStock?.symbol}
+            icon={<Wallet2 />}
+            className="bg-card"
+          />
+          <StatsCard
+            title="Trading Volume"
+            value={formatVolume(activeStock?.volume ?? 0)}
+            description={
+              relativeVolume != null
+                ? `Rel Vol: ${relativeVolume.toFixed(2)}×`
+                : 'Today\'s volume'
+            }
+            icon={<BarChart3 />}
+            className="bg-card"
+          />
+          <TopMoverCard direction="gainer" className="bg-card" />
+          <TopMoverCard direction="loser"  className="bg-card" />
+        </div>
+      </ErrorBoundary>
 
-      {/* Stock Cards + Chart side-by-side */}
-      <div className="flex flex-col lg:flex-row gap-6 mb-6 animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
-        {/* Stock cards — ~1/3 width, internal scroll */}
-        <div className="lg:w-1/3 flex flex-col animate-slide-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
-          <h2 className="text-lg font-semibold tracking-tight mb-3">All Stocks</h2>
-          <div className="space-y-3 overflow-y-auto lg:max-h-[500px] p-1">
-            {stocks.slice(0, 10).map((stock) => (
-              <StockCardWithHistory
-                key={stock.symbol}
-                stock={stock}
-                days={chartDays}
-                isActive={activeStock.symbol === stock.symbol}
-                onClick={() => setSelectedStock(stock)}
-                compact
-              />
-            ))}
+      {ready ? (
+        <>
+          {/* Stock Cards + Chart side-by-side */}
+          <div className="flex flex-col lg:flex-row gap-6 mb-6 animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
+            <div className="lg:w-1/3 flex flex-col animate-slide-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
+              <h2 className="text-lg font-semibold tracking-tight mb-3">All Stocks</h2>
+              <ErrorBoundary name="AllStocks">
+                <div className="space-y-3 overflow-y-auto lg:max-h-[500px] p-1">
+                  {stocks.slice(0, 10).map((stock) => (
+                    <StockCardWithHistory
+                      key={stock.symbol}
+                      stock={stock}
+                      days={chartDays}
+                      isActive={activeStock.symbol === stock.symbol}
+                      onClick={() => setSelectedStock(stock)}
+                      compact
+                    />
+                  ))}
+                </div>
+              </ErrorBoundary>
+            </div>
+
+            <div className="lg:w-2/3 min-w-0 h-64 md:h-96 lg:h-[500px]">
+              <ErrorBoundary name="StockChart">
+                <StockChart
+                  symbol={activeStock.symbol}
+                  name={activeStock.name}
+                  currentPrice={activeStock.price}
+                  onRangeChange={setChartDays}
+                />
+              </ErrorBoundary>
+            </div>
           </div>
-        </div>
 
-        {/* Chart — ~2/3 width */}
-        <div className="lg:w-2/3 min-w-0 h-64 md:h-96 lg:h-[500px]">
-          <StockChart
-            symbol={activeStock.symbol}
-            name={activeStock.name}
-            currentPrice={activeStock.price}
-            onRangeChange={setChartDays}
-          />
-        </div>
-      </div>
-
-      {/* Fundamentals Panel — updates when a stock is clicked */}
-      {activeStock && (
-        <div className="mb-6 animate-slide-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
-          <StockFundamentalsPanel
-            symbol={activeStock.symbol}
-            name={activeStock.name}
-            currentPrice={activeStock.price}
-          />
+          {/* Fundamentals Panel */}
+          <div className="mb-6 animate-slide-up" style={{ animationDelay: '250ms', animationFillMode: 'both' }}>
+            <ErrorBoundary name="Fundamentals">
+              <StockFundamentalsPanel
+                symbol={activeStock.symbol}
+                name={activeStock.name}
+                currentPrice={activeStock.price}
+              />
+            </ErrorBoundary>
+          </div>
+        </>
+      ) : (
+        <div className="space-y-6 mb-6">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="lg:w-1/3 h-[500px] rounded-lg bg-muted/40 animate-pulse" />
+            <div className="lg:w-2/3 h-[500px] rounded-lg bg-muted/40 animate-pulse" />
+          </div>
+          <div className="h-40 rounded-lg bg-muted/40 animate-pulse" />
         </div>
       )}
 
       {/* Main Content Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left column - News */}
         <div className="lg:col-span-2 space-y-6 animate-slide-up" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
-          <NewsCard
-            news={news}
-            watchlistSymbols={WATCHLIST_SYMBOLS}
-          />
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <Newspaper className="h-5 w-5 text-primary" />
-                Top Stories
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0 overflow-hidden rounded-b-lg">
-              <TradingViewTimeline height={500} className="w-full" />
-            </CardContent>
-          </Card>
+          <ErrorBoundary name="News">
+            <NewsCard
+              news={news}
+              watchlistSymbols={WATCHLIST_SYMBOLS}
+            />
+          </ErrorBoundary>
+          <ErrorBoundary name="TopStories">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Newspaper className="h-5 w-5 text-primary" />
+                  Top Stories
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-0 overflow-hidden rounded-b-lg">
+                <DeferUntilVisible minHeight={500}>
+                  <TradingViewTimeline height={500} className="w-full" />
+                </DeferUntilVisible>
+              </CardContent>
+            </Card>
+          </ErrorBoundary>
         </div>
 
-        {/* Right column - Market overview, markets, breadth */}
         <div className="lg:col-span-1 space-y-6 animate-slide-up" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
-          <MarketOverviewCard />
-          <MarketOverview indices={indices} />
-          <MarketBreadthCards />
+          <ErrorBoundary name="MarketOverviewCard"><MarketOverviewCard /></ErrorBoundary>
+          <ErrorBoundary name="MarketOverview"><MarketOverview indices={indices} /></ErrorBoundary>
+          <ErrorBoundary name="MarketBreadth">
+            <DeferUntilVisible minHeight={240}>
+              <MarketBreadthCards />
+            </DeferUntilVisible>
+          </ErrorBoundary>
         </div>
       </div>
     </>
