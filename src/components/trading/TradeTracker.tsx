@@ -84,7 +84,7 @@ const money = (n: number) =>
   '$' + n.toLocaleString('en-US', { maximumFractionDigits: n >= 1000 ? 0 : 2 });
 
 export function TradeTracker() {
-  const { addTrade } = useTradeJournal();
+  const { addTrade, deleteTrade } = useTradeJournal();
   const { trades: open, addOpen, removeOpen, patchOpen } = useOpenTrades();
 
   const [draft, setDraft] = useState<OpenTrade>(emptyDraft());
@@ -279,6 +279,14 @@ export function TradeTracker() {
     toast.success('Trade tracked');
   }, [draft, canAdd, addOpen, addSetup]);
 
+  function discardOpen(t: OpenTrade) {
+    removeOpen(t.id);
+    toast(`${t.symbol} discarded`, {
+      action: { label: 'Undo', onClick: () => addOpen(t) },
+      duration: 6000,
+    });
+  }
+
   function beginClose(t: OpenTrade) {
     setClosingId(t.id);
     const liveAtOpen = quotes[t.symbol.trim().toUpperCase()]?.price ?? null;
@@ -293,7 +301,7 @@ export function TradeTracker() {
     if (!isValidExit(exitPrice)) return;
     if (submittingRef.current) return;
     submittingRef.current = true;
-    addTrade({
+    const newId = addTrade({
       symbol: t.symbol, side: t.side, quantity: t.quantity,
       entryPrice: t.entryPrice, exitPrice: Number(exitPrice) || 0,
       entryDate: t.entryDate, exitDate, fees: Number(fees) || 0,
@@ -303,7 +311,13 @@ export function TradeTracker() {
     });
     removeOpen(t.id);
     setClosingId(null);
-    toast.success(`${t.symbol} closed — filed to your Journal`);
+    toast.success(`${t.symbol} closed — filed to your Journal`, {
+      action: {
+        label: 'Undo',
+        onClick: () => { deleteTrade(newId); addOpen(t); },
+      },
+      duration: 6000,
+    });
     submittingRef.current = false;
   }
 
@@ -803,7 +817,7 @@ export function TradeTracker() {
                               <Button size="sm" variant="ghost"
                                 className="h-7 w-7 p-0 text-muted-foreground hover:text-trading-sell"
                                 title="Discard (no journal entry)"
-                                onClick={() => removeOpen(t.id)}>
+                                onClick={() => discardOpen(t)}>
                                 <X className="h-3.5 w-3.5" />
                               </Button>
                             </>
