@@ -103,6 +103,54 @@ function RowSparkline({ t, live }: { t: OpenTrade; live: number | null }) {
   );
 }
 
+function RowEditor({
+  t, onSave, onCancel,
+}: {
+  t: OpenTrade;
+  onSave: (patch: Partial<OpenTrade>) => void;
+  onCancel: () => void;
+}) {
+  const [stop, setStop] = useState(t.stopLoss != null ? String(t.stopLoss) : '');
+  const [target, setTarget] = useState(t.target != null ? String(t.target) : '');
+  const [notes, setNotes] = useState(t.notes ?? '');
+  const fieldCls = 'h-9 font-mono-num text-sm';
+  const lblCls = 'text-[11px] font-medium text-muted-foreground';
+  return (
+    <div className="mt-3 pt-3 border-t border-border/50 space-y-2.5">
+      <div className="grid grid-cols-2 gap-2.5">
+        <div className="space-y-1">
+          <label className={lblCls}>Stop</label>
+          <Input type="number" step={0.01} className={fieldCls}
+            value={stop} onChange={(e) => setStop(e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <label className={lblCls}>Target</label>
+          <Input type="number" step={0.01} className={fieldCls}
+            value={target} onChange={(e) => setTarget(e.target.value)} />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <label className={lblCls}>Notes</label>
+        <Input className={`${fieldCls} font-sans`} value={notes}
+          onChange={(e) => setNotes(e.target.value)} />
+      </div>
+      <div className="flex gap-2">
+        <Button size="sm" className="flex-1 font-semibold"
+          onClick={() => onSave({
+            stopLoss: stop.trim() === '' ? undefined : Number(stop),
+            target: target.trim() === '' ? undefined : Number(target),
+            notes,
+          })}>
+          Save
+        </Button>
+        <Button size="sm" variant="ghost" className="h-8 text-xs" onClick={onCancel}>
+          Cancel
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export function TradeTracker() {
   const { addTrade, deleteTrade } = useTradeJournal();
   const { trades: open, addOpen, removeOpen, patchOpen } = useOpenTrades();
@@ -111,6 +159,7 @@ export function TradeTracker() {
   const [qtyTouched, setQtyTouched] = useState(false);
   const [entryLocked, setEntryLocked] = useState(false);
   const [closingId, setClosingId] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
   const [exitPrice, setExitPrice] = useState('');
   const [exitDate, setExitDate] = useState(todayISO());
   const [exitReason, setExitReason] = useState<ExitReason>('target');
@@ -874,6 +923,10 @@ export function TradeTracker() {
                               <Button size="sm" className="h-7 text-xs" onClick={() => beginClose(t)}>
                                 Close <ArrowRight className="h-3 w-3 ml-1" /> Journal
                               </Button>
+                              <Button size="sm" variant="ghost" className="h-7 text-xs"
+                                onClick={() => setEditId(editId === t.id ? null : t.id)}>
+                                {editId === t.id ? 'Close edit' : 'Edit'}
+                              </Button>
                               <Button size="sm" variant="ghost"
                                 className="h-7 w-7 p-0 text-muted-foreground hover:text-trading-sell"
                                 title="Discard (no journal entry)"
@@ -926,6 +979,14 @@ export function TradeTracker() {
                             Confirm close &amp; add to Journal
                           </Button>
                         </div>
+                      )}
+
+                      {editId === t.id && !closing && (
+                        <RowEditor
+                          t={t}
+                          onSave={(patch) => { patchOpen(t.id, patch); setEditId(null); }}
+                          onCancel={() => setEditId(null)}
+                        />
                       )}
                     </div>
                   );
