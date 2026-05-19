@@ -1,7 +1,10 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useStocks, useIndices, useCurrencies, useNews } from '@/hooks/useSupabaseData';
+import { useWatchlist } from '@/hooks/useWatchlist';
+import { resolveDisplayStocks } from '@/lib/dashboardStocks';
 import { useHistoricalPrices } from '@/hooks/useDefeatBeta';
 import { useSparklineData } from '@/hooks/useSparklineData';
 import { useLogoPrefetch } from '@/hooks/useLogoPrefetch';
@@ -75,7 +78,35 @@ export function Dashboard() {
   useLogoPrefetch(visibleTickers);
 
   const [selectedStock, setSelectedStock] = useState<typeof stocks[0] | null>(null);
-  const activeStock = selectedStock ?? stocks[0];
+
+  const { symbols: watchSymbols } = useWatchlist();
+  const { list: displayStocks, source: listSource } = useMemo(
+    () => resolveDisplayStocks(stocks, watchSymbols),
+    [stocks, watchSymbols],
+  );
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const persistedSym =
+    searchParams.get('sym') ||
+    (typeof localStorage !== 'undefined' ? localStorage.getItem('dash-active-sym') : null);
+
+  const selectStock = useCallback(
+    (stock: { symbol: string }) => {
+      setSelectedStock(stock as typeof selectedStock);
+      const sp = new URLSearchParams(searchParams);
+      sp.set('sym', stock.symbol);
+      setSearchParams(sp, { replace: true });
+      try { localStorage.setItem('dash-active-sym', stock.symbol); } catch { /* quota */ }
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const activeStock =
+    selectedStock ??
+    (persistedSym
+      ? stocks.find((s) => s.symbol?.toUpperCase() === persistedSym.toUpperCase())
+      : undefined) ??
+    stocks[0];
 
   // ── Per-stock metrics (Market Cap + Volume cards) ──────────────────────────
   // Fetch 90 days of history for the active stock to compute average daily volume.
@@ -190,21 +221,31 @@ export function Dashboard() {
           {/* Stock Cards + Chart side-by-side */}
           <div className="flex flex-col lg:flex-row gap-6 mb-6 animate-slide-up" style={{ animationDelay: '200ms', animationFillMode: 'both' }}>
             <div className="lg:w-1/3 flex flex-col animate-slide-up" style={{ animationDelay: '300ms', animationFillMode: 'both' }}>
-              <h2 className="text-lg font-semibold tracking-tight mb-3">All Stocks</h2>
+              <h2 className="text-lg font-semibold tracking-tight mb-3">
+                {listSource === 'watchlist' ? 'Your Watchlist' : 'Top Movers'}
+              </h2>
               <ErrorBoundary name="AllStocks">
                 <div className="space-y-3 overflow-y-auto lg:max-h-[500px] p-1">
-                  {stocks.slice(0, 10).map((stock) => (
+                  {displayStocks.map((stock) => (
                     <StockCardWithHistory
                       key={stock.symbol}
                       stock={stock}
                       days={chartDays}
                       isActive={activeStock.symbol === stock.symbol}
-                      onClick={() => setSelectedStock(stock)}
+                      onClick={() => selectStock(stock)}
                       compact
                     />
                   ))}
                 </div>
               </ErrorBoundary>
+              {listSource === 'movers' && (
+                <Link
+                  to="/watchlists"
+                  className="mt-3 text-xs text-primary hover:underline self-start"
+                >
+                  Add symbols to build your watchlist →
+                </Link>
+              )}
             </div>
 
             <div className="lg:w-2/3 min-w-0 h-64 md:h-96 lg:h-[500px]">
