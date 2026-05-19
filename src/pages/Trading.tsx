@@ -13,6 +13,7 @@ import { StatsCard } from '@/components/ui/StatsCard';
 import { TradeTracker } from '@/components/trading/TradeTracker';
 import { Watchlist } from '@/components/trading/Watchlist';
 import { SymbolChart } from '@/components/trading/SymbolChart';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { toast } from 'sonner';
 import {
   Activity,
@@ -878,7 +879,7 @@ export default function Trading() {
 
         {/* Trade Tracker — broker-independent; always shown (moved here from
             My Trading Plan). Closing a trade files it into the shared Journal. */}
-        <TradeTracker />
+        <ErrorBoundary name="TradeTracker"><TradeTracker /></ErrorBoundary>
 
         {/* Stats row — IBKR-only, self-gated */}
         {isConnected && <AccountStats accountId={accountId} />}
@@ -907,12 +908,14 @@ export default function Trading() {
                 )}
               </TabsList>
               <TabsContent value="watchlist" className="mt-3">
-                <Watchlist
-                  selSymbol={selSymbol}
-                  onSelect={setSelSymbol}
-                  onSendToTicket={setSelSymbol}
-                  showGatewayNote={isGatewayOffline}
-                />
+                <ErrorBoundary name="Watchlist">
+                  <Watchlist
+                    selSymbol={selSymbol}
+                    onSelect={setSelSymbol}
+                    onSendToTicket={setSelSymbol}
+                    showGatewayNote={isGatewayOffline}
+                  />
+                </ErrorBoundary>
               </TabsContent>
               {isConnected && (
                 <>
@@ -948,8 +951,8 @@ export default function Trading() {
 
           {/* Right: Symbol chart + Order form + Live Prices */}
           <div className="space-y-4">
-            <SymbolChart symbol={selSymbol} />
-            <QuickOrder accountId={accountId} isConnected={isConnected} selSymbol={selSymbol} />
+            <ErrorBoundary name="SymbolChart"><SymbolChart symbol={selSymbol} /></ErrorBoundary>
+            <ErrorBoundary name="QuickOrder"><QuickOrder accountId={accountId} isConnected={isConnected} selSymbol={selSymbol} /></ErrorBoundary>
             {isConnected && accountId && <LivePrices accountId={accountId} />}
           </div>
         </div>
