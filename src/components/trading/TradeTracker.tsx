@@ -998,6 +998,7 @@ export function TradeTracker() {
                               value={closeNotes} onChange={(e) => setCloseNotes(e.target.value)} />
                           </div>
                           <Button size="sm" className="w-full font-semibold"
+                            disabled={planClose({ positionQty: t.quantity, closeQty: Number(closeQty) || 0 }).mode === 'invalid'}
                             onClick={() => confirmClose(t)}>
                             Confirm close &amp; add to Journal
                           </Button>
