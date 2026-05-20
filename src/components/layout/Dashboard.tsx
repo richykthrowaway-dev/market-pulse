@@ -40,8 +40,6 @@ import { DeferUntilVisible } from '@/components/common/DeferUntilVisible';
 import { WatchlistChart } from '@/components/stocks/WatchlistChart';
 import { MarketOverviewCard } from '@/components/widgets/MarketOverviewCard';
 import { TopMoverCard } from '@/components/widgets/TopMoverCard';
-import { useEffect } from 'react';
-import { useNavbarSlot } from '@/contexts/NavbarSlotContext';
 import { BarChart3, TrendingDown, TrendingUp, Wallet2, Newspaper } from 'lucide-react';
 import { TradingViewTimeline } from '@/components/tradingview';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -82,12 +80,6 @@ export function Dashboard() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [chartDays, setChartDays] = useState(30);
 
-  // Inject compact snapshot chips into the navbar (desktop only, clears on unmount)
-  const { setSlot } = useNavbarSlot();
-  useEffect(() => {
-    setSlot(<YourSnapshot variant="inline" />);
-    return () => setSlot(null);
-  }, [setSlot]);
   
   const { data: stocks = [], isLoading: stocksLoading } = useStocks();
   const { data: indices = [] } = useIndices();
@@ -711,7 +703,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navbar />
+      <Navbar centerContent={<YourSnapshot variant="inline" />} />
 
       <div className="flex-1 flex">
         <Sidebar isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />

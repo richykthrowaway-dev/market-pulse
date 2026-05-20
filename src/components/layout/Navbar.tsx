@@ -12,9 +12,11 @@ import { ViewModeToggle } from '@/components/layout/ViewModeToggle';
 
 interface NavbarProps {
   className?: string;
+  /** Content rendered in the middle gap between search and right controls */
+  centerContent?: React.ReactNode;
 }
 
-export function Navbar({ className }: NavbarProps) {
+export function Navbar({ className, centerContent }: NavbarProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => { setMounted(true); }, []);
@@ -46,9 +48,9 @@ export function Navbar({ className }: NavbarProps) {
           <StockSearch className="hidden md:block" />
         </div>
 
-        {/* Middle: page-injected slot fills the gap between search and right controls */}
+        {/* Middle: fills the gap between search and right controls */}
         <div className="flex-1 flex items-center">
-          {slot}
+          {centerContent ?? slot}
         </div>
 
         {/* Right: controls */}
