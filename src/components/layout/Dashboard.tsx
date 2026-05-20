@@ -287,7 +287,7 @@ export function Dashboard() {
 
       {/* Stats Row */}
       <ErrorBoundary name="StatsRow">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'both' }}>
           <StatsCard
             title="Market Cap"
             value={activeMarketCap != null ? formatMarketCap(activeMarketCap) : '…'}

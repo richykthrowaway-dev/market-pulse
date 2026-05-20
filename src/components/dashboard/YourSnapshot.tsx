@@ -33,10 +33,10 @@ function Tile({ label, value, sub, tone, to }: {
   const color = tone === 'pos' ? 'text-trading-buy' : tone === 'neg' ? 'text-trading-sell'
     : tone === 'warn' ? 'text-warning' : 'text-foreground';
   const inner = (
-    <div className="rounded-lg border border-border/60 bg-card px-3 py-2">
-      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`mt-0.5 text-base font-semibold font-mono-num leading-tight ${color}`}>{value}</p>
-      {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
+    <div className="rounded-md border border-border/60 bg-card px-2 py-1.5 min-w-0">
+      <p className="text-[9px] uppercase tracking-wider text-muted-foreground truncate">{label}</p>
+      <p className={`mt-0.5 text-sm font-semibold font-mono-num leading-tight truncate ${color}`}>{value}</p>
+      {sub && <p className="text-[9px] text-muted-foreground mt-0.5 truncate">{sub}</p>}
     </div>
   );
   return to ? <Link to={to} className="block hover:opacity-90 transition-opacity">{inner}</Link> : inner;
@@ -141,7 +141,7 @@ export function YourSnapshot({ variant = 'grid' }: YourSnapshotProps) {
           {session.open ? '🟢 US open' : '🔴 US closed'} · {session.label}
         </span>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-4 gap-2">
         <Tile
           label="Open P&L"
           value={open.length ? money(openPnl) : '—'}

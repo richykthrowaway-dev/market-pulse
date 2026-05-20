@@ -345,12 +345,12 @@ export function TopMoverCard({ direction, className }: TopMoverCardProps) {
 
   return (
     <Card className={cn('transition-all duration-300 hover:shadow-md overflow-hidden', className)}>
-      <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3 space-y-0">
-        <div className="flex flex-col">
-          <CardTitle className="text-xs font-medium text-muted-foreground">{title}</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between gap-1 pb-0.5 pt-2 px-2.5 space-y-0">
+        <div className="flex flex-col min-w-0">
+          <CardTitle className="text-[10px] font-medium text-muted-foreground truncate">{title}</CardTitle>
           <FilterChips filters={filters} onChange={setFilters} />
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5 shrink-0">
           <FilterPopover
             filters={filters}
             onChange={setFilters}
@@ -358,20 +358,20 @@ export function TopMoverCard({ direction, className }: TopMoverCardProps) {
             countries={countries}
             marketCapAvailable={marketCapAvailable}
           />
-          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+          <Icon className="h-3 w-3 text-muted-foreground" />
         </div>
       </CardHeader>
-      <CardContent className="px-3 pb-3 pt-0">
-        <div className="text-xl font-bold tracking-tight truncate leading-tight">
+      <CardContent className="px-2.5 pb-2 pt-0 min-w-0">
+        <div className="text-base font-bold tracking-tight truncate leading-tight">
           {isLoading ? '…' : mover?.symbol ?? '—'}
         </div>
-        <div className="flex items-center text-[11px] mt-0.5">
+        <div className="flex items-center text-[10px] mt-0.5 min-w-0">
           {mover?.change_percent != null && (
-            <span className={cn('inline-flex items-center mr-1', trendColor)}>
+            <span className={cn('inline-flex items-center mr-1 shrink-0 font-mono-num', trendColor)}>
               {mover.change_percent > 0 ? (
-                <ArrowUpIcon className="h-2.5 w-2.5 mr-0.5" />
+                <ArrowUpIcon className="h-2 w-2 mr-0.5" />
               ) : (
-                <ArrowDownIcon className="h-2.5 w-2.5 mr-0.5" />
+                <ArrowDownIcon className="h-2 w-2 mr-0.5" />
               )}
               {mover.change_percent > 0 ? '+' : ''}
               {mover.change_percent.toFixed(2)}%
@@ -381,8 +381,8 @@ export function TopMoverCard({ direction, className }: TopMoverCardProps) {
             <span className="text-muted-foreground ml-1 truncate">{mover.name}</span>
           )}
           {noResults && (
-            <span className="text-muted-foreground italic">
-              No stocks match these filters
+            <span className="text-muted-foreground italic truncate">
+              No matches
             </span>
           )}
         </div>
