@@ -19,22 +19,28 @@ export function use4hSparkline(symbol: string, exchange = 'US') {
   return useQuery<number[]>({
     queryKey: ['sparkline-4h', eodSymbol, from],
     queryFn: async () => {
-      const bars = await fetchEodIntraday(eodSymbol, '1h', from, to);
+      const allBars = await fetchEodIntraday(eodSymbol, '1h', from, to);
+      if (allBars.length === 0) return [];
+
+      // Trim to the last 7 calendar days so the sparkline shows exactly one
+      // week — without this the 14-day fetch looked indistinguishable from 30D.
+      const cutoffSec = Date.now() / 1000 - 7 * 24 * 60 * 60;
+      const bars = allBars.filter(b => b.timestamp >= cutoffSec);
       if (bars.length === 0) return [];
-      // Aggregate: group into chunks of 4 and take the last close in each chunk.
+
+      // Aggregate 1h → 4h: take the last close in every group of 4 hourly bars.
       const closes: number[] = [];
       for (let i = 3; i < bars.length; i += 4) {
         closes.push(bars[i].close);
       }
-      // If the most recent group is incomplete (< 4 bars), include current close.
-      const remainder = bars.length % 4;
-      if (remainder > 0) {
+      // Include a trailing partial group (the current incomplete candle).
+      if (bars.length % 4 !== 0) {
         closes.push(bars[bars.length - 1].close);
       }
       return closes;
     },
     enabled: !!symbol,
-    staleTime: 15 * 60_000, // 15 min
+    staleTime: 15 * 60_000,
     refetchOnWindowFocus: false,
   });
 }

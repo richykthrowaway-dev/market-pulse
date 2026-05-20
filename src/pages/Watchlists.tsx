@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { StockLogo } from '@/components/stocks/StockLogo';
 import { StockSearch } from '@/components/search/StockSearch';
 import { Sparkline } from '@/components/ui/sparkline';
-import { useSparklineData } from '@/hooks/useSparklineData';
+import { useSparklineData, use4hSparkline } from '@/hooks/useSparklineData';
 import { cn } from '@/lib/utils';
 import {
   Plus, Trash2, Search, X, Star, Pencil, Check,
@@ -54,6 +54,10 @@ function WatchlistSparklines({
   /** Supabase nightly snapshot — used as last-resort 2-point sparkline. */
   fallbackStock?: Stock;
 }) {
+  // 4h bars for the 7D slot — always prefetch so data is ready when panel opens.
+  // Loading state is handled per-slot (doesn't block the other five periods).
+  const { data: bars4h = [], isLoading: loading4h } = use4hSparkline(symbol, exchange);
+
   // Daily bars for the full year — covers all six periods via client-side slicing.
   const { data: dailyBars = [], isLoading: dailyLoading } = useSparklineData(symbol, 365, exchange);
 
@@ -87,12 +91,15 @@ function WatchlistSparklines({
   if (!open) return null;
 
   const n = effectiveDailyBars.length;
+  // 4h loading does NOT block the whole row — handled per-slot below.
   const isLoading = dailyLoading || (dailyBars.length === 0 && sbLoading);
 
   const periodData: Record<string, number[]> = Object.fromEntries(
     SPARKLINE_PERIODS.map(({ label, tradingDays }) => [
       label,
-      effectiveDailyBars.slice(Math.max(0, n - tradingDays)),
+      label === '7D'
+        ? (bars4h.length >= 2 ? bars4h : effectiveDailyBars.slice(Math.max(0, n - tradingDays)))
+        : effectiveDailyBars.slice(Math.max(0, n - tradingDays)),
     ]),
   );
 
@@ -120,6 +127,10 @@ function WatchlistSparklines({
       data-bars-synth={synthBars.length}
     >
       {SPARKLINE_PERIODS.map(({ label }) => {
+        // 7D: show per-slot skeleton while 4h fetch is still in flight.
+        if (label === '7D' && loading4h && bars4h.length === 0) {
+          return <Skeleton key={label} className={cn('rounded shrink-0', skelCls)} />;
+        }
         const slice = periodData[label] ?? [];
         // Empty / degenerate slice — same placeholder regardless of mode.
         if (slice.length < 2) {
