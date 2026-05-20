@@ -1,7 +1,8 @@
 
 import React, { useEffect, useState } from 'react';
-import { Bell, Moon, Sun, User } from 'lucide-react';
+import { Bell, ChevronLeft, Moon, Sun, User } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -19,11 +20,27 @@ export function Navbar({ className }: NavbarProps) {
   useEffect(() => { setMounted(true); }, []);
   const isDark = mounted && resolvedTheme === 'dark';
   const { slot } = useNavbarSlot();
+  const navigate = useNavigate();
+  const location = useLocation();
+  // 'default' is the key React Router assigns to the very first (entry) page;
+  // any subsequent navigation gets a generated key, meaning there's history to pop.
+  const canGoBack = location.key !== 'default';
 
   return (
     <header className={cn("bg-background/95 backdrop-blur-sm sticky top-0 z-30 border-b", className)}>
       <div className="container flex items-center justify-between h-16 px-4">
         <div className="flex items-center gap-2 lg:gap-4">
+          {canGoBack && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 shrink-0"
+              onClick={() => navigate(-1)}
+              aria-label="Go back"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+          )}
           <h1 className="text-lg font-semibold tracking-tight lg:text-xl">MarketPulse</h1>
           <StockSearch className="hidden md:block" />
         </div>
