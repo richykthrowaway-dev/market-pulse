@@ -3,6 +3,43 @@ import { fetchEodHistorical, fetchEodIntraday } from '@/services/eodhdApi';
 import { subDays, format } from 'date-fns';
 
 /**
+ * Fetches 1-hour intraday bars for the past `calendarDays` calendar days and
+ * aggregates them into 4-hour candles by taking the last close in each group
+ * of 4 hourly bars. Used for the 7D sparkline in the watchlist.
+ *
+ * EODHD doesn't expose a native 4h interval, so we aggregate client-side.
+ * We request 14 calendar days to ensure we always cover 7 full trading days
+ * even across weekends / holidays.
+ */
+export function use4hSparkline(symbol: string, exchange = 'US') {
+  const eodSymbol = symbol.includes('.') ? symbol : `${symbol}.${exchange}`;
+  const from = format(subDays(new Date(), 14), 'yyyy-MM-dd');
+  const to   = format(new Date(), 'yyyy-MM-dd');
+
+  return useQuery<number[]>({
+    queryKey: ['sparkline-4h', eodSymbol, from],
+    queryFn: async () => {
+      const bars = await fetchEodIntraday(eodSymbol, '1h', from, to);
+      if (bars.length === 0) return [];
+      // Aggregate: group into chunks of 4 and take the last close in each chunk.
+      const closes: number[] = [];
+      for (let i = 3; i < bars.length; i += 4) {
+        closes.push(bars[i].close);
+      }
+      // If the most recent group is incomplete (< 4 bars), include current close.
+      const remainder = bars.length % 4;
+      if (remainder > 0) {
+        closes.push(bars[bars.length - 1].close);
+      }
+      return closes;
+    },
+    enabled: !!symbol,
+    staleTime: 15 * 60_000, // 15 min
+    refetchOnWindowFocus: false,
+  });
+}
+
+/**
  * Fetches close-price history for sparkline rendering via EODHD.
  *
  * Unlike `useStockHistory` (which queries the sparse local ohlcv_bars table),

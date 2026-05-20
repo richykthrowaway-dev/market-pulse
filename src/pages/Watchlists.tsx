@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { StockLogo } from '@/components/stocks/StockLogo';
 import { StockSearch } from '@/components/search/StockSearch';
 import { Sparkline } from '@/components/ui/sparkline';
-import { useSparklineData } from '@/hooks/useSparklineData';
+import { useSparklineData, use4hSparkline } from '@/hooks/useSparklineData';
 import { cn } from '@/lib/utils';
 import {
   Plus, Trash2, Search, X, Star, Pencil, Check,
@@ -54,6 +54,9 @@ function WatchlistSparklines({
   /** Supabase nightly snapshot — used as last-resort 2-point sparkline. */
   fallbackStock?: Stock;
 }) {
+  // 4-hour bars for the 7D sparkline (aggregated from 1h EODHD intraday).
+  const { data: bars4h = [], isLoading: loading4h } = use4hSparkline(open ? symbol : '', exchange);
+
   // Daily bars for the full year — covers all six periods via client-side slicing.
   const { data: dailyBars = [], isLoading: dailyLoading } = useSparklineData(symbol, 365, exchange);
 
@@ -87,21 +90,17 @@ function WatchlistSparklines({
   if (!open) return null;
 
   const n = effectiveDailyBars.length;
-  const isLoading = dailyLoading || (dailyBars.length === 0 && sbLoading);
+  const isLoading = loading4h || dailyLoading || (dailyBars.length === 0 && sbLoading);
 
-  // Slice the SAME daily series for every period using the canonical
-  // tradingDays constants from SPARKLINE_PERIODS. This guarantees:
-  //   • Each curve accurately represents its labeled timeframe.
-  //   • Visual progression across the row (7D → 1Y) reads as widening lookback.
-  //   • Y-axis normalization in the polyline below is per-period, so each
-  //     sparkline auto-fits its own min/max range and stays legible whether
-  //     the underlying volatility is 0.5% or 50%.
-  // We deliberately do NOT mix hourly intraday bars in — that produced
-  // inconsistent slice density and degenerate ranges across the row.
+  // Build per-period data arrays:
+  //   • 7D  → 4h intraday bars (richer intraweek detail, ~10-14 candles)
+  //   • All others → slice of the daily series (unchanged behaviour)
   const periodData: Record<string, number[]> = Object.fromEntries(
     SPARKLINE_PERIODS.map(({ label, tradingDays }) => [
       label,
-      effectiveDailyBars.slice(Math.max(0, n - tradingDays)),
+      label === '7D'
+        ? (bars4h.length >= 2 ? bars4h : effectiveDailyBars.slice(Math.max(0, n - tradingDays)))
+        : effectiveDailyBars.slice(Math.max(0, n - tradingDays)),
     ]),
   );
 
