@@ -94,7 +94,7 @@ export function YourSnapshot({ variant = 'grid' }: YourSnapshotProps) {
   // ── Inline navbar variant ──────────────────────────────────────────────────
   if (variant === 'inline') {
     return (
-      <div className="hidden xl:flex items-center divide-x divide-border/50 border border-border/40 rounded-md overflow-hidden bg-card/60">
+      <div className="hidden lg:flex items-center divide-x divide-border/50 border border-border/40 rounded-md overflow-hidden bg-card/60">
         <Chip
           label="P&L"
           value={open.length ? money(openPnl) : '—'}

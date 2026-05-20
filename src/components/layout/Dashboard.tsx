@@ -285,7 +285,7 @@ export function Dashboard() {
   const dashboardContent = (
     <>
       {/* Mobile only: show snapshot grid (on desktop it lives in the navbar) */}
-      <div className="xl:hidden mb-4">
+      <div className="lg:hidden mb-4">
         <ErrorBoundary name="YourSnapshot"><YourSnapshot /></ErrorBoundary>
       </div>
 
