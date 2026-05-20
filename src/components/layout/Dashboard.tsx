@@ -45,6 +45,7 @@ import { TradingViewTimeline } from '@/components/tradingview';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MobileShell } from '@/components/layout/MobileShell';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { useApplyDarkStyle } from '@/hooks/useDarkStyle';
 
 // ── Formatting helpers ───────────────────────────────────────────────────────
 
@@ -77,6 +78,7 @@ const WATCHLIST_DISPLAY = [
 const WATCHLIST_SYMBOLS = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSLA', 'V'];
 
 export function Dashboard() {
+  useApplyDarkStyle();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [chartDays, setChartDays] = useState(30);
 

@@ -186,6 +186,38 @@
     --shadow-card-hover: 0 4px 16px hsl(0 0% 0% / 0.25), 0 12px 32px hsl(0 0% 0% / 0.2);
     --shadow-trading: 0 4px 20px hsl(217 91% 60% / 0.15);
   }
+
+  /* ── Black / AMOLED dark mode ──────────────────────────────────────────────
+     Applied when the user chooses "Black" in Settings → Display.
+     Overrides only the background-family tokens; accent/brand colors stay. */
+  .dark.dark-black {
+    --background: 0 0% 4%;
+    --foreground: 210 15% 94%;
+
+    --card: 0 0% 7%;
+    --card-foreground: 210 15% 94%;
+
+    --popover: 0 0% 7%;
+    --popover-foreground: 210 15% 94%;
+
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 210 15% 94%;
+
+    --muted: 0 0% 12%;
+    --muted-foreground: 215 10% 52%;
+
+    --accent: 217 60% 16%;
+
+    --border: 0 0% 16%;
+    --input: 0 0% 18%;
+
+    --sidebar-background: 0 0% 5%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-border: 0 0% 12%;
+
+    --shadow-card: 0 1px 3px hsl(0 0% 0% / 0.4), 0 4px 12px hsl(0 0% 0% / 0.3);
+    --shadow-card-hover: 0 4px 16px hsl(0 0% 0% / 0.5), 0 12px 32px hsl(0 0% 0% / 0.4);
+  }
 }
 
 @layer base {

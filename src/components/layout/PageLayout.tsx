@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/Sidebar';
 import { MobileShell } from '@/components/layout/MobileShell';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useStatement } from '@/contexts/StatementContext';
+import { useApplyDarkStyle } from '@/hooks/useDarkStyle';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,7 @@ interface PageLayoutProps {
 }
 
 export function PageLayout({ children, title, description, canonical, hideTitle }: PageLayoutProps) {
+  useApplyDarkStyle();
   const isMobile = useIsMobile();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const { parsedStatement, fileName, isParsingFile, handleFileUpload, clearStatement } = useStatement();

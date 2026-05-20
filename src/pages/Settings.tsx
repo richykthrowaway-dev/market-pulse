@@ -3,8 +3,10 @@ import { useTheme } from 'next-themes';
 import { PageLayout } from '@/components/layout/PageLayout';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { Bell, Globe, Lock, User, Settings as SettingsIcon, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Bell, Globe, Lock, User, Settings as SettingsIcon, Loader2, CheckCircle2, AlertCircle, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useDarkStyle } from '@/hooks/useDarkStyle';
+import { cn } from '@/lib/utils';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,6 +23,7 @@ type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 const Settings = () => {
   const { resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted]       = useState(false);
+  const { darkStyle, setDarkStyle }  = useDarkStyle();
 
   // Auth state
   const [email,       setEmail]       = useState('');
@@ -231,6 +234,64 @@ const Settings = () => {
                       onCheckedChange={checked => setTheme(checked ? 'dark' : 'light')}
                     />
                   </div>
+
+                  {/* Dark mode background style — only shown when dark mode is on */}
+                  {isDark && (
+                    <div className="space-y-2">
+                      <div>
+                        <p className="font-medium">Dark Mode Style</p>
+                        <p className="text-sm text-muted-foreground">Choose the background tone for dark mode</p>
+                      </div>
+                      <div className="flex gap-3">
+                        {/* Navy swatch */}
+                        <button
+                          type="button"
+                          onClick={() => setDarkStyle('navy')}
+                          className={cn(
+                            'relative flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 transition-all w-28',
+                            darkStyle === 'navy'
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:border-muted-foreground/40'
+                          )}
+                        >
+                          {/* Preview swatch */}
+                          <div className="w-full h-10 rounded-md overflow-hidden flex">
+                            <div className="flex-1" style={{ background: 'hsl(222 47% 6%)' }} />
+                            <div className="w-1/3" style={{ background: 'hsl(222 47% 9%)' }} />
+                          </div>
+                          <span className="text-xs font-medium">Navy</span>
+                          {darkStyle === 'navy' && (
+                            <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                            </span>
+                          )}
+                        </button>
+
+                        {/* Black swatch */}
+                        <button
+                          type="button"
+                          onClick={() => setDarkStyle('black')}
+                          className={cn(
+                            'relative flex flex-col items-center gap-1.5 rounded-lg border-2 p-3 transition-all w-28',
+                            darkStyle === 'black'
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border hover:border-muted-foreground/40'
+                          )}
+                        >
+                          <div className="w-full h-10 rounded-md overflow-hidden flex">
+                            <div className="flex-1" style={{ background: 'hsl(0 0% 4%)' }} />
+                            <div className="w-1/3" style={{ background: 'hsl(0 0% 7%)' }} />
+                          </div>
+                          <span className="text-xs font-medium">Black</span>
+                          {darkStyle === 'black' && (
+                            <span className="absolute top-1.5 right-1.5 h-4 w-4 rounded-full bg-primary flex items-center justify-center">
+                              <Check className="h-2.5 w-2.5 text-primary-foreground" />
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="flex items-center justify-between">
                     <div>
