@@ -275,8 +275,6 @@ export function Dashboard() {
   
   const dashboardContent = (
     <>
-      <ErrorBoundary name="YourSnapshot"><YourSnapshot /></ErrorBoundary>
-
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
         Market Dashboard
       </p>
@@ -701,11 +699,16 @@ export function Dashboard() {
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
+      {/* Snapshot sub-bar — sticky just below the navbar */}
+      <div className="sticky top-16 z-20 border-b bg-background/95 backdrop-blur-sm px-4 py-2">
+        <ErrorBoundary name="YourSnapshot"><YourSnapshot /></ErrorBoundary>
+      </div>
+
       <div className="flex-1 flex">
         <Sidebar isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
 
         <main className="flex-1 transition-all duration-300">
-          <div className="container max-w-full p-4 lg:p-6 animate-fade-in">
+          <div className="container max-w-full p-4 lg:p-4 animate-fade-in">
             {dashboardContent}
           </div>
         </main>
