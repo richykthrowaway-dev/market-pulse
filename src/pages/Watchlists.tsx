@@ -42,11 +42,14 @@ function WatchlistSparklines({
   exchange,
   open,
   expanded,
+  fallbackStock,
 }: {
   symbol: string;
   exchange: string;
   open: boolean;
   expanded: boolean;
+  /** Supabase nightly snapshot — used as last-resort 2-point sparkline. */
+  fallbackStock?: Stock;
 }) {
   // 1h bars for 1 month — covers 7D (~35 bars) and 30D (~130 bars) with rich detail
   const { data: hourlyBars = [], isLoading: hourlyLoading } = useIntradaySparkline(symbol, exchange);
@@ -61,9 +64,23 @@ function WatchlistSparklines({
     dailyBars.length === 0 ? symbol : '',
     365,
   );
+
+  // Last-resort 2-point synthesis: [yesterday close, today close] derived from
+  // the nightly Supabase stocks row (price − change → price). Shows directional
+  // movement when all historical APIs are down. Only used when every other
+  // source returns empty.
+  const synthBars: number[] = (() => {
+    if (fallbackStock && fallbackStock.price > 0 && fallbackStock.change !== 0) {
+      return [fallbackStock.price - fallbackStock.change, fallbackStock.price];
+    }
+    return [];
+  })();
+
   const effectiveDailyBars: number[] = dailyBars.length > 0
     ? dailyBars
-    : (sbBars ?? []).map((b) => Number(b.close));
+    : (sbBars ?? []).length > 0
+      ? (sbBars ?? []).map((b) => Number(b.close))
+      : synthBars;
 
   // Hidden: render nothing (no queries wasted — hooks run regardless, data is cached)
   if (!open) return null;
@@ -95,7 +112,7 @@ function WatchlistSparklines({
 
   if (isLoading) {
     return (
-      <div className="hidden xl:flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 shrink-0">
         {SPARKLINE_PERIODS.map(({ label }) => (
           <Skeleton key={label} className={cn('rounded', skelCls)} />
         ))}
@@ -104,7 +121,7 @@ function WatchlistSparklines({
   }
 
   return (
-    <div className="hidden xl:flex items-center gap-2 shrink-0">
+    <div className="flex items-center gap-2 shrink-0">
       {SPARKLINE_PERIODS.map(({ label }) => (
         <Sparkline
           key={label}
@@ -199,7 +216,7 @@ function WatchlistStockRow({
           <Skeleton className="h-3 w-28" />
         </div>
         {sparklinesOpen && (
-          <div className="hidden xl:flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {SPARKLINE_PERIODS.map(({ label }) => (
               <Skeleton key={label} className={cn('rounded', skelCls)} />
             ))}
@@ -268,6 +285,7 @@ function WatchlistStockRow({
         exchange={entry.exchange}
         open={sparklinesOpen}
         expanded={sparklinesExpanded}
+        fallbackStock={fallbackStock}
       />
 
       {/* Price */}
@@ -624,7 +642,7 @@ const Watchlists = () => {
                 <div className="w-36 shrink-0">Symbol</div>
 
                 {/* Sparkline controls + period labels — always visible at xl+ */}
-                <div className="hidden xl:flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1 shrink-0">
                   {/* Expand / minimise */}
                   <button
                     onClick={() => setSparklinesExpanded(v => !v)}
