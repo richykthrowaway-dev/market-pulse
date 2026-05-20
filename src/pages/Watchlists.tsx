@@ -19,7 +19,8 @@ import { useWatchlists, type WatchlistEntry } from '@/hooks/useWatchlists';
 import { useEodhdStock, type EodhdStockData } from '@/hooks/useEodhdStock';
 import { formatCurrency, formatNumber } from '@/utils/stocksApi';
 import { useNews, useStocks } from '@/hooks/useSupabaseData';
-import { useDefeatBetaNews, useHistoricalPrices } from '@/hooks/useDefeatBeta';
+import { useDefeatBetaNews } from '@/hooks/useDefeatBeta';
+import { useStockHistory } from '@/hooks/useStockHistory';
 import { NewsCard } from '@/components/news/NewsCard';
 import type { NewsItem, Stock } from '@/utils/stocksApi';
 
@@ -52,22 +53,24 @@ function WatchlistSparklines({
   // Daily bars for the full year — covers 60D / 90D / 120D / 1Y via client-side slicing
   const { data: dailyBars  = [], isLoading: dailyLoading  } = useSparklineData(symbol, 365, exchange);
 
-  // DefeatBeta fallback — mirrors the Dashboard's StockCardWithHistory pattern.
+  // Supabase ohlcv_bars fallback — always available (no external API needed).
   // Only fires when EODHD daily bars are empty (quota exhausted / API down).
-  const { data: dbBars = [], isLoading: dbLoading } = useHistoricalPrices(
-    dailyBars.length === 0 ? symbol : undefined,
+  // useStockHistory is disabled when ticker is '' (falsy), so passing '' when
+  // EODHD already has data avoids an unnecessary Supabase round-trip.
+  const { data: sbBars = [], isLoading: sbLoading } = useStockHistory(
+    dailyBars.length === 0 ? symbol : '',
     365,
   );
   const effectiveDailyBars: number[] = dailyBars.length > 0
     ? dailyBars
-    : (dbBars ?? []).map((b) => Number(b.close));
+    : (sbBars ?? []).map((b) => Number(b.close));
 
   // Hidden: render nothing (no queries wasted — hooks run regardless, data is cached)
   if (!open) return null;
 
   const h = hourlyBars.length;
   const n = effectiveDailyBars.length;
-  const isLoading = hourlyLoading || dailyLoading || (dailyBars.length === 0 && dbLoading);
+  const isLoading = hourlyLoading || dailyLoading || (dailyBars.length === 0 && sbLoading);
 
   // Map each period label to the right data slice.
   // 7D/30D prefer hourly bars for density; fall back to daily slices if Yahoo
