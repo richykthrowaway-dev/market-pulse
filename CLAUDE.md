@@ -2,6 +2,19 @@
 
 A React + Vite + TypeScript portfolio analytics app backed by Supabase + EODHD market data.
 
+## 📍 Site map — READ FIRST for any UI / page / widget work
+
+The complete, source-verified site map lives at **`docs/SITEMAP.md`**.
+
+It documents every route, section, card, widget, button label, input placeholder,
+table column, conditional render, data hook, and localStorage key — for all 17
+routes plus global chrome and shared components. Before touching any page
+component or claiming where a feature lives, **read `docs/SITEMAP.md` first**
+to get exact positioning rather than guessing or searching the codebase.
+
+Keep it current: when you add/remove/rename a widget, route, control, or
+localStorage key, update `docs/SITEMAP.md` in the same commit.
+
 ## Skills available in this project
 
 This project ships with the **eodhd-api skill** at `.claude/skills/eodhd-api/`.
