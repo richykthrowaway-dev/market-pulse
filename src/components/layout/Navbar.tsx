@@ -46,6 +46,9 @@ export function Navbar({ className }: NavbarProps) {
         </div>
         
         <div className="flex items-center gap-4">
+          {/* Page-injected slot — left of ViewModeToggle (Dashboard uses this for snapshot chips) */}
+          {slot && <div className="flex items-center">{slot}</div>}
+
           <ViewModeToggle />
 
           <Button
@@ -74,8 +77,6 @@ export function Navbar({ className }: NavbarProps) {
             </AvatarFallback>
           </Avatar>
 
-          {/* Page-injected slot — Portfolio uses this for the Link/Unlink sort button */}
-          {slot && <div className="flex items-center">{slot}</div>}
         </div>
       </div>
     </header>

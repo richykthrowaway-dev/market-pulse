@@ -40,6 +40,8 @@ import { DeferUntilVisible } from '@/components/common/DeferUntilVisible';
 import { WatchlistChart } from '@/components/stocks/WatchlistChart';
 import { MarketOverviewCard } from '@/components/widgets/MarketOverviewCard';
 import { TopMoverCard } from '@/components/widgets/TopMoverCard';
+import { useEffect } from 'react';
+import { useNavbarSlot } from '@/contexts/NavbarSlotContext';
 import { BarChart3, TrendingDown, TrendingUp, Wallet2, Newspaper } from 'lucide-react';
 import { TradingViewTimeline } from '@/components/tradingview';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -79,6 +81,13 @@ const WATCHLIST_SYMBOLS = ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN', 'META', 'TSL
 export function Dashboard() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [chartDays, setChartDays] = useState(30);
+
+  // Inject compact snapshot chips into the navbar (desktop only, clears on unmount)
+  const { setSlot } = useNavbarSlot();
+  useEffect(() => {
+    setSlot(<YourSnapshot variant="inline" />);
+    return () => setSlot(null);
+  }, [setSlot]);
   
   const { data: stocks = [], isLoading: stocksLoading } = useStocks();
   const { data: indices = [] } = useIndices();
@@ -275,6 +284,11 @@ export function Dashboard() {
   
   const dashboardContent = (
     <>
+      {/* Mobile only: show snapshot grid (on desktop it lives in the navbar) */}
+      <div className="xl:hidden mb-4">
+        <ErrorBoundary name="YourSnapshot"><YourSnapshot /></ErrorBoundary>
+      </div>
+
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
         Market Dashboard
       </p>
@@ -699,16 +713,11 @@ export function Dashboard() {
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
-      {/* Snapshot sub-bar — sticky just below the navbar */}
-      <div className="sticky top-16 z-20 border-b bg-background/95 backdrop-blur-sm px-4 py-2">
-        <ErrorBoundary name="YourSnapshot"><YourSnapshot /></ErrorBoundary>
-      </div>
-
       <div className="flex-1 flex">
         <Sidebar isCollapsed={isSidebarCollapsed} onToggle={toggleSidebar} />
 
         <main className="flex-1 transition-all duration-300">
-          <div className="container max-w-full p-4 lg:p-4 animate-fade-in">
+          <div className="container max-w-full p-4 lg:p-6 animate-fade-in">
             {dashboardContent}
           </div>
         </main>

@@ -42,7 +42,29 @@ function Tile({ label, value, sub, tone, to }: {
   return to ? <Link to={to} className="block hover:opacity-90 transition-opacity">{inner}</Link> : inner;
 }
 
-export function YourSnapshot() {
+/** Compact pill for the navbar inline variant */
+function Chip({ label, value, tone, to }: {
+  label: string; value: string;
+  tone?: 'pos' | 'neg'; to?: string;
+}) {
+  const color = tone === 'pos' ? 'text-trading-buy' : tone === 'neg' ? 'text-trading-sell' : 'text-foreground';
+  const inner = (
+    <div className="flex flex-col items-center px-2.5 leading-none">
+      <span className="text-[9px] uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className={`text-[11px] font-semibold font-mono-num mt-0.5 ${color}`}>{value}</span>
+    </div>
+  );
+  return to
+    ? <Link to={to} className="hover:opacity-80 transition-opacity">{inner}</Link>
+    : inner;
+}
+
+interface YourSnapshotProps {
+  /** 'grid' (default) = 4-tile card row; 'inline' = compact navbar chips */
+  variant?: 'grid' | 'inline';
+}
+
+export function YourSnapshot({ variant = 'grid' }: YourSnapshotProps) {
   const { trades: open } = useOpenTrades();
   const { intervalMs } = useLiveSpeed();
   const openSymbols = useMemo(
@@ -69,6 +91,46 @@ export function YourSnapshot() {
   const streakTxt = currentStreak.kind === 'none' ? '—'
     : `${currentStreak.kind === 'win' ? '🔥' : '🧊'} ${currentStreak.length}${currentStreak.kind === 'win' ? 'W' : 'L'}`;
 
+  // ── Inline navbar variant ──────────────────────────────────────────────────
+  if (variant === 'inline') {
+    return (
+      <div className="hidden xl:flex items-center divide-x divide-border/50 border border-border/40 rounded-md overflow-hidden bg-card/60">
+        <Chip
+          label="P&L"
+          value={open.length ? money(openPnl) : '—'}
+          tone={open.length ? tone(openPnl) : undefined}
+          to="/trading"
+        />
+        <Chip
+          label="Risk"
+          value={open.length ? (risk.pct != null ? `${risk.pct.toFixed(1)}%` : '—') : '—'}
+          to="/trading"
+        />
+        <Chip
+          label="Today"
+          value={journal.length ? money(todayPnl) : '—'}
+          tone={journal.length ? tone(todayPnl) : undefined}
+          to="/journal"
+        />
+        <Chip
+          label="Week"
+          value={journal.length ? money(weekPnl) : '—'}
+          tone={journal.length ? tone(weekPnl) : undefined}
+          to="/journal"
+        />
+        {/* Session pill */}
+        <div className="px-2.5 flex items-center">
+          <span className={`text-[9px] font-mono-num whitespace-nowrap ${
+            session.open ? 'text-trading-buy' : 'text-muted-foreground'
+          }`}>
+            {session.open ? '🟢' : '🔴'} {session.label}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Grid variant (default) ─────────────────────────────────────────────────
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
