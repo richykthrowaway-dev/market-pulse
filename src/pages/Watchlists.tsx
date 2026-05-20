@@ -11,7 +11,7 @@ import { Sparkline } from '@/components/ui/sparkline';
 import { useSparklineData } from '@/hooks/useSparklineData';
 import { cn } from '@/lib/utils';
 import {
-  Plus, Trash2, Search, X, ExternalLink, Star, Pencil, Check,
+  Plus, Trash2, Search, X, Star, Pencil, Check,
   ArrowUpIcon, ArrowDownIcon, ChevronDown, ChevronLeft, ChevronRight,
   Eye, EyeOff, Maximize2, Minimize2, Activity, Percent,
 } from 'lucide-react';
@@ -326,7 +326,14 @@ function WatchlistStockRow({
 
   // ── Data row ──
   return (
-    <div className="flex items-center gap-2 py-2.5 px-2 hover:bg-muted/30 rounded-lg group transition-colors">
+    <div className="relative flex items-center gap-2 py-2.5 px-2 hover:bg-muted/30 rounded-lg group transition-colors cursor-pointer">
+
+      {/* Invisible full-row link — covers everything except the action buttons */}
+      <Link
+        to={stocksHref}
+        className="absolute inset-0 rounded-lg"
+        aria-label={`Open ${entry.symbol} on Stocks page`}
+      />
 
       {/* Logo */}
       <StockLogo
@@ -388,8 +395,11 @@ function WatchlistStockRow({
         {stock.marketCap > 0 ? formatNumber(stock.marketCap, stock.currency) : '—'}
       </div>
 
-      {/* Actions */}
-      <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+      {/* Actions — raised above the full-row link via relative+z-10 */}
+      <div
+        className="relative z-10 flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+        onClick={e => e.stopPropagation()}
+      >
 
         {/* Move to another list */}
         {otherLists.length > 0 && (
@@ -419,15 +429,6 @@ function WatchlistStockRow({
             )}
           </div>
         )}
-
-        {/* Navigate to stock detail */}
-        <Link
-          to={stocksHref}
-          className="h-7 w-7 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-          aria-label={`View ${entry.symbol} detail`}
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-        </Link>
 
         {/* Remove */}
         <button
