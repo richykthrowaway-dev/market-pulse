@@ -33,10 +33,10 @@ function Tile({ label, value, sub, tone, to }: {
   const color = tone === 'pos' ? 'text-trading-buy' : tone === 'neg' ? 'text-trading-sell'
     : tone === 'warn' ? 'text-warning' : 'text-foreground';
   const inner = (
-    <div className="rounded-lg border border-border/60 bg-card p-3">
+    <div className="rounded-lg border border-border/60 bg-card px-3 py-2">
       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
-      <p className={`mt-0.5 text-lg font-semibold font-mono-num ${color}`}>{value}</p>
-      {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
+      <p className={`mt-0.5 text-base font-semibold font-mono-num leading-tight ${color}`}>{value}</p>
+      {sub && <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>}
     </div>
   );
   return to ? <Link to={to} className="block hover:opacity-90 transition-opacity">{inner}</Link> : inner;

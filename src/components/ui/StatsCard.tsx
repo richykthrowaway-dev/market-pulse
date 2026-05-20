@@ -39,23 +39,23 @@ export function StatsCard({
       )}
       onClick={onClick}
     >
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        {icon && <div className="h-4 w-4 text-muted-foreground">{icon}</div>}
+      <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3 space-y-0">
+        <CardTitle className="text-xs font-medium text-muted-foreground">{title}</CardTitle>
+        {icon && <div className="h-3.5 w-3.5 text-muted-foreground">{icon}</div>}
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold tracking-tight truncate" style={{ lineHeight: '1.5' }}>
+      <CardContent className="px-3 pb-3 pt-0">
+        <div className="text-xl font-bold tracking-tight truncate leading-tight">
           <span className={valueClassName}>{value}</span>
         </div>
-        
+
         {(description || trend !== undefined) && (
-          <div className="flex items-center text-xs mt-1">
+          <div className="flex items-center text-[11px] mt-0.5">
             {trend !== undefined && (
               <span className={cn(
                 "inline-flex items-center mr-1",
                 isTrendPositive ? "text-success" : "text-danger"
               )}>
-                {isTrendPositive ? <ArrowUpIcon className="h-3 w-3 mr-1" /> : <ArrowDownIcon className="h-3 w-3 mr-1" />}
+                {isTrendPositive ? <ArrowUpIcon className="h-2.5 w-2.5 mr-0.5" /> : <ArrowDownIcon className="h-2.5 w-2.5 mr-0.5" />}
                 {formattedTrend}
               </span>
             )}
