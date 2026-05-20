@@ -16,8 +16,9 @@ import {
   useSnapTradeSync,
   useSnapTradeConnections,
 } from '@/hooks/useSnapTrade';
-import { Link2, Unlink2, ArrowUpDown, RefreshCw, Loader2, CheckCircle2, PlusCircle } from 'lucide-react';
+import { Link2, Unlink2, ArrowUpDown, RefreshCw, Loader2, CheckCircle2, PlusCircle, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 import { useNavbarSlot } from '@/contexts/NavbarSlotContext';
+import { useManualPositions, daysHeld, holdingPeriod, type ManualLot } from '@/hooks/useManualPositions';
 
 import { Card, CardContent } from '@/components/ui/card';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '@/components/ui/hover-card';
@@ -464,10 +465,139 @@ function usePageMeta(title: string, description: string, canonical?: string) {
   }, [title, description, canonical]);
 }
 
+/* ─── Add-lot inline form ─── */
+
+interface AddLotFormProps {
+  onAdd: (lot: Omit<ManualLot, 'id'>) => void;
+  onCancel: () => void;
+}
+
+function AddLotForm({ onAdd, onCancel }: AddLotFormProps) {
+  const today = new Date().toISOString().split('T')[0];
+  const [symbol, setSymbol] = useState('');
+  const [name, setName] = useState('');
+  const [qty, setQty] = useState('');
+  const [cost, setCost] = useState('');
+  const [date, setDate] = useState(today);
+  const [notes, setNotes] = useState('');
+
+  const inputCls =
+    'w-full rounded border border-border bg-background px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-ring';
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const sym = symbol.trim().toUpperCase();
+    const qtyN = parseFloat(qty);
+    const costN = parseFloat(cost);
+    if (!sym || isNaN(qtyN) || qtyN <= 0 || isNaN(costN) || costN <= 0) return;
+    onAdd({ symbol: sym, name: name.trim() || sym, qty: qtyN, costBasis: costN, purchaseDate: date, notes: notes.trim() || undefined });
+    setSymbol(''); setName(''); setQty(''); setCost(''); setDate(today); setNotes('');
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mb-3 rounded-md border border-border/70 bg-muted/30 p-3 space-y-2">
+      <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Add Lot</p>
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <div className="space-y-0.5">
+          <label className="text-[9px] text-muted-foreground uppercase tracking-wider">Symbol *</label>
+          <input required value={symbol} onChange={e => setSymbol(e.target.value)} placeholder="AAPL" className={inputCls} />
+        </div>
+        <div className="space-y-0.5">
+          <label className="text-[9px] text-muted-foreground uppercase tracking-wider">Name</label>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="Apple Inc." className={inputCls} />
+        </div>
+        <div className="space-y-0.5">
+          <label className="text-[9px] text-muted-foreground uppercase tracking-wider">Qty *</label>
+          <input required type="number" min="0.0001" step="any" value={qty} onChange={e => setQty(e.target.value)} placeholder="10" className={inputCls} />
+        </div>
+        <div className="space-y-0.5">
+          <label className="text-[9px] text-muted-foreground uppercase tracking-wider">Cost/share *</label>
+          <input required type="number" min="0.0001" step="any" value={cost} onChange={e => setCost(e.target.value)} placeholder="150.00" className={inputCls} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-0.5">
+          <label className="text-[9px] text-muted-foreground uppercase tracking-wider">Purchase date</label>
+          <input type="date" value={date} max={today} onChange={e => setDate(e.target.value)} className={inputCls} />
+        </div>
+        <div className="space-y-0.5">
+          <label className="text-[9px] text-muted-foreground uppercase tracking-wider">Notes</label>
+          <input value={notes} onChange={e => setNotes(e.target.value)} placeholder="Optional note" className={inputCls} />
+        </div>
+      </div>
+      <div className="flex gap-2 pt-1">
+        <Button type="submit" size="sm" className="h-7 text-xs">Add lot</Button>
+        <Button type="button" variant="ghost" size="sm" className="h-7 text-xs" onClick={onCancel}>Cancel</Button>
+      </div>
+    </form>
+  );
+}
+
+/* ─── Lot-detail expanded rows ─── */
+
+function LotDetailRows({ lots, onRemove }: { lots: ManualLot[]; onRemove: (id: string) => void }) {
+  const colSpanTotal = 12 + 1; // header columns + chevron col
+  return (
+    <>
+      {lots.map((lot) => {
+        const days = daysHeld(lot.purchaseDate);
+        const period = holdingPeriod(lot.purchaseDate);
+        const costTotal = lot.qty * lot.costBasis;
+        const periodColor = period === 'Long-Term' ? 'text-emerald-400' : 'text-amber-400';
+        return (
+          <tr key={lot.id} className="bg-muted/20 border-b border-border/30">
+            {/* indent cell */}
+            <td className="pl-6 pr-1.5 py-1" colSpan={1}>
+              <span className="text-[8px] text-muted-foreground/40">└</span>
+            </td>
+            <td className="py-1 px-1.5 font-mono text-[10px] text-muted-foreground" colSpan={1}>
+              {lot.purchaseDate || '—'}
+            </td>
+            <td className="py-1 px-1.5 font-mono text-[10px] text-right">{lot.qty}</td>
+            <td className="py-1 px-1.5 font-mono text-[10px] text-right">${lot.costBasis.toFixed(2)}</td>
+            <td className="py-1 px-1.5 font-mono text-[10px] text-right">{fmtCurrency(costTotal)}</td>
+            <td className="py-1 px-1.5 text-[10px] text-muted-foreground text-center">{days}d</td>
+            <td className={cn('py-1 px-1.5 text-[9px] font-medium text-center', periodColor)} colSpan={2}>
+              {period}
+            </td>
+            <td className="py-1 px-1.5 text-[9px] text-muted-foreground italic" colSpan={3}>
+              {lot.notes || ''}
+            </td>
+            <td className="py-1 px-1 text-right">
+              <button
+                onClick={() => onRemove(lot.id)}
+                className="text-muted-foreground/40 hover:text-danger transition-colors p-0.5 rounded"
+                title="Remove lot"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </td>
+            {/* fill remaining cols */}
+            <td colSpan={Math.max(0, colSpanTotal - 13)} />
+          </tr>
+        );
+      })}
+    </>
+  );
+}
+
 const Portfolio = () => {
   const { data: dbHoldings = [], isLoading: isDbLoading } = usePortfolio();
   const { parsedStatement } = useStatement();
   const [navTimeframe, setNavTimeframe] = useState<PnlTimeframe>('All');
+
+  // Manual positions (localStorage-backed lots)
+  const { positions: manualPositions, addLot, removeLot } = useManualPositions();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const toggleExpand = useCallback((ticker: string) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev);
+      if (next.has(ticker)) next.delete(ticker);
+      else next.add(ticker);
+      return next;
+    });
+  }, []);
 
   // SEO
   usePageMeta(
@@ -666,37 +796,67 @@ const Portfolio = () => {
     setSharedSort({ col: sharedCol, asc });
   }, [setSharedSort]);
 
-  /* Merge: parsed statement positions take priority over DB holdings */
+  /* Merge: parsed statement positions take priority over DB holdings.
+     Manual positions are always appended (they track lots you entered yourself). */
   const holdings = useMemo(() => {
+    let base: Array<{
+      id: string; ticker: string; name: string; shares: number; avgCost: number;
+      marketValue: number; unrealizedPL: number; currency: string; purchaseDate: string; exchange: string;
+      _manualLots?: import('@/hooks/useManualPositions').ManualLot[];
+    }>;
+
     if (parsedStatement && parsedStatement.openPositions.length > 0) {
-      return parsedStatement.openPositions.
-      filter((p) => p.quantity > 0 && p.assetCategory === 'Stocks').
-      map((p) => ({
-        id: p.symbol,
-        ticker: p.symbol,
-        name: p.description,
-        shares: p.quantity,
-        avgCost: p.costPrice,
-        marketValue: p.marketValue,
-        unrealizedPL: p.unrealizedPL,
-        currency: p.currency,
-        purchaseDate: '',
-        exchange: p.exchange || ''
+      base = parsedStatement.openPositions
+        .filter((p) => p.quantity > 0 && p.assetCategory === 'Stocks')
+        .map((p) => ({
+          id: p.symbol,
+          ticker: p.symbol,
+          name: p.description,
+          shares: p.quantity,
+          avgCost: p.costPrice,
+          marketValue: p.marketValue,
+          unrealizedPL: p.unrealizedPL,
+          currency: p.currency,
+          purchaseDate: '',
+          exchange: p.exchange || '',
+        }));
+    } else {
+      base = dbHoldings.map((h: any) => ({
+        id: h.id,
+        ticker: h.localTicker || h.canonicalTicker || '?',
+        name: h.symbolName || '',
+        shares: h.shares,
+        avgCost: h.avg_cost_basis,
+        marketValue: h.shares * h.avg_cost_basis,
+        unrealizedPL: 0,
+        currency: h.currency || 'USD',
+        purchaseDate: h.purchase_date || '',
+        exchange: h.exchangeCode || '',
       }));
     }
-    return dbHoldings.map((h: any) => ({
-      id: h.id,
-      ticker: h.localTicker || h.canonicalTicker || '?',
-      name: h.symbolName || '',
-      shares: h.shares,
-      avgCost: h.avg_cost_basis,
-      marketValue: h.shares * h.avg_cost_basis,
-      unrealizedPL: 0,
-      currency: h.currency || 'USD',
-      purchaseDate: h.purchase_date || '',
-      exchange: h.exchangeCode || ''
-    }));
-  }, [parsedStatement, dbHoldings]);
+
+    // Append manual positions (skip any symbol already in base to avoid duplication)
+    const existingSymbols = new Set(base.map((h) => h.ticker.toUpperCase()));
+    for (const mp of manualPositions) {
+      const sym = mp.symbol.toUpperCase();
+      if (existingSymbols.has(sym)) continue; // IBKR already covers this ticker
+      base.push({
+        id: `manual-${sym}`,
+        ticker: sym,
+        name: mp.name,
+        shares: mp.shares,
+        avgCost: mp.avgCost,
+        marketValue: mp.shares * mp.avgCost,
+        unrealizedPL: 0,
+        currency: 'USD',
+        purchaseDate: mp.lots[0]?.purchaseDate || '',
+        exchange: '',
+        _manualLots: mp.lots,
+      });
+    }
+
+    return base;
+  }, [parsedStatement, dbHoldings, manualPositions]);
 
   const isLoading = isDbLoading && !parsedStatement;
 
@@ -988,8 +1148,20 @@ const Portfolio = () => {
 
         {/* Empty */}
         {!isLoading && holdings.length === 0 &&
-        <div className="flex flex-col items-center justify-center gap-2 py-8">
+        <div className="flex flex-col items-center justify-center gap-3 py-8">
             <p className="text-muted-foreground text-sm">No holdings yet. Upload a statement or use <strong>Connect Brokerage</strong> at the top to auto-import positions.</p>
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => setShowAddForm(true)}>
+              <PlusCircle className="h-4 w-4" />
+              Add position manually
+            </Button>
+            {showAddForm && (
+              <div className="w-full max-w-xl">
+                <AddLotForm
+                  onAdd={(lot) => { addLot(lot); setShowAddForm(false); }}
+                  onCancel={() => setShowAddForm(false)}
+                />
+              </div>
+            )}
           </div>
         }
 
@@ -1015,7 +1187,7 @@ const Portfolio = () => {
 
             <div>
               <div className="bg-card rounded-lg px-3 py-3 shadow min-h-[420px]">
-                {/* Header row: title + collapse toggle */}
+                {/* Header row: title + add + collapse toggle */}
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-sm font-semibold">
                     Holdings
@@ -1025,16 +1197,34 @@ const Portfolio = () => {
                       </span>
                     )}
                   </h2>
-                  {filteredHoldings.length > 15 && (
+                  <div className="flex items-center gap-1.5">
                     <button
                       type="button"
-                      onClick={() => setHoldingsCollapsed(v => !v)}
-                      className="text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded border border-border bg-muted/40 hover:bg-muted/70 shrink-0"
+                      onClick={() => setShowAddForm((v) => !v)}
+                      className="text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded border border-border bg-muted/40 hover:bg-muted/70 shrink-0 flex items-center gap-0.5"
                     >
-                      {holdingsCollapsed ? `Expand (${filteredHoldings.length})` : 'Collapse'}
+                      <PlusCircle className="h-3 w-3" />
+                      <span>Add position</span>
                     </button>
-                  )}
+                    {filteredHoldings.length > 15 && (
+                      <button
+                        type="button"
+                        onClick={() => setHoldingsCollapsed(v => !v)}
+                        className="text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors px-1.5 py-0.5 rounded border border-border bg-muted/40 hover:bg-muted/70 shrink-0"
+                      >
+                        {holdingsCollapsed ? `Expand (${filteredHoldings.length})` : 'Collapse'}
+                      </button>
+                    )}
+                  </div>
                 </div>
+
+                {/* Inline add-lot form */}
+                {showAddForm && (
+                  <AddLotForm
+                    onAdd={(lot) => { addLot(lot); setShowAddForm(false); }}
+                    onCancel={() => setShowAddForm(false)}
+                  />
+                )}
 
                 {/* Scrollable table — max-height when collapsed, unconstrained when expanded */}
                 <div
@@ -1048,6 +1238,8 @@ const Portfolio = () => {
                   <table className="w-full text-[11px]" aria-label="Portfolio holdings">
                      <thead>
                       <tr className="border-b">
+                        {/* Expand chevron col — no sort */}
+                        <th className="py-1.5 px-1 sticky top-0 z-10 bg-card border-b border-border w-5" aria-hidden="true" />
                         <HoldingsSortableTh label="Ticker"  col="ticker"      active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="left" />
                         <HoldingsSortableTh label="Shares"  col="shares"      active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
                         <HoldingsSortableTh label="Cost"    col="cost"        active={effectiveHoldingsCol} asc={effectiveHoldingsAsc} onSort={handleHoldingsSort} align="right" />
@@ -1077,7 +1269,7 @@ const Portfolio = () => {
                             <React.Fragment key={h.id}>
                               {showHeader && (
                                 <tr>
-                                  <td colSpan={12} className="pt-2.5 pb-1 px-1.5">
+                                  <td colSpan={13} className="pt-2.5 pb-1 px-1.5">
                                     <div className="flex items-center gap-1.5">
                                       <span className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
                                       <span className="text-[10px] font-semibold uppercase tracking-wider" style={{ color }}>{displayGroup}</span>
@@ -1087,6 +1279,20 @@ const Portfolio = () => {
                                 </tr>
                               )}
                               <tr className={cn('border-b border-border/50', isGrouped && 'border-l-2')} style={isGrouped ? { borderLeftColor: color } : undefined}>
+                                {/* Chevron expand toggle — only shown for manual positions with lots */}
+                                <td className="py-1.5 px-1">
+                                  {(h as any)._manualLots?.length > 0 ? (
+                                    <button
+                                      onClick={() => toggleExpand(h.ticker)}
+                                      className="text-muted-foreground/60 hover:text-foreground transition-colors p-0.5 rounded"
+                                      aria-label={expandedRows.has(h.ticker) ? 'Collapse lots' : 'Expand lots'}
+                                    >
+                                      {expandedRows.has(h.ticker)
+                                        ? <ChevronDown className="h-3 w-3" />
+                                        : <ChevronRight className="h-3 w-3" />}
+                                    </button>
+                                  ) : <span className="w-3 inline-block" />}
+                                </td>
                                 <td className="py-1.5 px-1.5">
                                   <div className="flex items-start gap-1.5">
                                     <span className="h-2 w-2 rounded-full flex-shrink-0 mt-[3px]" style={{ backgroundColor: isGrouped ? color : getGicsSectorColor(sectorMap[h.ticker] || null) }} />
@@ -1225,6 +1431,10 @@ const Portfolio = () => {
                                   />
                                 </td>
                               </tr>
+                              {/* Lot-level detail rows (manual positions only) */}
+                              {expandedRows.has(h.ticker) && (h as any)._manualLots && (
+                                <LotDetailRows lots={(h as any)._manualLots} onRemove={removeLot} />
+                              )}
                             </React.Fragment>
                           );
                         });
