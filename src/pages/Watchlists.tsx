@@ -706,6 +706,64 @@ const Watchlists = () => {
             </div>
           ) : (
             <>
+              {/* Controls row — mirrors data-row flex layout so buttons sit centered above the sparkline column */}
+              <div className="flex items-center gap-3 px-2 pt-1 pb-0">
+                <div className="w-8 shrink-0" />
+                <div className="w-36 shrink-0" />
+                {/* Sparkline display controls, centered over the sparkline-column space */}
+                <div className="flex items-center justify-center gap-1 shrink-0">
+                  {/* Width matches the period-label / sparkline group: 6 items × w-11/w-16 + 5 × gap-2 */}
+                  <div
+                    className={cn(
+                      'flex items-center justify-center gap-1 transition-all duration-200',
+                      sparklinesExpanded ? 'w-[424px]' : 'w-[304px]',
+                    )}
+                  >
+                    <button
+                      onClick={() => setSparklinesExpanded(v => !v)}
+                      disabled={!sparklinesOpen}
+                      className={cn(
+                        'h-5 w-5 flex items-center justify-center rounded transition-colors',
+                        sparklinesOpen
+                          ? 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          : 'text-muted-foreground/30 cursor-not-allowed',
+                      )}
+                      title={sparklinesExpanded ? 'Minimise sparklines' : 'Expand sparklines'}
+                    >
+                      {sparklinesExpanded
+                        ? <Minimize2 className="h-3 w-3" />
+                        : <Maximize2 className="h-3 w-3" />}
+                    </button>
+                    <button
+                      onClick={() => setSparklinesMode(m => m === 'chart' ? 'percent' : 'chart')}
+                      disabled={!sparklinesOpen}
+                      className={cn(
+                        'h-5 w-5 flex items-center justify-center rounded transition-colors',
+                        sparklinesOpen
+                          ? 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          : 'text-muted-foreground/30 cursor-not-allowed',
+                      )}
+                      title={sparklinesMode === 'chart' ? 'Show as % change' : 'Show as charts'}
+                      aria-label={sparklinesMode === 'chart' ? 'Switch to percent change' : 'Switch to charts'}
+                    >
+                      {sparklinesMode === 'chart'
+                        ? <Percent className="h-3 w-3" />
+                        : <Activity className="h-3 w-3" />}
+                    </button>
+                    <button
+                      onClick={() => { setSparklinesOpen(v => !v); if (sparklinesOpen) setSparklinesExpanded(false); }}
+                      className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title={sparklinesOpen ? 'Hide sparklines' : 'Show sparklines'}
+                    >
+                      {sparklinesOpen
+                        ? <EyeOff className="h-3 w-3" />
+                        : <Eye    className="h-3 w-3" />}
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1" />
+              </div>
+
               {/* Column headers — mirrors data-row flex layout (gap-3 px-2) so labels line up under their data */}
               <div className="flex items-center gap-3 px-2 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b">
                 <div className="w-8 shrink-0" />
@@ -729,50 +787,7 @@ const Watchlists = () => {
                 <div className="w-20 text-right shrink-0 hidden sm:block">Chg %</div>
                 <div className="w-20 text-right shrink-0 hidden md:block">Chg $</div>
                 <div className="w-20 text-right shrink-0 hidden lg:block">Mkt Cap</div>
-
-                {/* Sparkline display controls — moved to trailing w-20 slot so they don't push the labels right */}
-                <div className="w-20 shrink-0 flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => setSparklinesExpanded(v => !v)}
-                    disabled={!sparklinesOpen}
-                    className={cn(
-                      'h-5 w-5 flex items-center justify-center rounded transition-colors',
-                      sparklinesOpen
-                        ? 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        : 'text-muted-foreground/30 cursor-not-allowed',
-                    )}
-                    title={sparklinesExpanded ? 'Minimise sparklines' : 'Expand sparklines'}
-                  >
-                    {sparklinesExpanded
-                      ? <Minimize2 className="h-3 w-3" />
-                      : <Maximize2 className="h-3 w-3" />}
-                  </button>
-                  <button
-                    onClick={() => setSparklinesMode(m => m === 'chart' ? 'percent' : 'chart')}
-                    disabled={!sparklinesOpen}
-                    className={cn(
-                      'h-5 w-5 flex items-center justify-center rounded transition-colors',
-                      sparklinesOpen
-                        ? 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                        : 'text-muted-foreground/30 cursor-not-allowed',
-                    )}
-                    title={sparklinesMode === 'chart' ? 'Show as % change' : 'Show as charts'}
-                    aria-label={sparklinesMode === 'chart' ? 'Switch to percent change' : 'Switch to charts'}
-                  >
-                    {sparklinesMode === 'chart'
-                      ? <Percent className="h-3 w-3" />
-                      : <Activity className="h-3 w-3" />}
-                  </button>
-                  <button
-                    onClick={() => { setSparklinesOpen(v => !v); if (sparklinesOpen) setSparklinesExpanded(false); }}
-                    className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                    title={sparklinesOpen ? 'Hide sparklines' : 'Show sparklines'}
-                  >
-                    {sparklinesOpen
-                      ? <EyeOff className="h-3 w-3" />
-                      : <Eye    className="h-3 w-3" />}
-                  </button>
-                </div>
+                <div className="w-20 shrink-0" />
               </div>
 
               {/* Stock rows */}
