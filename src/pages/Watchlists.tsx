@@ -16,12 +16,12 @@ import {
   Eye, EyeOff, Maximize2, Minimize2,
 } from 'lucide-react';
 import { useWatchlists, type WatchlistEntry } from '@/hooks/useWatchlists';
-import { useEodhdStock } from '@/hooks/useEodhdStock';
+import { useEodhdStock, type EodhdStockData } from '@/hooks/useEodhdStock';
 import { formatCurrency, formatNumber } from '@/utils/stocksApi';
-import { useNews } from '@/hooks/useSupabaseData';
+import { useNews, useStocks } from '@/hooks/useSupabaseData';
 import { useDefeatBetaNews } from '@/hooks/useDefeatBeta';
 import { NewsCard } from '@/components/news/NewsCard';
-import type { NewsItem } from '@/utils/stocksApi';
+import type { NewsItem, Stock } from '@/utils/stocksApi';
 
 // ── Sparkline periods ─────────────────────────────────────────────────────────
 // Trading-day approximations of each calendar period. We fetch 365 days once
@@ -117,6 +117,7 @@ function WatchlistStockRow({
   onMove,
   sparklinesOpen,
   sparklinesExpanded,
+  fallbackStock,
 }: {
   entry: WatchlistEntry;
   listId: string;
@@ -125,8 +126,41 @@ function WatchlistStockRow({
   onMove: (toId: string) => void;
   sparklinesOpen: boolean;
   sparklinesExpanded: boolean;
+  /** Supabase nightly-data fallback — used when EODHD/Yahoo return nothing. */
+  fallbackStock?: Stock;
 }) {
   const { data, isLoading } = useEodhdStock(entry.symbol, entry.exchange, entry.name);
+
+  // ── Supabase fallback ──────────────────────────────────────────────────────
+  // When EODHD + Yahoo both fail (quota, outage, bad crumb), useEodhdStock
+  // returns null. Rather than showing "No data", we synthesise an
+  // EodhdStockData object from the nightly-ingested Supabase row so that
+  // price / change / marketCap columns are always populated.
+  const fallbackData: EodhdStockData | null =
+    !data && fallbackStock && fallbackStock.price > 0
+      ? {
+          stock: {
+            symbol:        fallbackStock.symbol,
+            name:          fallbackStock.name,
+            price:         fallbackStock.price,
+            change:        fallbackStock.change,
+            changePercent: fallbackStock.changePercent,
+            marketCap:     fallbackStock.marketCap,
+            market_cap:    fallbackStock.marketCap,
+            volume:        fallbackStock.volume,
+            lastUpdated:   fallbackStock.lastUpdated,
+            last_updated:  fallbackStock.lastUpdated.toISOString(),
+            currency:      'USD',
+          },
+          priceHistory:      [],
+          bars:              [],
+          liveQuoteAvailable: false,
+        }
+      : null;
+
+  /** Resolved data: live EODHD data, then Supabase fallback, then null. */
+  const effectiveData = data ?? fallbackData;
+
   const [moveOpen, setMoveOpen] = useState(false);
   const moveRef = useRef<HTMLDivElement>(null);
 
@@ -167,7 +201,7 @@ function WatchlistStockRow({
   }
 
   // ── No data ──
-  if (!data) {
+  if (!effectiveData) {
     return (
       <div className="flex items-center gap-3 py-3 px-2 group">
         <StockLogo ticker={entry.symbol} name={entry.name ?? entry.symbol} size="sm" exchange={entry.exchange} />
@@ -190,7 +224,7 @@ function WatchlistStockRow({
     );
   }
 
-  const { stock } = data;
+  const { stock } = effectiveData;
   const isUp = stock.changePercent >= 0;
 
   // ── Data row ──
@@ -380,6 +414,20 @@ const Watchlists = () => {
     () => activeList?.entries.map(e => e.symbol) ?? [],
     [activeList],
   );
+
+  // ── Supabase bulk fallback ─────────────────────────────────────────────────
+  // One query for all active watchlist symbols — used as fallback when the
+  // per-row useEodhdStock calls fail (EODHD quota exhausted, Yahoo crumb stale,
+  // API key missing, etc.). Nightly data is far better than "No data".
+  const { data: dbStocks = [] } = useStocks(
+    watchlistSymbols.length > 0 ? watchlistSymbols : undefined,
+  );
+  const dbStockMap = useMemo<Record<string, Stock>>(() => {
+    const m: Record<string, Stock> = {};
+    for (const s of dbStocks) m[s.symbol.toUpperCase()] = s;
+    return m;
+  }, [dbStocks]);
+
   const { data: finnhubNews = [] } = useNews(watchlistSymbols.length > 0 ? watchlistSymbols : undefined);
   const { data: dbNews = [] }      = useDefeatBetaNews(watchlistSymbols);
 
@@ -624,6 +672,7 @@ const Watchlists = () => {
                     onMove={toId => moveEntry(activeList.id, toId, entry.symbol, entry.exchange)}
                     sparklinesOpen={sparklinesOpen}
                     sparklinesExpanded={sparklinesExpanded}
+                    fallbackStock={dbStockMap[entry.symbol.toUpperCase()]}
                   />
                 ))}
               </div>
