@@ -112,7 +112,7 @@ function WatchlistSparklines({
 
   if (isLoading) {
     return (
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-3 shrink-0">
         {SPARKLINE_PERIODS.map(({ label }) => (
           <Skeleton key={label} className={cn('rounded', skelCls)} />
         ))}
@@ -122,7 +122,7 @@ function WatchlistSparklines({
 
   return (
     <div
-      className="flex items-center gap-2 shrink-0"
+      className="flex items-center gap-3 shrink-0"
       data-testid="watchlist-sparklines"
       data-bars-eodhd={dailyBars.length}
       data-bars-supabase={sbBars.length}
@@ -712,11 +712,11 @@ const Watchlists = () => {
                 <div className="w-36 shrink-0" />
                 {/* Sparkline display controls, centered over the sparkline-column space */}
                 <div className="flex items-center justify-center gap-1 shrink-0">
-                  {/* Width matches the period-label / sparkline group: 6 items × w-11/w-16 + 5 × gap-2 */}
+                  {/* Width matches the period-label / sparkline group: 6 items × w-11/w-16 + 5 × gap-3 */}
                   <div
                     className={cn(
                       'flex items-center justify-center gap-1 transition-all duration-200',
-                      sparklinesExpanded ? 'w-[424px]' : 'w-[304px]',
+                      sparklinesExpanded ? 'w-[444px]' : 'w-[324px]',
                     )}
                   >
                     <button
@@ -771,7 +771,7 @@ const Watchlists = () => {
 
                 {/* Period labels — same flex/gap/widths as <WatchlistSparklines>, so they sit directly above */}
                 {sparklinesOpen && (
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-3 shrink-0">
                     {SPARKLINE_PERIODS.map(({ label }) => (
                       <div
                         key={label}
