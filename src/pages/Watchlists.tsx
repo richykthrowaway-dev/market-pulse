@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { StockLogo } from '@/components/stocks/StockLogo';
 import { StockSearch } from '@/components/search/StockSearch';
 import { Sparkline } from '@/components/ui/sparkline';
-import { useSparklineData, useIntradaySparkline } from '@/hooks/useSparklineData';
+import { useSparklineData } from '@/hooks/useSparklineData';
 import { cn } from '@/lib/utils';
 import {
   Plus, Trash2, Search, X, ExternalLink, Star, Pencil, Check,
@@ -51,10 +51,8 @@ function WatchlistSparklines({
   /** Supabase nightly snapshot — used as last-resort 2-point sparkline. */
   fallbackStock?: Stock;
 }) {
-  // 1h bars for 1 month — covers 7D (~35 bars) and 30D (~130 bars) with rich detail
-  const { data: hourlyBars = [], isLoading: hourlyLoading } = useIntradaySparkline(symbol, exchange);
-  // Daily bars for the full year — covers 60D / 90D / 120D / 1Y via client-side slicing
-  const { data: dailyBars  = [], isLoading: dailyLoading  } = useSparklineData(symbol, 365, exchange);
+  // Daily bars for the full year — covers all six periods via client-side slicing.
+  const { data: dailyBars = [], isLoading: dailyLoading } = useSparklineData(symbol, 365, exchange);
 
   // Supabase ohlcv_bars fallback — always available (no external API needed).
   // Only fires when EODHD daily bars are empty (quota exhausted / API down).
@@ -85,25 +83,24 @@ function WatchlistSparklines({
   // Hidden: render nothing (no queries wasted — hooks run regardless, data is cached)
   if (!open) return null;
 
-  const h = hourlyBars.length;
   const n = effectiveDailyBars.length;
-  const isLoading = hourlyLoading || dailyLoading || (dailyBars.length === 0 && sbLoading);
+  const isLoading = dailyLoading || (dailyBars.length === 0 && sbLoading);
 
-  // Map each period label to the right data slice.
-  // 7D/30D prefer hourly bars for density; fall back to daily slices if Yahoo
-  // is unavailable (e.g. cold-start crumb fetch fails). Bezier smoothing makes
-  // even the 5-point daily fallback look clean.
-  const hasHourly = hourlyBars.length > 0;
-  const periodData: Record<string, number[]> = {
-    '7D':   hasHourly ? hourlyBars.slice(Math.max(0, h -  35))        // ~35 hourly bars
-                      : effectiveDailyBars.slice(Math.max(0, n -  5)), // fallback: 5 daily
-    '30D':  hasHourly ? hourlyBars                                      // all ~130 hourly bars
-                      : effectiveDailyBars.slice(Math.max(0, n - 21)), // fallback: 21 daily
-    '60D':  effectiveDailyBars.slice(Math.max(0, n -  42)),
-    '90D':  effectiveDailyBars.slice(Math.max(0, n -  63)),
-    '120D': effectiveDailyBars.slice(Math.max(0, n -  84)),
-    '1Y':   effectiveDailyBars,
-  };
+  // Slice the SAME daily series for every period using the canonical
+  // tradingDays constants from SPARKLINE_PERIODS. This guarantees:
+  //   • Each curve accurately represents its labeled timeframe.
+  //   • Visual progression across the row (7D → 1Y) reads as widening lookback.
+  //   • Y-axis normalization in the polyline below is per-period, so each
+  //     sparkline auto-fits its own min/max range and stays legible whether
+  //     the underlying volatility is 0.5% or 50%.
+  // We deliberately do NOT mix hourly intraday bars in — that produced
+  // inconsistent slice density and degenerate ranges across the row.
+  const periodData: Record<string, number[]> = Object.fromEntries(
+    SPARKLINE_PERIODS.map(({ label, tradingDays }) => [
+      label,
+      effectiveDailyBars.slice(Math.max(0, n - tradingDays)),
+    ]),
+  );
 
   // Dimensions — normal vs expanded
   const sparkH  = expanded ? 52  : 32;
@@ -121,18 +118,62 @@ function WatchlistSparklines({
   }
 
   return (
-    <div className="flex items-center gap-2 shrink-0">
-      {SPARKLINE_PERIODS.map(({ label }) => (
-        <Sparkline
-          key={label}
-          data={periodData[label] ?? []}
-          height={sparkH}
-          width={sparkW}
-          animate={false}
-          showBaseline={false}
-          ariaLabel={`${symbol} ${label} performance`}
-        />
-      ))}
+    <div
+      className="flex items-center gap-2 shrink-0"
+      data-testid="watchlist-sparklines"
+      data-bars-eodhd={dailyBars.length}
+      data-bars-supabase={sbBars.length}
+      data-bars-synth={synthBars.length}
+    >
+      {SPARKLINE_PERIODS.map(({ label }) => {
+        const slice = periodData[label] ?? [];
+        // Hand-rolled inline SVG — bypasses Sparkline component entirely.
+        // If THIS doesn't render, the problem is layout/CSS, not Sparkline.
+        if (slice.length < 2) {
+          return (
+            <div
+              key={label}
+              style={{ width: sparkW, height: sparkH, flex: '0 0 auto', background: '#222' }}
+              className="flex items-center justify-center text-[10px] text-muted-foreground"
+            >
+              ∅
+            </div>
+          );
+        }
+        const min = Math.min(...slice);
+        const max = Math.max(...slice);
+        const range = max - min || 1;
+        const w = sparkW;
+        const h = sparkH;
+        const points = slice
+          .map((v, i) => {
+            const x = (i / (slice.length - 1)) * w;
+            const y = h - ((v - min) / range) * h;
+            return `${x.toFixed(2)},${y.toFixed(2)}`;
+          })
+          .join(' ');
+        const isUp = slice[slice.length - 1] >= slice[0];
+        const color = isUp ? '#22c55e' : '#ef4444'; // green-500 / red-500
+        return (
+          <svg
+            key={label}
+            width={w}
+            height={h}
+            viewBox={`0 0 ${w} ${h}`}
+            style={{ flex: '0 0 auto', overflow: 'visible' }}
+            aria-label={`${symbol} ${label} performance`}
+          >
+            <polyline
+              points={points}
+              fill="none"
+              stroke={color}
+              strokeWidth={1.5}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          </svg>
+        );
+      })}
     </div>
   );
 }
