@@ -345,9 +345,9 @@ export function TopMoverCard({ direction, className }: TopMoverCardProps) {
 
   return (
     <Card className={cn('transition-all duration-300 hover:shadow-md overflow-hidden', className)}>
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+      <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 px-3 space-y-0">
         <div className="flex flex-col">
-          <CardTitle className="text-sm font-medium">{title}</CardTitle>
+          <CardTitle className="text-xs font-medium text-muted-foreground">{title}</CardTitle>
           <FilterChips filters={filters} onChange={setFilters} />
         </div>
         <div className="flex items-center gap-1">
@@ -358,20 +358,20 @@ export function TopMoverCard({ direction, className }: TopMoverCardProps) {
             countries={countries}
             marketCapAvailable={marketCapAvailable}
           />
-          <Icon className="h-4 w-4 text-muted-foreground" />
+          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-bold tracking-tight truncate" style={{ lineHeight: '1.5' }}>
+      <CardContent className="px-3 pb-3 pt-0">
+        <div className="text-xl font-bold tracking-tight truncate leading-tight">
           {isLoading ? '…' : mover?.symbol ?? '—'}
         </div>
-        <div className="flex items-center text-xs mt-1">
+        <div className="flex items-center text-[11px] mt-0.5">
           {mover?.change_percent != null && (
             <span className={cn('inline-flex items-center mr-1', trendColor)}>
               {mover.change_percent > 0 ? (
-                <ArrowUpIcon className="h-3 w-3 mr-1" />
+                <ArrowUpIcon className="h-2.5 w-2.5 mr-0.5" />
               ) : (
-                <ArrowDownIcon className="h-3 w-3 mr-1" />
+                <ArrowDownIcon className="h-2.5 w-2.5 mr-0.5" />
               )}
               {mover.change_percent > 0 ? '+' : ''}
               {mover.change_percent.toFixed(2)}%
