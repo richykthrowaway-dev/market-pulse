@@ -20,8 +20,8 @@ export default {
 		},
 		extend: {
 			fontFamily: {
-				sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-				mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+				sans: ['IBM Plex Sans', 'system-ui', '-apple-system', 'sans-serif'],
+				mono: ['IBM Plex Mono', 'ui-monospace', 'monospace'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',
