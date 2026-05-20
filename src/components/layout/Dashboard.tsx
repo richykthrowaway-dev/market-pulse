@@ -277,9 +277,9 @@ export function Dashboard() {
     <>
       <ErrorBoundary name="YourSnapshot"><YourSnapshot /></ErrorBoundary>
 
-      <h1 className="text-2xl font-bold mb-6 tracking-tight">
+      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
         Market Dashboard
-      </h1>
+      </p>
 
       {/* Stats Row */}
       <ErrorBoundary name="StatsRow">

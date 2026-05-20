@@ -70,7 +70,7 @@ export function YourSnapshot() {
     : `${currentStreak.kind === 'win' ? '🔥' : '🧊'} ${currentStreak.length}${currentStreak.kind === 'win' ? 'W' : 'L'}`;
 
   return (
-    <div className="mb-6">
+    <div className="mb-4">
       <div className="flex items-center justify-between mb-2">
         <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Your snapshot</p>
         <span className={`text-[11px] font-mono-num rounded-full border px-2 py-0.5 ${
