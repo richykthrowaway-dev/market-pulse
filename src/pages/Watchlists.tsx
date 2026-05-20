@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import {
   Plus, Trash2, Search, X, ExternalLink, Star, Pencil, Check,
   ArrowUpIcon, ArrowDownIcon, ChevronDown, ChevronLeft, ChevronRight,
-  Eye, EyeOff, Maximize2, Minimize2,
+  Eye, EyeOff, Maximize2, Minimize2, Activity, Percent,
 } from 'lucide-react';
 import { useWatchlists, type WatchlistEntry } from '@/hooks/useWatchlists';
 import { useEodhdStock, type EodhdStockData } from '@/hooks/useEodhdStock';
@@ -42,12 +42,15 @@ function WatchlistSparklines({
   exchange,
   open,
   expanded,
+  mode,
   fallbackStock,
 }: {
   symbol: string;
   exchange: string;
   open: boolean;
   expanded: boolean;
+  /** 'chart' = inline SVG curve; 'percent' = first→last return percentage. */
+  mode: 'chart' | 'percent';
   /** Supabase nightly snapshot — used as last-resort 2-point sparkline. */
   fallbackStock?: Stock;
 }) {
@@ -127,19 +130,42 @@ function WatchlistSparklines({
     >
       {SPARKLINE_PERIODS.map(({ label }) => {
         const slice = periodData[label] ?? [];
-        // Hand-rolled inline SVG — bypasses Sparkline component entirely.
-        // If THIS doesn't render, the problem is layout/CSS, not Sparkline.
+        // Empty / degenerate slice — same placeholder regardless of mode.
         if (slice.length < 2) {
           return (
             <div
               key={label}
-              style={{ width: sparkW, height: sparkH, flex: '0 0 auto', background: '#222' }}
-              className="flex items-center justify-center text-[10px] text-muted-foreground"
+              style={{ width: sparkW, height: sparkH, flex: '0 0 auto' }}
+              className="flex items-center justify-center text-[10px] text-muted-foreground/50"
             >
-              ∅
+              —
             </div>
           );
         }
+        const first = slice[0];
+        const last = slice[slice.length - 1];
+        const pct = first !== 0 ? ((last - first) / first) * 100 : 0;
+        const isUp = pct >= 0;
+        const color = isUp ? '#22c55e' : '#ef4444'; // green-500 / red-500
+
+        // ── Percent mode ─────────────────────────────────────────────
+        if (mode === 'percent') {
+          return (
+            <div
+              key={label}
+              style={{ width: sparkW, height: sparkH, flex: '0 0 auto', color }}
+              className={cn(
+                'flex items-center justify-center font-mono tabular-nums font-semibold',
+                expanded ? 'text-xs' : 'text-[11px]',
+              )}
+              aria-label={`${symbol} ${label} return ${pct.toFixed(2)} percent`}
+            >
+              {isUp ? '+' : ''}{pct.toFixed(2)}%
+            </div>
+          );
+        }
+
+        // ── Chart mode (default) — inline SVG polyline ───────────────
         const min = Math.min(...slice);
         const max = Math.max(...slice);
         const range = max - min || 1;
@@ -152,8 +178,6 @@ function WatchlistSparklines({
             return `${x.toFixed(2)},${y.toFixed(2)}`;
           })
           .join(' ');
-        const isUp = slice[slice.length - 1] >= slice[0];
-        const color = isUp ? '#22c55e' : '#ef4444'; // green-500 / red-500
         return (
           <svg
             key={label}
@@ -188,6 +212,7 @@ function WatchlistStockRow({
   onMove,
   sparklinesOpen,
   sparklinesExpanded,
+  sparklinesMode,
   fallbackStock,
 }: {
   entry: WatchlistEntry;
@@ -197,6 +222,7 @@ function WatchlistStockRow({
   onMove: (toId: string) => void;
   sparklinesOpen: boolean;
   sparklinesExpanded: boolean;
+  sparklinesMode: 'chart' | 'percent';
   /** Supabase nightly-data fallback — used when EODHD/Yahoo return nothing. */
   fallbackStock?: Stock;
 }) {
@@ -326,6 +352,7 @@ function WatchlistStockRow({
         exchange={entry.exchange}
         open={sparklinesOpen}
         expanded={sparklinesExpanded}
+        mode={sparklinesMode}
         fallbackStock={fallbackStock}
       />
 
@@ -480,6 +507,8 @@ const Watchlists = () => {
   const [panelOpen, setPanelOpen]           = useState(true);
   const [sparklinesOpen, setSparklinesOpen] = useState(true);
   const [sparklinesExpanded, setSparklinesExpanded] = useState(false);
+  /** 'chart' renders inline SVG curves; 'percent' renders the per-period return %. */
+  const [sparklinesMode, setSparklinesMode] = useState<'chart' | 'percent'>('chart');
   const newInputRef                         = useRef<HTMLInputElement>(null);
 
   const watchlistSymbols = useMemo(
@@ -677,14 +706,32 @@ const Watchlists = () => {
             </div>
           ) : (
             <>
-              {/* Column headers */}
-              <div className="flex items-center gap-2 px-5 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b">
+              {/* Column headers — mirrors data-row flex layout (gap-3 px-2) so labels line up under their data */}
+              <div className="flex items-center gap-3 px-2 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground border-b">
                 <div className="w-8 shrink-0" />
                 <div className="w-36 shrink-0">Symbol</div>
 
-                {/* Sparkline controls + period labels — always visible at xl+ */}
-                <div className="flex items-center gap-1 shrink-0">
-                  {/* Expand / minimise */}
+                {/* Period labels — same flex/gap/widths as <WatchlistSparklines>, so they sit directly above */}
+                {sparklinesOpen && (
+                  <div className="flex items-center gap-2 shrink-0">
+                    {SPARKLINE_PERIODS.map(({ label }) => (
+                      <div
+                        key={label}
+                        className={cn('text-center transition-all duration-200', sparklinesExpanded ? 'w-16' : 'w-11')}
+                      >
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex-1 text-right">Price</div>
+                <div className="w-20 text-right shrink-0 hidden sm:block">Chg %</div>
+                <div className="w-20 text-right shrink-0 hidden md:block">Chg $</div>
+                <div className="w-20 text-right shrink-0 hidden lg:block">Mkt Cap</div>
+
+                {/* Sparkline display controls — moved to trailing w-20 slot so they don't push the labels right */}
+                <div className="w-20 shrink-0 flex items-center justify-end gap-1">
                   <button
                     onClick={() => setSparklinesExpanded(v => !v)}
                     disabled={!sparklinesOpen}
@@ -700,7 +747,22 @@ const Watchlists = () => {
                       ? <Minimize2 className="h-3 w-3" />
                       : <Maximize2 className="h-3 w-3" />}
                   </button>
-                  {/* Show / hide */}
+                  <button
+                    onClick={() => setSparklinesMode(m => m === 'chart' ? 'percent' : 'chart')}
+                    disabled={!sparklinesOpen}
+                    className={cn(
+                      'h-5 w-5 flex items-center justify-center rounded transition-colors',
+                      sparklinesOpen
+                        ? 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                        : 'text-muted-foreground/30 cursor-not-allowed',
+                    )}
+                    title={sparklinesMode === 'chart' ? 'Show as % change' : 'Show as charts'}
+                    aria-label={sparklinesMode === 'chart' ? 'Switch to percent change' : 'Switch to charts'}
+                  >
+                    {sparklinesMode === 'chart'
+                      ? <Percent className="h-3 w-3" />
+                      : <Activity className="h-3 w-3" />}
+                  </button>
                   <button
                     onClick={() => { setSparklinesOpen(v => !v); if (sparklinesOpen) setSparklinesExpanded(false); }}
                     className="h-5 w-5 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
@@ -710,26 +772,7 @@ const Watchlists = () => {
                       ? <EyeOff className="h-3 w-3" />
                       : <Eye    className="h-3 w-3" />}
                   </button>
-                  {/* Period labels — only when sparklines are visible */}
-                  {sparklinesOpen && (
-                    <div className="flex items-center gap-2 ml-1">
-                      {SPARKLINE_PERIODS.map(({ label }) => (
-                        <div
-                          key={label}
-                          className={cn('text-center transition-all duration-200', sparklinesExpanded ? 'w-16' : 'w-11')}
-                        >
-                          {label}
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
-
-                <div className="flex-1 text-right">Price</div>
-                <div className="w-20 text-right shrink-0 hidden sm:block">Chg %</div>
-                <div className="w-20 text-right shrink-0 hidden md:block">Chg $</div>
-                <div className="w-20 text-right shrink-0 hidden lg:block">Mkt Cap</div>
-                <div className="w-20 shrink-0" />
               </div>
 
               {/* Stock rows */}
@@ -744,6 +787,7 @@ const Watchlists = () => {
                     onMove={toId => moveEntry(activeList.id, toId, entry.symbol, entry.exchange)}
                     sparklinesOpen={sparklinesOpen}
                     sparklinesExpanded={sparklinesExpanded}
+                    sparklinesMode={sparklinesMode}
                     fallbackStock={dbStockMap[entry.symbol.toUpperCase()]}
                   />
                 ))}
