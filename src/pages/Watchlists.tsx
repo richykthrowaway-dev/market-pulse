@@ -19,7 +19,7 @@ import { useWatchlists, type WatchlistEntry } from '@/hooks/useWatchlists';
 import { useEodhdStock, type EodhdStockData } from '@/hooks/useEodhdStock';
 import { formatCurrency, formatNumber } from '@/utils/stocksApi';
 import { useNews, useStocks } from '@/hooks/useSupabaseData';
-import { useDefeatBetaNews } from '@/hooks/useDefeatBeta';
+import { useDefeatBetaNews, useHistoricalPrices } from '@/hooks/useDefeatBeta';
 import { NewsCard } from '@/components/news/NewsCard';
 import type { NewsItem, Stock } from '@/utils/stocksApi';
 
@@ -52,12 +52,22 @@ function WatchlistSparklines({
   // Daily bars for the full year — covers 60D / 90D / 120D / 1Y via client-side slicing
   const { data: dailyBars  = [], isLoading: dailyLoading  } = useSparklineData(symbol, 365, exchange);
 
+  // DefeatBeta fallback — mirrors the Dashboard's StockCardWithHistory pattern.
+  // Only fires when EODHD daily bars are empty (quota exhausted / API down).
+  const { data: dbBars = [], isLoading: dbLoading } = useHistoricalPrices(
+    dailyBars.length === 0 ? symbol : undefined,
+    365,
+  );
+  const effectiveDailyBars: number[] = dailyBars.length > 0
+    ? dailyBars
+    : (dbBars ?? []).map((b) => Number(b.close));
+
   // Hidden: render nothing (no queries wasted — hooks run regardless, data is cached)
   if (!open) return null;
 
   const h = hourlyBars.length;
-  const n = dailyBars.length;
-  const isLoading = hourlyLoading || dailyLoading;
+  const n = effectiveDailyBars.length;
+  const isLoading = hourlyLoading || dailyLoading || (dailyBars.length === 0 && dbLoading);
 
   // Map each period label to the right data slice.
   // 7D/30D prefer hourly bars for density; fall back to daily slices if Yahoo
@@ -65,14 +75,14 @@ function WatchlistSparklines({
   // even the 5-point daily fallback look clean.
   const hasHourly = hourlyBars.length > 0;
   const periodData: Record<string, number[]> = {
-    '7D':   hasHourly ? hourlyBars.slice(Math.max(0, h -  35))  // ~35 hourly bars
-                      : dailyBars.slice(Math.max(0, n -   5)),  // fallback: 5 daily
-    '30D':  hasHourly ? hourlyBars                               // all ~130 hourly bars
-                      : dailyBars.slice(Math.max(0, n -  21)),  // fallback: 21 daily
-    '60D':  dailyBars.slice(Math.max(0, n -  42)),
-    '90D':  dailyBars.slice(Math.max(0, n -  63)),
-    '120D': dailyBars.slice(Math.max(0, n -  84)),
-    '1Y':   dailyBars,
+    '7D':   hasHourly ? hourlyBars.slice(Math.max(0, h -  35))        // ~35 hourly bars
+                      : effectiveDailyBars.slice(Math.max(0, n -  5)), // fallback: 5 daily
+    '30D':  hasHourly ? hourlyBars                                      // all ~130 hourly bars
+                      : effectiveDailyBars.slice(Math.max(0, n - 21)), // fallback: 21 daily
+    '60D':  effectiveDailyBars.slice(Math.max(0, n -  42)),
+    '90D':  effectiveDailyBars.slice(Math.max(0, n -  63)),
+    '120D': effectiveDailyBars.slice(Math.max(0, n -  84)),
+    '1Y':   effectiveDailyBars,
   };
 
   // Dimensions — normal vs expanded
