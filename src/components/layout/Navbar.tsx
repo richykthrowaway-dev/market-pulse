@@ -28,8 +28,9 @@ export function Navbar({ className }: NavbarProps) {
 
   return (
     <header className={cn("bg-background/95 backdrop-blur-sm sticky top-0 z-30 border-b", className)}>
-      <div className="container flex items-center justify-between h-16 px-4">
-        <div className="flex items-center gap-2 lg:gap-4">
+      <div className="container flex items-center h-16 px-4 gap-4">
+        {/* Left: back + brand + search */}
+        <div className="flex items-center gap-2 lg:gap-4 shrink-0">
           {canGoBack && (
             <Button
               variant="ghost"
@@ -44,11 +45,14 @@ export function Navbar({ className }: NavbarProps) {
           <h1 className="text-lg font-semibold tracking-tight lg:text-xl">MarketPulse</h1>
           <StockSearch className="hidden md:block" />
         </div>
-        
-        <div className="flex items-center gap-4">
-          {/* Page-injected slot — left of ViewModeToggle (Dashboard uses this for snapshot chips) */}
-          {slot && <div className="flex items-center">{slot}</div>}
 
+        {/* Middle: page-injected slot fills the gap between search and right controls */}
+        <div className="flex-1 flex items-center">
+          {slot}
+        </div>
+
+        {/* Right: controls */}
+        <div className="flex items-center gap-4 shrink-0">
           <ViewModeToggle />
 
           <Button
