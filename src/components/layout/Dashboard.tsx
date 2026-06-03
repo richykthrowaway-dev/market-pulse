@@ -46,6 +46,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MobileShell } from '@/components/layout/MobileShell';
 import { useIsMobile } from '@/hooks/useIsMobile';
 import { useApplyDarkStyle } from '@/hooks/useDarkStyle';
+import { DailyBriefCard } from '@/components/dashboard/DailyBriefCard';
 
 // ── Formatting helpers ───────────────────────────────────────────────────────
 
@@ -286,6 +287,11 @@ export function Dashboard() {
       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
         Market Dashboard
       </p>
+
+      {/* Daily Brief — AI-generated market summary, generated once at 6am ET */}
+      <ErrorBoundary>
+        <DailyBriefCard />
+      </ErrorBoundary>
 
       {/* Stats Row */}
       <ErrorBoundary name="StatsRow">
