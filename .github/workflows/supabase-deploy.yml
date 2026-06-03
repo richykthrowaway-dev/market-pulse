@@ -1,0 +1,61 @@
+name: Deploy Supabase backend
+
+# Push-to-deploy for the Supabase backend (DB migrations + edge functions).
+# Mirrors what Vercel does for the frontend, but for everything under supabase/.
+#
+# Runs on every push to main that touches supabase/**. Applies any new
+# migrations and deploys all edge functions. Idempotent: re-running is safe —
+# `db push` only applies migrations not yet in the remote migration history,
+# and `functions deploy` overwrites the deployed function with the repo version.
+#
+# ── One-time setup (see docs/DEPLOYMENT.md) ──────────────────────────────────
+# Add ONE GitHub repo secret: SUPABASE_ACCESS_TOKEN
+#   → repo Settings → Secrets and variables → Actions → New repository secret
+#   → generate the token at https://supabase.com/dashboard/account/tokens
+# The project ref is non-secret and set as an env var below.
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'supabase/migrations/**'
+      - 'supabase/functions/**'
+      - 'supabase/config.toml'
+      - '.github/workflows/supabase-deploy.yml'
+  # Allow manual runs from the Actions tab
+  workflow_dispatch:
+
+# Prevent overlapping deploys racing on the same DB
+concurrency:
+  group: supabase-deploy
+  cancel-in-progress: false
+
+env:
+  SUPABASE_PROJECT_REF: fzokumkbgvwsyftwwprx
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Push database migrations
+        run: supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+      - name: Deploy edge functions
+        run: supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
